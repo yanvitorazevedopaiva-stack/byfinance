@@ -1987,6 +1987,103 @@
   .conquista-data{font-size:10px;color:var(--neon-green);font-family:'JetBrains Mono',monospace;}
 
   @media(max-width:640px){#fab-lanc{bottom:80px;right:16px;}}
+
+  /* ========== MEUS BENS ========== */
+  .bens-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;}
+  .bens-filter-wrap{display:flex;gap:6px;flex-wrap:wrap;}
+  .bens-filter-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;font-weight:700;transition:all .2s;}
+  .bens-filter-btn.active,.bens-filter-btn:hover{color:var(--neon-blue);background:rgba(0,200,255,0.08);border-color:rgba(0,200,255,0.3);}
+  body.day .bens-filter-btn.active,body.day .bens-filter-btn:hover{color:#2563eb;background:rgba(37,99,235,0.07);border-color:rgba(37,99,235,0.25);}
+  .bens-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+  .bem-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:box-shadow .22s,transform .18s;position:relative;}
+  .bem-card:hover{box-shadow:var(--glow-b);transform:translateY(-2px);}
+  .bem-status-bar{height:3px;width:100%;}
+  .bem-status-green{background:var(--neon-green);}
+  .bem-status-yellow{background:var(--neon-yellow);}
+  .bem-status-red{background:var(--neon-red);}
+  .bem-card-foto{width:100%;height:160px;background:var(--bg2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .bem-card-foto img{width:100%;height:100%;object-fit:cover;}
+  .bem-card-foto-placeholder{font-size:48px;opacity:.35;}
+  .bem-card-body{padding:14px 16px;}
+  .bem-card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+  .bem-card-sub{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;margin-bottom:10px;}
+  .bem-card-sep{height:1px;background:var(--border);margin:8px 0;}
+  .bem-card-row{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2);margin-bottom:5px;}
+  .bem-card-row span:last-child{font-weight:600;text-align:right;}
+  .bem-card-cta{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;margin-top:2px;background:rgba(0,200,255,0.05);border:none;border-top:1px solid var(--border);color:var(--neon-blue);font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;cursor:pointer;transition:background .18s;}
+  .bem-card-cta:hover{background:rgba(0,200,255,0.12);}
+  body.day .bem-card-cta{color:#2563eb;background:rgba(37,99,235,0.03);}
+  body.day .bem-card-cta:hover{background:rgba(37,99,235,0.08);}
+  .bem-ficha-header{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
+  .bem-ficha-foto{width:180px;height:140px;flex-shrink:0;border-radius:10px;background:var(--bg2);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .bem-ficha-foto img{width:100%;height:100%;object-fit:cover;}
+  .bem-ficha-foto-ph{font-size:52px;opacity:.35;}
+  .bem-ficha-info{flex:1;min-width:180px;}
+  .bem-ficha-nome{font-size:18px;font-weight:800;color:var(--text);letter-spacing:.5px;margin-bottom:4px;}
+  .bem-ficha-tipo{font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:2px;color:var(--text3);margin-bottom:12px;}
+  .bem-ficha-meta{display:flex;flex-wrap:wrap;gap:10px 18px;}
+  .bem-ficha-meta-item{display:flex;flex-direction:column;gap:2px;}
+  .bem-ficha-meta-label{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);}
+  .bem-ficha-meta-val{font-size:13px;font-weight:700;color:var(--text);}
+  .bem-ficha-custo{text-align:center;min-width:120px;background:rgba(0,255,157,0.05);border:1px solid rgba(0,255,157,0.2);border-radius:10px;padding:14px 18px;flex-shrink:0;align-self:center;}
+  .bem-ficha-custo-label{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:4px;}
+  .bem-ficha-custo-val{font-size:22px;font-weight:800;color:var(--neon-green);}
+  body.day .bem-ficha-custo{background:rgba(5,150,105,0.05);border-color:rgba(5,150,105,0.2);}
+  body.day .bem-ficha-custo-val{color:#059669;}
+  .bem-tabs{display:flex;gap:6px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow-x:auto;flex-wrap:nowrap;}
+  .bem-tab{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:9px;font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;font-weight:700;color:var(--text3);background:transparent;border:1px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+  .bem-tab:hover{color:var(--text);background:rgba(255,255,255,0.04);border-color:var(--border);}
+  .bem-tab.active{color:var(--neon-blue);background:rgba(0,200,255,0.08);border-color:rgba(0,200,255,0.3);box-shadow:0 0 14px rgba(0,200,255,0.1);}
+  body.day .bem-tab.active{color:#2563eb;background:rgba(37,99,235,0.07);border-color:rgba(37,99,235,0.25);box-shadow:none;}
+  .bem-panel{display:none;}
+  .bem-panel.active{display:block;}
+  .bem-timeline{display:flex;flex-direction:column;gap:10px;}
+  .bem-evento{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;transition:border-color .18s;}
+  .bem-evento:hover{border-color:rgba(0,200,255,0.25);}
+  .bem-evento-icon{width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .bem-evento-blue{background:rgba(0,200,255,0.12);}
+  .bem-evento-green{background:rgba(0,255,157,0.12);}
+  .bem-evento-yellow{background:rgba(255,215,0,0.12);}
+  .bem-evento-purple{background:rgba(168,85,247,0.12);}
+  .bem-evento-red{background:rgba(255,68,68,0.12);}
+  .bem-evento-gray{background:rgba(107,114,128,0.12);}
+  .bem-evento-body{flex:1;min-width:0;}
+  .bem-evento-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:4px;}
+  .bem-evento-tipo{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;font-weight:700;}
+  .bem-evento-data{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+  .bem-evento-desc{font-size:13px;color:var(--text);font-weight:600;margin-bottom:3px;}
+  .bem-evento-meta{font-size:11px;color:var(--text3);}
+  .bem-evento-footer{display:flex;justify-content:space-between;align-items:center;margin-top:7px;flex-wrap:wrap;gap:6px;}
+  .bem-evento-val{font-size:13px;font-weight:700;color:var(--neon-green);font-family:'JetBrains Mono',monospace;}
+  body.day .bem-evento-val{color:#059669;}
+  .bem-doc-valido{color:var(--neon-green);}
+  .bem-doc-vencendo{color:var(--neon-yellow);}
+  .bem-doc-vencido{color:var(--neon-red);}
+  body.day .bem-doc-valido{color:#059669;}
+  body.day .bem-doc-vencendo{color:#d97706;}
+  body.day .bem-doc-vencido{color:#dc2626;}
+  .bem-fin-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+  .bem-fin-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+  .bem-fin-card-label{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:6px;}
+  .bem-fin-card-val{font-size:18px;font-weight:800;color:var(--text);}
+  .bem-back-btn{display:inline-flex;align-items:center;gap:7px;background:rgba(0,200,255,0.06);border:1px solid rgba(0,200,255,0.2);color:var(--neon-blue);border-radius:9px;padding:8px 14px;font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;font-weight:700;cursor:pointer;margin-bottom:16px;transition:all .18s;}
+  .bem-back-btn:hover{background:rgba(0,200,255,0.14);}
+  body.day .bem-back-btn{color:#2563eb;background:rgba(37,99,235,0.05);border-color:rgba(37,99,235,0.2);}
+  #bem-modal{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.78);display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px;}
+  .bem-modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;width:min(560px,100%);margin:auto;box-shadow:0 8px 40px rgba(0,0,0,0.5);}
+  .bem-modal-title{font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:20px;}
+  .bem-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .bem-form-full{grid-column:1/-1;}
+  .bem-form-label{font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.5px;display:block;}
+  .bem-form-input{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:9px;font-family:'Inter',sans-serif;font-size:13px;box-sizing:border-box;outline:none;transition:border-color .2s;}
+  .bem-form-input:focus{border-color:var(--neon-blue);}
+  .bem-form-input.money{color:var(--neon-green);font-family:'JetBrains Mono',monospace;}
+  body.day .bem-form-input.money{color:#059669;}
+  body.day .bem-form-input{background:var(--bg2);}
+  .bem-modal-btns{display:flex;gap:10px;margin-top:20px;}
+  @media(max-width:560px){.bem-form-grid{grid-template-columns:1fr;}.bem-form-full{grid-column:1;}}
+  @media(max-width:768px){.bem-ficha-header{flex-direction:column;}.bem-ficha-foto{width:100%;height:180px;}.bens-grid{grid-template-columns:1fr;}}
+  @media print{#sidebar,#mob-topbar,#fab-speed-dial,.bem-back-btn,.bem-tabs,.bem-modal-btns{display:none!important;}.bem-panel{display:block!important;}#page-bens{display:block!important;}body{background:#fff!important;color:#000!important;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
@@ -3558,6 +3655,42 @@
   </div>
 </div>
 
+<!-- ========== MEUS BENS ========== -->
+<div id="page-bens" class="page">
+  <div class="page-title">MEUS BENS</div>
+  <div class="page-sub">// PATRIMÔNIO · VEÍCULOS · IMÓVEIS · EQUIPAMENTOS</div>
+
+  <!-- LISTA VIEW -->
+  <div id="bens-lista-view">
+    <div class="bens-actions">
+      <button class="btn btn-green" onclick="abrirModalBem()">+ NOVO BEM</button>
+      <div class="bens-filter-wrap">
+        <button class="bens-filter-btn active" onclick="setBensFiltro('TODOS',this)">TODOS</button>
+        <button class="bens-filter-btn" onclick="setBensFiltro('Veículo',this)">VEÍCULO</button>
+        <button class="bens-filter-btn" onclick="setBensFiltro('Imóvel',this)">IMÓVEL</button>
+        <button class="bens-filter-btn" onclick="setBensFiltro('Eletrônico',this)">ELETRÔNICO</button>
+        <button class="bens-filter-btn" onclick="setBensFiltro('Equipamento',this)">EQUIPAMENTO</button>
+        <button class="bens-filter-btn" onclick="setBensFiltro('Outro',this)">OUTRO</button>
+      </div>
+    </div>
+    <div class="bens-grid" id="bens-grid"></div>
+  </div>
+
+  <!-- FICHA VIEW -->
+  <div id="bens-ficha-view" style="display:none">
+    <button class="bem-back-btn" onclick="voltarListaBens()">← VOLTAR</button>
+    <div id="bem-ficha-header"></div>
+    <div class="bem-tabs" id="bem-tabs-bar"></div>
+    <div id="bem-panel-resumo"     class="bem-panel"></div>
+    <div id="bem-panel-timeline"   class="bem-panel"></div>
+    <div id="bem-panel-manut"      class="bem-panel"></div>
+    <div id="bem-panel-km"         class="bem-panel"></div>
+    <div id="bem-panel-docs"       class="bem-panel"></div>
+    <div id="bem-panel-financeiro" class="bem-panel"></div>
+    <div id="bem-panel-relatorio"  class="bem-panel"></div>
+  </div>
+</div>
+
 <!-- ========== COMPRAS ========== -->
 <div id="page-compras" class="page">
   <div class="page-title">COMPRAS</div>
@@ -4163,6 +4296,197 @@
     <div class="confirm-btns">
       <button class="confirm-btn-cancel" onclick="closeConfirm()">CANCELAR</button>
       <button class="confirm-btn-del" id="confirm-btn-ok" onclick="doConfirm()">✕ REMOVER</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL BEM — CADASTRO/EDIÇÃO ========== -->
+<div id="bem-modal">
+  <div class="bem-modal-box">
+    <div class="bem-modal-title" id="bem-modal-title">◈ CADASTRAR BEM</div>
+    <div class="bem-form-grid">
+      <div class="bem-form-full">
+        <label class="bem-form-label">NOME DO BEM</label>
+        <input id="bem-f-nome" type="text" class="bem-form-input" placeholder="Ex: Meu HB20">
+      </div>
+      <div>
+        <label class="bem-form-label">TIPO</label>
+        <select id="bem-f-tipo" class="bem-form-input">
+          <option>Veículo</option><option>Imóvel</option><option>Eletrônico</option>
+          <option>Equipamento</option><option>Outro</option>
+        </select>
+      </div>
+      <div>
+        <label class="bem-form-label">ANO</label>
+        <input id="bem-f-ano" type="number" class="bem-form-input" placeholder="2021">
+      </div>
+      <div>
+        <label class="bem-form-label">MARCA</label>
+        <input id="bem-f-marca" type="text" class="bem-form-input" placeholder="Ex: Hyundai">
+      </div>
+      <div>
+        <label class="bem-form-label">MODELO</label>
+        <input id="bem-f-modelo" type="text" class="bem-form-input" placeholder="Ex: HB20">
+      </div>
+      <div>
+        <label class="bem-form-label">COR</label>
+        <input id="bem-f-cor" type="text" class="bem-form-input" placeholder="Prata">
+      </div>
+      <div>
+        <label class="bem-form-label">IDENTIFICADOR (placa / matrícula / nº série)</label>
+        <input id="bem-f-identificador" type="text" class="bem-form-input" placeholder="Ex: ABC-1234">
+      </div>
+      <div>
+        <label class="bem-form-label">DATA DE AQUISIÇÃO</label>
+        <input id="bem-f-aquisicao" type="date" class="bem-form-input">
+      </div>
+      <div>
+        <label class="bem-form-label">VALOR PAGO</label>
+        <input id="bem-f-valorPago" type="text" class="bem-form-input money" placeholder="R$ 0,00">
+      </div>
+      <div>
+        <label class="bem-form-label">VALOR ATUAL ESTIMADO</label>
+        <input id="bem-f-valorAtual" type="text" class="bem-form-input money" placeholder="R$ 0,00">
+      </div>
+      <div class="bem-form-full">
+        <label class="bem-form-label">FOTO DO BEM (opcional)</label>
+        <input id="bem-f-foto" type="file" accept="image/*" class="bem-form-input" style="padding:6px 12px">
+      </div>
+      <div class="bem-form-full">
+        <label class="bem-form-label">OBSERVAÇÕES</label>
+        <textarea id="bem-f-obs" class="bem-form-input" rows="2" placeholder="Informações adicionais..."></textarea>
+      </div>
+    </div>
+    <div class="bem-modal-btns">
+      <button class="btn btn-green" style="flex:1" onclick="salvarBem()">✓ SALVAR BEM</button>
+      <button class="btn" style="flex:1;border-color:rgba(255,68,68,0.3);color:#ff6666" onclick="fecharModalBem()">✕ CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL EVENTO / MANUTENÇÃO ========== -->
+<div id="bem-evento-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.78);align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px">
+  <div class="bem-modal-box">
+    <div class="bem-modal-title">🔧 REGISTRAR EVENTO / MANUTENÇÃO</div>
+    <div class="bem-form-grid">
+      <div>
+        <label class="bem-form-label">TIPO</label>
+        <select id="bev-f-tipo" class="bem-form-input">
+          <option>Manutenção</option><option>Vistoria</option><option>Troca de Peça</option>
+          <option>Revisão</option><option>Seguro</option><option>IPVA</option>
+          <option>IPTU</option><option>Outro</option>
+        </select>
+      </div>
+      <div>
+        <label class="bem-form-label">DATA</label>
+        <input id="bev-f-data" type="date" class="bem-form-input">
+      </div>
+      <div class="bem-form-full">
+        <label class="bem-form-label">DESCRIÇÃO</label>
+        <input id="bev-f-desc" type="text" class="bem-form-input" placeholder="Ex: Troca de óleo 5W-30">
+      </div>
+      <div>
+        <label class="bem-form-label">ESTABELECIMENTO / PESSOA</label>
+        <input id="bev-f-local" type="text" class="bem-form-input" placeholder="AutoCar Serviços">
+      </div>
+      <div>
+        <label class="bem-form-label">TELEFONE / CONTATO</label>
+        <input id="bev-f-contato" type="text" class="bem-form-input" placeholder="(11) 99999-9999">
+      </div>
+      <div>
+        <label class="bem-form-label">VALOR</label>
+        <input id="bev-f-valor" type="text" class="bem-form-input money" placeholder="R$ 0,00">
+      </div>
+      <div>
+        <label class="bem-form-label">PRÓX. MANUTENÇÃO — DATA</label>
+        <input id="bev-f-proxData" type="date" class="bem-form-input">
+      </div>
+      <div>
+        <label class="bem-form-label">PRÓX. MANUTENÇÃO — KM</label>
+        <input id="bev-f-proxKm" type="number" class="bem-form-input" placeholder="Ex: 85000">
+      </div>
+      <div>
+        <label class="bem-form-label">GARANTIA ATÉ</label>
+        <input id="bev-f-garantia" type="date" class="bem-form-input">
+      </div>
+      <div>
+        <label class="bem-form-label">COMPROVANTE / FOTO</label>
+        <input id="bev-f-anexo" type="file" accept="image/*,application/pdf" class="bem-form-input" style="padding:6px 12px">
+      </div>
+      <div class="bem-form-full">
+        <label class="bem-form-label">OBSERVAÇÕES</label>
+        <textarea id="bev-f-obs" class="bem-form-input" rows="2"></textarea>
+      </div>
+      <div class="bem-form-full">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.5px">
+          <input id="bev-f-vincular" type="checkbox" style="width:14px;height:14px">
+          VINCULAR ESTE GASTO AOS LANÇAMENTOS DO SISTEMA
+        </label>
+      </div>
+    </div>
+    <div class="bem-modal-btns">
+      <button class="btn btn-green" style="flex:1" onclick="salvarEventoBem()">✓ SALVAR EVENTO</button>
+      <button class="btn" style="flex:1;border-color:rgba(255,68,68,0.3);color:#ff6666" onclick="fecharEventoModal()">✕ CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL KM ========== -->
+<div id="bem-km-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.78);align-items:center;justify-content:center">
+  <div class="bem-modal-box" style="max-width:380px">
+    <div class="bem-modal-title">🛣 REGISTRAR KM</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <label class="bem-form-label">DATA DO REGISTRO</label>
+        <input id="bkm-f-data" type="date" class="bem-form-input">
+      </div>
+      <div>
+        <label class="bem-form-label">KM ATUAL</label>
+        <input id="bkm-f-km" type="number" class="bem-form-input" placeholder="Ex: 78540" style="color:var(--neon-blue);font-family:'JetBrains Mono',monospace">
+      </div>
+      <div>
+        <label class="bem-form-label">OBSERVAÇÃO (opcional)</label>
+        <input id="bkm-f-obs" type="text" class="bem-form-input">
+      </div>
+    </div>
+    <div class="bem-modal-btns">
+      <button class="btn btn-green" style="flex:1" onclick="salvarKmBem()">✓ REGISTRAR</button>
+      <button class="btn" style="flex:1;border-color:rgba(255,68,68,0.3);color:#ff6666" onclick="fecharKmModal()">✕ CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL DOCUMENTO BEM ========== -->
+<div id="bem-doc-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.78);align-items:center;justify-content:center">
+  <div class="bem-modal-box" style="max-width:420px">
+    <div class="bem-modal-title">📄 CADASTRAR DOCUMENTO</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <label class="bem-form-label">NOME DO DOCUMENTO</label>
+        <input id="bdoc-f-nome" type="text" class="bem-form-input" placeholder="Ex: CRLV 2025, Nota Fiscal, Apólice">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="bem-form-label">DATA DE EMISSÃO</label>
+          <input id="bdoc-f-emissao" type="date" class="bem-form-input">
+        </div>
+        <div>
+          <label class="bem-form-label">DATA DE VALIDADE</label>
+          <input id="bdoc-f-validade" type="date" class="bem-form-input">
+        </div>
+      </div>
+      <div>
+        <label class="bem-form-label">ARQUIVO (imagem ou PDF)</label>
+        <input id="bdoc-f-arquivo" type="file" accept="image/*,application/pdf" class="bem-form-input" style="padding:6px 12px">
+      </div>
+      <div>
+        <label class="bem-form-label">OBSERVAÇÃO</label>
+        <input id="bdoc-f-obs" type="text" class="bem-form-input">
+      </div>
+    </div>
+    <div class="bem-modal-btns">
+      <button class="btn btn-green" style="flex:1" onclick="salvarDocumentoBem()">✓ SALVAR DOCUMENTO</button>
+      <button class="btn" style="flex:1;border-color:rgba(255,68,68,0.3);color:#ff6666" onclick="fecharDocModal()">✕ CANCELAR</button>
     </div>
   </div>
 </div>
@@ -4915,8 +5239,8 @@ function closeSidebar(){
 
 // ===================== NAVIGATION =====================
 let currentPage='dashboard', _currentPage='dashboard';
-const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,parcelas:3,lancamentos:4,semanal:5,faturas:6,planejamento:7,receita:8,investimentos:9,compras:10,relatorios:11,config:12,sobre:13};
-const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',compras:'COMPRAS',relatorios:'RELATÓRIOS',config:'CONFIGURAÇÕES',sobre:'SOBRE'};
+const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,parcelas:3,lancamentos:4,semanal:5,faturas:6,planejamento:7,receita:8,investimentos:9,bens:10,compras:11,relatorios:12,config:13,sobre:14};
+const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',compras:'COMPRAS',relatorios:'RELATÓRIOS',config:'CONFIGURAÇÕES',sobre:'SOBRE'};
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -4936,7 +5260,7 @@ function showPage(id){
 function renderPage(id){
   const fns={dashboard:renderDashboard,gastos:renderGastos,cartoes:renderCartoes,parcelas:renderParcelas,
     lancamentos:renderLancamentos,faturas:renderFaturas,planejamento:renderPlanejamento,
-    receita:renderReceita,investimentos:renderInvestimentos,
+    receita:renderReceita,investimentos:renderInvestimentos,bens:renderBens,
     compras:renderCompras,relatorios:renderRelatorios,semanal:renderSemanal,config:renderConfig,sobre:renderSobre};
   if(fns[id]) fns[id]();
 }
@@ -5160,6 +5484,28 @@ function renderDashboard(){
   const dtiClass=dti>85?'alert-red':dti>70?'alert-yellow':'alert-blue';
   alertsHtml+=`<div class="alert ${dtiClass}"><span class="alert-icon">📊</span><span>Comprometimento de renda: <b>${dti}%</b> em gastos fixos</span></div>`;
   alertsHtml+=`<div class="alert alert-green"><span class="alert-icon">✦</span><span>Liberdade financeira prevista para <b>Agosto/2026</b>!</span></div>`;
+
+  // Alertas de Meus Bens — documentos vencendo e manutenções próximas
+  const _hoje=new Date(); _hoje.setHours(0,0,0,0);
+  getBensDocumentos().forEach(doc=>{
+    if(!doc.validade) return;
+    const val=new Date(doc.validade); val.setHours(0,0,0,0);
+    const diff=Math.round((val-_hoje)/(1000*60*60*24));
+    const bem=getBens().find(b=>b.id===doc.bemId);
+    if(!bem) return;
+    if(diff<0) alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">📄</span><span><b>${esc(doc.nome)}</b> do ${esc(bem.nome)} está <b>VENCIDO</b></span></div>`;
+    else if(diff<=30) alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">📄</span><span><b>${esc(doc.nome)}</b> do ${esc(bem.nome)} vence em <b>${diff} dias</b></span></div>`;
+  });
+  getBensEventos().forEach(ev=>{
+    if(!ev.proximaData) return;
+    const prox=new Date(ev.proximaData); prox.setHours(0,0,0,0);
+    const diff=Math.round((prox-_hoje)/(1000*60*60*24));
+    if(diff>=0&&diff<=15){
+      const bem=getBens().find(b=>b.id===ev.bemId);
+      if(bem) alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">🔧</span><span>Manutenção do <b>${esc(bem.nome)}</b>: ${esc(ev.desc||ev.tipo)} em <b>${diff} dias</b></span></div>`;
+    }
+  });
+
   daAlertas.innerHTML=alertsHtml;
 
   // Gráfico categorias — atualiza dados sem destruir
@@ -10260,17 +10606,30 @@ const _NAV_META={
   planejamento:{icon:'◎',label:'PLANEJAMENTO'},
   receita:{icon:'◈',label:'RECEITA'},
   investimentos:{icon:'◈',label:'INVESTIMENTOS'},
+  bens:{icon:'◆',label:'MEUS BENS'},
   compras:{icon:'◑',label:'COMPRAS'},
   relatorios:{icon:'▦',label:'RELATÓRIOS'},
   config:{icon:'⚙',label:'CONFIGURAÇÕES'},
 };
 const _NAV_DEFAULT={
   b1:['dashboard','gastos','cartoes','parcelas','semanal','faturas'],
-  b2:['planejamento','receita','investimentos','compras','relatorios']
+  b2:['planejamento','receita','investimentos','bens','compras','relatorios']
 };
 // páginas que saem dos blocos (ficam em ícones próprios)
 const _NAV_EXCLUDED=new Set(['config','lancamentos']);
-function _navGetOrder(){return load('navOrder')||JSON.parse(JSON.stringify(_NAV_DEFAULT));}
+function _navGetOrder(){
+  const saved=load('navOrder');
+  if(!saved) return JSON.parse(JSON.stringify(_NAV_DEFAULT));
+  // garante que novos itens adicionados ao _NAV_DEFAULT apareçam na ordem salva
+  const merged={b1:[...saved.b1],b2:[...saved.b2]};
+  ['b1','b2'].forEach(bk=>{
+    _NAV_DEFAULT[bk].forEach(k=>{
+      if(!merged.b1.includes(k)&&!merged.b2.includes(k)&&!_NAV_EXCLUDED.has(k))
+        merged[bk].push(k);
+    });
+  });
+  return merged;
+}
 function _navSaveOrder(o){save('navOrder',o);}
 
 let _navDragKey=null,_navDragBlock=null;
@@ -11998,6 +12357,656 @@ function cfgMsgShow(el,type,text){
   el.className='cfg-msg '+type;
   el.textContent=text;
   setTimeout(()=>{el.className='cfg-msg';el.textContent='';},4000);
+}
+
+// ===================== MEUS BENS =====================
+let _bemFiltro='TODOS', _bemFichaId=null, _bemTabAtiva='resumo';
+let _bemEditId=null, _chartBemPizza=null, _chartBemBarras=null, _chartBemKm=null;
+
+// — storage
+function getBens(){return load('bens')||[];}
+function setBens(v){save('bens',v);}
+function getBensEventos(){return load('bensEventos')||[];}
+function setBensEventos(v){save('bensEventos',v);}
+function getBensKm(){return load('bensKm')||[];}
+function setBensKm(v){save('bensKm',v);}
+function getBensDocumentos(){return load('bensDocumentos')||[];}
+function setBensDocumentos(v){save('bensDocumentos',v);}
+
+// — ícones
+function _bemIcone(tipo){return{Veículo:'🚗',Imóvel:'🏠',Eletrônico:'💻',Equipamento:'🔧',Outro:'📦'}[tipo]||'📦';}
+function _eventoIcone(tipo){return{'Manutenção':'🔧','Vistoria':'📋','Troca de Peça':'⚡','Revisão':'🔄','Seguro':'🛡','IPVA':'📄','IPTU':'📄','Outro':'📌'}[tipo]||'📌';}
+function _eventoCor(tipo){return'bem-evento-'+({'Manutenção':'blue','Vistoria':'green','Troca de Peça':'purple','Revisão':'blue','Seguro':'yellow','IPVA':'yellow','IPTU':'yellow','Outro':'gray'}[tipo]||'gray');}
+function _eventoTipoCor(tipo){return{'Manutenção':'var(--neon-blue)','Vistoria':'var(--neon-green)','Troca de Peça':'var(--neon-purple)','Revisão':'var(--neon-blue)','Seguro':'var(--neon-yellow)','IPVA':'var(--neon-yellow)','IPTU':'var(--neon-yellow)','Outro':'var(--text3)'}[tipo]||'var(--text3)';}
+function _eventoBadgeCor(tipo){return{'Manutenção':'blue','Vistoria':'green','Troca de Peça':'purple','Revisão':'blue','Seguro':'yellow','IPVA':'yellow','IPTU':'yellow','Outro':'graphite'}[tipo]||'graphite';}
+function _fmtData(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
+function _initMascaraOnce(el){if(el&&!el._maskInit){el._maskInit=true;mascaraBRL(el);}}
+
+// — status do bem (verde/amarelo/vermelho)
+function _bemStatus(bem){
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  for(const doc of getBensDocumentos().filter(d=>d.bemId===bem.id)){
+    if(!doc.validade)continue;
+    const v=new Date(doc.validade);v.setHours(0,0,0,0);
+    const d=Math.round((v-hoje)/(864e5));
+    if(d<0)return'red';
+    if(d<=30)return'yellow';
+  }
+  for(const ev of getBensEventos().filter(e=>e.bemId===bem.id)){
+    if(!ev.proximaData)continue;
+    const p=new Date(ev.proximaData);p.setHours(0,0,0,0);
+    if(Math.round((p-hoje)/(864e5))<=15)return'yellow';
+  }
+  return'green';
+}
+
+// — meses desde aquisição
+function _mesesDesde(aquisicao){
+  if(!aquisicao)return 1;
+  const a=new Date(aquisicao),h=new Date();
+  return Math.max(1,(h.getFullYear()-a.getFullYear())*12+(h.getMonth()-a.getMonth()));
+}
+
+// ── LISTA ──
+function renderBens(){
+  [_chartBemPizza,_chartBemBarras,_chartBemKm].forEach(c=>{if(c){try{c.destroy();}catch(e){}}});
+  _chartBemPizza=_chartBemBarras=_chartBemKm=null;
+  _bemFichaId=null;
+  document.getElementById('bens-lista-view').style.display='';
+  document.getElementById('bens-ficha-view').style.display='none';
+  const bens=getBens();
+  const filtrado=_bemFiltro==='TODOS'?bens:bens.filter(b=>b.tipo===_bemFiltro);
+  const grid=document.getElementById('bens-grid');
+  if(filtrado.length===0){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text3)">
+      <div style="font-size:40px;margin-bottom:12px">📦</div>
+      <div style="font-size:13px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:16px">${bens.length===0?'Nenhum bem cadastrado.':'Nenhum bem nesta categoria.'}</div>
+      ${bens.length===0?`<button class="btn btn-green" onclick="abrirModalBem()">+ ADICIONAR PRIMEIRO BEM</button>`:''}
+    </div>`;
+    return;
+  }
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  grid.innerHTML=filtrado.map(bem=>{
+    const ev=getBensEventos().filter(e=>e.bemId===bem.id);
+    const docs=getBensDocumentos().filter(d=>d.bemId===bem.id);
+    const totalGasto=ev.reduce((a,e)=>a+(e.valor||0),0);
+    let proxManut='—',proxDias=null;
+    ev.forEach(e=>{
+      if(!e.proximaData)return;
+      const p=new Date(e.proximaData);p.setHours(0,0,0,0);
+      const d=Math.round((p-hoje)/(864e5));
+      if(proxDias===null||d<proxDias){proxDias=d;proxManut=d<0?`${Math.abs(d)}d atrás`:`em ${d}d`;}
+    });
+    const docsVenc=docs.filter(d=>{
+      if(!d.validade)return false;
+      const v=new Date(d.validade);v.setHours(0,0,0,0);
+      return Math.round((v-hoje)/(864e5))<=30;
+    }).length;
+    const sub=[bem.cor,bem.identificador].filter(Boolean).join(' · ');
+    const status=_bemStatus(bem);
+    return`<div class="bem-card">
+      <div class="bem-status-bar bem-status-${status}"></div>
+      <div class="bem-card-foto" onclick="abrirFichaBem(${bem.id})">${bem.foto?`<img src="${bem.foto}" alt="${esc(bem.nome)}">`:`<div class="bem-card-foto-placeholder">${_bemIcone(bem.tipo)}</div>`}</div>
+      <div class="bem-card-body" onclick="abrirFichaBem(${bem.id})">
+        <div class="bem-card-title">${_bemIcone(bem.tipo)} ${esc(bem.nome)}</div>
+        ${sub?`<div class="bem-card-sub">${esc(sub)}</div>`:''}
+        <div class="bem-card-sep"></div>
+        <div class="bem-card-row"><span>💰 Total gasto</span><span style="color:var(--neon-green)">${fmt(totalGasto)}</span></div>
+        <div class="bem-card-row"><span>📅 Próx. manutenção</span><span>${proxManut}</span></div>
+        ${docsVenc>0?`<div class="bem-card-row"><span>📄 Doc. vencendo</span><span style="color:var(--neon-yellow)">${docsVenc}</span></div>`:''}
+      </div>
+      <button class="bem-card-cta" onclick="abrirFichaBem(${bem.id})">VER FICHA COMPLETA →</button>
+    </div>`;
+  }).join('');
+}
+
+function setBensFiltro(filtro,btn){
+  _bemFiltro=filtro;
+  document.querySelectorAll('.bens-filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderBens();
+}
+
+// ── FICHA ──
+function abrirFichaBem(id){
+  _bemFichaId=id;
+  document.getElementById('bens-lista-view').style.display='none';
+  document.getElementById('bens-ficha-view').style.display='';
+  _renderFichaHeader(id);
+  _renderBemTabs(id);
+  switchBemTab('resumo',true);
+}
+
+function voltarListaBens(){
+  renderBens();
+}
+
+function _renderFichaHeader(id){
+  const bem=getBens().find(b=>b.id===id);if(!bem)return;
+  const ev=getBensEventos().filter(e=>e.bemId===id);
+  const totalGasto=ev.reduce((a,e)=>a+(e.valor||0),0);
+  const media=totalGasto/_mesesDesde(bem.aquisicao);
+  document.getElementById('bem-ficha-header').innerHTML=`
+  <div class="bem-ficha-header">
+    <div class="bem-ficha-foto">${bem.foto?`<img src="${bem.foto}" alt="${esc(bem.nome)}">`:`<div class="bem-ficha-foto-ph">${_bemIcone(bem.tipo)}</div>`}</div>
+    <div class="bem-ficha-info">
+      <div class="bem-ficha-nome">${esc(bem.nome)}</div>
+      <div class="bem-ficha-tipo">${esc(bem.tipo).toUpperCase()}${bem.marca?' · '+esc(bem.marca):''}${bem.modelo?' '+esc(bem.modelo):''}${bem.ano?' '+bem.ano:''}</div>
+      <div class="bem-ficha-meta">
+        ${bem.cor?`<div class="bem-ficha-meta-item"><div class="bem-ficha-meta-label">COR</div><div class="bem-ficha-meta-val">${esc(bem.cor)}</div></div>`:''}
+        ${bem.identificador?`<div class="bem-ficha-meta-item"><div class="bem-ficha-meta-label">IDENTIFICADOR</div><div class="bem-ficha-meta-val">${esc(bem.identificador)}</div></div>`:''}
+        ${bem.aquisicao?`<div class="bem-ficha-meta-item"><div class="bem-ficha-meta-label">AQUISIÇÃO</div><div class="bem-ficha-meta-val">${_fmtData(bem.aquisicao)}</div></div>`:''}
+        <div class="bem-ficha-meta-item"><div class="bem-ficha-meta-label">MÉDIA/MÊS</div><div class="bem-ficha-meta-val" style="color:var(--neon-yellow)">${fmt(media)}</div></div>
+      </div>
+    </div>
+    <div class="bem-ficha-custo">
+      <div class="bem-ficha-custo-label">TOTAL GASTO</div>
+      <div class="bem-ficha-custo-val">${fmt(totalGasto)}</div>
+    </div>
+  </div>`;
+}
+
+function _renderBemTabs(id){
+  const bem=getBens().find(b=>b.id===id);
+  const isVeiculo=bem&&bem.tipo==='Veículo';
+  const tabs=[
+    {id:'resumo',    icon:'📊',label:'RESUMO'},
+    {id:'timeline',  icon:'📅',label:'LINHA DO TEMPO'},
+    {id:'manut',     icon:'🔧',label:'MANUTENÇÕES'},
+    ...(isVeiculo?[{id:'km',icon:'🛣',label:'KM E USO'}]:[]),
+    {id:'docs',      icon:'📄',label:'DOCUMENTOS'},
+    {id:'financeiro',icon:'💰',label:'FINANCEIRO'},
+    {id:'relatorio', icon:'📋',label:'RELATÓRIO'},
+  ];
+  document.getElementById('bem-tabs-bar').innerHTML=tabs.map(t=>
+    `<button class="bem-tab" onclick="switchBemTab('${t.id}')">${t.icon} ${t.label}</button>`
+  ).join('');
+}
+
+function switchBemTab(tab,silent){
+  _bemTabAtiva=tab;
+  document.querySelectorAll('.bem-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#bem-tabs-bar .bem-tab').forEach(t=>t.classList.remove('active'));
+  const panel=document.getElementById('bem-panel-'+tab);
+  if(panel)panel.classList.add('active');
+  document.querySelectorAll('#bem-tabs-bar .bem-tab').forEach(t=>{
+    if(t.getAttribute('onclick')===`switchBemTab('${tab}')`)t.classList.add('active');
+  });
+  const id=_bemFichaId;if(!id)return;
+  const bem=getBens().find(b=>b.id===id);if(!bem)return;
+  ({resumo:()=>renderBemResumo(bem),timeline:()=>renderBemTimeline(bem),
+    manut:()=>renderBemManutencoes(bem),km:()=>renderBemKm(bem),
+    docs:()=>renderBemDocumentos(bem),financeiro:()=>renderBemFinanceiro(bem),
+    relatorio:()=>renderBemRelatorio(bem)})[tab]?.();
+}
+
+// ── ABA 1: RESUMO ──
+function _resumoCard(label,val){
+  return`<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px"><div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:6px">${label}</div><div style="font-size:14px;font-weight:700;color:var(--text)">${val}</div></div>`;
+}
+
+function renderBemResumo(bem){
+  const ev=getBensEventos().filter(e=>e.bemId===bem.id);
+  const totalGasto=ev.reduce((a,e)=>a+(e.valor||0),0);
+  const media=totalGasto/_mesesDesde(bem.aquisicao);
+  const dep=bem.valorPago&&bem.valorAtual&&bem.valorPago>0?((bem.valorPago-bem.valorAtual)/bem.valorPago*100):null;
+  document.getElementById('bem-panel-resumo').innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px">
+    ${_resumoCard('NOME',esc(bem.nome))}
+    ${_resumoCard('TIPO',esc(bem.tipo))}
+    ${bem.marca?_resumoCard('MARCA',esc(bem.marca)):''}
+    ${bem.modelo?_resumoCard('MODELO',esc(bem.modelo)):''}
+    ${bem.ano?_resumoCard('ANO',''+bem.ano):''}
+    ${bem.cor?_resumoCard('COR',esc(bem.cor)):''}
+    ${bem.identificador?_resumoCard('IDENTIFICADOR',esc(bem.identificador)):''}
+    ${bem.aquisicao?_resumoCard('AQUISIÇÃO',_fmtData(bem.aquisicao)):''}
+    ${bem.valorPago?_resumoCard('VALOR PAGO',`<span style="color:var(--neon-blue)">${fmt(bem.valorPago)}</span>`):''}
+    ${bem.valorAtual?_resumoCard('VALOR ATUAL',`<span style="color:var(--neon-green)">${fmt(bem.valorAtual)}</span>`):''}
+    ${dep!==null?_resumoCard('DEPRECIAÇÃO',`<span style="color:var(--neon-red)">${dep.toFixed(1)}%</span>`):''}
+    ${_resumoCard('TOTAL GASTO',`<span style="color:var(--neon-yellow)">${fmt(totalGasto)}</span>`)}
+    ${_resumoCard('MÉDIA MENSAL',`<span style="color:var(--neon-yellow)">${fmt(media)}</span>`)}
+  </div>
+  ${bem.obs?`<div class="card" style="margin-bottom:16px"><div class="sec-title">OBSERVAÇÕES</div><div style="font-size:13px;color:var(--text2);margin-top:10px">${esc(bem.obs)}</div></div>`:''}
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)" onclick="editarBem(${bem.id})">✎ EDITAR BEM</button>
+    <button class="btn" style="color:var(--neon-red);border-color:rgba(255,68,68,0.3)" onclick="excluirBem(${bem.id})">🗑 EXCLUIR BEM</button>
+  </div>`;
+}
+
+// ── ABA 2: LINHA DO TEMPO ──
+function renderBemTimeline(bem){
+  const ev=getBensEventos().filter(e=>e.bemId===bem.id).sort((a,b)=>b.data.localeCompare(a.data));
+  if(ev.length===0){document.getElementById('bem-panel-timeline').innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px">Nenhum evento registrado ainda.</div>`;return;}
+  document.getElementById('bem-panel-timeline').innerHTML=`<div class="bem-timeline">${ev.map(e=>`
+  <div class="bem-evento">
+    <div class="bem-evento-icon ${_eventoCor(e.tipo)}">${_eventoIcone(e.tipo)}</div>
+    <div class="bem-evento-body">
+      <div class="bem-evento-header">
+        <span class="bem-evento-tipo" style="color:${_eventoTipoCor(e.tipo)}">${esc(e.tipo).toUpperCase()}</span>
+        <span class="bem-evento-data">${_fmtData(e.data)}</span>
+      </div>
+      <div class="bem-evento-desc">${esc(e.desc||'—')}</div>
+      ${e.local||e.contato?`<div class="bem-evento-meta">${[e.local,e.contato].filter(Boolean).map(s=>esc(s)).join(' · ')}</div>`:''}
+      <div class="bem-evento-footer">
+        <span class="bem-evento-val">${e.valor?fmt(e.valor):'Sem custo'}</span>
+        <div style="display:flex;gap:6px">
+          ${e.anexo?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" style="font-size:10px">📎 Comprovante</button>`:''}
+          <button class="btn btn-sm" onclick="excluirEventoBem(${e.id})" style="font-size:10px;color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕</button>
+        </div>
+      </div>
+    </div>
+  </div>`).join('')}</div>`;
+}
+
+// ── ABA 3: MANUTENÇÕES ──
+let _bemEvFiltroTipo='Todos',_bemEvFiltroPer='';
+function renderBemManutencoes(bem){
+  let ev=getBensEventos().filter(e=>e.bemId===bem.id);
+  if(_bemEvFiltroTipo!=='Todos')ev=ev.filter(e=>e.tipo===_bemEvFiltroTipo);
+  if(_bemEvFiltroPer)ev=ev.filter(e=>e.data&&e.data.startsWith(_bemEvFiltroPer));
+  ev.sort((a,b)=>b.data.localeCompare(a.data));
+  const tipoSel=_bemEvFiltroTipo;const perSel=_bemEvFiltroPer;
+  document.getElementById('bem-panel-manut').innerHTML=`
+  <div style="margin-bottom:16px"><button class="btn btn-green" onclick="abrirEventoModal()">+ REGISTRAR EVENTO</button></div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+    <select onchange="_bemEvFiltroTipo=this.value;switchBemTab('manut')" style="padding:7px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+      <option${tipoSel==='Todos'?' selected':''}>Todos</option>
+      <option${tipoSel==='Manutenção'?' selected':''}>Manutenção</option>
+      <option${tipoSel==='Vistoria'?' selected':''}>Vistoria</option>
+      <option${tipoSel==='Troca de Peça'?' selected':''}>Troca de Peça</option>
+      <option${tipoSel==='Revisão'?' selected':''}>Revisão</option>
+      <option${tipoSel==='Seguro'?' selected':''}>Seguro</option>
+      <option${tipoSel==='IPVA'?' selected':''}>IPVA</option>
+      <option${tipoSel==='IPTU'?' selected':''}>IPTU</option>
+      <option${tipoSel==='Outro'?' selected':''}>Outro</option>
+    </select>
+    <input type="month" value="${perSel}" onchange="_bemEvFiltroPer=this.value;switchBemTab('manut')"
+      style="padding:7px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+  </div>
+  ${ev.length===0?`<div style="text-align:center;padding:32px 0;color:var(--text3);font-size:13px">Nenhum evento encontrado.</div>`:`
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>DATA</th><th>TIPO</th><th>DESCRIÇÃO</th><th>LOCAL</th><th style="text-align:right">VALOR</th><th>PRÓXIMA</th><th></th></tr></thead>
+    <tbody>${ev.map(e=>`<tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${_fmtData(e.data)}</td>
+      <td><span class="badge badge-${_eventoBadgeCor(e.tipo)}">${esc(e.tipo)}</span></td>
+      <td>${esc(e.desc||'—')}</td>
+      <td style="font-size:11px;color:var(--text3)">${e.local?esc(e.local):'—'}</td>
+      <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
+      <td style="font-size:11px;color:var(--text3)">${e.proximaData?_fmtData(e.proximaData):'—'}</td>
+      <td style="white-space:nowrap">
+        ${e.anexo?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver" style="margin-right:4px">📎</button>`:''}
+        <button class="btn btn-sm" onclick="excluirEventoBem(${e.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`}`;
+}
+
+// ── ABA 4: KM E USO ──
+function renderBemKm(bem){
+  const reg=getBensKm().filter(k=>k.bemId===bem.id).sort((a,b)=>a.data.localeCompare(b.data));
+  const ev=getBensEventos().filter(e=>e.bemId===bem.id);
+  const totalGasto=ev.reduce((a,e)=>a+(e.valor||0),0);
+  const kmInicial=reg.length?reg[0].km:0;
+  const kmAtual=reg.length?reg[reg.length-1].km:0;
+  const kmTotal=kmAtual-kmInicial;
+  const mediaKm=kmTotal/_mesesDesde(bem.aquisicao);
+  const custoPorKm=kmTotal>0?totalGasto/kmTotal:0;
+  if(_chartBemKm){try{_chartBemKm.destroy();}catch(e){}_chartBemKm=null;}
+  document.getElementById('bem-panel-km').innerHTML=`
+  <div style="margin-bottom:16px"><button class="btn btn-green" onclick="abrirKmModal()">+ REGISTRAR KM</button></div>
+  <div class="bem-fin-cards">
+    <div class="bem-fin-card"><div class="bem-fin-card-label">KM TOTAL RODADO</div><div class="bem-fin-card-val" style="color:var(--neon-blue)">${kmTotal.toLocaleString('pt-BR')} km</div></div>
+    <div class="bem-fin-card"><div class="bem-fin-card-label">MÉDIA MENSAL</div><div class="bem-fin-card-val" style="color:var(--neon-blue)">${Math.round(mediaKm).toLocaleString('pt-BR')} km</div></div>
+    <div class="bem-fin-card"><div class="bem-fin-card-label">CUSTO POR KM</div><div class="bem-fin-card-val" style="color:var(--neon-yellow)">${custoPorKm.toFixed(2).replace('.',',')} R$/km</div></div>
+    <div class="bem-fin-card"><div class="bem-fin-card-label">KM ATUAL</div><div class="bem-fin-card-val">${kmAtual.toLocaleString('pt-BR')} km</div></div>
+  </div>
+  ${reg.length>1?`<div class="card" style="margin-bottom:20px"><div class="sec-title" style="margin-bottom:14px">EVOLUÇÃO DO KM</div><div style="height:180px"><canvas id="chartBemKm"></canvas></div></div>`:''}
+  ${reg.length?`<div class="tbl-wrap"><table><thead><tr><th>DATA</th><th style="text-align:right">KM</th><th>OBSERVAÇÃO</th><th></th></tr></thead>
+  <tbody>${[...reg].reverse().map(k=>`<tr>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${_fmtData(k.data)}</td>
+    <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">${k.km.toLocaleString('pt-BR')}</td>
+    <td style="font-size:11px;color:var(--text3)">${k.obs?esc(k.obs):'—'}</td>
+    <td><button class="btn btn-sm" onclick="excluirKmBem(${k.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕</button></td>
+  </tr>`).join('')}</tbody></table></div>`:`<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">Nenhum registro de KM ainda.</div>`}`;
+  if(reg.length>1){
+    setTimeout(()=>{
+      const el=document.getElementById('chartBemKm');if(!el)return;
+      _chartBemKm=new Chart(el,{type:'line',
+        data:{labels:reg.map(k=>_fmtData(k.data)),datasets:[{label:'KM',data:reg.map(k=>k.km),
+          borderColor:'#00c8ff',backgroundColor:_grad(el,'rgba(0,200,255,0.3)','rgba(0,200,255,0)'),
+          borderWidth:2.5,tension:0.4,fill:true,pointBackgroundColor:'#00c8ff',pointBorderColor:'var(--card)',pointBorderWidth:2,pointRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,animation:{duration:500},plugins:{legend:{display:false}},
+          scales:_scaleOpts(v=>v.toLocaleString('pt-BR')+' km')}});
+    },50);
+  }
+}
+
+// ── ABA 5: DOCUMENTOS ──
+function renderBemDocumentos(bem){
+  const docs=getBensDocumentos().filter(d=>d.bemId===bem.id);
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  document.getElementById('bem-panel-docs').innerHTML=`
+  <div style="margin-bottom:16px"><button class="btn btn-green" onclick="abrirDocModal()">+ CADASTRAR DOCUMENTO</button></div>
+  ${docs.length===0?`<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">Nenhum documento cadastrado.</div>`:`
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+    ${docs.map(d=>{
+      let sl='VÁLIDO',sc='bem-doc-valido',sb='rgba(0,255,157,0.08)';
+      if(d.validade){
+        const v=new Date(d.validade);v.setHours(0,0,0,0);
+        const df=Math.round((v-hoje)/(864e5));
+        if(df<0){sl='VENCIDO';sc='bem-doc-vencido';sb='rgba(255,68,68,0.08)';}
+        else if(df<=30){sl=`VENCENDO EM ${df} DIAS`;sc='bem-doc-vencendo';sb='rgba(255,215,0,0.08)';}
+      }
+      return`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">📄 ${esc(d.nome)}</div>
+          <span class="${sc}" style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;font-weight:700;background:${sb};padding:3px 8px;border-radius:6px">${sl}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">
+          ${d.emissao?`Emissão: ${_fmtData(d.emissao)}<br>`:''}${d.validade?`Validade: ${_fmtData(d.validade)}`:'Sem validade'}${d.obs?`<br>${esc(d.obs)}`:''}
+        </div>
+        <div style="display:flex;gap:8px">
+          ${d.anexo?`<button class="btn btn-sm" onclick="_verAnexoBemDoc(${d.id})">📎 Ver arquivo</button>`:''}
+          <button class="btn btn-sm" onclick="excluirDocBem(${d.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕ Excluir</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`}`;
+}
+
+// ── ABA 6: FINANCEIRO ──
+function renderBemFinanceiro(bem){
+  const ev=getBensEventos().filter(e=>e.bemId===bem.id);
+  const hoje=new Date();
+  const mesAtual=hoje.toISOString().substring(0,7);
+  const anoAtual=String(hoje.getFullYear());
+  const totalTodo=ev.reduce((a,e)=>a+(e.valor||0),0);
+  const totalMes=ev.filter(e=>e.data&&e.data.startsWith(mesAtual)).reduce((a,e)=>a+(e.valor||0),0);
+  const totalAno=ev.filter(e=>e.data&&e.data.startsWith(anoAtual)).reduce((a,e)=>a+(e.valor||0),0);
+  const media=totalTodo/_mesesDesde(bem.aquisicao);
+  const porCat={};ev.forEach(e=>{porCat[e.tipo]=(porCat[e.tipo]||0)+(e.valor||0);});
+  const mesesL=[],mesesV=[];
+  for(let i=11;i>=0;i--){
+    const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
+    const k=d.toISOString().substring(0,7);
+    mesesL.push(d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}));
+    mesesV.push(ev.filter(e=>e.data&&e.data.startsWith(k)).reduce((a,e)=>a+(e.valor||0),0));
+  }
+  if(_chartBemPizza){try{_chartBemPizza.destroy();}catch(e){}_chartBemPizza=null;}
+  if(_chartBemBarras){try{_chartBemBarras.destroy();}catch(e){}_chartBemBarras=null;}
+  document.getElementById('bem-panel-financeiro').innerHTML=`
+  <div class="bem-fin-cards">
+    <div class="bem-fin-card"><div class="bem-fin-card-label">TOTAL GASTO</div><div class="bem-fin-card-val" style="color:var(--neon-green)">${fmt(totalTodo)}</div></div>
+    <div class="bem-fin-card"><div class="bem-fin-card-label">ESTE MÊS</div><div class="bem-fin-card-val" style="color:var(--neon-blue)">${fmt(totalMes)}</div></div>
+    <div class="bem-fin-card"><div class="bem-fin-card-label">ESTE ANO</div><div class="bem-fin-card-val" style="color:var(--neon-yellow)">${fmt(totalAno)}</div></div>
+    <div class="bem-fin-card"><div class="bem-fin-card-label">MÉDIA MENSAL</div><div class="bem-fin-card-val">${fmt(media)}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card"><div class="sec-title" style="margin-bottom:14px">POR CATEGORIA</div><div style="height:180px"><canvas id="chartBemPizza"></canvas></div></div>
+    <div class="card"><div class="sec-title" style="margin-bottom:14px">GASTOS MENSAIS</div><div style="height:180px"><canvas id="chartBemBarras"></canvas></div></div>
+  </div>
+  ${ev.length?`<div class="tbl-wrap"><table><thead><tr><th>DATA</th><th>TIPO</th><th>DESCRIÇÃO</th><th style="text-align:right">VALOR</th></tr></thead>
+  <tbody>${[...ev].sort((a,b)=>b.data.localeCompare(a.data)).map(e=>`<tr>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${_fmtData(e.data)}</td>
+    <td><span class="badge badge-${_eventoBadgeCor(e.tipo)}">${esc(e.tipo)}</span></td>
+    <td>${esc(e.desc||'—')}</td>
+    <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
+  </tr>`).join('')}</tbody></table></div>`:''}`;
+  const catColors=['#00ff9d','#00c8ff','#a855f7','#ffd700','#ff4444','#ff8c00','#1effe4'];
+  setTimeout(()=>{
+    const pe=document.getElementById('chartBemPizza');
+    if(pe&&Object.keys(porCat).length){
+      _chartBemPizza=new Chart(pe,{type:'doughnut',
+        data:{labels:Object.keys(porCat),datasets:[{data:Object.values(porCat),
+          backgroundColor:catColors.slice(0,Object.keys(porCat).length),borderWidth:2,borderColor:'var(--card)',borderRadius:3}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'65%',animation:{duration:500},
+          plugins:{legend:{display:true,position:'bottom',labels:{color:'#7aa8cc',font:{size:10,family:"'JetBrains Mono',monospace"},boxWidth:8,padding:8}}}}});
+    }
+    const be=document.getElementById('chartBemBarras');
+    if(be){
+      _chartBemBarras=new Chart(be,{type:'bar',
+        data:{labels:mesesL,datasets:[{label:'Gastos',data:mesesV,backgroundColor:'rgba(0,200,255,0.22)',borderColor:'#00c8ff',borderWidth:1.5,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,animation:{duration:500},plugins:{legend:{display:false}},
+          scales:_scaleOpts(v=>v===0?'R$0':'R$'+v.toLocaleString('pt-BR',{maximumFractionDigits:0}))}});
+    }
+  },50);
+}
+
+// ── ABA 7: RELATÓRIO ──
+function renderBemRelatorio(bem){
+  const ev=getBensEventos().filter(e=>e.bemId===bem.id).sort((a,b)=>b.data.localeCompare(a.data));
+  const docs=getBensDocumentos().filter(d=>d.bemId===bem.id);
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const totalGasto=ev.reduce((a,e)=>a+(e.valor||0),0);
+  const top3=[...ev].filter(e=>e.valor>0).sort((a,b)=>b.valor-a.valor).slice(0,3);
+  const docsVenc=docs.filter(d=>{
+    if(!d.validade)return false;
+    const v=new Date(d.validade);v.setHours(0,0,0,0);
+    return Math.round((v-hoje)/(864e5))<=30;
+  });
+  const proxManuts=ev.filter(e=>e.proximaData).map(e=>{
+    const p=new Date(e.proximaData);p.setHours(0,0,0,0);
+    return{...e,diff:Math.round((p-hoje)/(864e5))};
+  }).filter(e=>e.diff>=0).sort((a,b)=>a.diff-b.diff).slice(0,5);
+  document.getElementById('bem-panel-relatorio').innerHTML=`
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+    <button class="btn" onclick="window.print()" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">📄 EXPORTAR PDF</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+    ${_resumoCard('BEM',esc(bem.nome))}${_resumoCard('TIPO',esc(bem.tipo))}
+    ${_resumoCard('TOTAL GASTO',`<span style="color:var(--neon-green)">${fmt(totalGasto)}</span>`)}
+    ${_resumoCard('Nº EVENTOS',''+ev.length)}${_resumoCard('DOCUMENTOS',''+docs.length)}
+  </div>
+  ${ev.length?`<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-bottom:14px">ÚLTIMOS 6 EVENTOS</div>
+  <div class="bem-timeline">${ev.slice(0,6).map(e=>`
+  <div class="bem-evento" style="padding:10px 12px">
+    <div class="bem-evento-icon ${_eventoCor(e.tipo)}" style="width:28px;height:28px;font-size:13px">${_eventoIcone(e.tipo)}</div>
+    <div class="bem-evento-body">
+      <div class="bem-evento-header"><span class="bem-evento-tipo" style="color:${_eventoTipoCor(e.tipo)}">${esc(e.tipo)}</span><span class="bem-evento-data">${_fmtData(e.data)}</span></div>
+      <div class="bem-evento-desc" style="font-size:12px">${esc(e.desc||'—')}</div>
+      <span class="bem-evento-val" style="font-size:12px">${fmt(e.valor||0)}</span>
+    </div>
+  </div>`).join('')}</div></div>`:''}
+  ${top3.length?`<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-bottom:12px">TOP 3 MAIORES GASTOS</div>
+  ${top3.map((e,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+    <div style="font-size:18px;font-weight:800;color:var(--text3);min-width:24px;text-align:center">${i+1}</div>
+    <div style="flex:1"><div style="font-size:13px;font-weight:700">${esc(e.desc||e.tipo)}</div><div style="font-size:11px;color:var(--text3)">${_fmtData(e.data)} · ${esc(e.tipo)}</div></div>
+    <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-red)">${fmt(e.valor)}</div>
+  </div>`).join('')}</div>`:''}
+  ${docsVenc.length?`<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-bottom:12px">⚠ DOCUMENTOS VENCENDO</div>
+  ${docsVenc.map(d=>{const v=new Date(d.validade);v.setHours(0,0,0,0);const df=Math.round((v-hoje)/(864e5));
+    return`<div class="alert ${df<0?'alert-red':'alert-yellow'}" style="margin-bottom:6px"><span class="alert-icon">📄</span><span>${esc(d.nome)} — ${df<0?'vencido há '+Math.abs(df)+' dias':'vence em '+df+' dias'}</span></div>`;
+  }).join('')}</div>`:''}
+  ${proxManuts.length?`<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-bottom:12px">🔧 PRÓXIMAS MANUTENÇÕES</div>
+  ${proxManuts.map(e=>`<div class="alert ${e.diff<=3?'alert-red':e.diff<=15?'alert-yellow':'alert-blue'}" style="margin-bottom:6px">
+    <span class="alert-icon">🔧</span><span>${esc(e.desc||e.tipo)} — em ${e.diff} dias (${_fmtData(e.proximaData)})</span>
+  </div>`).join('')}</div>`:''}`;
+}
+
+// ── MODAL BEM ──
+function abrirModalBem(id){
+  _bemEditId=id||null;
+  document.getElementById('bem-modal-title').textContent=id?'✎ EDITAR BEM':'◈ CADASTRAR BEM';
+  const campos=['nome','tipo','ano','marca','modelo','cor','identificador','aquisicao','obs'];
+  if(id){
+    const bem=getBens().find(b=>b.id===id);
+    if(bem){
+      campos.forEach(c=>{const el=document.getElementById('bem-f-'+c);if(el)el.value=bem[c]||'';});
+      document.getElementById('bem-f-valorPago').value=bem.valorPago?fmt(bem.valorPago):'';
+      document.getElementById('bem-f-valorAtual').value=bem.valorAtual?fmt(bem.valorAtual):'';
+    }
+  } else {
+    campos.forEach(c=>{const el=document.getElementById('bem-f-'+c);if(el)el.value='';});
+    document.getElementById('bem-f-valorPago').value='';
+    document.getElementById('bem-f-valorAtual').value='';
+  }
+  document.getElementById('bem-f-foto').value='';
+  _initMascaraOnce(document.getElementById('bem-f-valorPago'));
+  _initMascaraOnce(document.getElementById('bem-f-valorAtual'));
+  document.getElementById('bem-modal').style.display='flex';
+}
+
+function fecharModalBem(){document.getElementById('bem-modal').style.display='none';}
+
+function salvarBem(){
+  const nome=document.getElementById('bem-f-nome').value.trim();
+  if(!nome){alert('Informe o nome do bem.');return;}
+  const bens=getBens();
+  const fotoFile=document.getElementById('bem-f-foto').files[0];
+  const fotoAtual=_bemEditId?(bens.find(b=>b.id===_bemEditId)||{}).foto:null;
+  const _save=foto=>{
+    const obj={
+      id:_bemEditId||Date.now(),nome,
+      tipo:document.getElementById('bem-f-tipo').value,
+      marca:document.getElementById('bem-f-marca').value.trim(),
+      modelo:document.getElementById('bem-f-modelo').value.trim(),
+      ano:parseInt(document.getElementById('bem-f-ano').value)||'',
+      cor:document.getElementById('bem-f-cor').value.trim(),
+      identificador:document.getElementById('bem-f-identificador').value.trim(),
+      aquisicao:document.getElementById('bem-f-aquisicao').value,
+      valorPago:parseBRL(document.getElementById('bem-f-valorPago').value),
+      valorAtual:parseBRL(document.getElementById('bem-f-valorAtual').value),
+      obs:document.getElementById('bem-f-obs').value.trim(),
+      foto:foto||fotoAtual||null,
+    };
+    if(_bemEditId){const i=bens.findIndex(b=>b.id===_bemEditId);if(i>-1)bens[i]=obj;else bens.push(obj);}
+    else bens.push(obj);
+    setBens(bens);fecharModalBem();
+    if(_bemFichaId===obj.id){_renderFichaHeader(obj.id);switchBemTab('resumo');}
+    else renderBens();
+  };
+  if(fotoFile){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(fotoFile);}
+  else _save(null);
+}
+
+function editarBem(id){abrirModalBem(id);}
+
+function excluirBem(id){
+  const bem=getBens().find(b=>b.id===id);if(!bem)return;
+  showConfirm('Excluir Bem',`Excluir "${bem.nome}" e todos os seus dados?`,()=>{
+    setBens(getBens().filter(b=>b.id!==id));
+    setBensEventos(getBensEventos().filter(e=>e.bemId!==id));
+    setBensKm(getBensKm().filter(k=>k.bemId!==id));
+    setBensDocumentos(getBensDocumentos().filter(d=>d.bemId!==id));
+    voltarListaBens();
+  });
+}
+
+// ── MODAL EVENTO ──
+function abrirEventoModal(){
+  ['tipo','data','desc','local','contato','proxData','proxKm','garantia','obs'].forEach(c=>{
+    const el=document.getElementById('bev-f-'+c);if(el)el.value='';
+  });
+  document.getElementById('bev-f-valor').value='';
+  document.getElementById('bev-f-anexo').value='';
+  document.getElementById('bev-f-vincular').checked=false;
+  document.getElementById('bev-f-data').value=new Date().toISOString().slice(0,10);
+  _initMascaraOnce(document.getElementById('bev-f-valor'));
+  document.getElementById('bem-evento-modal').style.display='flex';
+}
+function fecharEventoModal(){document.getElementById('bem-evento-modal').style.display='none';}
+function salvarEventoBem(){
+  const data=document.getElementById('bev-f-data').value;
+  const desc=document.getElementById('bev-f-desc').value.trim();
+  if(!data){alert('Informe a data.');return;}
+  if(!desc){alert('Informe a descrição.');return;}
+  const valor=parseBRL(document.getElementById('bev-f-valor').value);
+  const vincular=document.getElementById('bev-f-vincular').checked;
+  const anexoFile=document.getElementById('bev-f-anexo').files[0];
+  const _save=anexo=>{
+    const obj={id:Date.now(),bemId:_bemFichaId,
+      tipo:document.getElementById('bev-f-tipo').value,data,desc,
+      local:document.getElementById('bev-f-local').value.trim(),
+      contato:document.getElementById('bev-f-contato').value.trim(),
+      valor,
+      proximaData:document.getElementById('bev-f-proxData').value||null,
+      proximaKm:parseInt(document.getElementById('bev-f-proxKm').value)||null,
+      garantiaAte:document.getElementById('bev-f-garantia').value||null,
+      anexo:anexo||null,
+      obs:document.getElementById('bev-f-obs').value.trim(),
+    };
+    const ev=getBensEventos();ev.push(obj);setBensEventos(ev);
+    if(vincular&&valor>0){
+      const all=getData('lancamentos');const sem=getSemanaFromData(data);
+      if(!all[sem])all[sem]=[];
+      all[sem].push({id:Date.now()+1,desc:`[BEM] ${desc}`,data,val:valor,cat:'Despesas Pessoais',forma:'outro'});
+      setData('lancamentos',all);
+    }
+    fecharEventoModal();_renderFichaHeader(_bemFichaId);switchBemTab('manut');
+  };
+  if(anexoFile){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(anexoFile);}
+  else _save(null);
+}
+function excluirEventoBem(id){
+  showConfirm('Excluir Evento','Remover este evento?',()=>{
+    setBensEventos(getBensEventos().filter(e=>e.id!==id));
+    _renderFichaHeader(_bemFichaId);switchBemTab(_bemTabAtiva);
+  });
+}
+
+// ── MODAL KM ──
+function abrirKmModal(){
+  document.getElementById('bkm-f-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('bkm-f-km').value='';
+  document.getElementById('bkm-f-obs').value='';
+  document.getElementById('bem-km-modal').style.display='flex';
+}
+function fecharKmModal(){document.getElementById('bem-km-modal').style.display='none';}
+function salvarKmBem(){
+  const data=document.getElementById('bkm-f-data').value;
+  const km=parseInt(document.getElementById('bkm-f-km').value);
+  if(!data||!km){alert('Informe data e KM.');return;}
+  const reg=getBensKm();
+  reg.push({id:Date.now(),bemId:_bemFichaId,data,km,obs:document.getElementById('bkm-f-obs').value.trim()});
+  setBensKm(reg);fecharKmModal();switchBemTab('km');
+}
+function excluirKmBem(id){
+  showConfirm('Excluir Registro','Remover este registro de KM?',()=>{setBensKm(getBensKm().filter(k=>k.id!==id));switchBemTab('km');});
+}
+
+// ── MODAL DOCUMENTO ──
+function abrirDocModal(){
+  ['nome','emissao','validade','obs'].forEach(c=>{const el=document.getElementById('bdoc-f-'+c);if(el)el.value='';});
+  document.getElementById('bdoc-f-arquivo').value='';
+  document.getElementById('bem-doc-modal').style.display='flex';
+}
+function fecharDocModal(){document.getElementById('bem-doc-modal').style.display='none';}
+function salvarDocumentoBem(){
+  const nome=document.getElementById('bdoc-f-nome').value.trim();
+  if(!nome){alert('Informe o nome do documento.');return;}
+  const arquivo=document.getElementById('bdoc-f-arquivo').files[0];
+  const _save=anexo=>{
+    const docs=getBensDocumentos();
+    docs.push({id:Date.now(),bemId:_bemFichaId,nome,
+      emissao:document.getElementById('bdoc-f-emissao').value,
+      validade:document.getElementById('bdoc-f-validade').value,
+      anexo:anexo||null,
+      obs:document.getElementById('bdoc-f-obs').value.trim()});
+    setBensDocumentos(docs);fecharDocModal();switchBemTab('docs');
+  };
+  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  else _save(null);
+}
+function excluirDocBem(id){
+  showConfirm('Excluir Documento','Remover este documento?',()=>{setBensDocumentos(getBensDocumentos().filter(d=>d.id!==id));switchBemTab('docs');});
+}
+
+// ── VER ANEXOS ──
+function _verAnexoBem(id){
+  const ev=getBensEventos().find(e=>e.id==id);if(!ev||!ev.anexo)return;
+  const w=window.open('');
+  w.document.write(ev.anexo.startsWith('data:application/pdf')
+    ?`<iframe src="${ev.anexo}" style="width:100%;height:100vh;border:none"></iframe>`
+    :`<img src="${ev.anexo}" style="max-width:100%;height:auto">`);
+  w.document.close();
+}
+function _verAnexoBemDoc(id){
+  const d=getBensDocumentos().find(x=>x.id==id);if(!d||!d.anexo)return;
+  const w=window.open('');
+  w.document.write(d.anexo.startsWith('data:application/pdf')
+    ?`<iframe src="${d.anexo}" style="width:100%;height:100vh;border:none"></iframe>`
+    :`<img src="${d.anexo}" style="max-width:100%;height:auto">`);
+  w.document.close();
 }
 </script>
 </body>

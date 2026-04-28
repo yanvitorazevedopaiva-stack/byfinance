@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyOS — Painel de Estudos 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root {
+  --bg: #f5f3ef;
+  --surface: #ffffff;
+  --surface2: #f0ede8;
+  --border: #e2ddd6;
+  --border2: #cdc8bf;
+  --ink: #1c1a17;
+  --ink2: #5a5650;
+  --ink3: #8c877f;
+  --accent: #1d3d2f;
+  --accent-light: #e8f0eb;
+  --accent-mid: #3a6b50;
+  --gold: #c9943a;
+  --gold-light: #fdf4e3;
+  --red: #9b2c2c;
+  --red-light: #fdeaea;
+  --blue: #1d3a5f;
+  --blue-light: #e8eef5;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── LAYOUT ── */
+.app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--accent);
+  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.logo {
+  padding: 0 24px 32px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.logo-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: 22px;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+.logo-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; }
+
+.nav { padding: 20px 12px; flex: 1; }
+.nav-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); padding: 0 12px; margin-bottom: 8px; margin-top: 16px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: rgba(255,255,255,0.6);
+  font-size: 13.5px;
+  font-weight: 400;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); }
+.nav-item.active { background: rgba(255,255,255,0.14); color: #fff; font-weight: 500; }
+.nav-icon { width: 18px; height: 18px; opacity: 0.7; flex-shrink: 0; }
+.nav-item.active .nav-icon { opacity: 1; }
+
+.sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1); }
+.sidebar-footer p { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+/* ── MAIN ── */
+.main { overflow-y: auto; }
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topbar-title { font-size: 15px; font-weight: 500; color: var(--ink); }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 40px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn:hover { background: var(--surface2); border-color: var(--border2); color: var(--ink); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-mid); border-color: var(--accent-mid); }
+.btn-ghost { border-color: transparent; }
+.btn-ghost:hover { background: var(--surface2); border-color: var(--border); }
+
+/* ── PAGES ── */
+.page { display: none; padding: 32px; animation: fadeUp 0.25s ease; }
+.page.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 28px; }
+.page-header h1 { font-family: 'Fraunces', serif; font-weight: 300; font-size: 28px; letter-spacing: -0.5px; color: var(--ink); }
+.page-header p { font-size: 13px; color: var(--ink3); margin-top: 4px; }
+
+/* ── STAT CARDS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  transition: box-shadow 0.2s;
+}
+.stat-card:hover { box-shadow: var(--shadow-lg); }
+.stat-card .label {
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-card .value {
+  font-family: 'DM Mono', monospace;
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1;
+}
+.stat-card .sub { font-size: 11px; color: var(--ink3); margin-top: 6px; }
+.stat-card.accent-card { background: var(--accent); border-color: var(--accent); }
+.stat-card.accent-card .label { color: rgba(255,255,255,0.5); }
+.stat-card.accent-card .value { color: #fff; }
+.stat-card.accent-card .sub { color: rgba(255,255,255,0.4); }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot-green { background: #3a6b50; }
+.dot-gold { background: #c9943a; }
+.dot-red { background: #9b2c2c; }
+.dot-blue { background: #1d3a5f; }
+
+/* ── CHARTS ── */
+.charts-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 24px; }
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+.chart-card-title { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+.chart-card-title span { font-size: 11px; color: var(--ink3); font-weight: 400; }
+
+canvas { max-height: 220px; }
+
+/* ── INSIGHTS ── */
+.insights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.insight-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.insight-card .ic-label { font-size: 11px; color: var(--ink3); margin-bottom: 6px; }
+.insight-card .ic-value { font-size: 15px; font-weight: 500; color: var(--ink); }
+.insight-card .ic-sub { font-size: 11px; color: var(--ink3); margin-top: 2px; }
+
+/* ── MATÉRIAS BREAKDOWN ── */
+.breakdown-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.breakdown-item:last-child { border-bottom: none; }
+.breakdown-name { flex: 1; font-size: 13px; color: var(--ink); }
+.breakdown-bar-wrap { flex: 2; height: 6px; background: var(--surface2); border-radius: 10px; overflow: hidden; }
+.breakdown-bar { height: 100%; background: var(--accent-mid); border-radius: 10px; transition: width 0.6s ease; }
+.breakdown-pct { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--ink2); min-width: 36px; text-align: right; }
+
+/* ── WEEK TABS ── */
+.week-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.week-chip {
+  padding: 6px 14px;
+  border-radius: 40px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink2);
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.week-chip:hover { border-color: var(--accent); color: var(--accent); }
+.week-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.week-chip-del {
+  padding: 6px 10px;
+  border-radius: 40px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--red-light);
+  background: var(--red-light);
+  color: var(--red);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.week-chip-del:hover { background: var(--red); color: #fff; }
+.week-pair { display: flex; gap: 4px; align-items: center; }
+
+/* ── TABLE ── */
+.table-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.study-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 1200px;
+}
+
+.study-table thead tr {
+  background: var(--accent);
+}
+.study-table th {
+  color: rgba(255,255,255,0.75);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 12px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.study-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.day-separator td {
+  background: var(--surface2);
+  font-weight: 600;
+  font-size: 11.5px;
+  color: var(--ink2);
+  padding: 10px 14px;
+  letter-spacing: 0.3px;
+}
+
+.row-today { background: #f4f8f5 !important; }
+
+.study-table input[type="text"],
+.study-table input[type="time"],
+.study-table input[type="date"] {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11.5px;
+  color: var(--ink);
+  background: transparent;
+  transition: all 0.15s;
+}
+.study-table input:hover { border-color: var(--border2); background: var(--surface2); }
+.study-table input:focus { border-color: var(--accent-mid); background: #fff; outline: none; }
+
+.study-table input[type="checkbox"] {
+  width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); display: block; margin: 0 auto;
+}
+
+.act-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.act-revisar { background: var(--blue-light); color: var(--blue); }
+.act-conteudo { background: var(--accent-light); color: var(--accent); }
+.act-questoes { background: var(--gold-light); color: var(--gold); }
+.act-intervalo { background: var(--surface2); color: var(--ink3); }
+
+.note-btn {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 500;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.note-btn:hover { border-color: var(--accent); color: var(--accent); }
+.note-btn.has-notes { border-color: var(--gold); color: var(--gold); background: var(--gold-light); }
+
+.rev-date { font-family: 'DM Mono', monospace; font-size: 10.5px; color: var(--ink3); }
+.rev-late { color: var(--red); }
+
+/* ── PROGRESS RING ── */
+.progress-ring-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-label { font-size: 11px; color: var(--ink3); margin-top: 8px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20,18,14,0.5);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 28px;
+  width: 480px;
+  max-width: calc(100vw - 32px);
+  box-shadow: var(--shadow-lg);
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-title { font-size: 15px; font-weight: 500; }
+.modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--ink3); padding: 4px; }
+.modal textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  resize: vertical;
+  background: var(--surface2);
+}
+.modal textarea:focus { outline: none; border-color: var(--accent-mid); background: #fff; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--accent);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 40px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.25s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 48px 24px; color: var(--ink3); font-size: 14px; }
+
+/* ── SEMANA CONFIG ── */
+.config-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.config-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.config-field { display: flex; flex-direction: column; gap: 6px; }
+.config-label { font-size: 11px; color: var(--ink3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+.config-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface2);
+}
+.config-input:focus { outline: none; border-color: var(--accent-mid); background: #fff; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+  .insights-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-title">StudyOS</div>
+      <div class="logo-sub">Painel de Estudos · 2025</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Visão Geral</div>
+      <button class="nav-item active" data-page="dashboard">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-page="planilha">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        Planilha Semanal
+      </button>
+      <div class="nav-label">Análise</div>
+      <button class="nav-item" data-page="materias">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-6"/></svg>
+        Por Matéria
+      </button>
+      <button class="nav-item" data-page="revisoes">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Revisões
+      </button>
+    </nav>
+    <div class="sidebar-footer"><p id="sidebarDate">—</p></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn" id="btnSave">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar
+        </button>
+        <button class="btn" id="btnCSV">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          CSV
+        </button>
+        <button class="btn btn-primary" id="btnPDF">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v11a2 2 0 01-2 2z"/></svg>
+          PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE: DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1>Visão Geral</h1>
+        <p id="dashWeekLabel">Semana atual — carregando...</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card accent-card">
+          <div class="label">⏱ Total de horas</div>
+          <div class="value" id="s-horas">0<span style="font-size:16px;opacity:.5">h</span></div>
+          <div class="sub">Atividades concluídas</div>
+        </div>
+        <div class="stat-card">
+          <div class="label"><span class="dot dot-gold"></span> Questões respondidas</div>
+          <div class="value" id="s-quest">0</div>
+          <div class="sub">Sessões de questões</div>
+        </div>
+        <div class="stat-card">
+          <div class="label"><span class="dot dot-green"></span> Taxa de acerto</div>
+          <div class="value" id="s-taxa">—</div>
+          <div class="sub" id="s-taxa-sub">Sem dados</div>
+        </div>
+        <div class="stat-card">
+          <div class="label"><span class="dot dot-blue"></span> Revisões pendentes</div>
+          <div class="value" id="s-rev">0</div>
+          <div class="sub">15d + 30d em aberto</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label"><span class="dot dot-green"></span> Conteúdo novo</div>
+          <div class="value" id="s-novo">0<span style="font-size:16px;opacity:.5">h</span></div>
+          <div class="sub">Horas de aprendizado</div>
+        </div>
+        <div class="stat-card">
+          <div class="label"><span class="dot dot-blue"></span> Revisão ativa</div>
+          <div class="value" id="s-rev-h">0<span style="font-size:16px;opacity:.5">h</span></div>
+          <div class="sub">Horas revisando</div>
+        </div>
+        <div class="stat-card">
+          <div class="label"><span class="dot dot-green"></span> Acertos</div>
+          <div class="value" id="s-acertos">0</div>
+          <div class="sub">Questões corretas</div>
+        </div>
+        <div class="stat-card">
+          <div class="label"><span class="dot dot-red"></span> Erros</div>
+          <div class="value" id="s-erros">0</div>
+          <div class="sub">Questões incorretas</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-title">Horas estudadas por dia <span id="chartWeekName"></span></div>
+          <canvas id="chartHoras"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Desempenho em questões <span></span></div>
+          <canvas id="chartQuestoes"></canvas>
+        </div>
+      </div>
+
+      <div class="insights-grid">
+        <div class="insight-card">
+          <div class="ic-label">🏆 Melhor dia (acertos)</div>
+          <div class="ic-value" id="i-bestday">—</div>
+          <div class="ic-sub" id="i-bestday-sub">—</div>
+        </div>
+        <div class="insight-card">
+          <div class="ic-label">⚠️ Dia mais fraco</div>
+          <div class="ic-value" id="i-worstday">—</div>
+          <div class="ic-sub" id="i-worstday-sub">—</div>
+        </div>
+        <div class="insight-card">
+          <div class="ic-label">⏰ Dia mais produtivo</div>
+          <div class="ic-value" id="i-maxday">—</div>
+          <div class="ic-sub" id="i-maxday-sub">—</div>
+        </div>
+        <div class="insight-card">
+          <div class="ic-label">📚 Melhor matéria</div>
+          <div class="ic-value" id="i-bestmat">—</div>
+          <div class="ic-sub" id="i-bestmat-sub">—</div>
+        </div>
+        <div class="insight-card">
+          <div class="ic-label">📌 Matéria a reforçar</div>
+          <div class="ic-value" id="i-worstmat">—</div>
+          <div class="ic-sub" id="i-worstmat-sub">—</div>
+        </div>
+        <div class="insight-card">
+          <div class="ic-label">📅 Semanas registradas</div>
+          <div class="ic-value" id="i-weeks">—</div>
+          <div class="ic-sub">Histórico total</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: PLANILHA -->
+    <div class="page" id="page-planilha">
+      <div class="page-header">
+        <h1>Planilha Semanal</h1>
+        <p>Registre cada sessão de estudo, horário e desempenho</p>
+      </div>
+
+      <div class="week-bar" id="weekBar">
+        <button class="btn btn-ghost" id="btnAddWeek">+ Nova semana</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <div class="table-wrapper">
+          <table class="study-table" id="studyTable">
+            <thead>
+              <tr>
+                <th style="min-width:110px">Atividade</th>
+                <th style="width:36px;text-align:center">✓</th>
+                <th style="min-width:72px">Horário</th>
+                <th style="min-width:160px">Aula / Descrição</th>
+                <th style="min-width:60px">Minutos</th>
+                <th style="min-width:110px">Data</th>
+                <th style="min-width:170px">Observações (Acertos/Erros)</th>
+                <th style="min-width:90px">Rev. 15d</th>
+                <th style="width:36px;text-align:center">✓</th>
+                <th style="min-width:90px">Rev. 30d</th>
+                <th style="width:36px;text-align:center">✓</th>
+                <th style="min-width:90px">Questões</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--ink3);margin-top:12px;padding:0 4px;">💡 Formato de observações: "Acertos 8 / Erros 2" ou "8/2"</p>
+    </div>
+
+    <!-- PAGE: MATÉRIAS -->
+    <div class="page" id="page-materias">
+      <div class="page-header">
+        <h1>Análise por Matéria</h1>
+        <p>Distribuição de acertos e horas por conteúdo</p>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-title">Horas por matéria</div>
+          <canvas id="chartMateriaHoras"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Taxa de acerto por matéria</div>
+          <canvas id="chartMateriaAcerto"></canvas>
+        </div>
+      </div>
+
+      <div class="breakdown-card">
+        <div class="chart-card-title" style="margin-bottom:16px">Ranking de desempenho</div>
+        <div id="breakdownList"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: REVISÕES -->
+    <div class="page" id="page-revisoes">
+      <div class="page-header">
+        <h1>Revisões Programadas</h1>
+        <p>Controle de revisões espaçadas (15 e 30 dias)</p>
+      </div>
+      <div id="revisoesContent"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL NOTAS -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Questões erradas</div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <textarea id="modalTextarea" placeholder="Registre as questões que errou, comandos principais, conceitos…"></textarea>
+    <div class="modal-footer">
+      <button class="btn" id="modalCancel">Cancelar</button>
+      <button class="btn btn-primary" id="modalSave">Salvar nota</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DAYS = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
+const ACTIVITIES = ["Conteúdo Novo","Revisar","Questões","Intervalo","Conteúdo Novo"];
+const DEFAULT_TIMES = ["19:00","19:25","19:50","20:15","20:30"];
+const DEFAULT_MINS = ["25","25","25","10","20"];
+
+let weeksData = [];
+let currentWeekIdx = 0;
+let notesCtx = null;
+let charts = {};
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+function monday(from = new Date()) {
+  let d = new Date(from);
+  let day = d.getDay();
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+  return d.toISOString().slice(0,10);
+}
+
+function addDays(dateStr, n) {
+  let d = new Date(dateStr + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
+}
+
+function fmtDate(dateStr) {
+  if(!dateStr) return "—";
+  let [y,m,d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function createRows(monStr) {
+  let rows = [];
+  DAYS.forEach((day, di) => {
+    let dayDate = addDays(monStr, di);
+    ACTIVITIES.forEach((act, ai) => {
+      rows.push({
+        id: `${day}_${ai}`,
+        day, act,
+        check: false,
+        horario: DEFAULT_TIMES[ai],
+        aulaDesc: "",
+        minuto: DEFAULT_MINS[ai],
+        dataAtividade: dayDate,
+        observacoes: "",
+        rev15done: false,
+        rev30done: false,
+        notes: ""
+      });
+    });
+  });
+  return rows;
+}
+
+function createWeek(idx, monStr) {
+  let mon = monStr || monday();
+  let [y,m,d] = mon.split("-");
+  return {
+    id: "w" + Date.now() + idx,
+    name: `Sem. ${d}/${m}`,
+    monStr: mon,
+    rows: createRows(mon)
+  };
+}
+
+function load() {
+  try {
+    let s = localStorage.getItem("studyos_v2");
+    if(s) { let p = JSON.parse(s); if(p && p.length) { weeksData = p; return; } }
+  } catch(e) {}
+  weeksData = [createWeek(0)];
+}
+
+function save() {
+  localStorage.setItem("studyos_v2", JSON.stringify(weeksData));
+  showToast("✓ Dados salvos");
+}
+
+function showToast(msg) {
+  let t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+function parseObs(obs) {
+  if(!obs) return {a:0,e:0};
+  let a=0,e=0;
+  let m1 = obs.match(/(\d+)\s*[\/\-]\s*(\d+)/);
+  if(m1) { a=+m1[1]; e=+m1[2]; return {a,e}; }
+  let ma = obs.match(/acertos?\s*[:\s]?\s*(\d+)/i) || obs.match(/certas?\s*[:\s]?\s*(\d+)/i) || obs.match(/(\d+)\s*acertos?/i);
+  if(ma) a=+ma[1];
+  let me = obs.match(/erros?\s*[:\s]?\s*(\d+)/i) || obs.match(/erradas?\s*[:\s]?\s*(\d+)/i) || obs.match(/(\d+)\s*erros?/i);
+  if(me) e=+me[1];
+  return {a,e};
+}
+
+function getMinutos(row) {
+  if(!row.check) return 0;
+  let v = parseInt(row.minuto);
+  return isNaN(v) ? 0 : v;
+}
+
+function actClass(act) {
+  if(act === "Revisar") return "act-revisar";
+  if(act === "Conteúdo Novo") return "act-conteudo";
+  if(act === "Questões") return "act-questoes";
+  return "act-intervalo";
+}
+
+// ── WEEK BAR ──
+function renderWeekBar() {
+  let bar = document.getElementById("weekBar");
+  bar.innerHTML = "";
+  weeksData.forEach((w, idx) => {
+    let pair = document.createElement("div");
+    pair.className = "week-pair";
+    let chip = document.createElement("button");
+    chip.className = "week-chip" + (idx === currentWeekIdx ? " active" : "");
+    chip.textContent = w.name;
+    chip.onclick = () => { currentWeekIdx = idx; renderAll(); };
+    let del = document.createElement("button");
+    del.className = "week-chip-del";
+    del.textContent = "✕";
+    del.onclick = (e) => {
+      e.stopPropagation();
+      if(!confirm(`Apagar "${w.name}"?`)) return;
+      weeksData.splice(idx,1);
+      if(!weeksData.length) weeksData = [createWeek(0)];
+      if(currentWeekIdx >= weeksData.length) currentWeekIdx = weeksData.length-1;
+      save(); renderAll();
+    };
+    pair.append(chip, del);
+    bar.appendChild(pair);
+  });
+  let addBtn = document.createElement("button");
+  addBtn.className = "btn btn-ghost";
+  addBtn.style.fontSize = "12px";
+  addBtn.textContent = "+ Nova semana";
+  addBtn.id = "btnAddWeek";
+  addBtn.onclick = addWeek;
+  bar.appendChild(addBtn);
+}
+
+function addWeek() {
+  let lastMon = weeksData.length ? weeksData[weeksData.length-1].monStr : monday();
+  let newMon = addDays(lastMon, 7);
+  weeksData.push(createWeek(weeksData.length, newMon));
+  currentWeekIdx = weeksData.length-1;
+  save(); renderAll();
+}
+
+// ── TABLE ──
+function renderTable() {
+  if(!weeksData.length) return;
+  let week = weeksData[currentWeekIdx];
+  let tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
+  let currDay = "";
+  let td = today();
+
+  week.rows.forEach((row, idx) => {
+    if(row.day !== currDay) {
+      currDay = row.day;
+      let sep = document.createElement("tr");
+      sep.className = "day-separator";
+      let td_sep = document.createElement("td");
+      td_sep.colSpan = 12;
+      td_sep.innerHTML = `<span>${row.day}</span> <span style="font-weight:400;color:var(--ink3);font-size:11px;font-family:'DM Mono',monospace;margin-left:8px">${fmtDate(row.dataAtividade)}</span>`;
+      sep.appendChild(td_sep);
+      tbody.appendChild(sep);
+    }
+
+    let tr = document.createElement("tr");
+    if(row.dataAtividade === td) tr.classList.add("row-today");
+
+    // Atividade (badge)
+    let tdAct = document.createElement("td");
+    let sel = document.createElement("select");
+    sel.style.cssText = "border:1px solid transparent;border-radius:8px;padding:4px 6px;font-size:11px;font-family:'DM Sans',sans-serif;background:transparent;cursor:pointer;color:var(--ink);width:100%;";
+    ["Conteúdo Novo","Revisar","Questões","Intervalo"].forEach(a => {
+      let opt = document.createElement("option");
+      opt.value = a; opt.textContent = a;
+      if(a === row.act) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener("change", e => { week.rows[idx].act = e.target.value; updateDashboard(); });
+    tdAct.appendChild(sel);
+
+    // Check
+    let tdChk = document.createElement("td"); tdChk.style.textAlign="center";
+    let chk = document.createElement("input"); chk.type="checkbox"; chk.checked=row.check;
+    chk.addEventListener("change", e => { week.rows[idx].check=e.target.checked; updateDashboard(); });
+    tdChk.appendChild(chk);
+
+    // Horário
+    let tdHor = makeInput(row.horario, "time", v => week.rows[idx].horario=v);
+    // Aula
+    let tdAula = makeInput(row.aulaDesc, "text", v => { week.rows[idx].aulaDesc=v; updateDashboard(); });
+    tdAula.querySelector("input").placeholder = "Matéria / tema...";
+    // Minuto
+    let tdMin = makeInput(row.minuto, "text", v => { week.rows[idx].minuto=v; updateDashboard(); });
+    tdMin.querySelector("input").placeholder = "min";
+    // Data
+    let tdData = makeInput(row.dataAtividade, "date", v => { week.rows[idx].dataAtividade=v; renderTable(); updateDashboard(); });
+    // Obs
+    let tdObs = makeInput(row.observacoes, "text", v => { week.rows[idx].observacoes=v; updateDashboard(); });
+    tdObs.querySelector("input").placeholder = "Ex: 8/2 ou 8 acertos 2 erros";
+
+    // Rev 15
+    let r15 = row.dataAtividade ? addDays(row.dataAtividade, 15) : null;
+    let tdR15 = document.createElement("td");
+    let r15span = document.createElement("span");
+    r15span.className = "rev-date" + (r15 && r15 < td && !row.rev15done ? " rev-late" : "");
+    r15span.textContent = r15 ? fmtDate(r15) : "—";
+    tdR15.appendChild(r15span);
+
+    let tdR15Chk = document.createElement("td"); tdR15Chk.style.textAlign="center";
+    let chk15 = document.createElement("input"); chk15.type="checkbox"; chk15.checked=row.rev15done;
+    chk15.addEventListener("change", e => { week.rows[idx].rev15done=e.target.checked; updateDashboard(); });
+    tdR15Chk.appendChild(chk15);
+
+    // Rev 30
+    let r30 = row.dataAtividade ? addDays(row.dataAtividade, 30) : null;
+    let tdR30 = document.createElement("td");
+    let r30span = document.createElement("span");
+    r30span.className = "rev-date" + (r30 && r30 < td && !row.rev30done ? " rev-late" : "");
+    r30span.textContent = r30 ? fmtDate(r30) : "—";
+    tdR30.appendChild(r30span);
+
+    let tdR30Chk = document.createElement("td"); tdR30Chk.style.textAlign="center";
+    let chk30 = document.createElement("input"); chk30.type="checkbox"; chk30.checked=row.rev30done;
+    chk30.addEventListener("change", e => { week.rows[idx].rev30done=e.target.checked; updateDashboard(); });
+    tdR30Chk.appendChild(chk30);
+
+    // Notes
+    let tdNotes = document.createElement("td");
+    noteBtn.className = "note-btn" + (row.notes ? " has-notes" : "");
+    noteBtn.textContent = row.notes ? "✎ Ver notas" : "+ Notas";
+    noteBtn.onclick = () => openModal(currentWeekIdx, idx);
+    tdNotes.appendChild(noteBtn);
+
+    tr.append(tdAct, tdChk, tdHor, tdAula, tdMin, tdData, tdObs, tdR15, tdR15Chk, tdR30, tdR30Chk, tdNotes);
+    tbody.appendChild(tr);
+  });
+}
+
+function makeInput(val, type, onChange) {
+  let td = document.createElement("td");
+  let inp = document.createElement("input");
+  inp.type = type;
+  inp.value = val || "";
+  inp.addEventListener("change", e => onChange(e.target.value));
+  td.appendChild(inp);
+  return td;
+}
+
+// ── DASHBOARD ──
+function buildDashData() {
+  if(!weeksData.length) return {};
+  let week = weeksData[currentWeekIdx];
+  let totalMin=0, revMin=0, newMin=0;
+  let totQ=0, totA=0, totE=0;
+  let pendRev=0;
+  let dayHours={}, dayA={}, dayE={};
+  let matA={}, matE={}, matH={};
+  let td = today();
+
+  DAYS.forEach(d => { dayHours[d]=0; dayA[d]=0; dayE[d]=0; });
+
+  week.rows.forEach(row => {
+    let mins = getMinutos(row);
+    totalMin += mins;
+    if(row.act==="Revisar") revMin += mins;
+    if(row.act==="Conteúdo Novo") newMin += mins;
+    dayHours[row.day] += mins;
+
+    if(row.act==="Questões" && row.check) {
+      let {a,e} = parseObs(row.observacoes);
+      totQ += a+e; totA += a; totE += e;
+      dayA[row.day] += a; dayE[row.day] += e;
+      let mat = row.aulaDesc || "Sem matéria";
+      if(!matA[mat]) { matA[mat]=0; matE[mat]=0; }
+      matA[mat]+=a; matE[mat]+=e;
+    }
+    if(row.act !== "Intervalo") {
+      if(row.dataAtividade) {
+        let r15 = addDays(row.dataAtividade, 15);
+        let r30 = addDays(row.dataAtividade, 30);
+        if(!row.rev15done && r15 <= td) pendRev++;
+        if(!row.rev30done && r30 <= td) pendRev++;
+      }
+    }
+    if(row.act !== "Intervalo" && row.aulaDesc) {
+      let mat = row.aulaDesc;
+      if(!matH[mat]) matH[mat]=0;
+      matH[mat] += mins;
+    }
+  });
+
+  return { totalMin, revMin, newMin, totQ, totA, totE, pendRev, dayHours, dayA, dayE, matA, matE, matH };
+}
+
+function updateDashboard() {
+  let d = buildDashData();
+  if(!d.totalMin && d.totalMin !== 0) return;
+
+  let taxa = d.totQ > 0 ? Math.round((d.totA/d.totQ)*100) : null;
+
+  document.getElementById("s-horas").innerHTML = (d.totalMin/60).toFixed(1)+'<span style="font-size:16px;opacity:.5">h</span>';
+  document.getElementById("s-quest").textContent = d.totQ;
+  document.getElementById("s-taxa").textContent = taxa !== null ? taxa+"%" : "—";
+  document.getElementById("s-taxa-sub").textContent = taxa !== null ? `${d.totA} acertos de ${d.totQ}` : "Sem questões";
+  document.getElementById("s-rev").textContent = d.pendRev;
+  document.getElementById("s-novo").innerHTML = (d.newMin/60).toFixed(1)+'<span style="font-size:16px;opacity:.5">h</span>';
+  document.getElementById("s-rev-h").innerHTML = (d.revMin/60).toFixed(1)+'<span style="font-size:16px;opacity:.5">h</span>';
+  document.getElementById("s-acertos").textContent = d.totA;
+  document.getElementById("s-erros").textContent = d.totE;
+
+  // Insights
+  let bestDay=null, bestDA=-1, worstDay=null, worstDA=Infinity, maxDay=null, maxH=0;
+  DAYS.forEach(dy => {
+    if((d.dayA[dy]||0) > bestDA) { bestDA=d.dayA[dy]||0; bestDay=dy; }
+    if((d.dayA[dy]||0)+(d.dayE[dy]||0)>0 && (d.dayA[dy]||0) < worstDA) { worstDA=d.dayA[dy]||0; worstDay=dy; }
+    if((d.dayHours[dy]||0) > maxH) { maxH=d.dayHours[dy]||0; maxDay=dy; }
+  });
+  document.getElementById("i-bestday").textContent = bestDay || "—";
+  document.getElementById("i-bestday-sub").textContent = bestDA > 0 ? `${bestDA} acertos` : "Sem dados";
+  document.getElementById("i-worstday").textContent = worstDay || "—";
+  document.getElementById("i-worstday-sub").textContent = worstDA < Infinity ? `${worstDA} acertos` : "Sem dados";
+  document.getElementById("i-maxday").textContent = maxDay || "—";
+  document.getElementById("i-maxday-sub").textContent = maxH > 0 ? `${(maxH/60).toFixed(1)}h estudadas` : "Sem dados";
+
+  let mats = Object.keys(d.matA);
+  let bestMat=null, bestPct=-1, worstMat=null, worstPct=Infinity;
+  mats.forEach(m => {
+    let tot = (d.matA[m]||0)+(d.matE[m]||0);
+    if(tot === 0) return;
+    let pct = Math.round((d.matA[m]/tot)*100);
+    if(pct > bestPct) { bestPct=pct; bestMat=m; }
+    if(pct < worstPct) { worstPct=pct; worstMat=m; }
+  });
+  document.getElementById("i-bestmat").textContent = bestMat || "—";
+  document.getElementById("i-bestmat-sub").textContent = bestMat ? `${bestPct}% de acerto` : "Sem dados";
+  document.getElementById("i-worstmat").textContent = worstMat || "—";
+  document.getElementById("i-worstmat-sub").textContent = worstMat ? `${worstPct}% de acerto` : "—";
+  document.getElementById("i-weeks").textContent = weeksData.length;
+
+  let week = weeksData[currentWeekIdx];
+  document.getElementById("dashWeekLabel").textContent = `${week.name} · ${fmtDate(week.monStr)} → ${fmtDate(addDays(week.monStr,6))}`;
+  document.getElementById("chartWeekName").textContent = week.name;
+
+  // Charts
+  renderChartHoras(d);
+  renderChartQuestoes(d);
+  renderMateriasPage(d);
+  renderRevisoesPage();
+}
+
+function renderChartHoras(d) {
+  let ctx = document.getElementById("chartHoras");
+  if(charts.horas) charts.horas.destroy();
+  let labels = DAYS.map(dy => dy.slice(0,3));
+  let data = DAYS.map(dy => +((d.dayHours[dy]||0)/60).toFixed(2));
+  charts.horas = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Horas",
+        data,
+        backgroundColor: DAYS.map((_, i) => i === DAYS.findIndex(dy => addDays(weeksData[currentWeekIdx].monStr,DAYS.indexOf(dy)) === today()) ? "#c9943a" : "#1d3d2f"),
+        borderRadius: 8,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { family: "DM Mono", size: 10 }, color: "#8c877f" } },
+        x: { grid: { display: false }, ticks: { font: { family: "DM Sans", size: 11 }, color: "#5a5650" } }
+      }
+    }
+  });
+}
+
+function renderChartQuestoes(d) {
+  let ctx = document.getElementById("chartQuestoes");
+  if(charts.questoes) charts.questoes.destroy();
+  if(d.totA === 0 && d.totE === 0) return;
+  charts.questoes = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Acertos", "Erros"],
+      datasets: [{
+        data: [d.totA, d.totE],
+        backgroundColor: ["#3a6b50", "#9b2c2c"],
+        borderWidth: 0,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: "68%",
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { font: { family: "DM Sans", size: 11 }, color: "#5a5650", padding: 16, boxWidth: 10 }
+        }
+      }
+    }
+  });
+}
+
+function renderMateriasPage(d) {
+  let mats = Object.keys(d.matH).sort((a,b) => (d.matH[b]||0)-(d.matH[a]||0));
+  let maxH = Math.max(...mats.map(m => d.matH[m]||0), 1);
+
+  // Chart horas por matéria
+  let ctx1 = document.getElementById("chartMateriaHoras");
+  if(charts.matH) charts.matH.destroy();
+  if(mats.length) {
+    charts.matH = new Chart(ctx1, {
+      type: "bar",
+      data: {
+        labels: mats.slice(0,8),
+        datasets: [{
+          data: mats.slice(0,8).map(m => +((d.matH[m]||0)/60).toFixed(2)),
+          backgroundColor: "#1d3d2f",
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { family: "DM Mono", size: 10 }, color: "#8c877f" } },
+          y: { grid: { display: false }, ticks: { font: { family: "DM Sans", size: 11 }, color: "#5a5650" } }
+        }
+      }
+    });
+  }
+
+  // Chart taxa por matéria
+  let matsList = Object.keys(d.matA).filter(m => (d.matA[m]||0)+(d.matE[m]||0)>0);
+  let ctx2 = document.getElementById("chartMateriaAcerto");
+  if(charts.matA) charts.matA.destroy();
+  if(matsList.length) {
+    let taxas = matsList.map(m => Math.round((d.matA[m]/((d.matA[m]||0)+(d.matE[m]||0)))*100));
+    charts.matA = new Chart(ctx2, {
+      type: "bar",
+      data: {
+        labels: matsList.slice(0,8),
+        datasets: [{
+          data: taxas.slice(0,8),
+          backgroundColor: taxas.slice(0,8).map(t => t >= 70 ? "#3a6b50" : t >= 50 ? "#c9943a" : "#9b2c2c"),
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, max: 100, grid: { color: "rgba(0,0,0,0.04)" }, ticks: { callback: v => v+"%", font: { family: "DM Mono", size: 10 }, color: "#8c877f" } },
+          x: { grid: { display: false }, ticks: { font: { family: "DM Sans", size: 10 }, color: "#5a5650" } }
+        }
+      }
+    });
+  }
+
+  // Breakdown list
+  let bl = document.getElementById("breakdownList");
+  if(!mats.length) { bl.innerHTML = '<div class="empty">Sem dados. Registre aulas e questões na planilha.</div>'; return; }
+  bl.innerHTML = "";
+  mats.forEach(m => {
+    let hrs = d.matH[m] || 0;
+    let a = d.matA[m] || 0;
+    let e = d.matE[m] || 0;
+    let taxa = (a+e) > 0 ? Math.round(a/(a+e)*100) : null;
+    let pct = Math.round(hrs/maxH*100);
+    let row = document.createElement("div");
+    row.className = "breakdown-item";
+    row.innerHTML = `
+      <span class="breakdown-name">${m}</span>
+      <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${pct}%"></div></div>
+      <span class="breakdown-pct">${(hrs/60).toFixed(1)}h</span>
+      <span style="font-size:11px;min-width:52px;text-align:right;color:${taxa===null?'var(--ink3)':taxa>=70?'#3a6b50':taxa>=50?'#c9943a':'#9b2c2c'};font-weight:500;">${taxa !== null ? taxa+"%" : "—"}</span>
+    `;
+    bl.appendChild(row);
+  });
+}
+
+function renderRevisoesPage() {
+  let td = today();
+  let pendentes = [], proximas = [];
+  let todayParsed = new Date(td+"T12:00:00");
+
+  weeksData.forEach(week => {
+    week.rows.forEach(row => {
+      if(!row.dataAtividade || row.act === "Intervalo") return;
+      let r15 = addDays(row.dataAtividade, 15);
+      let r30 = addDays(row.dataAtividade, 30);
+      let label = row.aulaDesc || `${row.day} — ${row.act}`;
+      if(!row.rev15done) {
+        let diff = Math.round((new Date(r15+"T12:00:00")-todayParsed)/(86400000));
+        let entry = { week: week.name, label, date: r15, tipo: "15d", diff };
+        if(diff < 0) pendentes.push(entry);
+        else if(diff <= 7) proximas.push(entry);
+      }
+      if(!row.rev30done) {
+        let diff = Math.round((new Date(r30+"T12:00:00")-todayParsed)/(86400000));
+        let entry = { week: week.name, label, date: r30, tipo: "30d", diff };
+        if(diff < 0) pendentes.push(entry);
+        else if(diff <= 7) proximas.push(entry);
+      }
+    });
+  });
+
+  pendentes.sort((a,b) => a.diff-b.diff);
+  proximas.sort((a,b) => a.diff-b.diff);
+
+  let el = document.getElementById("revisoesContent");
+  el.innerHTML = "";
+
+  const makeCard = (title, items, color) => {
+    let card = document.createElement("div");
+    card.className = "breakdown-card";
+    card.innerHTML = `<div class="chart-card-title" style="color:${color};margin-bottom:16px">${title} <span style="font-size:11px;color:var(--ink3);font-weight:400">(${items.length})</span></div>`;
+    if(!items.length) { card.innerHTML += `<div class="empty" style="padding:20px 0">Nenhuma revisão ${title === "Atrasadas" ? "atrasada" : "próxima"} 🎉</div>`; }
+    items.forEach(it => {
+      let row = document.createElement("div");
+      row.className = "breakdown-item";
+      let diffText = it.diff < 0 ? `${Math.abs(it.diff)} dias atrás` : it.diff === 0 ? "Hoje!" : `em ${it.diff} dias`;
+      row.innerHTML = `
+        <span class="breakdown-name">${it.label}<br><span style="font-size:10px;color:var(--ink3)">${it.week} · Rev. ${it.tipo}</span></span>
+        <span class="rev-date" style="color:${color}">${fmtDate(it.date)}</span>
+        <span style="font-size:11px;font-weight:500;min-width:80px;text-align:right;color:${color}">${diffText}</span>
+      `;
+      card.appendChild(row);
+    });
+    el.appendChild(card);
+  };
+
+  makeCard("⚠️ Atrasadas", pendentes, "#9b2c2c");
+  makeCard("📅 Esta semana", proximas, "#c9943a");
+}
+
+// ── MODAL ──
+function openModal(wIdx, rIdx) {
+  notesCtx = { wIdx, rIdx };
+  let row = weeksData[wIdx].rows[rIdx];
+  document.getElementById("modalTitle").textContent = `Questões erradas · ${row.day} · ${row.act}`;
+  document.getElementById("modalTextarea").value = row.notes || "";
+  document.getElementById("modalOverlay").classList.add("open");
+}
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+  notesCtx = null;
+}
+function saveModal() {
+  if(!notesCtx) return;
+  let val = document.getElementById("modalTextarea").value;
+  weeksData[notesCtx.wIdx].rows[notesCtx.rIdx].notes = val;
+  save(); renderTable(); closeModal();
+}
+
+// ── CSV ──
+function exportCSV() {
+  if(!weeksData.length) return;
+  let week = weeksData[currentWeekIdx];
+  let headers = ["Semana","Dia","Atividade","✓","Horário","Aula/Descrição","Minutos","Data","Observações","Rev15d","Rev15d✓","Rev30d","Rev30d✓"];
+  let rows = week.rows.map(r => [
+    week.name, r.day, r.act, r.check?"Sim":"Não", r.horario, r.aulaDesc, r.minuto, r.dataAtividade, r.observacoes,
+    r.dataAtividade ? fmtDate(addDays(r.dataAtividade,15)) : "",
+    r.rev15done?"Sim":"Não",
+    r.dataAtividade ? fmtDate(addDays(r.dataAtividade,30)) : "",
+    r.rev30done?"Sim":"Não"
+  ]);
+  let csv = "\uFEFF" + [headers, ...rows].map(r => r.map(c => `"${String(c||"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+  a.download = `${week.name.replace(/\s/g,"_")}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── PDF ──
+async function exportPDF() {
+  let week = weeksData[currentWeekIdx];
+  let div = document.createElement("div");
+  div.style.cssText = "padding:20px;font-family:sans-serif;font-size:10px;";
+  div.innerHTML = `<h2 style="margin-bottom:12px;font-size:16px">📚 ${week.name} · StudyOS</h2>`;
+  let tbl = document.createElement("table");
+  tbl.style.cssText = "width:100%;border-collapse:collapse;font-size:8px;";
+  let thead = `<thead><tr style="background:#1d3d2f;color:white">${["Dia","Atividade","✓","Horário","Aula","Min","Data","Observações"].map(h=>`<th style="padding:5px;text-align:left">${h}</th>`).join("")}</tr></thead>`;
+  let tbody = week.rows.map((r,i) => {
+    let bg = i%2===0 ? "#f5f3ef" : "#fff";
+    return `<tr style="background:${bg}">${[r.day,r.act,r.check?"✅":"⬜",r.horario,r.aulaDesc,r.minuto,r.dataAtividade,r.observacoes].map(c=>`<td style="padding:4px;border-bottom:1px solid #e2ddd6">${c||"—"}</td>`).join("")}</tr>`;
+  }).join("");
+  tbl.innerHTML = thead + `<tbody>${tbody}</tbody>`;
+  div.appendChild(tbl);
+  await html2pdf().set({margin:[0.3,0.3],filename:`${week.name}.pdf`,jsPDF:{unit:"in",format:"a4",orientation:"landscape"},html2canvas:{scale:2}}).from(div).save();
+}
+
+// ── NAV ──
+function setPage(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById("page-"+page).classList.add("active");
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
+  let titles = { dashboard:"Dashboard", planilha:"Planilha Semanal", materias:"Análise por Matéria", revisoes:"Revisões Programadas" };
+  document.getElementById("topbarTitle").textContent = titles[page] || "StudyOS";
+}
+
+function renderAll() {
+  renderWeekBar();
+  renderTable();
+  updateDashboard();
+}
+
+// ── INIT ──
+document.querySelectorAll(".nav-item").forEach(btn => {
+  btn.addEventListener("click", () => setPage(btn.dataset.page));
+});
+document.getElementById("btnSave").addEventListener("click", save);
+document.getElementById("btnCSV").addEventListener("click", exportCSV);
+document.getElementById("btnPDF").addEventListener("click", exportPDF);
+document.getElementById("modalClose").addEventListener("click", closeModal);
+document.getElementById("modalCancel").addEventListener("click", closeModal);
+document.getElementById("modalSave").addEventListener("click", saveModal);
+document.getElementById("modalOverlay").addEventListener("click", e => { if(e.target === document.getElementById("modalOverlay")) closeModal(); });
+
+// Sidebar date
+let now = new Date();
+document.getElementById("sidebarDate").textContent = now.toLocaleDateString("pt-BR", {weekday:"long",day:"numeric",month:"long"});
+
+// Auto-save on change
+document.addEventListener("change", () => {
+  clearTimeout(window._saveTimer);
+  window._saveTimer = setTimeout(() => {
+    localStorage.setItem("studyos_v2", JSON.stringify(weeksData));
+  }, 800);
+});
+
+load();
+renderAll();
+</script>
+</body>
+</html>

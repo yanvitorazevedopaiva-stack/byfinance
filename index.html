@@ -979,9 +979,9 @@
     .card-value{font-size:20px;}
 
     /* ── LOGIN ── */
-    #login-screen{align-items:flex-start;overflow-y:auto;padding:20px 12px;}
-    .login-box{padding:24px 20px;}
-    .login-logo{margin-bottom:16px;}
+    #login-screen{align-items:center;justify-content:flex-start;overflow-y:auto;padding:24px 16px;}
+    .login-box{padding:28px 20px;max-width:min(440px,100%);margin:auto;}
+    .login-logo{margin-bottom:0;}
     .login-logo h1{font-size:18px;}
     .login-tabs{margin-bottom:18px;}
   }
@@ -1557,10 +1557,13 @@
     box-shadow:0 0 40px rgba(0,0,0,0.06),0 0 80px rgba(37,99,235,0.04),0 16px 40px rgba(0,0,0,0.12);}
 
   @media(max-width:768px){
-    #login-screen{align-items:flex-start;overflow-y:auto;padding:20px 12px;}
-    .login-box{padding:24px 20px;max-width:100%;}
+    #login-screen{align-items:center;justify-content:flex-start;overflow-y:auto;padding:24px 16px;}
+    .login-box{padding:28px 20px;max-width:min(440px,100%);margin:auto;}
     .login-logo{margin-bottom:0;}
     .login-tabs{margin-bottom:18px;}}
+  @media(min-width:769px) and (max-width:1024px){
+    #login-screen{overflow-y:auto;}
+    .login-box{max-width:480px;padding:36px 32px;}}
   .login-rk-box{
     text-align:center;padding:8px 0 4px;
   }
@@ -10232,8 +10235,10 @@ function applyMascaraBRL(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  // Restaura tema salvo (global, independente do usuário)
-  if(localStorage.getItem('yanfin_tema')==='day'){
+  // Restaura tema salvo; se não houver preferência, respeita o sistema
+  const _savedTheme=localStorage.getItem('yanfin_tema');
+  const _prefersLight=window.matchMedia('(prefers-color-scheme: light)').matches;
+  if(_savedTheme==='day'||(!_savedTheme&&_prefersLight)){
     document.body.classList.add('day');
     document.getElementById('theme-icon').textContent='🌙';
     document.getElementById('theme-label').textContent='MODO NOTURNO';

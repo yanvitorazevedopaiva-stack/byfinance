@@ -2371,6 +2371,121 @@
     .bem-tabs{gap:4px;padding:4px;}
     .bem-tab{padding:7px 10px;font-size:10px;}
   }
+
+  /* ══════════════════════════════════════════
+     MOBILE FIXES — max-width: 768px
+  ══════════════════════════════════════════ */
+
+  /* 1. FUNDO DARK NO MOBILE */
+  @media(max-width:768px){
+    body:not(.day){background:#050a0f!important;color:#e0f0ff!important;}
+    body:not(.day) .page,
+    body:not(.day) #main{background:#050a0f!important;}
+  }
+
+  /* 2. TABELAS COM SCROLL HORIZONTAL */
+  @media(max-width:768px){
+    table,.tbl-wrap,.table-wrap,
+    #fat-tbody,#gf-tbody,#lanc-tbody,#parc-tbody,
+    .semanal-tabela-wrap{
+      display:block;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      white-space:nowrap;
+      max-width:100%;
+    }
+    /* thead/tbody/tr devem continuar como table-* */
+    thead,tbody,tfoot{display:table-header-group;}
+    tbody{display:table-row-group;}
+    tfoot{display:table-footer-group;}
+    tr{display:table-row;}
+    th,td{display:table-cell;}
+  }
+
+  /* 3. SEMANAL — TABELA DE DIAS */
+  @media(max-width:768px){
+    #semanal-tabela-container,.semanal-dias-wrap,
+    .month-tabs,#sem-view-tabs{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    #semanal-tabela-container table{min-width:600px;}
+    .semanal-semana-table{min-width:600px;}
+  }
+
+  /* 4. FORMULÁRIOS — CAMPOS EMPILHADOS */
+  @media(max-width:768px){
+    .form-row,.form-grid,.input-row,.grid-2,.grid-cols-2{
+      display:flex!important;
+      flex-direction:column!important;
+      gap:12px!important;
+    }
+    .form-row>*,.form-grid>*,.input-row>*{
+      width:100%!important;
+      min-width:unset!important;
+    }
+  }
+
+  /* 5. CARDS DE RESUMO — EMPILHAR VERTICALMENTE */
+  @media(max-width:768px){
+    .dash-cards,.cards-grid,.resumo-cards,.parc-cards{
+      grid-template-columns:1fr!important;
+      gap:12px!important;
+    }
+  }
+
+  /* 6. BOTÃO CALCULADORA — REPOSICIONAR */
+  @media(max-width:768px){
+    #calc-btn{bottom:140px!important;right:16px!important;}
+    #calc-widget{
+      bottom:190px!important;right:16px!important;
+      width:calc(100vw - 32px)!important;
+      max-width:320px!important;
+    }
+    #fab-lanc{bottom:80px!important;right:16px!important;}
+    #fab-speed-dial{bottom:80px!important;right:80px!important;}
+  }
+
+  /* 7. FATURAS — TABELA DE MESES */
+  @media(max-width:768px){
+    #fat-table-wrap,.fat-meses-wrap,.fat-hist-wrap{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    #fat-table-wrap table,.fat-meses-wrap table,
+    #fat-table{min-width:800px;}
+  }
+
+  /* 8. INPUTS — EVITAR ZOOM NO IOS/ANDROID */
+  @media(max-width:768px){
+    input,select,textarea{font-size:16px!important;}
+  }
+
+  /* 9. PÁGINA PRINCIPAL — PADDING CORRETO */
+  @media(max-width:768px){
+    #main{
+      margin-left:0!important;
+      width:100%!important;
+      padding:16px!important;
+      padding-bottom:80px!important;
+      box-sizing:border-box!important;
+    }
+    .page{padding:12px!important;}
+    .page-title{font-size:18px!important;margin-bottom:16px!important;}
+  }
+
+  /* 10. BOTTOM BAR — Z-INDEX GARANTIDO */
+  @media(max-width:768px){
+    #mob-bottom-bar,.mob-bottom-bar{
+      z-index:9000!important;
+      position:fixed!important;
+      bottom:0!important;
+      left:0!important;
+      right:0!important;
+    }
+    #mob-drawer{z-index:9200!important;}
+    #mob-drawer-overlay{z-index:9100!important;}
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>emailjs.init("4Dr3YSdkOOmM4GEVa");</script>

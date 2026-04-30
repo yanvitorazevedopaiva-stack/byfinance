@@ -4671,7 +4671,15 @@
 </div>
 <div id="fab-overlay" style="display:none;position:fixed;inset:0;z-index:799" onclick="fabDialClose()"></div>
 <button id="fab-lanc" onclick="fabDialToggle()" title="Menu rápido">+</button>
-<button id="calc-btn" onclick="toggleCalc()" title="Calculadora">🖩</button>
+<button id="calc-btn" onclick="toggleCalc()" title="Calculadora">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="2" width="16" height="20" rx="2"/>
+    <line x1="8" y1="6" x2="16" y2="6"/>
+    <line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/>
+    <line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/>
+    <line x1="8" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/>
+  </svg>
+</button>
 <div id="calc-widget">
   <div class="calc-header" id="calc-drag-handle">
     <span class="calc-htitle">🖩 CALCULADORA</span>
@@ -11092,10 +11100,16 @@ ${miniCapa}
 // ===================== TEMA =====================
 function toggleTheme(){
   const isDay=document.body.classList.toggle('day');
-  document.getElementById('theme-icon').textContent=isDay?'🌙':'☀';
-  document.getElementById('theme-label').textContent=isDay?'MODO NOTURNO':'MODO DIURNO';
+  const icon=isDay?'🌙':'☀';
+  const label=isDay?'MODO NOTURNO':'MODO DIURNO';
+  document.getElementById('theme-icon').textContent=icon;
+  document.getElementById('theme-label').textContent=label;
+  // sincroniza ícones do drawer mobile
+  const mi=document.getElementById('mob-theme-icon');
+  const ml=document.getElementById('mob-theme-label');
+  if(mi) mi.textContent=icon;
+  if(ml) ml.textContent=label;
   localStorage.setItem('yanfin_tema',isDay?'day':'night');
-  // Atualiza cores dos gráficos após troca de tema
   if(currentPage) renderPage(currentPage);
 }
 
@@ -11127,6 +11141,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.body.classList.add('day');
     document.getElementById('theme-icon').textContent='🌙';
     document.getElementById('theme-label').textContent='MODO NOTURNO';
+    const mi=document.getElementById('mob-theme-icon');
+    const ml=document.getElementById('mob-theme-label');
+    if(mi) mi.textContent='🌙';
+    if(ml) ml.textContent='MODO NOTURNO';
   }
   // Inicializa autenticação
   const loggedIn=initAuth();
@@ -13890,6 +13908,10 @@ function _verAnexoBemDoc(id){
   </div>
 
   <div class="mob-drawer-footer">
+    <button class="mob-drawer-item" onclick="toggleTheme()" id="mob-theme-btn">
+      <span class="mob-drawer-icon" id="mob-theme-icon">☀</span>
+      <span id="mob-theme-label">MODO DIURNO</span>
+    </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('config')">
       <span class="mob-drawer-icon">⚙</span>CONFIGURAÇÕES
     </button>

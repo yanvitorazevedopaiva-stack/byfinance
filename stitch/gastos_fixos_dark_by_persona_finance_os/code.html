@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PERSONA OS - Fixed Expenses</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#f26420",
+                    "inverse-surface": "#e0e2ed",
+                    "outline-variant": "#414655",
+                    "secondary-fixed": "#d9e2ff",
+                    "surface-container-low": "#181c24",
+                    "on-surface": "#e0e2ed",
+                    "error-container": "#93000a",
+                    "on-secondary-container": "#98b4f8",
+                    "surface-container-lowest": "#0b0e16",
+                    "surface": "#10131b",
+                    "on-tertiary-container": "#4f1800",
+                    "on-background": "#e0e2ed",
+                    "surface-tint": "#b0c6ff",
+                    "secondary": "#afc6ff",
+                    "on-tertiary-fixed-variant": "#7f2b00",
+                    "primary-fixed": "#d9e2ff",
+                    "primary-container": "#558dff",
+                    "tertiary-fixed-dim": "#ffb599",
+                    "surface-dim": "#10131b",
+                    "secondary-fixed-dim": "#afc6ff",
+                    "surface-container": "#1c2028",
+                    "on-tertiary-fixed": "#370e00",
+                    "inverse-on-surface": "#2d3039",
+                    "outline": "#8c90a1",
+                    "primary-fixed-dim": "#b0c6ff",
+                    "on-error": "#690005",
+                    "surface-variant": "#31353d",
+                    "on-secondary": "#082e69",
+                    "tertiary": "#ffb599",
+                    "on-primary-container": "#002761",
+                    "on-primary-fixed": "#001944",
+                    "error": "#ffb4ab",
+                    "secondary-container": "#274581",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary": "#5a1c00",
+                    "on-surface-variant": "#c2c6d8",
+                    "on-primary": "#002d6e",
+                    "on-secondary-fixed-variant": "#274581",
+                    "surface-bright": "#363942",
+                    "background": "#10131b",
+                    "surface-container-highest": "#31353d",
+                    "on-primary-fixed-variant": "#00429b",
+                    "inverse-primary": "#0058ca",
+                    "primary": "#b0c6ff",
+                    "on-secondary-fixed": "#001944",
+                    "surface-container-high": "#262a32",
+                    "tertiary-fixed": "#ffdbce"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sm": "8px",
+                    "lg": "24px",
+                    "grid-gutter": "20px",
+                    "xs": "4px",
+                    "xl": "40px",
+                    "md": "16px",
+                    "unit": "4px",
+                    "container-margin": "32px"
+            },
+            "fontFamily": {
+                    "body-main": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "label-caps": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #050a0f; color: #e0e2ed; }
+        .glass { background: rgba(16, 19, 27, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(176, 198, 255, 0.1); }
+        .neon-glow-blue { box-shadow: 0 0 15px rgba(85, 141, 255, 0.15); }
+        .neon-text-blue { text-shadow: 0 0 8px rgba(176, 198, 255, 0.5); }
+        .chart-gradient { background: linear-gradient(180deg, rgba(85, 141, 255, 0.2) 0%, rgba(85, 141, 255, 0) 100%); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-main text-body-main">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#050a0f]/80 backdrop-blur-xl border-b border-slate-800/50 shadow-[0_4px_20px_rgba(0,200,255,0.05)]">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="grid_view">grid_view</span>
+<h1 class="text-xl font-black tracking-tighter text-primary font-mono">PERSONA OS</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-6">
+<span class="text-primary border-b-2 border-primary font-['Inter'] tracking-tight text-sm font-semibold uppercase font-mono cursor-pointer">Terminal</span>
+<span class="text-slate-500 font-['Inter'] tracking-tight text-sm font-semibold uppercase font-mono hover:text-tertiary-container transition-colors cursor-pointer">Markets</span>
+</div>
+<div class="w-8 h-8 rounded-full border border-primary/30 overflow-hidden">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a financial tech executive in a dark, high-contrast studio setting with subtle blue rim lighting. The subject is wearing a modern charcoal suit, conveying a sense of authority and precision. The background is a deep, velvety black that emphasizes the sharp lines of the face and clothing, perfectly matching the high-performance operating system aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxqXCNBARRe4KnRwrhy6Ach6nXiVkNY2F6hT6kSnQ1g2EKgbJxKZ7D4FhwZXF5QtlcOI7hSvr7uWweQiWWgL4upTPQw-7vZWzu5SulaSKNzaOL4YwQL-bdTrL0qGCXj7Fcn5ZINE_U6-NAtQIr8lX22Piq2qEy8kodZT12i4TnVfQYCzgqqj0I1eK6Wf-gEiydD3-0jWs2EravHAR-k7IjZV9X6-IbqroOrzY36dzWBrA3Qxb8_YXfuFEI2PdVslK2RTxX0T2PpwY"/>
+</div>
+</div>
+</header>
+<!-- NavigationDrawer (Desktop) -->
+<aside class="hidden md:flex flex-col fixed left-0 top-0 h-full z-40 w-64 bg-[#050a0f] border-r border-slate-800">
+<div class="p-6 pt-24 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-container/20 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-['JetBrains_Mono'] text-xs tracking-widest uppercase font-bold text-primary">OPERATOR_01</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-tighter">Verified Session</p>
+</div>
+</div>
+<nav class="mt-8 flex-1">
+<div class="px-4 py-3 bg-primary/10 text-primary border-l-4 border-primary cursor-pointer flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+<span class="font-['JetBrains_Mono'] text-xs tracking-widest uppercase">Terminal</span>
+</div>
+<div class="px-4 py-3 text-slate-500 hover:bg-slate-900 hover:text-tertiary-container transition-all flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-['JetBrains_Mono'] text-xs tracking-widest uppercase">Assets</span>
+</div>
+<div class="px-4 py-3 text-slate-500 hover:bg-slate-900 hover:text-tertiary-container transition-all flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="font-['JetBrains_Mono'] text-xs tracking-widest uppercase">Markets</span>
+</div>
+<div class="px-4 py-3 text-slate-500 hover:bg-slate-900 hover:text-tertiary-container transition-all flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-['JetBrains_Mono'] text-xs tracking-widest uppercase">Intelligence</span>
+</div>
+<div class="px-4 py-3 text-slate-500 hover:bg-slate-900 hover:text-tertiary-container transition-all flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+<span class="font-['JetBrains_Mono'] text-xs tracking-widest uppercase">Security</span>
+</div>
+</nav>
+<div class="p-6">
+<div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+<p class="text-[10px] text-slate-400 uppercase font-mono">System Status</p>
+<div class="flex items-center gap-2 mt-1">
+<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+<p class="text-[11px] font-mono text-emerald-500">Live Feed Active</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="pt-24 pb-32 md:pb-8 md:pl-72 px-6 max-w-7xl mx-auto w-full">
+<!-- Header Section -->
+<div class="mb-10">
+<h2 class="font-display-lg text-display-lg text-primary neon-text-blue">Fixed Expenses</h2>
+<p class="text-on-surface-variant font-body-main opacity-70">Strategic allocation of core capital for fiscal stability.</p>
+</div>
+<!-- Metric Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-grid-gutter mb-10">
+<div class="glass p-lg rounded-xl neon-glow-blue flex flex-col gap-2">
+<p class="text-label-caps font-label-caps text-on-surface-variant uppercase opacity-60">Base Salary</p>
+<div class="flex items-end justify-between">
+<p class="text-headline-md font-headline-md text-primary">$12,500.00</p>
+<span class="material-symbols-outlined text-primary/40" data-icon="payments">payments</span>
+</div>
+</div>
+<div class="glass p-lg rounded-xl flex flex-col gap-2 border-primary/20">
+<p class="text-label-caps font-label-caps text-on-surface-variant uppercase opacity-60">Total Fixed</p>
+<div class="flex items-end justify-between">
+<p class="text-headline-md font-headline-md text-tertiary">$4,820.00</p>
+<span class="material-symbols-outlined text-tertiary/40" data-icon="account_balance">account_balance</span>
+</div>
+</div>
+<div class="glass p-lg rounded-xl flex flex-col gap-2">
+<p class="text-label-caps font-label-caps text-on-surface-variant uppercase opacity-60">Net Surplus</p>
+<div class="flex items-end justify-between">
+<p class="text-headline-md font-headline-md text-emerald-400">$7,680.00</p>
+<span class="material-symbols-outlined text-emerald-400/40" data-icon="trending_up">trending_up</span>
+</div>
+</div>
+<div class="glass p-lg rounded-xl flex flex-col gap-2">
+<p class="text-label-caps font-label-caps text-on-surface-variant uppercase opacity-60">% Commitment</p>
+<div class="flex items-end justify-between">
+<p class="text-headline-md font-headline-md text-primary">38.5%</p>
+<div class="w-12 h-2 bg-slate-800 rounded-full overflow-hidden self-center mb-2">
+<div class="h-full bg-primary" style="width: 38.5%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Annual Projection Chart (Simplified UI Representation) -->
+<div class="glass p-lg rounded-xl mb-10 overflow-hidden">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Annual Projection</h3>
+<p class="text-xs text-on-surface-variant opacity-60 uppercase font-mono">Fiscal Year 2024 • Forecasting</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-slate-800/50 border border-slate-700 px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-primary transition-colors">YTD</button>
+<button class="bg-primary/20 border border-primary/40 px-3 py-1 rounded text-xs font-mono text-primary">12M</button>
+</div>
+</div>
+<div class="relative h-64 w-full flex items-end justify-between gap-2 px-2">
+<!-- Bars or Area Graph logic in pure CSS -->
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 60%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-primary/30 px-2 py-1 rounded text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">$4.2k</div>
+</div>
+<span class="text-[10px] font-mono text-slate-500">JAN</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 65%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-primary/30 px-2 py-1 rounded text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">$4.5k</div>
+</div>
+<span class="text-[10px] font-mono text-slate-500">FEB</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/40 rounded-t-sm relative group-hover:bg-primary/50 transition-colors neon-glow-blue" style="height: 85%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-primary/30 px-2 py-1 rounded text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">$5.8k</div>
+</div>
+<span class="text-[10px] font-mono text-primary font-bold">MAR</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 55%"></div>
+<span class="text-[10px] font-mono text-slate-500">APR</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 62%"></div>
+<span class="text-[10px] font-mono text-slate-500">MAY</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 58%"></div>
+<span class="text-[10px] font-mono text-slate-500">JUN</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 60%"></div>
+<span class="text-[10px] font-mono text-slate-500">JUL</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 64%"></div>
+<span class="text-[10px] font-mono text-slate-500">AUG</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 61%"></div>
+<span class="text-[10px] font-mono text-slate-500">SEP</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 70%"></div>
+<span class="text-[10px] font-mono text-slate-500">OCT</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 68%"></div>
+<span class="text-[10px] font-mono text-slate-500">NOV</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-primary/20 rounded-t-sm relative group-hover:bg-primary/30 transition-colors" style="height: 72%"></div>
+<span class="text-[10px] font-mono text-slate-500">DEC</span>
+</div>
+</div>
+</div>
+<!-- Expenses Table -->
+<div class="glass rounded-xl overflow-hidden mb-10">
+<div class="px-lg py-md border-b border-slate-800 flex justify-between items-center bg-slate-900/30">
+<h3 class="font-headline-md text-headline-md text-on-surface">Inventory of Commitments</h3>
+<button class="flex items-center gap-2 bg-primary text-on-primary-container px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span> Add Expense
+                </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-900/50">
+<th class="px-lg py-4 text-label-caps font-label-caps text-slate-400 uppercase tracking-widest">Description</th>
+<th class="px-lg py-4 text-label-caps font-label-caps text-slate-400 uppercase tracking-widest">Category</th>
+<th class="px-lg py-4 text-label-caps font-label-caps text-slate-400 uppercase tracking-widest text-center">Priority</th>
+<th class="px-lg py-4 text-label-caps font-label-caps text-slate-400 uppercase tracking-widest text-right">Value</th>
+<th class="px-lg py-4 text-label-caps font-label-caps text-slate-400 uppercase tracking-widest text-right">Annual Value</th>
+<th class="px-lg py-4 text-label-caps font-label-caps text-slate-400 uppercase tracking-widest text-center">Receipt</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-800">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-lg py-4 font-medium text-on-surface">Luxury Apartment Rent</td>
+<td class="px-lg py-4">
+<span class="bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded text-[10px] uppercase font-mono">Housing</span>
+</td>
+<td class="px-lg py-4 text-center">
+<span class="material-symbols-outlined text-tertiary-container text-sm" data-icon="priority_high" data-weight="fill">priority_high</span>
+</td>
+<td class="px-lg py-4 text-right font-data-mono text-primary">$3,200.00</td>
+<td class="px-lg py-4 text-right font-data-mono text-slate-400">$38,400.00</td>
+<td class="px-lg py-4 text-center">
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors" data-icon="description">description</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-lg py-4 font-medium text-on-surface">Executive Healthcare</td>
+<td class="px-lg py-4">
+<span class="bg-secondary-container/20 text-on-secondary-container border border-secondary-container/30 px-2 py-0.5 rounded text-[10px] uppercase font-mono">Health</span>
+</td>
+<td class="px-lg py-4 text-center">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="check_circle">check_circle</span>
+</td>
+<td class="px-lg py-4 text-right font-data-mono text-primary">$450.00</td>
+<td class="px-lg py-4 text-right font-data-mono text-slate-400">$5,400.00</td>
+<td class="px-lg py-4 text-center">
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors" data-icon="description">description</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-lg py-4 font-medium text-on-surface">Fiber Optic Connectivity</td>
+<td class="px-lg py-4">
+<span class="bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded text-[10px] uppercase font-mono">Utilities</span>
+</td>
+<td class="px-lg py-4 text-center">
+<span class="material-symbols-outlined text-slate-600 text-sm" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+</td>
+<td class="px-lg py-4 text-right font-data-mono text-primary">$120.00</td>
+<td class="px-lg py-4 text-right font-data-mono text-slate-400">$1,440.00</td>
+<td class="px-lg py-4 text-center">
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors" data-icon="description">description</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-lg py-4 font-medium text-on-surface">Cloud Infrastructure Subs</td>
+<td class="px-lg py-4">
+<span class="bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20 px-2 py-0.5 rounded text-[10px] uppercase font-mono">Operations</span>
+</td>
+<td class="px-lg py-4 text-center">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="check_circle">check_circle</span>
+</td>
+<td class="px-lg py-4 text-right font-data-mono text-primary">$85.00</td>
+<td class="px-lg py-4 text-right font-data-mono text-slate-400">$1,020.00</td>
+<td class="px-lg py-4 text-center">
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors" data-icon="description">description</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 pb-safe md:hidden bg-[#050a0f]/90 backdrop-blur-2xl border-t border-slate-800/50 shadow-[0_-4px_24px_rgba(0,0,0,0.4)]">
+<div class="flex flex-col items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(0,200,255,0.5)] scale-100 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal mt-1">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-600 scale-90 active:scale-100 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="lock_open">lock_open</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal mt-1">Vault</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-600 scale-90 active:scale-100 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="swap_vert">swap_vert</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal mt-1">Trade</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-600 scale-90 active:scale-100 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal mt-1">Settings</span>
+</div>
+</nav>
+<!-- Contextual FAB (Hidden on this transactional screen as per protocol) -->
+</body></html>

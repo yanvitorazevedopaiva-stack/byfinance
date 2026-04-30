@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PERSONA OS - Installments</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#f26420",
+                        "inverse-surface": "#e0e2ed",
+                        "outline-variant": "#414655",
+                        "secondary-fixed": "#d9e2ff",
+                        "surface-container-low": "#181c24",
+                        "on-surface": "#e0e2ed",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#98b4f8",
+                        "surface-container-lowest": "#0b0e16",
+                        "surface": "#10131b",
+                        "on-tertiary-container": "#4f1800",
+                        "on-background": "#e0e2ed",
+                        "surface-tint": "#b0c6ff",
+                        "secondary": "#afc6ff",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "primary-fixed": "#d9e2ff",
+                        "primary-container": "#558dff",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "surface-dim": "#10131b",
+                        "secondary-fixed-dim": "#afc6ff",
+                        "surface-container": "#1c2028",
+                        "on-tertiary-fixed": "#370e00",
+                        "inverse-on-surface": "#2d3039",
+                        "outline": "#8c90a1",
+                        "primary-fixed-dim": "#b0c6ff",
+                        "on-error": "#690005",
+                        "surface-variant": "#31353d",
+                        "on-secondary": "#082e69",
+                        "tertiary": "#ffb599",
+                        "on-primary-container": "#002761",
+                        "on-primary-fixed": "#001944",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#274581",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#5a1c00",
+                        "on-surface-variant": "#c2c6d8",
+                        "on-primary": "#002d6e",
+                        "on-secondary-fixed-variant": "#274581",
+                        "surface-bright": "#363942",
+                        "background": "#10131b",
+                        "surface-container-highest": "#31353d",
+                        "on-primary-fixed-variant": "#00429b",
+                        "inverse-primary": "#0058ca",
+                        "primary": "#b0c6ff",
+                        "on-secondary-fixed": "#001944",
+                        "surface-container-high": "#262a32",
+                        "tertiary-fixed": "#ffdbce",
+                        "persona-gold": "#C9A84C",
+                        "persona-black": "#050a0f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "grid-gutter": "20px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "container-margin": "32px"
+                    },
+                    "fontFamily": {
+                        "body-main": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "label-caps": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(16, 19, 27, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(140, 144, 161, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050a0f; }
+        ::-webkit-scrollbar-thumb { background: #1c2028; border-radius: 10px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-persona-black text-on-surface font-body-main antialiased overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#050a0f]/80 backdrop-blur-xl border-b border-slate-800/50 shadow-[0_4px_20px_rgba(0,200,255,0.05)]">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-sky-400 cursor-pointer" data-icon="grid_view">grid_view</span>
+<h1 class="text-xl font-black tracking-tighter text-sky-400 font-mono">PERSONA OS</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-['Inter'] tracking-tight text-sm font-semibold uppercase font-mono text-slate-500 hover:bg-slate-800/40 hover:text-emerald-400 transition-colors px-2 py-1" href="#">Terminal</a>
+<a class="font-['Inter'] tracking-tight text-sm font-semibold uppercase font-mono text-sky-400 border-b-2 border-sky-400 px-2 py-1" href="#">Assets</a>
+<a class="font-['Inter'] tracking-tight text-sm font-semibold uppercase font-mono text-slate-500 hover:bg-slate-800/40 hover:text-emerald-400 transition-colors px-2 py-1" href="#">Intelligence</a>
+</nav>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-sky-400/30">
+<img alt="User Profile Avatar" data-alt="A professional portrait of a financial operator in a high-tech office environment. The lighting is dramatic with cool blue and warm amber tones, reflecting a mission control atmosphere. The subject is sharp and focused, wearing a modern dark blazer, with blurred digital displays showing financial data in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhAXPuNMoDtYr32icCy5JwaLeBx8gUEjhGVpuZdqeP2dxuDNwzK8MMZn5QzRfrsq6VllHFNAm3XrIo2AZ3_ywSD29OvJhpj6Q1SSesjNo6skIw341-fYMR14swJw3FFX9GzRlioOFuSmJbjZaFY-cGBSDBjuJUrECR9JkNOA-KuuGNNnR7VDQdgWJuorDr004wU697n7snZgSGxRlWomwqNZvdJgn8ep2IzawWS4VFfHGpkseohRA5R_ms8Ye49ZtPzdSTa38X1wg"/>
+</div>
+</div>
+</header>
+<!-- Side Navigation -->
+<aside class="hidden md:flex flex-col fixed left-0 top-0 h-full w-64 z-40 bg-[#050a0f] border-r border-slate-800">
+<div class="pt-24 px-6 mb-12">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-sky-400" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-['JetBrains_Mono'] text-xs tracking-widest uppercase text-sky-400 font-bold">OPERATOR_01</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-tighter">Verified Session</p>
+</div>
+</div>
+<nav class="space-y-2">
+<div class="text-slate-500 px-4 py-3 font-['JetBrains_Mono'] text-xs tracking-widest uppercase hover:bg-slate-900 hover:text-emerald-400 cursor-pointer transition-all duration-150 flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span> Terminal
+                </div>
+<div class="bg-sky-500/10 text-sky-400 border-l-4 border-sky-400 font-bold px-4 py-3 font-['JetBrains_Mono'] text-xs tracking-widest uppercase cursor-pointer transition-all duration-150 flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span> Assets
+                </div>
+<div class="text-slate-500 px-4 py-3 font-['JetBrains_Mono'] text-xs tracking-widest uppercase hover:bg-slate-900 hover:text-emerald-400 cursor-pointer transition-all duration-150 flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span> Markets
+                </div>
+<div class="text-slate-500 px-4 py-3 font-['JetBrains_Mono'] text-xs tracking-widest uppercase hover:bg-slate-900 hover:text-emerald-400 cursor-pointer transition-all duration-150 flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span> Intelligence
+                </div>
+<div class="text-slate-500 px-4 py-3 font-['JetBrains_Mono'] text-xs tracking-widest uppercase hover:bg-slate-900 hover:text-emerald-400 cursor-pointer transition-all duration-150 flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="shield">shield</span> Security
+                </div>
+</nav>
+</div>
+<div class="mt-auto p-6 border-t border-slate-800/50">
+<div class="p-3 glass-panel rounded-lg flex items-center justify-between">
+<span class="text-[10px] text-slate-500 uppercase font-mono">Node Status</span>
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-24 px-6 md:px-12 pb-24 min-h-screen">
+<!-- Header Section -->
+<header class="mb-12">
+<div class="flex items-center gap-2 text-sky-400/60 mb-2">
+<span class="material-symbols-outlined text-sm" data-icon="account_balance">account_balance</span>
+<span class="font-['JetBrains_Mono'] text-[10px] tracking-widest uppercase">Finance Management / Liability</span>
+</div>
+<h2 class="font-display-lg text-display-lg text-on-surface mb-2">Installment Cycles</h2>
+<p class="text-on-surface-variant max-w-2xl font-body-main">Precision tracking of ongoing credit series, installment liquidations, and projected monthly overhead for your high-performance financial stack.</p>
+</header>
+<!-- Bento Grid Summary -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<!-- Total Remaining Card -->
+<div class="glass-panel p-6 rounded-xl relative overflow-hidden group border-l-4 border-l-persona-gold">
+<div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" data-icon="payments">payments</span>
+</div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-4">Total Liability Balance</h3>
+<p class="font-data-mono text-persona-gold text-4xl font-bold mb-2">$142,850<span class="text-xl">.42</span></p>
+<div class="flex items-center gap-2 text-emerald-400 text-xs">
+<span class="material-symbols-outlined text-xs" data-icon="trending_down">trending_down</span>
+<span>-4.2% from last cycle</span>
+</div>
+</div>
+<!-- Active Series Card -->
+<div class="glass-panel p-6 rounded-xl relative overflow-hidden group border-l-4 border-l-primary">
+<div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" data-icon="reorder">reorder</span>
+</div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-4">Active Installment Series</h3>
+<p class="font-data-mono text-primary text-4xl font-bold mb-2">08</p>
+<div class="flex items-center gap-2 text-slate-500 text-xs">
+<span class="material-symbols-outlined text-xs" data-icon="info">info</span>
+<span>2 cycles completing this quarter</span>
+</div>
+</div>
+<!-- Monthly Cost Card -->
+<div class="glass-panel p-6 rounded-xl relative overflow-hidden group border-l-4 border-l-persona-gold/50">
+<div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" data-icon="event_repeat">event_repeat</span>
+</div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-4">Projected Monthly Overhead</h3>
+<p class="font-data-mono text-on-surface text-4xl font-bold mb-2">$8,412<span class="text-xl">.00</span></p>
+<div class="flex items-center gap-2 text-persona-gold text-xs">
+<span class="material-symbols-outlined text-xs" data-icon="schedule">schedule</span>
+<span>Next execution in 12 days</span>
+</div>
+</div>
+</div>
+<!-- Detailed Table Section -->
+<section class="glass-panel rounded-xl overflow-hidden mb-12">
+<div class="p-6 border-b border-slate-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Series Ledger</h3>
+<p class="text-xs text-on-surface-variant mt-1 uppercase tracking-widest font-data-mono">Comprehensive liability breakdown</p>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 glass-panel hover:bg-slate-800 text-xs font-label-caps flex items-center gap-2 rounded transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span> FILTER
+                    </button>
+<button class="px-4 py-2 bg-primary-container text-on-primary-container hover:opacity-90 text-xs font-label-caps flex items-center gap-2 rounded transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span> NEW SERIES
+                    </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="px-6 py-4 font-label-caps text-on-surface-variant text-[10px] uppercase border-b border-slate-800">Card / Creditor</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant text-[10px] uppercase border-b border-slate-800">Timeline / Progress</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant text-[10px] uppercase border-b border-slate-800">Installment Value</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant text-[10px] uppercase border-b border-slate-800 text-persona-gold">Total Principal</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant text-[10px] uppercase border-b border-slate-800 text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-800/30">
+<tr class="hover:bg-slate-800/20 transition-colors">
+<td class="px-6 py-6">
+<div class="flex items-center gap-4">
+<div class="w-10 h-6 bg-gradient-to-br from-slate-700 to-slate-900 rounded-sm border border-slate-600 flex items-center justify-center">
+<span class="text-[8px] font-bold text-slate-400">VISA</span>
+</div>
+<div>
+<p class="font-data-mono text-sm text-on-surface">Black Sapphire 0912</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Quantum Tech Purchase</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="w-48">
+<div class="flex justify-between mb-2">
+<span class="text-[10px] font-data-mono text-primary">06 / 12 Months</span>
+<span class="text-[10px] font-data-mono text-on-surface-variant">50%</span>
+</div>
+<div class="h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/2"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-6 font-data-mono text-sm">$1,200.00</td>
+<td class="px-6 py-6 font-data-mono text-sm text-persona-gold font-bold">$14,400.00</td>
+<td class="px-6 py-6 text-right">
+<span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-label-caps border border-emerald-500/20 rounded">CURRENT</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-800/20 transition-colors">
+<td class="px-6 py-6">
+<div class="flex items-center gap-4">
+<div class="w-10 h-6 bg-gradient-to-br from-amber-800 to-amber-950 rounded-sm border border-persona-gold/30 flex items-center justify-center">
+<span class="text-[8px] font-bold text-persona-gold">AMEX</span>
+</div>
+<div>
+<p class="font-data-mono text-sm text-on-surface">Platinum Elite 4402</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Infrastructure Lease</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="w-48">
+<div class="flex justify-between mb-2">
+<span class="text-[10px] font-data-mono text-primary">22 / 24 Months</span>
+<span class="text-[10px] font-data-mono text-on-surface-variant">92%</span>
+</div>
+<div class="h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[92%]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-6 font-data-mono text-sm">$2,450.00</td>
+<td class="px-6 py-6 font-data-mono text-sm text-persona-gold font-bold">$58,800.00</td>
+<td class="px-6 py-6 text-right">
+<span class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-label-caps border border-primary/20 rounded">MATURING</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-800/20 transition-colors">
+<td class="px-6 py-6">
+<div class="flex items-center gap-4">
+<div class="w-10 h-6 bg-gradient-to-br from-blue-900 to-indigo-950 rounded-sm border border-blue-600 flex items-center justify-center">
+<span class="text-[8px] font-bold text-blue-300">MC</span>
+</div>
+<div>
+<p class="font-data-mono text-sm text-on-surface">Titanium Ops 7721</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Data Center Expansion</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="w-48">
+<div class="flex justify-between mb-2">
+<span class="text-[10px] font-data-mono text-primary">02 / 36 Months</span>
+<span class="text-[10px] font-data-mono text-on-surface-variant">5%</span>
+</div>
+<div class="h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[5%]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-6 font-data-mono text-sm">$4,762.00</td>
+<td class="px-6 py-6 font-data-mono text-sm text-persona-gold font-bold">$171,432.00</td>
+<td class="px-6 py-6 text-right">
+<span class="px-2 py-1 bg-tertiary-container/10 text-tertiary-container text-[10px] font-label-caps border border-tertiary-container/20 rounded">HIGH IMPACT</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Visualization Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Glassmorphic Chart Mockup -->
+<div class="glass-panel p-6 rounded-xl">
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-6 uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="query_stats">query_stats</span> Projected Liability Decay
+                </h4>
+<div class="h-64 flex items-end justify-between gap-2 px-2">
+<div class="w-full bg-primary-container/20 border-t-2 border-primary relative group" style="height: 100%">
+<div class="hidden group-hover:block absolute -top-8 left-1/2 -translate-x-1/2 bg-surface p-1 rounded text-[10px] font-mono whitespace-nowrap">OCT: $142K</div>
+</div>
+<div class="w-full bg-primary-container/20 border-t-2 border-primary" style="height: 85%"></div>
+<div class="w-full bg-primary-container/20 border-t-2 border-primary" style="height: 70%"></div>
+<div class="w-full bg-primary-container/20 border-t-2 border-primary" style="height: 62%"></div>
+<div class="w-full bg-primary-container/20 border-t-2 border-primary" style="height: 45%"></div>
+<div class="w-full bg-primary-container/20 border-t-2 border-primary" style="height: 38%"></div>
+<div class="w-full bg-persona-gold/20 border-t-2 border-persona-gold" style="height: 25%"></div>
+<div class="w-full bg-persona-gold/20 border-t-2 border-persona-gold" style="height: 15%"></div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] font-data-mono text-on-surface-variant uppercase">
+<span>Oct 24</span>
+<span>Dec 24</span>
+<span>Mar 25</span>
+<span>Jun 25</span>
+</div>
+</div>
+<!-- Contextual Actions -->
+<div class="glass-panel p-6 rounded-xl flex flex-col justify-between">
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-4 uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="lightbulb">lightbulb</span> Strategic Intelligence
+                    </h4>
+<p class="text-on-surface-variant text-sm mb-6">Based on your current cash flow, consolidating the <span class="text-persona-gold">Black Sapphire</span> and <span class="text-persona-gold">Titanium Ops</span> installments could reduce quarterly interest by 1.2%.</p>
+<div class="space-y-3">
+<div class="p-4 bg-surface-container/50 border border-slate-800 rounded-lg flex items-center justify-between group cursor-pointer hover:border-sky-400/50 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-sky-400" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-xs font-label-caps">OPTIMIZE DEBT RATIO</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<div class="p-4 bg-surface-container/50 border border-slate-800 rounded-lg flex items-center justify-between group cursor-pointer hover:border-sky-400/50 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-sky-400" data-icon="history_edu">history_edu</span>
+<span class="text-xs font-label-caps">LIQUIDATION ARCHIVE</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</div>
+<div class="mt-8 flex items-center gap-4 p-4 border border-persona-gold/20 bg-persona-gold/5 rounded-lg">
+<span class="material-symbols-outlined text-persona-gold" data-icon="verified_user">verified_user</span>
+<p class="text-[10px] uppercase font-data-mono leading-relaxed">System calculated: Installment reliability index is at 98.4%. No immediate action required.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 pb-safe md:hidden bg-[#050a0f]/90 backdrop-blur-2xl border-t border-slate-800/50 shadow-[0_-4px_24px_rgba(0,0,0,0.4)]">
+<div class="flex flex-col items-center justify-center text-slate-600 active:bg-slate-800/50 scale-90 active:scale-100 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-sky-400 drop-shadow-[0_0_8px_rgba(0,200,255,0.5)] active:bg-slate-800/50 scale-90 active:scale-100 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="lock_open">lock_open</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal">Vault</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-600 active:bg-slate-800/50 scale-90 active:scale-100 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="swap_vert">swap_vert</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal">Trade</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-600 active:bg-slate-800/50 scale-90 active:scale-100 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal">Settings</span>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PERSONA Finance OS - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#2d3730",
+                    "on-tertiary-container": "#7a5f02",
+                    "error": "#ffb4ab",
+                    "primary-fixed": "#56ffa8",
+                    "outline-variant": "#3b4a3f",
+                    "surface": "#0c150f",
+                    "on-secondary-fixed-variant": "#004d64",
+                    "tertiary-fixed": "#ffe08f",
+                    "on-secondary-container": "#005068",
+                    "on-primary-fixed": "#002110",
+                    "background": "#0c150f",
+                    "inverse-on-surface": "#29332b",
+                    "error-container": "#93000a",
+                    "tertiary": "#fffbff",
+                    "on-primary": "#00391f",
+                    "surface-bright": "#323c34",
+                    "on-background": "#dae5da",
+                    "on-tertiary-fixed": "#241a00",
+                    "secondary-fixed": "#bee9ff",
+                    "on-surface": "#dae5da",
+                    "tertiary-fixed-dim": "#e6c364",
+                    "inverse-primary": "#006d40",
+                    "secondary": "#97deff",
+                    "surface-dim": "#0c150f",
+                    "surface-container-lowest": "#07100a",
+                    "outline": "#849587",
+                    "on-primary-fixed-variant": "#00522f",
+                    "on-error-container": "#ffdad6",
+                    "secondary-container": "#00c8fe",
+                    "secondary-fixed-dim": "#68d3ff",
+                    "on-secondary": "#003546",
+                    "surface-tint": "#00e38b",
+                    "surface-variant": "#2d3730",
+                    "on-surface-variant": "#b9cbbc",
+                    "on-tertiary": "#3d2e00",
+                    "on-secondary-fixed": "#001f2a",
+                    "tertiary-container": "#ffdc80",
+                    "primary": "#f4fff3",
+                    "inverse-surface": "#dae5da",
+                    "primary-container": "#00ff9d",
+                    "surface-container-low": "#141e17",
+                    "on-tertiary-fixed-variant": "#584400",
+                    "surface-container-high": "#232c25",
+                    "surface-container": "#18221b",
+                    "primary-fixed-dim": "#00e38b",
+                    "on-error": "#690005",
+                    "on-primary-container": "#007143"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-margin": "32px",
+                    "grid-gutter": "20px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "xl": "40px",
+                    "sm": "8px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "body-main": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-md": ["Inter"],
+                    "label-caps": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(0, 255, 157, 0.15);
+        }
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.15), inset 0 0 10px rgba(0, 255, 157, 0.05);
+        }
+        .diffuse-blob {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.15;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest min-h-screen font-body-main text-on-surface flex items-center justify-center p-md overflow-hidden">
+<!-- Background Decoration -->
+<div class="diffuse-blob bg-primary-container top-[-100px] left-[-100px]"></div>
+<div class="diffuse-blob bg-secondary-container bottom-[-100px] right-[-100px]"></div>
+<div class="diffuse-blob bg-surface-tint top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+<main class="relative z-10 w-full max-w-[400px]">
+<!-- Brand Identity -->
+<div class="text-center mb-xl">
+<h1 class="font-display-lg text-primary-container tracking-[0.2em] mb-xs drop-shadow-[0_0_12px_rgba(0,255,157,0.4)] uppercase">PERSONA</h1>
+<p class="font-label-caps text-on-surface-variant uppercase tracking-widest">Technological Financial Operating System</p>
+</div>
+<!-- Central Login Card -->
+<div class="glass-card rounded-xl p-lg neon-glow">
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant/30 mb-lg">
+<button class="flex-1 pb-md text-primary-container border-b-2 border-primary-container font-headline-md text-sm transition-all">
+                    Login
+                </button>
+<button class="flex-1 pb-md text-on-surface-variant font-headline-md text-sm hover:text-on-surface transition-all">
+                    Register
+                </button>
+<button class="flex-1 pb-md text-on-surface-variant font-headline-md text-sm hover:text-on-surface transition-all">
+                    Recover
+                </button>
+</div>
+<!-- Form -->
+<form class="space-y-lg">
+<div class="space-y-xs">
+<label class="font-label-caps text-on-surface-variant uppercase block">Access Identity</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary-container transition-colors" data-icon="fingerprint">fingerprint</span>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-lg py-md pl-[48px] pr-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/20 transition-all font-data-mono" placeholder="Username or UUID" type="text"/>
+</div>
+</div>
+<div class="space-y-xs">
+<label class="font-label-caps text-on-surface-variant uppercase block">Encryption Key</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary-container transition-colors" data-icon="lock">lock</span>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-lg py-md pl-[48px] pr-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/20 transition-all font-data-mono" placeholder="••••••••" type="password"/>
+</div>
+</div>
+<div class="flex items-center justify-between pt-xs">
+<label class="flex items-center space-x-sm cursor-pointer group">
+<div class="relative w-5 h-5 bg-surface-container-highest border border-outline-variant rounded group-hover:border-primary-container transition-colors">
+<input class="sr-only peer" type="checkbox"/>
+<span class="material-symbols-outlined absolute inset-0 text-[16px] text-primary-container opacity-0 peer-checked:opacity-100 transition-opacity flex items-center justify-center" data-icon="check">check</span>
+</div>
+<span class="font-label-caps text-on-surface-variant group-hover:text-on-surface">Secure Persistence</span>
+</label>
+<a class="font-label-caps text-primary-container hover:underline underline-offset-4" href="#">Secondary Auth?</a>
+</div>
+<button class="w-full bg-primary-container text-on-primary-container font-headline-md py-md rounded-lg flex items-center justify-center space-x-sm hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined" data-icon="login">login</span>
+<span>INITIALIZE SYSTEM</span>
+</button>
+</form>
+<!-- Biometric / Social Grid -->
+<div class="mt-xl pt-lg border-t border-outline-variant/30 text-center">
+<p class="font-label-caps text-on-surface-variant mb-md">Universal Verification Gateways</p>
+<div class="grid grid-cols-3 gap-md">
+<button class="bg-surface-container-high border border-outline-variant p-md rounded-lg hover:border-primary-container transition-all flex items-center justify-center group">
+<span class="material-symbols-outlined text-on-surface group-hover:text-primary-container" data-icon="face">face</span>
+</button>
+<button class="bg-surface-container-high border border-outline-variant p-md rounded-lg hover:border-primary-container transition-all flex items-center justify-center group">
+<span class="material-symbols-outlined text-on-surface group-hover:text-primary-container" data-icon="key">key</span>
+</button>
+<button class="bg-surface-container-high border border-outline-variant p-md rounded-lg hover:border-primary-container transition-all flex items-center justify-center group">
+<span class="material-symbols-outlined text-on-surface group-hover:text-primary-container" data-icon="contactless">contactless</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Status Bar Mimic -->
+<div class="mt-lg flex justify-between px-md opacity-40">
+<div class="flex items-center space-x-sm">
+<div class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></div>
+<span class="font-data-mono text-[10px] uppercase">Node Status: Operational</span>
+</div>
+<div class="flex items-center space-x-sm">
+<span class="font-data-mono text-[10px] uppercase">v2.4.0-Stable</span>
+<span class="material-symbols-outlined text-xs" data-icon="wifi">wifi</span>
+</div>
+</div>
+</main>
+<!-- Footer Aesthetic (Hidden in Mobile context, but following system logic) -->
+<footer class="fixed bottom-lg left-1/2 -translate-x-1/2 w-full text-center pointer-events-none opacity-30 px-md">
+<p class="font-label-caps text-[10px] tracking-[0.4em] uppercase">Secured by BY Persona Cryptographic Engine</p>
+</footer>
+<!-- Decorative Corner Element -->
+<div class="fixed top-0 right-0 p-lg opacity-20 hidden md:block">
+<div class="border-t-2 border-r-2 border-primary-container w-16 h-16 rounded-tr-xl"></div>
+</div>
+<div class="fixed bottom-0 left-0 p-lg opacity-20 hidden md:block">
+<div class="border-b-2 border-l-2 border-primary-container w-16 h-16 rounded-bl-xl"></div>
+</div>
+</body></html>

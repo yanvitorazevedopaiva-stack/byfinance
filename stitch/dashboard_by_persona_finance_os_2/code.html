@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-primary": "#0058ca",
+                    "on-tertiary": "#5a1c00",
+                    "on-error": "#690005",
+                    "primary": "#006d40",
+                    "on-tertiary-fixed": "#370e00",
+                    "on-secondary-fixed-variant": "#274581",
+                    "secondary-container": "#d9e2ff",
+                    "on-secondary-fixed": "#001944",
+                    "surface-tint": "#006d40",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#00429b",
+                    "on-primary-container": "#002110",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#ffb599",
+                    "outline": "#717871",
+                    "on-surface-variant": "#414942",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#56ffa8",
+                    "on-surface": "#181d19",
+                    "inverse-surface": "#2d322e",
+                    "on-error-container": "#410002",
+                    "tertiary-container": "#f26420",
+                    "secondary-fixed-dim": "#afc6ff",
+                    "tertiary-fixed": "#ffdbce",
+                    "surface": "#f8faf8",
+                    "surface-container-low": "#f0f5f0",
+                    "inverse-on-surface": "#eff1ee",
+                    "on-primary-fixed": "#001944",
+                    "surface-container": "#e8ece8",
+                    "on-tertiary-container": "#4f1800",
+                    "primary-fixed-dim": "#b0c6ff",
+                    "outline-variant": "#c1c9c0",
+                    "surface-bright": "#f8faf8",
+                    "on-tertiary-fixed-variant": "#7f2b00",
+                    "surface-dim": "#d8dbd8",
+                    "tertiary-fixed-dim": "#ffb599",
+                    "background": "#f0f2f5",
+                    "on-background": "#181d19",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e1e4e1",
+                    "secondary-fixed": "#d9e2ff",
+                    "surface-variant": "#dee5de",
+                    "surface-container-high": "#e1e4e1",
+                    "secondary": "#495e91",
+                    "error": "#ba1a1a",
+                    "on-secondary-container": "#001b3d",
+                    "primary-fixed": "#d9e2ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-margin": "32px",
+                    "grid-gutter": "20px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "xl": "40px",
+                    "sm": "8px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "body-main": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-md": ["Inter"],
+                    "label-caps": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 109, 64, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+        .neon-glow {
+            box-shadow: 0 0 12px rgba(0, 227, 139, 0.4);
+        }
+        .neon-text {
+            text-shadow: 0 0 4px rgba(0, 109, 64, 0.2);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-main selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="bg-white/90 backdrop-blur-xl border-b border-surface-container-high docked full-width top-0 z-50 shadow-sm flex justify-between items-center w-full px-6 h-16 fixed">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform text-primary">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-xl font-black tracking-widest text-primary font-['Inter']">PERSONA</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-outline" data-icon="notifications">notifications</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden">
+<img alt="User profile" data-alt="Professional headshot of a person with minimalist clean background, soft studio lighting, sharp focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGOsuL2kOuZluMhuq_G3w8cvQM_6-2OSTURvncryUBSFqcaTEW_g1Ys9TB55NoR763mUneCezOzTx6sMSQMKEWA14HDu8ZGRIJDKgF_MwRLKPazV2BoLeuEz1_QP73A__sHUHiIiRoBOaLBjANVV--UP7x7whv5SbWYGsVQ33Esm-YsYgDs1IBCw0mmp5wruQQbb5yn2LWiiJybEQBT6VRxThRB4NXi07t6V8dmvP4yM9IQlJM3UOi3VLu_7WZYXkXetb82p6qcew"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-28 px-6 max-w-lg mx-auto space-y-6">
+<!-- Financial Health Progress -->
+<section class="glass-card rounded-2xl p-6 space-y-4">
+<div class="flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md text-on-surface">Financial Health</h2>
+<span class="font-data-mono text-data-mono text-primary font-bold">84%</span>
+</div>
+<div class="h-2.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-container neon-glow w-[84%] transition-all duration-1000 rounded-full"></div>
+</div>
+<p class="text-sm text-on-surface-variant">Your equity grew <span class="text-primary font-bold">+12.4%</span> this month. Optimal performance detected.</p>
+</section>
+<!-- Summary Grid (2 columns) -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Balance -->
+<div class="glass-card rounded-2xl p-5 space-y-3">
+<div class="flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined text-sm" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">BALANCE</span>
+</div>
+<div class="font-data-mono text-xl font-bold text-on-surface">$24,500</div>
+<div class="text-[10px] text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="trending_up">trending_up</span>
+                    2.1% VS LAST WEEK
+                </div>
+</div>
+<!-- Debts -->
+<div class="glass-card rounded-2xl p-5 space-y-3 border-error/10">
+<div class="flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined text-sm" data-icon="payments">payments</span>
+<span class="font-label-caps text-label-caps">DEBTS</span>
+</div>
+<div class="font-data-mono text-xl font-bold text-on-surface">$1,280</div>
+<div class="text-[10px] text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="warning">warning</span>
+                    DUE IN 3 DAYS
+                </div>
+</div>
+<!-- Invoices -->
+<div class="glass-card rounded-2xl p-5 space-y-3">
+<div class="flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined text-sm" data-icon="description">description</span>
+<span class="font-label-caps text-label-caps">INVOICES</span>
+</div>
+<div class="font-data-mono text-xl font-bold text-on-surface">$4,120</div>
+<div class="text-[10px] text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="schedule">schedule</span>
+                    6 PENDING
+                </div>
+</div>
+<!-- Fixed Expenses -->
+<div class="glass-card rounded-2xl p-5 space-y-3">
+<div class="flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-caps text-label-caps">FIXED</span>
+</div>
+<div class="font-data-mono text-xl font-bold text-on-surface">$3,800</div>
+<div class="text-[10px] text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="sync">sync</span>
+                    AUTOMATED
+                </div>
+</div>
+</div>
+<!-- Debt Evolution Chart -->
+<section class="glass-card rounded-2xl p-6 space-y-6">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-md text-lg text-on-surface">Debt Evolution</h3>
+<span class="material-symbols-outlined text-outline" data-icon="more_vert">more_vert</span>
+</div>
+<div class="relative h-40 w-full flex items-end justify-between gap-2">
+<!-- Mock Chart Bars -->
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[60%]">
+<div class="absolute inset-0 bg-error/10 rounded-t-lg"></div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[45%]">
+<div class="absolute inset-0 bg-error/10 rounded-t-lg"></div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[75%]">
+<div class="absolute inset-0 bg-error/10 rounded-t-lg"></div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[30%]">
+<div class="absolute inset-0 bg-primary/20 to-transparent rounded-t-lg border-t-2 border-primary"></div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[20%]">
+<div class="absolute inset-0 bg-primary/20 to-transparent rounded-t-lg border-t-2 border-primary"></div>
+</div>
+</div>
+<div class="flex justify-between text-[10px] text-outline font-data-mono">
+<span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span>
+</div>
+</section>
+<!-- System Alerts -->
+<section class="space-y-3">
+<h3 class="font-label-caps text-label-caps text-outline px-1">SYSTEM ALERTS</h3>
+<div class="space-y-3">
+<div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 flex gap-4">
+<span class="material-symbols-outlined text-secondary" data-icon="info">info</span>
+<div>
+<div class="font-bold text-sm text-on-surface">Subscription Renewal</div>
+<div class="text-xs text-on-surface-variant mt-1">Amazon Prime will renew in 24 hours ($14.99).</div>
+</div>
+</div>
+<div class="bg-primary-container/10 border border-primary-container/20 rounded-xl p-4 flex gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<div>
+<div class="font-bold text-sm text-on-surface">Portfolio Rebalanced</div>
+<div class="text-xs text-on-surface-variant mt-1">Optimization complete. Expected ROI +1.5%.</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all z-40">
+<span class="material-symbols-outlined text-2xl" data-icon="add" style="font-variation-settings: 'FILL' 0, 'wght' 700;">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="bg-white/95 backdrop-blur-2xl border-t border-outline-variant/30 fixed bottom-0 w-full z-50 flex justify-around items-center h-20 px-4 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+<a class="text-primary scale-110 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</a>
+<a class="text-outline hover:text-primary active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+</a>
+<div class="w-12 h-12 flex items-center justify-center">
+<span class="material-symbols-outlined text-outline" data-icon="bolt">bolt</span>
+</div>
+<a class="text-outline hover:text-primary active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+</a>
+<a class="text-outline hover:text-primary active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</a>
+</nav>
+<!-- Drawer Overlay (Hidden by default) -->
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[55] hidden"></div>
+<!-- NavigationDrawer (Off-screen) -->
+<aside class="fixed inset-y-0 left-0 z-[60] flex flex-col h-full w-80 bg-white border-r border-outline-variant shadow-xl -translate-x-full transition-transform duration-300">
+<div class="p-8 flex flex-col gap-6">
+<div class="flex items-center gap-4 border-b border-surface-container-high pb-6">
+<div class="w-12 h-12 rounded-full border-2 border-primary p-0.5">
+<img alt="User profile" class="rounded-full w-full h-full object-cover" data-alt="Close up of a smiling face with studio lighting and deep blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5kDp7pThw2kZfYggDIXlm34hQONhev8GznWWDAafbgCxv3xKtBKzdb85G1-gTRiLgkJ4sRIGQ3Hx-k7J38qup4qpAX2upN2IfFCbjB_ynWWg8ACFrgYKXIbBHBK-HI98zmv7CS5t4osWqi4J0MbCy44YnNjpKNu43_qWKcbC4-wkkSEYjUXQyQYM7fkG_KYs4zNR-RMrY2iVmnzPzqjG7OqN0Syn5e7G4DOzA07_yo2bVGFOxj9j3TR-JPGLF2mG8cy5eTWRLORA"/>
+</div>
+<div>
+<h3 class="text-on-surface font-bold text-lg">Welcome back</h3>
+<p class="text-on-surface-variant text-xs">Mission Control</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 overflow-y-auto">
+<a class="bg-primary/10 text-primary border-l-4 border-primary font-bold px-4 py-3 flex items-center gap-4 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Inter'] text-sm font-medium">Dashboard</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 flex items-center gap-4 hover:bg-black/5 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-['Inter'] text-sm font-medium">Fixed Expenses</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 flex items-center gap-4 hover:bg-black/5 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+<span class="font-['Inter'] text-sm font-medium">Cards</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 flex items-center gap-4 hover:bg-black/5 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span class="font-['Inter'] text-sm font-medium">Financing</span>
+</a>
+<a class="text-on-surface-variant px-4 py-3 flex items-center gap-4 hover:bg-black/5 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-['Inter'] text-sm font-medium">Installments</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-8 border-t border-surface-container-high">
+<a class="text-on-surface-variant px-4 py-3 flex items-center gap-4 hover:text-error transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-['Inter'] text-sm font-medium">Disconnect</span>
+</a>
+</div>
+</aside>
+</body></html>

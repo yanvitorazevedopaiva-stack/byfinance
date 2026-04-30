@@ -2140,6 +2140,237 @@
   @media(max-width:560px){.bem-form-grid{grid-template-columns:1fr;}.bem-form-full{grid-column:1;}}
   @media(max-width:768px){.bem-ficha-header{flex-direction:column;}.bem-ficha-foto{width:100%;height:180px;}.bens-grid{grid-template-columns:1fr;}}
   @media print{#sidebar,#mob-topbar,#fab-speed-dial,.bem-back-btn,.bem-tabs,.bem-modal-btns{display:none!important;}.bem-panel{display:block!important;}#page-bens{display:block!important;}body{background:#fff!important;color:#000!important;}}
+
+  /* ══════════════════════════════════════════
+     MOBILE BOTTOM BAR & DRAWER
+  ══════════════════════════════════════════ */
+  .mob-bottom-bar{
+    display:none;
+    position:fixed;bottom:0;left:0;right:0;height:64px;z-index:1000;
+    background:var(--card);border-top:1px solid var(--border);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    align-items:stretch;
+  }
+  .mob-nav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;cursor:pointer;background:none;border:none;
+    font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+    letter-spacing:.5px;color:var(--text3);transition:color .18s;padding:0;
+  }
+  .mob-nav-item:hover,.mob-nav-item.active{color:var(--neon-blue);}
+  body.day .mob-nav-item:hover,body.day .mob-nav-item.active{color:#2563eb;}
+  .mob-nav-icon{font-size:20px;line-height:1;}
+  .mob-nav-center{
+    flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;cursor:pointer;background:none;border:none;
+    font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+    letter-spacing:.5px;transition:all .18s;padding:0;
+  }
+  .mob-nav-center-btn{
+    width:46px;height:46px;border-radius:50%;margin-bottom:2px;
+    background:linear-gradient(135deg,var(--neon-green),var(--neon-blue));
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;color:#050a0f;font-weight:900;
+    box-shadow:0 0 20px rgba(0,255,157,0.4);transition:transform .18s,box-shadow .18s;
+  }
+  .mob-nav-center:hover .mob-nav-center-btn{transform:scale(1.08);box-shadow:0 0 28px rgba(0,255,157,0.6);}
+  .mob-nav-center-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--neon-green);}
+
+  /* Drawer */
+  #mob-drawer-overlay{
+    display:none;position:fixed;inset:0;z-index:1100;
+    background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);
+  }
+  #mob-drawer{
+    position:fixed;top:0;left:0;bottom:0;z-index:1200;
+    width:min(280px,85vw);background:var(--bg2);
+    border-right:1px solid var(--border);
+    display:flex;flex-direction:column;
+    transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    overflow-y:auto;
+  }
+  #mob-drawer.open{transform:translateX(0);}
+  #mob-drawer-overlay.open{display:block;}
+  .mob-drawer-header{
+    padding:20px 16px 14px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  }
+  .mob-drawer-logo{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:800;color:var(--neon-green);letter-spacing:2px;}
+  .mob-drawer-close{background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:2px 6px;line-height:1;border-radius:6px;transition:color .15s;}
+  .mob-drawer-close:hover{color:var(--text);}
+  .mob-drawer-section{padding:8px 8px;}
+  .mob-drawer-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--text3);padding:6px 8px 4px;font-weight:700;}
+  .mob-drawer-item{
+    display:flex;align-items:center;gap:12px;padding:11px 12px;
+    border-radius:10px;cursor:pointer;background:none;border:none;
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+    letter-spacing:.5px;color:var(--text2);width:100%;text-align:left;
+    transition:all .15s;
+  }
+  .mob-drawer-item:hover,.mob-drawer-item.active{background:rgba(0,200,255,0.08);color:var(--neon-blue);}
+  body.day .mob-drawer-item:hover,body.day .mob-drawer-item.active{background:rgba(37,99,235,0.07);color:#2563eb;}
+  .mob-drawer-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+  .mob-drawer-footer{padding:12px 8px;border-top:1px solid var(--border);margin-top:auto;flex-shrink:0;}
+
+  /* ══════════════════════════════════════════
+     @media (max-width: 768px) — LAYOUT GERAL
+  ══════════════════════════════════════════ */
+  @media(max-width:768px){
+    /* show bottom bar */
+    .mob-bottom-bar{display:flex;}
+
+    /* sidebar oculta */
+    #sidebar{display:none;}
+
+    /* main */
+    #main{margin-left:0!important;padding-top:0;padding-bottom:80px;}
+    .page{padding:12px 12px 16px;}
+
+    /* FAB acima da bottom bar */
+    #fab-speed-dial{bottom:76px;right:16px;}
+    #fab-lanc{bottom:76px;right:16px;}
+    #calc-btn{bottom:144px;right:16px;}
+    #calc-widget{bottom:210px;right:16px;width:calc(100vw - 32px);max-width:320px;}
+
+    /* mob-topbar oculta (substituída pela bottom bar) */
+    #mob-topbar{display:none!important;}
+
+    /* ── TÍTULOS ── */
+    .page-title{font-size:18px;letter-spacing:1px;}
+    .page-sub{font-size:10px;margin-bottom:12px;}
+    .sec-title{font-size:11px;}
+
+    /* ── GRIDS → 1 ou 2 colunas ── */
+    .grid4{grid-template-columns:1fr 1fr!important;}
+    .grid3{grid-template-columns:1fr 1fr!important;}
+    .grid2{grid-template-columns:1fr!important;}
+    div[style*="grid-template-columns"]{grid-template-columns:1fr!important;}
+
+    /* ── CARDS ── */
+    .card{padding:12px 14px;}
+    .card-value{font-size:20px;}
+
+    /* ── INPUTS: evita zoom iOS ── */
+    input,select,textarea{font-size:16px!important;}
+    input[type="number"],input[type="text"],input[type="date"],
+    input[type="month"],input[type="email"],input[type="tel"],
+    input[type="password"]{font-size:16px!important;}
+
+    /* ── TABELAS: scroll horizontal ── */
+    .tbl-wrap,table{overflow-x:auto;display:block;max-width:100%;}
+    table{min-width:520px;}
+    #fat-table{min-width:680px;}
+    .crono-tbl{min-width:640px;}
+
+    /* ── BOTÕES ── */
+    .btn{font-size:11px;padding:6px 12px;}
+    .btn-sm{font-size:10px;padding:4px 8px;}
+
+    /* ── MODAIS ── */
+    .bem-modal-box,[style*="width:min(420px"],[style*="width:min(560px"],[style*="width:min(380px"],[style*="width:min(440px"]{
+      width:95vw!important;max-width:95vw!important;
+    }
+    [id$="-modal"]{padding:12px!important;}
+
+    /* ── DASHBOARD ── */
+    #page-dashboard .grid4{grid-template-columns:1fr 1fr!important;}
+    .health-bar-wrap{flex-direction:column!important;gap:12px;}
+    .health-right{flex-direction:row!important;flex-wrap:wrap!important;width:100%!important;}
+    .health-metric{flex:1;min-width:110px;}
+    #dash-graficos{grid-template-columns:1fr!important;}
+
+    /* ── CARTÕES ── */
+    #page-cartoes [style*="grid-template-columns:2fr 1fr 1fr 1fr 1fr"]{
+      grid-template-columns:1fr 1fr!important;
+    }
+    .ct-cards-grid{grid-template-columns:1fr!important;}
+    .ct-vcard-dates{grid-template-columns:1fr 1fr!important;}
+
+    /* ── LANÇAMENTOS ── */
+    .lanc-hero{padding:16px;}
+    .lanc-hero-title{font-size:22px!important;}
+    [style*="grid-template-columns:3fr 1fr 1fr 1fr"]{grid-template-columns:1fr!important;}
+    [id="lanc-formas-wrap"]{gap:4px!important;}
+    .lanc-forma-btn{font-size:10px!important;padding:6px 8px!important;}
+    #lanc-cred-fields{grid-template-columns:1fr!important;}
+    .btn-lancar{width:100%!important;}
+
+    /* ── SEMANAL ── */
+    .sem-compare-wrap{flex-direction:column!important;}
+    .sem-compare-bars{width:100%!important;}
+    .sem-limit-cfg{flex-wrap:wrap!important;}
+
+    /* ── FATURAS ── */
+    .fat-sim-grid{grid-template-columns:1fr!important;}
+    .fat-hist-wrap{overflow-x:auto!important;}
+    .fat-hist-grid{min-width:600px;}
+
+    /* ── GASTOS FIXOS ── */
+    #page-gastos [style*="grid-template-columns"]{grid-template-columns:1fr 1fr!important;}
+    .health-bar-wrap{grid-template-columns:1fr!important;}
+
+    /* ── PARCELAS ── */
+    .parc-tl-grid{min-width:460px;}
+    .parc-timeline-wrap{padding:12px!important;}
+
+    /* ── PLANEJAMENTO ── */
+    .plan-tabs{gap:4px;padding:4px;}
+    .plan-tab{padding:7px 10px;font-size:10px;}
+    #plan-anos-tabs{flex-wrap:wrap!important;}
+    #plan-table-wrap{overflow-x:auto!important;}
+    #plan-table{min-width:480px;}
+    .mp-input-row{grid-template-columns:1fr auto!important;}
+
+    /* ── INVESTIMENTOS ── */
+    #inv-sumario{grid-template-columns:1fr 1fr!important;}
+    #page-investimentos [style*="grid-template-columns:2fr 1fr 1fr 1fr"]{
+      grid-template-columns:1fr 1fr!important;
+    }
+    #inv-h-val{width:100%!important;}
+
+    /* ── COMPRAS ── */
+    .cp-form-row{grid-template-columns:1fr!important;}
+    .cp-tbl-header{display:none;}
+    .cp-row{grid-template-columns:1fr auto!important;}
+    .cp-afford-grid{grid-template-columns:1fr!important;}
+    .cp-afford-box{max-width:96vw!important;}
+
+    /* ── FINANCIAMENTOS ── */
+    #page-financiamentos [style*="grid-template-columns:1fr 1fr 1fr"]{
+      grid-template-columns:1fr!important;
+    }
+
+    /* ── MEUS BENS ── */
+    .bens-grid{grid-template-columns:1fr!important;}
+    .bem-ficha-header{flex-direction:column;}
+    .bem-ficha-foto{width:100%;height:160px;}
+    .bem-fin-cards{grid-template-columns:1fr 1fr!important;}
+    #bem-panel-financeiro [style*="grid-template-columns:1fr 1fr"]{
+      grid-template-columns:1fr!important;
+    }
+
+    /* ── RELATÓRIOS ── */
+    .rel-sec-grid{grid-template-columns:1fr 1fr!important;}
+
+    /* ── CONFIGURAÇÕES ── */
+    .cfg-grid{grid-template-columns:1fr!important;}
+
+    /* ── LOGIN ── */
+    .login-box{width:min(420px,92vw)!important;padding:24px 18px!important;}
+    .login-tabs{margin-bottom:16px;}
+
+    /* ── GRÁFICOS ── */
+    canvas{max-width:100%!important;}
+
+    /* ── PROJEÇÃO ANUAL (gf) ── */
+    #page-gastos [style*="grid-template-columns:repeat(4"]{
+      grid-template-columns:1fr 1fr!important;
+    }
+
+    /* ── PLANO ABAS BENS ── */
+    .bem-tabs{gap:4px;padding:4px;}
+    .bem-tab{padding:7px 10px;font-size:10px;}
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
@@ -5424,6 +5655,7 @@ function showPage(id){
   currentPage=id; _currentPage=id;
   const tbl=document.getElementById('mob-topbar-title');
   if(tbl) tbl.textContent=PAGE_LABELS[id]||id.toUpperCase();
+  if(window.innerWidth<=768&&typeof _mobUpdateBar==='function') _mobUpdateBar(id);
   closeSidebar();
   renderPage(id);
 }
@@ -13463,5 +13695,143 @@ function _verAnexoBemDoc(id){
   w.document.close();
 }
 </script>
+
+<!-- ══════════════════════════════════════
+     MOBILE BOTTOM NAVIGATION BAR
+══════════════════════════════════════ -->
+<nav class="mob-bottom-bar" id="mob-bottom-bar">
+  <button class="mob-nav-item" id="mbn-dashboard" onclick="mobNav('dashboard')">
+    <span class="mob-nav-icon">🏠</span>
+    <span>INÍCIO</span>
+  </button>
+  <button class="mob-nav-item" id="mbn-cartoes" onclick="mobNav('cartoes')">
+    <span class="mob-nav-icon">💳</span>
+    <span>CARTÕES</span>
+  </button>
+  <button class="mob-nav-center" id="mbn-lancamentos" onclick="mobNav('lancamentos')">
+    <div class="mob-nav-center-btn">⚡</div>
+    <span class="mob-nav-center-label">LANÇAR</span>
+  </button>
+  <button class="mob-nav-item" id="mbn-semanal" onclick="mobNav('semanal')">
+    <span class="mob-nav-icon">📊</span>
+    <span>SEMANAL</span>
+  </button>
+  <button class="mob-nav-item" id="mbn-mais" onclick="openMobDrawer()">
+    <span class="mob-nav-icon">☰</span>
+    <span>MAIS</span>
+  </button>
+</nav>
+
+<!-- DRAWER OVERLAY -->
+<div id="mob-drawer-overlay" onclick="closeMobDrawer()"></div>
+
+<!-- DRAWER MENU -->
+<div id="mob-drawer">
+  <div class="mob-drawer-header">
+    <span class="mob-drawer-logo">◈ PERSONA</span>
+    <button class="mob-drawer-close" onclick="closeMobDrawer()">✕</button>
+  </div>
+
+  <div class="mob-drawer-section">
+    <div class="mob-drawer-label">FINANCEIRO</div>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('gastos')">
+      <span class="mob-drawer-icon">◉</span>GASTOS FIXOS
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('faturas')">
+      <span class="mob-drawer-icon">▣</span>FATURAS
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('parcelas')">
+      <span class="mob-drawer-icon">◐</span>PARCELAS
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('financiamentos')">
+      <span class="mob-drawer-icon">◫</span>FINANCIAMENTOS
+    </button>
+  </div>
+
+  <div class="mob-drawer-section">
+    <div class="mob-drawer-label">PATRIMÔNIO</div>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('investimentos')">
+      <span class="mob-drawer-icon">◈</span>INVESTIMENTOS
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('bens')">
+      <span class="mob-drawer-icon">◆</span>MEUS BENS
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('compras')">
+      <span class="mob-drawer-icon">◑</span>COMPRAS
+    </button>
+  </div>
+
+  <div class="mob-drawer-section">
+    <div class="mob-drawer-label">ANÁLISE</div>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('planejamento')">
+      <span class="mob-drawer-icon">◎</span>PLANEJAMENTO
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('receita')">
+      <span class="mob-drawer-icon">◈</span>RECEITA
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('relatorios')">
+      <span class="mob-drawer-icon">▦</span>RELATÓRIOS
+    </button>
+  </div>
+
+  <div class="mob-drawer-footer">
+    <button class="mob-drawer-item" onclick="mobNavDrawer('config')">
+      <span class="mob-drawer-icon">⚙</span>CONFIGURAÇÕES
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('sobre')">
+      <span class="mob-drawer-icon">ℹ</span>SOBRE
+    </button>
+    <button class="mob-drawer-item" onclick="closeMobDrawer();doLogout()" style="color:rgba(255,100,100,0.85)">
+      <span class="mob-drawer-icon">⏻</span>SAIR
+    </button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// MOBILE NAVIGATION
+// ══════════════════════════════════════
+const _MOB_BAR_PAGES=['dashboard','cartoes','lancamentos','semanal'];
+
+function mobNav(page){
+  showPage(page);
+  _mobUpdateBar(page);
+}
+
+function mobNavDrawer(page){
+  closeMobDrawer();
+  showPage(page);
+  _mobUpdateBar(page);
+}
+
+function _mobUpdateBar(page){
+  document.querySelectorAll('.mob-nav-item,.mob-nav-center').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('mbn-'+page);
+  if(el) el.classList.add('active');
+  // marca "MAIS" como ativo quando página está no drawer
+  if(!_MOB_BAR_PAGES.includes(page)){
+    const mais=document.getElementById('mbn-mais');
+    if(mais) mais.classList.add('active');
+  }
+}
+
+function openMobDrawer(){
+  document.getElementById('mob-drawer').classList.add('open');
+  document.getElementById('mob-drawer-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeMobDrawer(){
+  document.getElementById('mob-drawer').classList.remove('open');
+  document.getElementById('mob-drawer-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// Atualiza bar quando página muda pelo menu lateral ou outro gatilho
+document.addEventListener('DOMContentLoaded',()=>{
+  if(typeof renderNav==='function') renderNav('dashboard');
+  _mobUpdateBar('dashboard');
+});
+</script>
 </body>
-</html> 
+</html>

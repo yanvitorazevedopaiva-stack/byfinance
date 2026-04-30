@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500;700&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #050a0f;
+            color: #e0e2ed;
+        }
+        .glass-card {
+            background: rgba(16, 19, 27, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(176, 198, 255, 0.1);
+        }
+        .neon-border-blue {
+            box-shadow: 0 0 15px rgba(0, 200, 255, 0.15);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+        }
+        .neon-progress-green {
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(176, 198, 255, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#00429b",
+                        "inverse-on-surface": "#2d3039",
+                        "tertiary-container": "#f26420",
+                        "inverse-surface": "#e0e2ed",
+                        "outline": "#8c90a1",
+                        "tertiary": "#ffb599",
+                        "on-error": "#690005",
+                        "on-primary-fixed": "#001944",
+                        "on-secondary-fixed-variant": "#274581",
+                        "secondary-container": "#274581",
+                        "surface-dim": "#10131b",
+                        "primary-container": "#558dff",
+                        "on-secondary-fixed": "#001944",
+                        "background": "#050a0f",
+                        "on-surface": "#e0e2ed",
+                        "outline-variant": "#414655",
+                        "secondary-fixed-dim": "#afc6ff",
+                        "surface-container-low": "#181c24",
+                        "on-secondary-container": "#98b4f8",
+                        "surface-tint": "#b0c6ff",
+                        "surface-variant": "#31353d",
+                        "primary-fixed": "#d9e2ff",
+                        "on-tertiary-container": "#4f1800",
+                        "inverse-primary": "#0058ca",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdbce",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "error-container": "#93000a",
+                        "surface-container-lowest": "#0b0e16",
+                        "secondary": "#afc6ff",
+                        "on-background": "#e0e2ed",
+                        "on-surface-variant": "#c2c6d8",
+                        "surface-bright": "#363942",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#082e69",
+                        "secondary-fixed": "#d9e2ff",
+                        "surface-container-high": "#262a32",
+                        "surface": "#10131b",
+                        "on-primary-container": "#002761",
+                        "primary-fixed-dim": "#b0c6ff",
+                        "on-tertiary": "#5a1c00",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "primary": "#b0c6ff",
+                        "on-tertiary-fixed": "#370e00",
+                        "surface-container-highest": "#31353d",
+                        "on-primary": "#002d6e",
+                        "surface-container": "#1c2028"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "grid-gutter": "20px",
+                        "container-margin": "32px",
+                        "sm": "8px",
+                        "unit": "4px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Space Grotesk"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Inter"],
+                        "body-main": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-main selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)]">
+<div class="flex items-center gap-4">
+<span class="text-lg font-black tracking-tighter text-blue-500 uppercase italic">BY Persona Finance OS</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-8">
+<span class="font-inter text-sm font-medium tracking-tight text-slate-500 hover:bg-blue-500/10 hover:text-blue-300 transition-all cursor-pointer">Dashboard</span>
+<span class="font-inter text-sm font-medium tracking-tight text-blue-400 active:scale-95 duration-200 cursor-pointer">Cards</span>
+<span class="font-inter text-sm font-medium tracking-tight text-slate-500 hover:bg-blue-500/10 hover:text-blue-300 transition-all cursor-pointer">Planning</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-blue-500">notifications</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center border border-white/10">
+<span class="material-symbols-outlined text-xs">person</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 px-6 max-w-7xl mx-auto space-y-8">
+<!-- Summary Cards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-grid-gutter">
+<!-- Total Cards -->
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-outline uppercase">Total Cards</span>
+<div class="mt-4 flex items-end justify-between">
+<span class="font-data-mono text-3xl font-bold text-primary">08</span>
+<span class="material-symbols-outlined text-primary/40">credit_card</span>
+</div>
+</div>
+<!-- Total Debt -->
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-outline uppercase">Total Debt</span>
+<div class="mt-4">
+<span class="font-data-mono text-2xl font-bold text-error">R$ 14.502,40</span>
+</div>
+</div>
+<!-- Monthly Cost -->
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-outline uppercase">Monthly Cost</span>
+<div class="mt-4">
+<span class="font-data-mono text-2xl font-bold text-on-surface">R$ 3.120,00</span>
+</div>
+</div>
+<!-- Active Debt -->
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-outline uppercase">Active Debts</span>
+<div class="mt-4 flex items-end justify-between">
+<span class="font-data-mono text-3xl font-bold text-tertiary">03</span>
+<span class="material-symbols-outlined text-tertiary/40">warning</span>
+</div>
+</div>
+<!-- Total Limit -->
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-between neon-border-blue">
+<span class="font-label-caps text-label-caps text-outline uppercase">Total Limit</span>
+<div class="mt-4">
+<span class="font-data-mono text-2xl font-bold text-[#00c8ff]">R$ 45.000,00</span>
+</div>
+</div>
+</div>
+<!-- Interactive Tabs -->
+<div class="flex items-center gap-2 bg-surface-container-low p-1 rounded-xl w-fit">
+<button class="px-8 py-2.5 rounded-lg bg-blue-600/20 text-blue-400 font-bold text-sm transition-all border border-blue-500/30">Cartões</button>
+<button class="px-8 py-2.5 rounded-lg text-slate-400 font-medium text-sm hover:bg-white/5 transition-all">Financiamentos</button>
+</div>
+<!-- Visual Credit Cards Slider/Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Card 01: Platinum -->
+<div class="relative group">
+<div class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="relative glass-card p-8 rounded-3xl overflow-hidden border-l-4 border-l-[#00c8ff]">
+<div class="flex justify-between items-start mb-12">
+<div>
+<p class="font-label-caps text-xs text-outline mb-1">ULTRA PLATINUM</p>
+<h3 class="font-headline-md text-xl">Digital Nexus Bank</h3>
+</div>
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">contactless</span>
+</div>
+<div class="space-y-6">
+<div class="flex justify-between items-end">
+<span class="font-data-mono text-xl tracking-widest text-on-surface/90">**** 8824</span>
+<div class="text-right">
+<p class="text-[10px] text-outline uppercase">Current Invoice</p>
+<p class="font-data-mono text-lg font-bold text-[#00ff9d]">R$ 4.250,00</p>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] text-outline font-bold">
+<span>USED: R$ 8.200,00</span>
+<span>LIMIT: R$ 20.000,00</span>
+</div>
+<div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-[#00ff9d] neon-progress-green" style="width: 41%;"></div>
+</div>
+</div>
+<div class="flex justify-between pt-4 border-t border-white/5">
+<div>
+<p class="text-[10px] text-outline uppercase">Closing</p>
+<p class="font-data-mono text-sm text-on-surface">24/10</p>
+</div>
+<div>
+<p class="text-[10px] text-outline uppercase">Due Date</p>
+<p class="font-data-mono text-sm text-on-surface">02/11</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 02: Neon Gold -->
+<div class="relative group">
+<div class="absolute inset-0 bg-gradient-to-br from-tertiary/20 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="relative glass-card p-8 rounded-3xl overflow-hidden border-l-4 border-l-tertiary">
+<div class="flex justify-between items-start mb-12">
+<div>
+<p class="font-label-caps text-xs text-outline mb-1">STRATEGIC GOLD</p>
+<h3 class="font-headline-md text-xl">Apex Capital</h3>
+</div>
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">rocket_launch</span>
+</div>
+<div class="space-y-6">
+<div class="flex justify-between items-end">
+<span class="font-data-mono text-xl tracking-widest text-on-surface/90">**** 1092</span>
+<div class="text-right">
+<p class="text-[10px] text-outline uppercase">Current Invoice</p>
+<p class="font-data-mono text-lg font-bold text-[#00ff9d]">R$ 1.120,50</p>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] text-outline font-bold">
+<span>USED: R$ 6.500,00</span>
+<span>LIMIT: R$ 8.000,00</span>
+</div>
+<div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-error" style="width: 81%;"></div>
+</div>
+</div>
+<div class="flex justify-between pt-4 border-t border-white/5">
+<div>
+<p class="text-[10px] text-outline uppercase">Closing</p>
+<p class="font-data-mono text-sm text-on-surface">12/10</p>
+</div>
+<div>
+<p class="text-[10px] text-outline uppercase">Due Date</p>
+<p class="font-data-mono text-sm text-on-surface">20/10</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Image Asset for Visual Break -->
+<div class="hidden lg:block relative rounded-3xl overflow-hidden glass-card group">
+<img alt="Futuristic Card Visual" class="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" data-alt="A macro shot of a sleek, futuristic metallic credit card with embedded holographic circuits and glowing fiber optic edges. The scene is set in a high-tech laboratory environment with deep blue and cybernetic green ambient lighting. The atmosphere is sophisticated and ultra-modern, emphasizing the cutting-edge financial technology of the Persona Finance OS brand. Sharp details and cinematic shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6UdK-i4u-BKzdKietK82iQPHyiT4QiOMyx5VlNTSFcMIQxb4rL1P5W72rM8iM5DdjcYFBD9hxmkOFFOyoe0BPv3NQSSbFzVgLtPtMjqBujcsynmHQcezZoz4C7qlsMdUlcQEOqpoal96X7SIy1OeuVgykPoLLYCe9nAXqJjkP56oS0-sb8kA7g4gxZmaPhR_tOipmQtCbVdd2ZpkBisMczbhkAuiqpd0KZSp61vDoI_1Dh1dlgsPReATog8hLYaUA42kxyzWVyRg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#050a0f] via-transparent to-transparent"></div>
+<div class="absolute bottom-6 left-6">
+<p class="font-label-caps text-xs text-primary mb-1">PRO TIP</p>
+<p class="text-sm font-medium text-on-surface">Consolidate debt to save up to 12% on interest.</p>
+</div>
+</div>
+</div>
+<!-- Detailed List Table -->
+<div class="glass-card rounded-2xl overflow-hidden">
+<div class="px-8 py-6 border-b border-white/5 flex justify-between items-center">
+<h2 class="font-headline-md text-lg">Inventory Details</h2>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-white transition-colors">filter_list</span>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-white transition-colors">download</span>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-white/5">
+<th class="px-8 py-4 text-left font-label-caps text-[11px] text-outline uppercase tracking-widest cursor-pointer hover:text-primary transition-colors">Institution <span class="material-symbols-outlined text-[10px] align-middle">expand_more</span></th>
+<th class="px-8 py-4 text-left font-label-caps text-[11px] text-outline uppercase tracking-widest">Type</th>
+<th class="px-8 py-4 text-right font-label-caps text-[11px] text-outline uppercase tracking-widest cursor-pointer hover:text-primary transition-colors">Limit</th>
+<th class="px-8 py-4 text-right font-label-caps text-[11px] text-outline uppercase tracking-widest cursor-pointer hover:text-primary transition-colors">Spent</th>
+<th class="px-8 py-4 text-center font-label-caps text-[11px] text-outline uppercase tracking-widest">Status</th>
+<th class="px-8 py-4 text-right font-label-caps text-[11px] text-outline uppercase tracking-widest">Next Due</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-on-primary-fixed-variant flex items-center justify-center font-bold text-xs">DN</div>
+<span class="text-sm font-medium">Digital Nexus</span>
+</div>
+</td>
+<td class="px-8 py-5 text-sm text-outline">Platinum Credit</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm">R$ 20.000,00</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm text-error">R$ 8.200,00</td>
+<td class="px-8 py-5 text-center">
+<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-green-500/10 text-[#00ff9d] border border-green-500/20 uppercase tracking-tighter">Healthy</span>
+</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm text-outline">02 Nov</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-tertiary-container flex items-center justify-center font-bold text-xs">AC</div>
+<span class="text-sm font-medium">Apex Capital</span>
+</div>
+</td>
+<td class="px-8 py-5 text-sm text-outline">Gold Rewards</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm">R$ 8.000,00</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm text-error">R$ 6.500,00</td>
+<td class="px-8 py-5 text-center">
+<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-red-500/10 text-error border border-red-500/20 uppercase tracking-tighter">High Usage</span>
+</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm text-outline">20 Oct</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center font-bold text-xs">VR</div>
+<span class="text-sm font-medium">Vortex Retail</span>
+</div>
+</td>
+<td class="px-8 py-5 text-sm text-outline">Standard</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm">R$ 2.500,00</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm text-error">R$ 420,00</td>
+<td class="px-8 py-5 text-center">
+<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-green-500/10 text-[#00ff9d] border border-green-500/20 uppercase tracking-tighter">Healthy</span>
+</td>
+<td class="px-8 py-5 text-right font-data-mono text-sm text-outline">15 Nov</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 md:bottom-8 right-8 w-14 h-14 rounded-full bg-blue-500 shadow-[0_0_20px_rgba(7,114,255,0.4)] flex items-center justify-center text-white active:scale-90 transition-transform z-[70]">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- BottomNavBar Shell -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 h-20 pb-safe bg-slate-950/90 backdrop-blur-2xl border-t border-blue-500/20 shadow-[0_-4px_20px_rgba(7,114,255,0.15)] rounded-t-2xl">
+<div class="flex flex-col items-center justify-center text-slate-500 opacity-60 hover:text-blue-300 hover:opacity-100 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-inter text-[10px] font-semibold uppercase tracking-widest mt-1">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-blue-400 bg-blue-500/10 rounded-xl px-3 py-1 shadow-[0_0_15px_rgba(7,114,255,0.3)] active:scale-90 transition-transform">
+<span class="material-symbols-outlined">credit_card</span>
+<span class="font-inter text-[10px] font-semibold uppercase tracking-widest mt-1">Cards</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 opacity-60 hover:text-blue-300 hover:opacity-100 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="font-inter text-[10px] font-semibold uppercase tracking-widest mt-1">Planning</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 opacity-60 hover:text-blue-300 hover:opacity-100 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="font-inter text-[10px] font-semibold uppercase tracking-widest mt-1">Investments</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 opacity-60 hover:text-blue-300 hover:opacity-100 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-inter text-[10px] font-semibold uppercase tracking-widest mt-1">Reports</span>
+</div>
+</nav>
+<!-- Side Navigation Drawer (Hidden on mobile, layout for desktop context) -->
+<aside class="hidden lg:flex fixed inset-y-0 left-0 z-[60] w-20 flex-col items-center py-8 gap-10 bg-slate-950/95 backdrop-blur-3xl border-r border-white/10 shadow-2xl shadow-blue-900/20 overflow-y-auto">
+<div class="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center border border-blue-500">
+<span class="material-symbols-outlined text-blue-400">account_balance_wallet</span>
+</div>
+<div class="flex flex-col gap-6">
+<span class="material-symbols-outlined text-slate-400 hover:text-blue-400 cursor-pointer">home</span>
+<span class="material-symbols-outlined text-blue-400 border-l-2 border-blue-400 pl-2 -ml-2">payments</span>
+<span class="material-symbols-outlined text-slate-400 hover:text-blue-400 cursor-pointer">insights</span>
+<span class="material-symbols-outlined text-slate-400 hover:text-blue-400 cursor-pointer">monitoring</span>
+<span class="material-symbols-outlined text-slate-400 hover:text-blue-400 cursor-pointer">shopping_cart</span>
+<span class="material-symbols-outlined text-slate-400 hover:text-blue-400 cursor-pointer">settings</span>
+</div>
+<div class="mt-auto">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-white/10"></div>
+</div>
+</aside>
+</body></html>

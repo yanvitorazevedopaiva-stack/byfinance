@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#002d6e",
+                        "primary-fixed-dim": "#b0c6ff",
+                        "outline": "#8c90a1",
+                        "surface-container-highest": "#31353d",
+                        "surface-bright": "#363942",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "error-container": "#93000a",
+                        "on-surface": "#e0e2ed",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#082e69",
+                        "surface-variant": "#31353d",
+                        "inverse-surface": "#e0e2ed",
+                        "on-secondary-fixed-variant": "#274581",
+                        "on-primary-fixed": "#001944",
+                        "surface-tint": "#b0c6ff",
+                        "secondary-fixed-dim": "#afc6ff",
+                        "on-tertiary-fixed": "#370e00",
+                        "on-tertiary": "#5a1c00",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "surface-container-low": "#181c24",
+                        "on-secondary-fixed": "#001944",
+                        "on-surface-variant": "#c2c6d8",
+                        "surface-container-lowest": "#0b0e16",
+                        "surface-container": "#1c2028",
+                        "primary-container": "#558dff",
+                        "inverse-on-surface": "#2d3039",
+                        "tertiary": "#ffb599",
+                        "tertiary-fixed": "#ffdbce",
+                        "tertiary-container": "#f26420",
+                        "secondary-fixed": "#d9e2ff",
+                        "secondary": "#afc6ff",
+                        "on-primary-fixed-variant": "#00429b",
+                        "surface-dim": "#10131b",
+                        "on-background": "#e0e2ed",
+                        "surface": "#10131b",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#98b4f8",
+                        "on-primary-container": "#002761",
+                        "primary-fixed": "#d9e2ff",
+                        "inverse-primary": "#0058ca",
+                        "on-error-container": "#ffdad6",
+                        "background": "#10131b",
+                        "secondary-container": "#274581",
+                        "surface-container-high": "#262a32",
+                        "primary": "#b0c6ff",
+                        "outline-variant": "#414655",
+                        "on-tertiary-container": "#4f1800"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "12px",
+                        "lg": "12px",
+                        "xl": "16px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "unit": "4px",
+                        "md": "16px",
+                        "container-margin": "32px",
+                        "lg": "24px",
+                        "grid-gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Space Grotesk"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-main": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { background-color: #f0f2f5; color: #10131b; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        .neon-accent-blue {
+            box-shadow: 0 0 15px rgba(85, 141, 255, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-main text-body-main">
+<!-- TopAppBar Shell -->
+<header class="bg-slate-950/80 backdrop-blur-xl docked full-width top-0 z-50 border-b border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex justify-between items-center w-full px-6 py-4 fixed">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional high-resolution studio portrait of a modern fintech executive with a friendly expression. The lighting is crisp and cinematic with a soft blue rim light that matches the technological elegance of the Persona OS interface. The background is a clean, out-of-focus modern office space with subtle glass reflections." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9J16oKO-F54ht_LfASDXRxwHLqlm4kvM0ZtJ-QlkMIah0YU5WDqDeRWOCxMjJn4agadHhwaIjZDsXOO5KVN4oYfm_lofziufH_PIUJSYiPn7kuvkVyFeoN9_C1U8PC2uRkxSCdeZwp3JqveGdanz3ozYgd1iyX2Zhg7rs-Zb9RUcjlqw2jSTLPZUuZB_8T_eve_dw-OKEX8vzfZ_dB7hH0VJoHQxoHzvugBzWxUCuXpDm0fbxH8r_NRddmRVVJzswQGrptAOzivo"/>
+</div>
+<h1 class="text-lg font-black tracking-widest text-blue-500 dark:text-blue-400 drop-shadow-[0_0_8px_rgba(7,114,255,0.6)] font-inter uppercase">PERSONA OS</h1>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-blue-500 dark:text-blue-400 cursor-pointer hover:opacity-80 transition-opacity" data-icon="sensors">sensors</span>
+</div>
+</header>
+<main class="pt-24 pb-32 px-container-margin max-w-7xl mx-auto">
+<div class="grid grid-cols-12 gap-grid-gutter">
+<!-- Left Column: Form & Percentage -->
+<div class="col-span-12 lg:col-span-5 space-y-grid-gutter">
+<!-- Revenue Percentage Widget -->
+<div class="glass-card p-lg rounded-xl flex items-center justify-between neon-accent-blue">
+<div>
+<p class="font-label-caps text-label-caps text-outline uppercase">Distribuição de Receita</p>
+<p class="font-display-lg text-headline-md text-primary-container mt-xs">74.2%</p>
+</div>
+<div class="h-16 w-16 relative">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-slate-200" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-primary-container" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="175.9" stroke-dashoffset="45" stroke-width="6"></circle>
+</svg>
+<span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold">LIVE</span>
+</div>
+</div>
+<!-- Central Entry Form -->
+<div class="glass-card p-lg rounded-xl">
+<h2 class="font-headline-md text-headline-md mb-lg">Novo Lançamento</h2>
+<form class="space-y-md">
+<div class="relative">
+<label class="font-label-caps text-label-caps text-outline block mb-xs">DESCRIÇÃO</label>
+<input class="w-full bg-white/50 border border-outline/20 rounded-lg p-md focus:ring-2 focus:ring-primary-container focus:border-transparent outline-none transition-all" placeholder="Ex: Assinatura Software" type="text"/>
+<div class="absolute right-md bottom-3 flex gap-xs">
+<span class="bg-primary/10 text-primary-container text-[10px] px-2 py-1 rounded-full font-bold">AUTOCOMPLETE</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div>
+<label class="font-label-caps text-label-caps text-outline block mb-xs">VALOR (R$)</label>
+<input class="w-full font-data-mono bg-white/50 border border-outline/20 rounded-lg p-md focus:ring-2 focus:ring-primary-container outline-none" placeholder="0,00" type="text"/>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-outline block mb-xs">CATEGORIA</label>
+<select class="w-full bg-white/50 border border-outline/20 rounded-lg p-md focus:ring-2 focus:ring-primary-container outline-none appearance-none">
+<option>Operacional</option>
+<option>Marketing</option>
+<option>Infraestrutura</option>
+</select>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary-container font-bold py-md rounded-lg shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                            CONFIRMAR LANÇAMENTO
+                        </button>
+</form>
+</div>
+</div>
+<!-- Right Column: History & Stats -->
+<div class="col-span-12 lg:col-span-7 space-y-grid-gutter">
+<!-- Last 10 Entries Bento Grid -->
+<div class="glass-card p-lg rounded-xl">
+<div class="flex justify-between items-end mb-lg">
+<h2 class="font-headline-md text-headline-md">Últimos Lançamentos</h2>
+<span class="font-label-caps text-label-caps text-primary-container">HISTÓRICO RECENTE</span>
+</div>
+<div class="space-y-sm">
+<!-- History Item 1 -->
+<div class="flex items-center justify-between p-md bg-white/40 rounded-lg border border-white/60 hover:border-primary/30 transition-colors cursor-pointer group">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded bg-tertiary-container/10 flex items-center justify-center text-tertiary-container">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</div>
+<div>
+<p class="font-bold text-sm">Serviços AWS Cloud</p>
+<p class="text-[11px] text-outline uppercase font-medium">Infraestrutura • Hoje, 14:20</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-mono font-bold text-error-container">- R$ 1.240,50</p>
+<p class="text-[10px] text-outline">PAGO</p>
+</div>
+</div>
+<!-- History Item 2 -->
+<div class="flex items-center justify-between p-md bg-white/40 rounded-lg border border-white/60 hover:border-primary/30 transition-colors cursor-pointer group">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded bg-primary-container/10 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+<div>
+<p class="font-bold text-sm">Aporte de Capital B3</p>
+<p class="text-[11px] text-outline uppercase font-medium">Investimentos • Ontem, 09:15</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-mono font-bold text-primary-container">+ R$ 5.000,00</p>
+<p class="text-[10px] text-outline">RECEBIDO</p>
+</div>
+</div>
+<!-- History Item 3 -->
+<div class="flex items-center justify-between p-md bg-white/40 rounded-lg border border-white/60 hover:border-primary/30 transition-colors cursor-pointer group">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded bg-secondary-container/10 flex items-center justify-center text-secondary-container">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+</div>
+<div>
+<p class="font-bold text-sm">Almoço Executivo</p>
+<p class="text-[11px] text-outline uppercase font-medium">Alimentação • 12 Out</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-mono font-bold text-error-container">- R$ 89,90</p>
+<p class="text-[10px] text-outline">PAGO</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Full Table Section -->
+<div class="col-span-12">
+<div class="glass-card rounded-xl overflow-hidden">
+<div class="p-lg border-b border-outline/10 flex flex-wrap gap-md justify-between items-center">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary-container" data-icon="filter_list">filter_list</span>
+<h3 class="font-headline-md text-headline-md">Painel Analítico</h3>
+</div>
+<div class="flex gap-sm">
+<div class="relative">
+<input class="bg-white/50 border border-outline/20 rounded-full py-sm px-xl text-sm focus:ring-1 focus:ring-primary-container outline-none w-64" placeholder="Filtrar lançamentos..." type="text"/>
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline text-lg" data-icon="search">search</span>
+</div>
+<button class="bg-white border border-outline/20 px-md py-sm rounded-full text-sm font-bold flex items-center gap-xs hover:bg-slate-50">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+                                Exportar
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50/50">
+<th class="p-md font-label-caps text-label-caps text-outline border-b border-outline/5">DATA</th>
+<th class="p-md font-label-caps text-label-caps text-outline border-b border-outline/5">DESCRIÇÃO</th>
+<th class="p-md font-label-caps text-label-caps text-outline border-b border-outline/5">CATEGORIA</th>
+<th class="p-md font-label-caps text-label-caps text-outline border-b border-outline/5">STATUS</th>
+<th class="p-md font-label-caps text-label-caps text-outline border-b border-outline/5 text-right">VALOR</th>
+</tr>
+</thead>
+<tbody class="font-body-main">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="p-md border-b border-outline/5 font-data-mono text-sm">14/10/2023</td>
+<td class="p-md border-b border-outline/5 font-bold">Google Workspace Pro</td>
+<td class="p-md border-b border-outline/5">
+<span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">SOFTWARE</span>
+</td>
+<td class="p-md border-b border-outline/5">
+<div class="flex items-center gap-xs text-primary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="text-[11px] font-bold uppercase">Confirmado</span>
+</div>
+</td>
+<td class="p-md border-b border-outline/5 text-right font-data-mono font-bold text-error-container">R$ 156,00</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="p-md border-b border-outline/5 font-data-mono text-sm">13/10/2023</td>
+<td class="p-md border-b border-outline/5 font-bold">Dividendos PETR4</td>
+<td class="p-md border-b border-outline/5">
+<span class="px-3 py-1 rounded-full bg-primary/10 text-primary-container text-[10px] font-bold">DIVIDENDOS</span>
+</td>
+<td class="p-md border-b border-outline/5">
+<div class="flex items-center gap-xs text-primary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="text-[11px] font-bold uppercase">Liquidado</span>
+</div>
+</td>
+<td class="p-md border-b border-outline/5 text-right font-data-mono font-bold text-primary-container">R$ 2.450,12</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="p-md border-b border-outline/5 font-data-mono text-sm">12/10/2023</td>
+<td class="p-md border-b border-outline/5 font-bold">Uber Trip - Corporate</td>
+<td class="p-md border-b border-outline/5">
+<span class="px-3 py-1 rounded-full bg-tertiary-container/10 text-tertiary-container text-[10px] font-bold">TRANSPORTE</span>
+</td>
+<td class="p-md border-b border-outline/5">
+<div class="flex items-center gap-xs text-outline">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span class="text-[11px] font-bold uppercase">Pendente</span>
+</div>
+</td>
+<td class="p-md border-b border-outline/5 text-right font-data-mono font-bold text-error-container">R$ 42,90</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Shell -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-slate-950/90 backdrop-blur-2xl rounded-t-2xl border-t border-blue-500/20 shadow-[0_-10px_30px_rgba(7,114,255,0.1)]">
+<a class="flex flex-col items-center justify-center text-blue-400 drop-shadow-[0_0_5px_rgba(7,114,255,0.8)] active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="add_chart" style="font-variation-settings: 'FILL' 1;">add_chart</span>
+<span class="text-[10px] font-bold uppercase tracking-widest mt-1">Lançar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-300 transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="insert_chart">insert_chart</span>
+<span class="text-[10px] font-bold uppercase tracking-widest mt-1">Semanal</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-300 transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="text-[10px] font-bold uppercase tracking-widest mt-1">Faturas</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-300 transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="text-[10px] font-bold uppercase tracking-widest mt-1">Ajustes</span>
+</a>
+</nav>
+</body></html>

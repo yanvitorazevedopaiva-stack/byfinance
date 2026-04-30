@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#2d3730",
+                    "on-tertiary-container": "#7a5f02",
+                    "error": "#ffb4ab",
+                    "primary-fixed": "#56ffa8",
+                    "outline-variant": "#3b4a3f",
+                    "surface": "#0c150f",
+                    "on-secondary-fixed-variant": "#004d64",
+                    "tertiary-fixed": "#ffe08f",
+                    "on-secondary-container": "#005068",
+                    "on-primary-fixed": "#002110",
+                    "background": "#0c150f",
+                    "inverse-on-surface": "#29332b",
+                    "error-container": "#93000a",
+                    "tertiary": "#fffbff",
+                    "on-primary": "#00391f",
+                    "surface-bright": "#323c34",
+                    "on-background": "#dae5da",
+                    "on-tertiary-fixed": "#241a00",
+                    "secondary-fixed": "#bee9ff",
+                    "on-surface": "#dae5da",
+                    "tertiary-fixed-dim": "#e6c364",
+                    "inverse-primary": "#006d40",
+                    "secondary": "#97deff",
+                    "surface-dim": "#0c150f",
+                    "surface-container-lowest": "#07100a",
+                    "outline": "#849587",
+                    "on-primary-fixed-variant": "#00522f",
+                    "on-error-container": "#ffdad6",
+                    "secondary-container": "#00c8fe",
+                    "secondary-fixed-dim": "#68d3ff",
+                    "on-secondary": "#003546",
+                    "surface-tint": "#00e38b",
+                    "surface-variant": "#2d3730",
+                    "on-surface-variant": "#b9cbbc",
+                    "on-tertiary": "#3d2e00",
+                    "on-secondary-fixed": "#001f2a",
+                    "tertiary-container": "#ffdc80",
+                    "primary": "#f4fff3",
+                    "inverse-surface": "#dae5da",
+                    "primary-container": "#00ff9d",
+                    "surface-container-low": "#141e17",
+                    "on-tertiary-fixed-variant": "#584400",
+                    "surface-container-high": "#232c25",
+                    "surface-container": "#18221b",
+                    "primary-fixed-dim": "#00e38b",
+                    "on-error": "#690005",
+                    "on-primary-container": "#007143"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-margin": "32px",
+                    "grid-gutter": "20px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "xl": "40px",
+                    "sm": "8px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "body-main": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-md": ["Inter"],
+                    "label-caps": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 157, 0.15);
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+        }
+        .neon-text {
+            text-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-main selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="bg-[#050a0f]/80 backdrop-blur-xl border-b border-cyan-400/15 docked full-width top-0 z-50 shadow-[0_4px_30px_rgba(0,0,0,0.5)] flex justify-between items-center w-full px-6 h-16 fixed">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform text-[#00ff9d]">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-xl font-black tracking-widest text-[#00ff9d] drop-shadow-[0_0_8px_rgba(0,255,157,0.5)] font-['Inter']">PERSONA</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-400" data-icon="notifications">notifications</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-cyan-400/30 overflow-hidden">
+<img alt="User profile" data-alt="Professional headshot of a person with minimalist clean background, soft studio lighting, sharp focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGOsuL2kOuZluMhuq_G3w8cvQM_6-2OSTURvncryUBSFqcaTEW_g1Ys9TB55NoR763mUneCezOzTx6sMSQMKEWA14HDu8ZGRIJDKgF_MwRLKPazV2BoLeuEz1_QP73A__sHUHiIiRoBOaLBjANVV--UP7x7whv5SbWYGsVQ33Esm-YsYgDs1IBCw0mmp5wruQQbb5yn2LWiiJybEQBT6VRxThRB4NXi07t6V8dmvP4yM9IQlJM3UOi3VLu_7WZYXkXetb82p6qcew"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-28 px-6 max-w-lg mx-auto space-y-6">
+<!-- Financial Health Progress -->
+<section class="glass-card rounded-2xl p-6 space-y-4">
+<div class="flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md text-on-surface">Financial Health</h2>
+<span class="font-data-mono text-data-mono text-[#00ff9d] neon-text">84%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-[#00ff9d] neon-glow w-[84%] transition-all duration-1000"></div>
+</div>
+<p class="text-sm text-slate-400">Your equity grew <span class="text-[#00ff9d] font-bold">+12.4%</span> this month. Optimal performance detected.</p>
+</section>
+<!-- Summary Grid (2 columns) -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Balance -->
+<div class="glass-card rounded-2xl p-5 space-y-3">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">BALANCE</span>
+</div>
+<div class="font-data-mono text-xl font-bold text-on-surface">$24,500</div>
+<div class="text-[10px] text-[#00ff9d] flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="trending_up">trending_up</span>
+                    2.1% VS LAST WEEK
+                </div>
+</div>
+<!-- Debts -->
+<div class="glass-card rounded-2xl p-5 space-y-3 border-red-500/10">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="payments">payments</span>
+<span class="font-label-caps text-label-caps">DEBTS</span>
+</div>
+<div class="font-data-mono text-xl font-bold text-on-surface">$1,280</div>
+<div class="text-[10px] text-error flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="warning">warning</span>
+                    DUE IN 3 DAYS
+                </div>
+</div>
+<!-- Invoices -->
+<div class="glass-card rounded-2xl p-5 space-y-3">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="description">description</span>
+<span class="font-label-caps text-label-caps">INVOICES</span>
+</div>
+<div class="font-data-mono text-xl font-bold text-on-surface">$4,120</div>
+<div class="text-[10px] text-on-tertiary-fixed-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="schedule">schedule</span>
+                    6 PENDING
+                </div>
+</div>
+<!-- Fixed Expenses -->
+<div class="glass-card rounded-2xl p-5 space-y-3">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-caps text-label-caps">FIXED</span>
+</div>
+<div class="font-data-mono text-xl font-bold text-on-surface">$3,800</div>
+<div class="text-[10px] text-slate-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="sync">sync</span>
+                    AUTOMATED
+                </div>
+</div>
+</div>
+<!-- Debt Evolution Chart -->
+<section class="glass-card rounded-2xl p-6 space-y-6">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-md text-lg text-on-surface">Debt Evolution</h3>
+<span class="material-symbols-outlined text-slate-500" data-icon="more_vert">more_vert</span>
+</div>
+<div class="relative h-40 w-full flex items-end justify-between gap-2">
+<!-- Mock Chart Bars -->
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[60%]">
+<div class="absolute inset-0 bg-gradient-to-t from-red-500/20 to-red-500/5 rounded-t-lg"></div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[45%]">
+<div class="absolute inset-0 bg-gradient-to-t from-red-500/20 to-red-500/5 rounded-t-lg"></div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[75%]">
+<div class="absolute inset-0 bg-gradient-to-t from-red-500/20 to-red-500/5 rounded-t-lg"></div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[30%]">
+<div class="absolute inset-0 bg-[#00ff9d]/30 to-transparent rounded-t-lg border-t border-[#00ff9d]"></div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-lg relative group h-[20%]">
+<div class="absolute inset-0 bg-[#00ff9d]/30 to-transparent rounded-t-lg border-t border-[#00ff9d]"></div>
+</div>
+</div>
+<div class="flex justify-between text-[10px] text-slate-500 font-data-mono">
+<span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span>
+</div>
+</section>
+<!-- System Alerts -->
+<section class="space-y-3">
+<h3 class="font-label-caps text-label-caps text-slate-500 px-1">SYSTEM ALERTS</h3>
+<div class="space-y-3">
+<div class="bg-on-tertiary-container/10 border border-on-tertiary-container/20 rounded-xl p-4 flex gap-4">
+<span class="material-symbols-outlined text-tertiary-fixed-dim" data-icon="info">info</span>
+<div>
+<div class="font-bold text-sm text-tertiary-fixed">Subscription Renewal</div>
+<div class="text-xs text-slate-400 mt-1">Amazon Prime will renew in 24 hours ($14.99).</div>
+</div>
+</div>
+<div class="bg-primary-container/5 border border-primary-container/10 rounded-xl p-4 flex gap-4">
+<span class="material-symbols-outlined text-[#00ff9d]" data-icon="check_circle">check_circle</span>
+<div>
+<div class="font-bold text-sm text-primary-fixed">Portfolio Rebalanced</div>
+<div class="text-xs text-slate-400 mt-1">Optimization complete. Expected ROI +1.5%.</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container shadow-[0_10px_25px_rgba(0,255,157,0.4)] active:scale-90 transition-all z-40">
+<span class="material-symbols-outlined text-2xl" data-icon="add" style="font-variation-settings: 'FILL' 0, 'wght' 700;">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="bg-[#050a0f]/90 backdrop-blur-2xl border-t border-cyan-400/20 fixed bottom-0 w-full z-50 flex justify-around items-center h-20 px-4 rounded-t-2xl shadow-[0_-10px_30px_rgba(0,255,157,0.05)]">
+<a class="text-[#00ff9d] drop-shadow-[0_0_10px_rgba(0,255,157,0.8)] scale-110 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</a>
+<a class="text-slate-500 hover:text-cyan-400 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+</a>
+<div class="w-12 h-12 flex items-center justify-center">
+<!-- Space for FAB or center action -->
+<span class="material-symbols-outlined text-slate-500" data-icon="bolt">bolt</span>
+</div>
+<a class="text-slate-500 hover:text-cyan-400 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+</a>
+<a class="text-slate-500 hover:text-cyan-400 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</a>
+</nav>
+<!-- Drawer Overlay (Hidden by default) -->
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] hidden"></div>
+<!-- NavigationDrawer (Off-screen) -->
+<aside class="fixed inset-y-0 left-0 z-[60] flex flex-col h-full w-80 bg-[#050a0f] border-r border-cyan-400/15 shadow-[20px_0_40px_rgba(0,0,0,0.8)] -translate-x-full transition-transform duration-300">
+<div class="p-8 flex flex-col gap-6">
+<div class="flex items-center gap-4 border-b border-cyan-400/10 pb-6">
+<div class="w-12 h-12 rounded-full border-2 border-[#00ff9d] p-0.5">
+<img alt="User profile" class="rounded-full w-full h-full object-cover" data-alt="Close up of a smiling face with studio lighting and deep blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5kDp7pThw2kZfYggDIXlm34hQONhev8GznWWDAafbgCxv3xKtBKzdb85G1-gTRiLgkJ4sRIGQ3Hx-k7J38qup4qpAX2upN2IfFCbjB_ynWWg8ACFrgYKXIbBHBK-HI98zmv7CS5t4osWqi4J0MbCy44YnNjpKNu43_qWKcbC4-wkkSEYjUXQyQYM7fkG_KYs4zNR-RMrY2iVmnzPzqjG7OqN0Syn5e7G4DOzA07_yo2bVGFOxj9j3TR-JPGLF2mG8cy5eTWRLORA"/>
+</div>
+<div>
+<h3 class="text-[#00ff9d] font-bold text-lg">Welcome back</h3>
+<p class="text-slate-400 text-xs">Mission Control</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 overflow-y-auto">
+<a class="bg-[#00ff9d]/10 text-[#00ff9d] border-l-4 border-[#00ff9d] font-bold px-4 py-3 flex items-center gap-4 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Inter'] text-sm font-medium">Dashboard</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-4 hover:bg-white/5 hover:text-[#00ff9d] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-['Inter'] text-sm font-medium">Fixed Expenses</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-4 hover:bg-white/5 hover:text-[#00ff9d] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+<span class="font-['Inter'] text-sm font-medium">Cards</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-4 hover:bg-white/5 hover:text-[#00ff9d] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span class="font-['Inter'] text-sm font-medium">Financing</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-4 hover:bg-white/5 hover:text-[#00ff9d] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-['Inter'] text-sm font-medium">Installments</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-4 hover:bg-white/5 hover:text-[#00ff9d] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-['Inter'] text-sm font-medium">Entries</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-4 hover:bg-white/5 hover:text-[#00ff9d] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_view_week">calendar_view_week</span>
+<span class="font-['Inter'] text-sm font-medium">Weekly</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-8 border-t border-cyan-400/10">
+<a class="text-slate-400 px-4 py-3 flex items-center gap-4 hover:text-red-400 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-['Inter'] text-sm font-medium">Disconnect</span>
+</a>
+</div>
+</aside>
+</body></html>

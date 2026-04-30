@@ -2180,7 +2180,9 @@
   #mob-drawer-overlay{
     display:none;position:fixed;inset:0;z-index:1100;
     background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
   }
+  #mob-drawer-overlay.open{display:block;pointer-events:all;}
   #mob-drawer{
     position:fixed;top:0;left:0;bottom:0;z-index:1200;
     width:min(280px,85vw);background:var(--bg2);
@@ -13856,7 +13858,7 @@ function _verAnexoBemDoc(id){
 </nav>
 
 <!-- DRAWER OVERLAY -->
-<div id="mob-drawer-overlay" onclick="closeMobDrawer()"></div>
+<div id="mob-drawer-overlay" onclick="closeMobDrawer()" ontouchend="closeMobDrawer()"></div>
 
 <!-- DRAWER MENU -->
 <div id="mob-drawer">
@@ -13955,13 +13957,11 @@ function _mobUpdateBar(page){
 function openMobDrawer(){
   document.getElementById('mob-drawer').classList.add('open');
   document.getElementById('mob-drawer-overlay').classList.add('open');
-  document.body.style.overflow='hidden';
 }
 
 function closeMobDrawer(){
   document.getElementById('mob-drawer').classList.remove('open');
   document.getElementById('mob-drawer-overlay').classList.remove('open');
-  document.body.style.overflow='';
 }
 
 // Atualiza bar quando página muda pelo menu lateral ou outro gatilho

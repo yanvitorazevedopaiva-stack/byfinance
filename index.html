@@ -77,10 +77,11 @@
   body.day select option { background:var(--bg3); color:var(--text); }
 
   /* ===== FAB SPEED DIAL ===== */
+  /* Canto superior direito do conteúdo */
   #fab-speed-dial{
     position:fixed;
-    bottom:28px;
-    right:92px; /* 28px margin + 56px botão + 8px gap */
+    top:76px;
+    right:24px;
     z-index:801;
     display:flex;flex-direction:column;align-items:flex-end;gap:8px;
     pointer-events:none;
@@ -94,16 +95,17 @@
     color:var(--text);letter-spacing:.4px;
     box-shadow:0 4px 20px rgba(0,0,0,.4);
     white-space:nowrap;opacity:0;
-    transform:translateX(24px);
+    transform:translateY(-12px);
     transition:opacity .18s, transform .18s, border-color .15s, color .15s;
     pointer-events:none;
   }
-  #fab-speed-dial.open .fab-dial-item{opacity:1;transform:translateX(0);pointer-events:all;}
-  /* stagger: item mais baixo aparece primeiro (mais próximo do +) */
-  .fab-dial-item:nth-child(1){transition-delay:.12s;}
-  .fab-dial-item:nth-child(2){transition-delay:.08s;}
-  .fab-dial-item:nth-child(3){transition-delay:.04s;}
-  .fab-dial-item:nth-child(4){transition-delay:0s;}
+  #fab-speed-dial.open .fab-dial-item{opacity:1;transform:translateY(0);pointer-events:all;}
+  /* stagger: primeiro item aparece primeiro (mais próximo do botão) */
+  .fab-dial-item:nth-child(1){transition-delay:0s;}
+  .fab-dial-item:nth-child(2){transition-delay:.04s;}
+  .fab-dial-item:nth-child(3){transition-delay:.08s;}
+  .fab-dial-item:nth-child(4){transition-delay:.12s;}
+  .fab-dial-item:nth-child(5){transition-delay:.16s;}
   .fab-dial-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
   .fab-dial-item:hover{border-color:var(--neon-blue);color:var(--neon-blue);}
   .fab-dial-item:hover .fab-dial-icon{background:rgba(0,200,255,0.15);}
@@ -1146,15 +1148,53 @@
   .fat-sim-label{font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;}
   .fat-sim-val{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;}
   .fat-sim-arrow{font-size:22px;color:var(--text3);}
-  .fat-hist-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-top:20px;}
-  .fat-hist-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-  .fat-hist-grid{display:grid;grid-template-columns:auto repeat(12,1fr);gap:3px;font-size:10px;overflow-x:auto;}
-  .fat-hist-cell{padding:5px 4px;border-radius:5px;text-align:center;white-space:nowrap;cursor:default;}
-  .fat-hist-cell.paga{background:rgba(0,255,157,0.12);color:var(--neon-green);cursor:pointer;font-weight:700;}
-  .fat-hist-cell.pendente{background:rgba(255,215,0,0.07);color:var(--neon-yellow);cursor:pointer;}
+  .fat-hist-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 28px;margin-top:20px;overflow-x:auto;}
+  .fat-hist-title{
+    font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;
+    margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .fat-hist-grid{
+    display:grid;grid-template-columns:160px repeat(12,1fr);
+    gap:2px;min-width:860px;
+  }
+  /* cabeçalho dos meses */
+  .fat-hist-cell.header{
+    font-size:11px;font-weight:800;font-family:'JetBrains Mono',monospace;
+    letter-spacing:.06em;color:var(--text3);background:transparent;
+    text-align:center;padding:6px 4px 8px;
+  }
+  .fat-hist-cell.header.mes-atual{color:var(--neon-blue);}
+  /* nome do cartão */
+  .fat-hist-cart{
+    font-size:12px;font-weight:700;font-family:'Inter',sans-serif;
+    color:var(--text);padding:8px 10px 8px 0;white-space:nowrap;
+    display:flex;align-items:center;letter-spacing:.01em;
+  }
+  /* células de valor */
+  .fat-hist-cell{
+    padding:7px 5px;border-radius:6px;text-align:center;
+    white-space:nowrap;cursor:default;
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+    transition:filter .15s;
+  }
+  .fat-hist-cell.paga{
+    background:rgba(0,255,157,0.1);color:var(--neon-green);
+    cursor:pointer;font-weight:700;
+  }
+  .fat-hist-cell.paga:hover{filter:brightness(1.2);}
+  .fat-hist-cell.pendente{
+    background:rgba(255,215,0,0.08);color:var(--neon-yellow);
+    cursor:pointer;font-weight:700;
+  }
+  .fat-hist-cell.pendente:hover{filter:brightness(1.15);}
   .fat-hist-cell.vazia{color:var(--text3);background:transparent;}
-  .fat-hist-cell.header{color:var(--text3);font-weight:700;letter-spacing:.04em;background:transparent;}
-  .fat-hist-cart{font-size:10px;font-weight:700;color:var(--text2);padding:5px 8px 5px 0;white-space:nowrap;display:flex;align-items:center;}
+  /* linha da grade separadora */
+  .fat-hist-row-sep{grid-column:1/-1;height:1px;background:var(--border);margin:2px 0;}
+  /* dia mode */
+  body.day .fat-hist-cell.paga{background:rgba(5,150,105,0.1);color:#059669;}
+  body.day .fat-hist-cell.pendente{background:rgba(217,119,6,0.1);color:#d97706;}
+  body.day .fat-hist-cell.header.mes-atual{color:#2563eb;}
+  body.day .fat-hist-cart{color:#111827;}
 
   /* ===== SAÚDE FINANCEIRA ===== */
   .health-bar-wrap{
@@ -1197,6 +1237,68 @@
   .mp-anual-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
   .mp-anual-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
   .mp-months-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);font-weight:700;white-space:nowrap;}
+
+  /* ===== DÉBITOS PARCELADOS (Lançamentos) ===== */
+  .lanc-deb-section{margin-top:20px;}
+  .lanc-deb-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;cursor:pointer;transition:border-color .18s;
+    user-select:none;
+  }
+  .lanc-deb-header:hover{border-color:var(--neon-yellow);}
+  .lanc-deb-header-title{
+    display:flex;align-items:center;gap:10px;
+    font-size:12px;font-weight:800;font-family:'JetBrains Mono',monospace;
+    letter-spacing:.08em;color:var(--neon-yellow);
+  }
+  .lanc-deb-body{
+    padding:16px;background:var(--card2);
+    border:1px solid var(--border);border-top:none;
+    border-radius:0 0 12px 12px;
+  }
+  .lanc-deb-body.hidden{display:none;}
+  .lanc-deb-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
+  .lanc-deb-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+  .lanc-deb-card-label{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:5px;}
+  .lanc-deb-card-val{font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+  /* tabela */
+  .lanc-deb-tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+  .lanc-deb-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:780px;}
+  .lanc-deb-tbl thead th{
+    padding:8px 10px;text-align:center;font-size:9px;font-weight:700;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.8px;text-transform:uppercase;
+    color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border);
+  }
+  .lanc-deb-tbl thead th:first-child{text-align:left;}
+  .lanc-deb-tbl tbody tr{border-bottom:1px solid var(--td-border);transition:background .15s;}
+  .lanc-deb-tbl tbody tr:hover{background:var(--td-hover);}
+  .lanc-deb-tbl tbody td{padding:8px 10px;text-align:center;vertical-align:middle;}
+  .lanc-deb-tbl tbody td:first-child{text-align:left;}
+  .lanc-deb-tbl tfoot td{
+    padding:8px 10px;font-weight:700;font-size:11px;
+    background:var(--bg3);border-top:1px solid var(--border);text-align:center;
+  }
+  .lanc-deb-prog{min-width:90px;}
+  .lanc-deb-prog-bar{height:5px;border-radius:3px;background:var(--bg2);overflow:hidden;margin-top:3px;}
+  .lanc-deb-prog-fill{height:100%;border-radius:3px;transition:width .4s;}
+  .lanc-deb-status-ok{color:var(--neon-green);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.5px;}
+  .lanc-deb-status-and{color:var(--neon-yellow);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.5px;}
+  .lanc-deb-status-quit{color:var(--neon-blue);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.5px;}
+  /* modal */
+  #lanc-deb-modal{position:fixed;inset:0;z-index:4500;background:rgba(0,0,0,0.78);
+    display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px;}
+  .lanc-deb-form-box{
+    background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+    padding:28px 24px;width:min(580px,100%);margin:auto;
+    box-shadow:0 8px 40px rgba(0,0,0,0.5);
+  }
+  .lanc-deb-juros-preview{
+    padding:10px 14px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);
+    border-radius:8px;font-size:11px;font-family:'JetBrains Mono',monospace;
+    color:var(--neon-yellow);margin-bottom:14px;min-height:36px;
+  }
+  body.day .lanc-deb-juros-preview{background:rgba(217,119,6,0.07);border-color:rgba(217,119,6,0.25);color:#d97706;}
 
   /* ===== SEMANAL: COMPARAÇÃO + LIMITE ===== */
   .sem-compare-wrap{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex-wrap:wrap;}
@@ -1916,16 +2018,19 @@
   .lanc-forma-btn.ativo-cred-parc{background:rgba(0,200,255,0.12);color:var(--neon-blue);border-color:rgba(0,200,255,0.4);}
   .lanc-forma-btn.ativo-pix{background:rgba(0,255,157,0.12);color:var(--neon-green);border-color:rgba(0,255,157,0.4);}
   .lanc-forma-btn.ativo-dinheiro{background:rgba(255,215,0,0.12);color:var(--neon-yellow);border-color:rgba(255,215,0,0.4);}
+  .lanc-forma-btn.ativo-emprestimo{background:rgba(255,140,0,0.12);color:#ff8c00;border-color:rgba(255,140,0,0.4);}
+  .lanc-forma-btn.ativo-pix-credito{background:rgba(168,85,247,0.12);color:var(--neon-purple);border-color:rgba(168,85,247,0.4);}
 
   /* ===== BOTÃO FLUTUANTE LANÇAMENTO ===== */
-  #fab-lanc{position:fixed;bottom:28px;right:28px;z-index:800;
-    width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
-    background:linear-gradient(135deg,var(--neon-green),var(--neon-blue));
-    color:#050a0f;font-size:26px;font-weight:900;
-    box-shadow:0 4px 24px rgba(0,255,157,0.45),0 8px 32px rgba(0,0,0,0.4);
-    transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;}
-  #fab-lanc:hover{transform:scale(1.1);box-shadow:0 6px 32px rgba(0,255,157,0.6);}
+  #fab-lanc{position:fixed;top:20px;right:24px;z-index:800;
+    width:56px;height:56px;border-radius:50%;border:1px solid rgba(0,255,157,0.4);cursor:pointer;
+    background:rgba(0,255,157,0.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    color:var(--neon-green);font-size:26px;font-weight:900;
+    box-shadow:0 0 20px rgba(0,255,157,0.2);
+    transition:transform .2s,box-shadow .2s,background .2s;display:flex;align-items:center;justify-content:center;}
+  #fab-lanc:hover{transform:scale(1.08);background:rgba(0,255,157,0.25);box-shadow:0 0 30px rgba(0,255,157,0.35);}
   #fab-lanc:active{transform:scale(.96);}
+  body.day #fab-lanc{background:rgba(5,150,105,0.12);border-color:rgba(5,150,105,0.35);color:var(--neon-green);box-shadow:none;}
 
   /* ===== MODAL RÁPIDO LANÇAMENTO ===== */
   #fab-modal{position:fixed;inset:0;z-index:799;display:none;align-items:center;justify-content:center;
@@ -1990,7 +2095,7 @@
   .conquista-nome{font-size:13px;font-weight:700;color:var(--text);}
   .conquista-data{font-size:10px;color:var(--neon-green);font-family:'JetBrains Mono',monospace;}
 
-  @media(max-width:640px){#fab-lanc{bottom:80px;right:16px;}}
+  @media(max-width:640px){#fab-lanc{top:auto;bottom:80px;left:16px;right:auto;}}
 
   /* ── Cartões: panel de abas ── */
   .ct-panel{display:none;}.ct-panel.active{display:block;}
@@ -2003,16 +2108,8 @@
   .lanc-hist-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
   .lanc-hist-title{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);letter-spacing:1px;}
   /* ── Calculadora flutuante ── */
-  #calc-btn{position:fixed;bottom:92px;right:28px;z-index:8000;
-    width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
-    background:linear-gradient(135deg,var(--neon-blue),#0090cc);
-    color:#050a0f;font-size:30px;
-    box-shadow:0 4px 24px rgba(0,200,255,0.45),0 8px 32px rgba(0,0,0,0.4);
-    display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;}
-  #calc-btn:hover{transform:scale(1.1);box-shadow:0 6px 32px rgba(0,200,255,0.6);}
-  #calc-btn:active{transform:scale(.96);}
-  body.day #calc-btn{color:#fff;}
-  #calc-widget{position:fixed;bottom:148px;right:28px;z-index:8001;
+  /* #calc-btn removido — calculadora agora está no menu do + */
+  #calc-widget{position:fixed;top:96px;right:24px;z-index:8001;
     width:320px;background:var(--card);border:1px solid var(--border);
     border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.4);
     display:none;user-select:none;touch-action:none;}
@@ -2043,6 +2140,29 @@
   body.day .ck-op{background:rgba(37,99,235,0.08);color:#2563eb;}
   body.day .ck-eq{background:rgba(5,150,105,0.12);color:#059669;}
   body.day .ck-c{background:rgba(220,38,38,0.07);color:#dc2626;}
+
+  /* ========== DOCUMENTOS PESSOAIS ========== */
+  .docs-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+  .docs-cat-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);
+    background:transparent;color:var(--text3);cursor:pointer;
+    font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;font-weight:700;
+    transition:all .18s;}
+  .docs-cat-btn.active,.docs-cat-btn:hover{background:rgba(0,200,255,0.08);color:var(--neon-blue);border-color:rgba(0,200,255,0.3);}
+  body.day .docs-cat-btn.active,body.day .docs-cat-btn:hover{background:rgba(37,99,235,0.07);color:#2563eb;border-color:rgba(37,99,235,0.25);}
+  .docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+  .doc-card{background:var(--card);border:1px solid var(--border);border-radius:13px;
+    padding:16px;transition:box-shadow .2s,border-color .2s;}
+  .doc-card:hover{box-shadow:var(--glow-b);}
+  .doc-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+  .doc-card-icon{font-size:26px;margin-right:10px;flex-shrink:0;}
+  .doc-card-nome{font-size:13px;font-weight:700;color:var(--text);word-break:break-word;}
+  .doc-card-cat{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;
+    padding:2px 8px;border-radius:5px;font-weight:700;margin-top:3px;display:inline-block;}
+  .doc-card-datas{font-size:11px;color:var(--text3);margin:8px 0;}
+  .doc-card-desc{font-size:11px;color:var(--text2);margin-bottom:10px;word-break:break-word;}
+  .doc-status-ok{color:var(--neon-green);}
+  .doc-status-warn{color:var(--neon-yellow);}
+  .doc-status-exp{color:var(--neon-red);}
 
   /* ========== MEUS BENS ========== */
   .bens-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;}
@@ -2093,6 +2213,21 @@
   body.day .bem-tab.active{color:#2563eb;background:rgba(37,99,235,0.07);border-color:rgba(37,99,235,0.25);box-shadow:none;}
   .bem-panel{display:none;}
   .bem-panel.active{display:block;}
+  /* tabs drag */
+  .bem-tab[draggable]{cursor:grab;}
+  .bem-tab[draggable]:active{cursor:grabbing;}
+  .bem-tab.bem-drag-over{border-color:var(--neon-yellow)!important;background:rgba(255,215,0,0.1)!important;}
+  .bem-tab.bem-dragging{opacity:.35;}
+  /* km reminder */
+  .bem-km-reminder{
+    padding:12px 16px;border-radius:10px;margin-bottom:14px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .bem-km-reminder-ok{background:rgba(0,255,157,0.07);border:1px solid rgba(0,255,157,0.2);}
+  .bem-km-reminder-due{background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);}
+  .bem-km-reminder-over{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);}
+  /* financeiro form rápido */
+  .bem-fin-quick{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;}
   .bem-timeline{display:flex;flex-direction:column;gap:10px;}
   .bem-evento{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;transition:border-color .18s;}
   .bem-evento:hover{border-color:rgba(0,200,255,0.25);}
@@ -2112,6 +2247,18 @@
   .bem-evento-footer{display:flex;justify-content:space-between;align-items:center;margin-top:7px;flex-wrap:wrap;gap:6px;}
   .bem-evento-val{font-size:13px;font-weight:700;color:var(--neon-green);font-family:'JetBrains Mono',monospace;}
   body.day .bem-evento-val{color:#059669;}
+  /* badge "Via Lançamentos" */
+  .bem-lanc-badge{
+    display:inline-flex;align-items:center;gap:3px;cursor:pointer;
+    font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.5px;
+    padding:2px 7px;border-radius:5px;
+    background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.22);color:var(--neon-green);
+    transition:all .15s;white-space:nowrap;
+  }
+  .bem-lanc-badge:hover{background:rgba(0,255,157,0.2);border-color:rgba(0,255,157,0.45);}
+  body.day .bem-lanc-badge{background:rgba(5,150,105,0.1);border-color:rgba(5,150,105,0.25);color:#059669;}
+  body.day .bem-lanc-badge:hover{background:rgba(5,150,105,0.18);}
+
   .bem-doc-valido{color:var(--neon-green);}
   .bem-doc-vencendo{color:var(--neon-yellow);}
   .bem-doc-vencido{color:var(--neon-red);}
@@ -2152,7 +2299,29 @@
   body.day .ct-overdue-box{background:rgba(220,38,38,0.05);border-color:rgba(220,38,38,0.25);}
   body.day .ct-overdue-title,body.day .ct-overdue-total{color:#dc2626;}
 
-  @media print{#sidebar,#mob-topbar,#fab-speed-dial,.bem-back-btn,.bem-tabs,.bem-modal-btns{display:none!important;}.bem-panel{display:block!important;}#page-bens{display:block!important;}body{background:#fff!important;color:#000!important;}}
+  @media print{
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    #sidebar,#mob-topbar,#mob-bottom-bar,#fab-speed-dial,#fab-lanc,
+    .bem-back-btn,.bem-tabs,.bem-modal-btns,button,.btn,
+    #calc-widget,#calc-btn,.mob-drawer-footer{display:none!important;}
+    #main{margin-left:0!important;padding:0!important;}
+    .bem-panel{display:block!important;}
+    #page-bens{display:block!important;}
+    body,#main,#page-bens{background:#fff!important;color:#000!important;}
+    .bem-ficha-header,.card,.bem-fin-card,.bem-evento{
+      border:1px solid #ccc!important;box-shadow:none!important;
+      background:#fff!important;
+    }
+    .bem-timeline{gap:6px;}
+    .bem-evento{padding:8px 10px!important;}
+    .page-title{font-size:16px!important;color:#1a1a1a!important;}
+    .page-sub{font-size:10px!important;color:#555!important;}
+    .card{page-break-inside:avoid;margin-bottom:12px!important;}
+    .bem-fin-cards{grid-template-columns:1fr 1fr!important;}
+    canvas{max-height:180px!important;}
+    table{font-size:10px!important;}
+    th,td{padding:4px 6px!important;}
+  }
 
   /* ══════════════════════════════════════════
      MOBILE BOTTOM BAR & DRAWER
@@ -2241,11 +2410,12 @@
     #main{margin-left:0!important;padding-top:0;padding-bottom:80px;}
     .page{padding:12px 12px 16px;}
 
-    /* FAB acima da bottom bar */
-    #fab-speed-dial{bottom:76px;right:16px;}
-    #fab-lanc{bottom:76px;right:16px;}
-    #calc-btn{bottom:144px;right:16px;}
-    #calc-widget{bottom:210px;right:16px;width:calc(100vw - 32px);max-width:320px;}
+    /* Mobile: FAB volta para canto inferior esquerdo acima da bottom bar */
+    #fab-speed-dial{top:auto;bottom:76px;left:16px;right:auto;align-items:flex-start;}
+    #fab-speed-dial .fab-dial-item{transform:translateX(-20px);}
+    #fab-speed-dial.open .fab-dial-item{transform:translateX(0);}
+    #fab-lanc{top:auto;bottom:76px;left:16px;right:auto;}
+    #calc-widget{top:auto;bottom:148px;left:16px;right:auto;width:calc(100vw - 32px);max-width:320px;}
 
     /* mob-topbar oculta (substituída pela bottom bar) */
     #mob-topbar{display:none!important;}
@@ -2449,16 +2619,15 @@
     }
   }
 
-  /* 6. BOTÃO CALCULADORA — REPOSICIONAR */
+  /* 6. CALCULADORA E FAB — MOBILE (inferior esquerdo) */
   @media(max-width:768px){
-    #calc-btn{bottom:140px!important;right:16px!important;}
     #calc-widget{
-      bottom:190px!important;right:16px!important;
-      width:calc(100vw - 32px)!important;
-      max-width:320px!important;
+      top:auto!important;bottom:148px!important;
+      left:16px!important;right:auto!important;
+      width:calc(100vw - 32px)!important;max-width:320px!important;
     }
-    #fab-lanc{bottom:80px!important;right:16px!important;}
-    #fab-speed-dial{bottom:80px!important;right:80px!important;}
+    #fab-lanc{top:auto!important;bottom:80px!important;left:16px!important;right:auto!important;}
+    #fab-speed-dial{top:auto!important;bottom:148px!important;left:16px!important;right:auto!important;align-items:flex-start!important;}
   }
 
   /* 7. FATURAS — TABELA DE MESES */
@@ -3387,11 +3556,45 @@
     <div style="margin-bottom:12px">
       <div style="font-size:10px;color:var(--text3);margin-bottom:8px;letter-spacing:.5px">FORMA DE PAGAMENTO</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="lanc-formas-wrap">
-        <button id="lb-debito"     class="lanc-forma-btn" onclick="setLancForma('debito')">💳 DÉBITO</button>
-        <button id="lb-cred-vista" class="lanc-forma-btn" onclick="setLancForma('cred-vista')">💳 CRÉDITO À VISTA</button>
-        <button id="lb-cred-parc"  class="lanc-forma-btn" onclick="setLancForma('cred-parc')">💳 CRÉDITO PARCELADO</button>
-        <button id="lb-pix"        class="lanc-forma-btn" onclick="setLancForma('pix')">🔄 PIX</button>
-        <button id="lb-dinheiro"   class="lanc-forma-btn" onclick="setLancForma('dinheiro')">💵 DINHEIRO</button>
+        <button id="lb-debito"      class="lanc-forma-btn" onclick="setLancForma('debito')">💳 DÉBITO</button>
+        <button id="lb-cred-vista"  class="lanc-forma-btn" onclick="setLancForma('cred-vista')">💳 CRÉDITO À VISTA</button>
+        <button id="lb-cred-parc"   class="lanc-forma-btn" onclick="setLancForma('cred-parc')">💳 CRÉDITO PARCELADO</button>
+        <button id="lb-pix"         class="lanc-forma-btn" onclick="setLancForma('pix')">🔄 PIX</button>
+        <button id="lb-dinheiro"    class="lanc-forma-btn" onclick="setLancForma('dinheiro')">💵 DINHEIRO</button>
+        <button id="lb-emprestimo"  class="lanc-forma-btn" onclick="setLancForma('emprestimo')">🏦 EMPRÉSTIMO</button>
+        <button id="lb-pix-credito" class="lanc-forma-btn" onclick="setLancForma('pix-credito')">💸 PIX CRÉDITO</button>
+      </div>
+
+      <!-- Mini-form: Empréstimo -->
+      <div id="lanc-emp-fields" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:10px">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:10px">🏦 DETALHES DO EMPRÉSTIMO</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">BANCO / INSTITUIÇÃO</div>
+            <input id="lanc-emp-inst" type="text" placeholder="Ex: Caixa, Nubank, Amigo..." style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Nº DE PARCELAS</div>
+            <input id="lanc-emp-nparc" type="number" min="1" placeholder="Ex: 6" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--neon-blue);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DATA 1ª PARCELA</div>
+            <input id="lanc-emp-inicio" type="date" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TAXA DE JUROS (% a.m., opcional)</div>
+            <input id="lanc-emp-juros" type="number" step="0.01" min="0" placeholder="0" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:12px;box-sizing:border-box">
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini-form: PIX Crédito -->
+      <div id="lanc-pixcred-fields" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:10px">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:10px">💸 DETALHES DO PIX CRÉDITO</div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">INSTITUIÇÃO</div>
+          <input id="lanc-pixcred-inst" type="text" placeholder="Ex: Nubank, Inter, C6..." style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+        </div>
       </div>
     </div>
 
@@ -3475,6 +3678,145 @@
       <div class="lanc-stat-val" id="ls-divida" style="color:var(--neon-red)">—</div>
     </div>
   </div>
+
+  <!-- ══ DÉBITOS PARCELADOS ══ -->
+  <div class="lanc-deb-section">
+    <div class="lanc-deb-header" onclick="toggleLancDebSection()">
+      <div class="lanc-deb-header-title">
+        💳 DÉBITOS PARCELADOS
+        <span id="lanc-deb-count" style="background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);border-radius:20px;padding:2px 10px;font-size:10px">0 ativos</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-sm" style="color:var(--neon-yellow);border-color:rgba(255,215,0,0.35);background:rgba(255,215,0,0.07)" onclick="event.stopPropagation();abrirDebModal()">+ REGISTRAR DÉBITO</button>
+        <span id="lanc-deb-chevron" style="color:var(--text3);font-size:12px;transition:transform .2s">▾</span>
+      </div>
+    </div>
+    <div class="lanc-deb-body hidden" id="lanc-deb-body">
+      <div class="lanc-deb-cards" id="lanc-deb-cards"></div>
+      <div class="lanc-deb-tbl-wrap">
+        <table class="lanc-deb-tbl">
+          <thead>
+            <tr>
+              <th style="text-align:left">DESCRIÇÃO</th>
+              <th>DATA</th>
+              <th>VALOR LÍQUIDO</th>
+              <th>COM JUROS</th>
+              <th>JUROS %</th>
+              <th>PARCELAS</th>
+              <th>PARCELA/MÊS</th>
+              <th>PROGRESSO</th>
+              <th>STATUS</th>
+              <th>COMPROV.</th>
+              <th>AÇÕES</th>
+            </tr>
+          </thead>
+          <tbody id="lanc-deb-tbody"></tbody>
+          <tfoot id="lanc-deb-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL DÉBITO PARCELADO ========== -->
+<div id="lanc-deb-modal">
+  <div class="lanc-deb-form-box">
+    <div style="font-size:13px;font-weight:700;color:var(--neon-yellow);letter-spacing:1px;margin-bottom:20px" id="lanc-deb-modal-title">💳 REGISTRAR DÉBITO PARCELADO</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="grid-column:1/-1">
+        <label class="bem-form-label">DESCRIÇÃO</label>
+        <input id="ld-desc" type="text" class="bem-form-input" placeholder="Ex: Conta do carro, Compra parcelada...">
+      </div>
+
+      <!-- Tipo + Instituição -->
+      <div>
+        <label class="bem-form-label">TIPO DO EMPRÉSTIMO / PARCELAMENTO</label>
+        <select id="ld-tipo" class="bem-form-input" onchange="ldTipoChange()">
+          <option value="PIX Crédito">PIX Crédito</option>
+          <option value="Empréstimo">Empréstimo</option>
+          <option value="Crédito Parcelado">Crédito Parcelado</option>
+          <option value="Boleto Parcelado">Boleto Parcelado</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div>
+        <label class="bem-form-label" id="ld-inst-label">INSTITUIÇÃO / BANCO</label>
+        <input id="ld-inst" type="text" class="bem-form-input" placeholder="Ex: Nubank, Caixa, João Silva...">
+      </div>
+
+      <div>
+        <label class="bem-form-label">DATA DO LANÇAMENTO</label>
+        <input id="ld-data" type="date" class="bem-form-input">
+      </div>
+      <div>
+        <label class="bem-form-label">DATA 1ª PARCELA</label>
+        <input id="ld-inicio" type="date" class="bem-form-input">
+      </div>
+
+      <!-- Valores -->
+      <div>
+        <label class="bem-form-label">💰 VALOR LÍQUIDO (R$) — o que você gastou</label>
+        <input id="ld-liq" type="text" class="bem-form-input money" placeholder="R$ 0,00" oninput="calcDebJuros()" style="color:var(--neon-blue);font-size:16px;font-weight:700">
+      </div>
+      <div>
+        <label class="bem-form-label">💸 VALOR TOTAL COM JUROS (R$)</label>
+        <input id="ld-total" type="text" class="bem-form-input money" placeholder="R$ 0,00 (deixe igual se sem juros)" oninput="calcDebJuros()">
+      </div>
+      <div>
+        <label class="bem-form-label">Nº DE PARCELAS</label>
+        <input id="ld-nparc" type="number" min="1" class="bem-form-input" placeholder="Ex: 3" oninput="calcDebJuros()" style="color:var(--neon-blue);font-family:'JetBrains Mono',monospace">
+      </div>
+      <div>
+        <label class="bem-form-label">PARCELAS JÁ PAGAS</label>
+        <input id="ld-pagas" type="number" min="0" class="bem-form-input" placeholder="0" style="color:var(--neon-green);font-family:'JetBrains Mono',monospace">
+      </div>
+
+      <!-- Categoria + obs -->
+      <div>
+        <label class="bem-form-label">CATEGORIA (para Semanal)</label>
+        <select id="ld-cat" class="bem-form-input">
+          <option>Despesas Pessoais</option><option>Transporte</option><option>Alimentação</option>
+          <option>Moradia</option><option>Saúde</option><option>Educação</option>
+          <option>Lazer e Entretenimento</option><option>Vestuário</option>
+          <option>Imprevistos</option><option>Investimentos/Poupança</option>
+        </select>
+      </div>
+      <div>
+        <label class="bem-form-label">OBSERVAÇÕES</label>
+        <input id="ld-obs" type="text" class="bem-form-input" placeholder="Condições, taxa, etc.">
+      </div>
+    </div>
+
+    <!-- Integrações automáticas -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:10px">◈ REGISTRAR AUTOMATICAMENTE EM:</div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2)">
+          <input id="ld-reg-semanal" type="checkbox" checked style="width:15px;height:15px;accent-color:var(--neon-green)">
+          <span>⚡ SEMANAL — como lançamento da semana</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2)">
+          <input id="ld-reg-parcelas" type="checkbox" checked style="width:15px;height:15px;accent-color:var(--neon-blue)">
+          <span>◐ PARCELAS — rastreio mês a mês</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Preview de juros calculado automaticamente -->
+    <div class="lanc-deb-juros-preview" id="ld-juros-preview">Preencha os valores acima para calcular os juros automaticamente.</div>
+
+    <!-- Comprovante -->
+    <div style="margin-bottom:16px">
+      <label class="bem-form-label">📎 COMPROVANTE / CONTRATO</label>
+      <input id="ld-anexo" type="file" accept="image/*,application/pdf" class="bem-form-input" style="padding:6px 12px">
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="salvarDebito()" style="flex:1;padding:11px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);color:var(--neon-yellow);border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">✓ SALVAR DÉBITO</button>
+      <button onclick="fecharDebModal()" style="flex:1;padding:11px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);color:#ff6666;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">✕ CANCELAR</button>
+    </div>
+  </div>
 </div>
 
 <!-- ========== SEMANAL ========== -->
@@ -3522,6 +3864,47 @@
         <thead><tr><th>#</th><th>DESCRIÇÃO</th><th>DATA</th><th>PAGAMENTO</th><th>CATEGORIA</th><th>VALOR</th><th></th></tr></thead>
         <tbody id="sem-view-tbody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL EDITAR PARCELA ========== -->
+<div id="edit-parcela-modal" style="display:none;position:fixed;inset:0;z-index:3500;background:rgba(0,0,0,0.72);align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(440px,94vw);box-shadow:0 8px 40px rgba(0,0,0,0.6)">
+    <div style="font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:18px">✎ EDITAR PARCELA</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div>
+        <input id="ep-desc" type="text" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR DA PARCELA (R$)</div>
+          <input id="ep-val" type="number" step="0.01" min="0" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--neon-yellow);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TOTAL DE PARCELAS</div>
+          <input id="ep-total" type="number" min="1" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PARCELAS JÁ PAGAS</div>
+          <input id="ep-paga" type="number" min="0" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">MÊS DE INÍCIO</div>
+          <input id="ep-inicio" type="month" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CARTÃO</div>
+        <select id="ep-cartao" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button onclick="salvarEdicaoParcela()" style="flex:1;padding:10px;background:rgba(0,255,157,0.15);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px">✓ SALVAR</button>
+      <button onclick="document.getElementById('edit-parcela-modal').style.display='none'" style="flex:1;padding:10px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);color:#ff6666;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px">✕ CANCELAR</button>
     </div>
   </div>
 </div>
@@ -4704,7 +5087,79 @@
   <div class="sobre-footer-txt">Desenvolvido com dedicação &nbsp;·&nbsp; B&Y Finance &nbsp;·&nbsp; 2025</div>
 </div>
 
+<!-- ========== DOCUMENTOS PESSOAIS ========== -->
+<div id="page-documentos" class="page">
+  <div class="page-title">DOCUMENTOS PESSOAIS</div>
+  <div class="page-sub">// SEU DATABOOK · EXAMES · CERTIDÕES · IDENTIFICAÇÃO · DOCUMENTOS DA VIDA</div>
+
+  <!-- Resumo cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px" id="docs-resumo-cards"></div>
+
+  <!-- Ações + filtros -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+    <button class="btn btn-green" onclick="abrirDocUsuarioModal()">+ NOVO DOCUMENTO</button>
+    <input id="docs-busca" type="text" placeholder="🔍 Buscar documento..."
+      oninput="renderDocumentosUsuario()"
+      style="padding:8px 14px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:9px;font-size:12px;min-width:200px">
+  </div>
+
+  <!-- Filtro por categoria -->
+  <div class="docs-cats" id="docs-cats-bar">
+    <button class="docs-cat-btn active" onclick="setDocCat('TODOS',this)">TODOS</button>
+    <button class="docs-cat-btn" onclick="setDocCat('Médico',this)">🏥 MÉDICO</button>
+    <button class="docs-cat-btn" onclick="setDocCat('Certidão',this)">📋 CERTIDÃO</button>
+    <button class="docs-cat-btn" onclick="setDocCat('Identificação',this)">🪪 IDENTIFICAÇÃO</button>
+    <button class="docs-cat-btn" onclick="setDocCat('Trabalhista',this)">💼 TRABALHISTA</button>
+    <button class="docs-cat-btn" onclick="setDocCat('Financeiro',this)">💰 FINANCEIRO</button>
+    <button class="docs-cat-btn" onclick="setDocCat('Educação',this)">🎓 EDUCAÇÃO</button>
+    <button class="docs-cat-btn" onclick="setDocCat('Outros',this)">📁 OUTROS</button>
+  </div>
+
+  <!-- Grid de documentos -->
+  <div class="docs-grid" id="docs-grid"></div>
+</div>
+
 </main>
+
+<!-- ========== MODAL DOCUMENTO PESSOAL ========== -->
+<div id="docs-usuario-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.78);align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;width:min(540px,100%);margin:auto;box-shadow:0 8px 40px rgba(0,0,0,0.5)">
+    <div style="font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:20px" id="docs-modal-title">📄 ADICIONAR DOCUMENTO</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="grid-column:1/-1">
+        <label class="bem-form-label">NOME DO DOCUMENTO</label>
+        <input id="du-nome" type="text" class="bem-form-input" placeholder="Ex: Exame de Sangue - Jan/2026, RG, CTPS...">
+      </div>
+      <div>
+        <label class="bem-form-label">CATEGORIA</label>
+        <select id="du-cat" class="bem-form-input">
+          <option>Médico</option><option>Certidão</option><option>Identificação</option>
+          <option>Trabalhista</option><option>Financeiro</option><option>Educação</option><option>Outros</option>
+        </select>
+      </div>
+      <div>
+        <label class="bem-form-label">DATA DE EMISSÃO</label>
+        <input id="du-emissao" type="date" class="bem-form-input">
+      </div>
+      <div>
+        <label class="bem-form-label">VALIDADE (opcional)</label>
+        <input id="du-validade" type="date" class="bem-form-input">
+      </div>
+      <div style="grid-column:1/-1">
+        <label class="bem-form-label">DESCRIÇÃO / OBSERVAÇÕES</label>
+        <textarea id="du-desc" class="bem-form-input" rows="2" placeholder="Ex: Resultado normal, emitido pelo Dr. João Silva..."></textarea>
+      </div>
+      <div style="grid-column:1/-1">
+        <label class="bem-form-label">ARQUIVO (PDF, imagem)</label>
+        <input id="du-arquivo" type="file" accept="image/*,application/pdf" class="bem-form-input" style="padding:6px 12px">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="salvarDocUsuario()" style="flex:1;padding:11px;background:rgba(0,200,255,0.15);border:1px solid rgba(0,200,255,0.4);color:var(--neon-blue);border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">✓ SALVAR</button>
+      <button onclick="document.getElementById('docs-usuario-modal').style.display='none'" style="flex:1;padding:11px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);color:#ff6666;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">✕ CANCELAR</button>
+    </div>
+  </div>
+</div>
 
 <!-- FAB LANÇAMENTO -->
 <!-- FAB Speed Dial -->
@@ -4721,18 +5176,12 @@
   <div class="fab-dial-item" onclick="fabDialAcao('compras')">
     <span class="fab-dial-icon" style="background:rgba(168,85,247,0.15)">🛒</span><span>Compra</span>
   </div>
+  <div class="fab-dial-item" onclick="fabDialClose();toggleCalc()">
+    <span class="fab-dial-icon" style="background:rgba(0,200,255,0.15)">🖩</span><span>Calculadora</span>
+  </div>
 </div>
 <div id="fab-overlay" style="display:none;position:fixed;inset:0;z-index:799" onclick="fabDialClose()"></div>
 <button id="fab-lanc" onclick="fabDialToggle()" title="Menu rápido">+</button>
-<button id="calc-btn" onclick="toggleCalc()" title="Calculadora">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="4" y="2" width="16" height="20" rx="2"/>
-    <line x1="8" y1="6" x2="16" y2="6"/>
-    <line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/>
-    <line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/>
-    <line x1="8" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/>
-  </svg>
-</button>
 <div id="calc-widget">
   <div class="calc-header" id="calc-drag-handle">
     <span class="calc-htitle">🖩 CALCULADORA</span>
@@ -5044,24 +5493,32 @@
 
 <!-- ========== MODAL KM ========== -->
 <div id="bem-km-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.78);align-items:center;justify-content:center">
-  <div class="bem-modal-box" style="max-width:380px">
-    <div class="bem-modal-title">🛣 REGISTRAR KM</div>
-    <div style="display:grid;gap:12px">
+  <div class="bem-modal-box" style="max-width:440px">
+    <div class="bem-modal-title" id="bkm-modal-title">🛣 REGISTRAR KM</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div>
         <label class="bem-form-label">DATA DO REGISTRO</label>
         <input id="bkm-f-data" type="date" class="bem-form-input">
       </div>
       <div>
         <label class="bem-form-label">KM ATUAL</label>
-        <input id="bkm-f-km" type="number" class="bem-form-input" placeholder="Ex: 78540" style="color:var(--neon-blue);font-family:'JetBrains Mono',monospace">
+        <input id="bkm-f-km" type="number" class="bem-form-input" placeholder="Ex: 78540" style="color:var(--neon-blue);font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">
       </div>
       <div>
+        <label class="bem-form-label">KM DA PRÓXIMA REVISÃO (opcional)</label>
+        <input id="bkm-f-revisao" type="number" class="bem-form-input" placeholder="Ex: 130000" style="color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">
+      </div>
+      <div>
+        <label class="bem-form-label">TIPO DA REVISÃO</label>
+        <input id="bkm-f-tipo-revisao" type="text" class="bem-form-input" placeholder="Ex: Revisão 30.000km, Óleo">
+      </div>
+      <div style="grid-column:1/-1">
         <label class="bem-form-label">OBSERVAÇÃO (opcional)</label>
         <input id="bkm-f-obs" type="text" class="bem-form-input">
       </div>
     </div>
     <div class="bem-modal-btns">
-      <button class="btn btn-green" style="flex:1" onclick="salvarKmBem()">✓ REGISTRAR</button>
+      <button class="btn btn-green" style="flex:1" id="bkm-save-btn" onclick="salvarKmBem()">✓ REGISTRAR</button>
       <button class="btn" style="flex:1;border-color:rgba(255,68,68,0.3);color:#ff6666" onclick="fecharKmModal()">✕ CANCELAR</button>
     </div>
   </div>
@@ -5913,8 +6370,8 @@ function closeSidebar(){
 
 // ===================== NAVIGATION =====================
 let currentPage='dashboard', _currentPage='dashboard';
-const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,financiamentos:3,parcelas:4,lancamentos:5,semanal:6,faturas:7,planejamento:8,receita:9,investimentos:10,bens:11,compras:12,relatorios:13,config:14,sobre:15};
-const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',financiamentos:'FINANCIAMENTOS',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',compras:'COMPRAS',relatorios:'RELATÓRIOS',config:'CONFIGURAÇÕES',sobre:'SOBRE'};
+const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,financiamentos:3,parcelas:4,lancamentos:5,semanal:6,faturas:7,planejamento:8,receita:9,investimentos:10,bens:11,compras:12,relatorios:13,documentos:14,config:15,sobre:16};
+const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',financiamentos:'FINANCIAMENTOS',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',compras:'COMPRAS',relatorios:'RELATÓRIOS',documentos:'DOCUMENTOS PESSOAIS',config:'CONFIGURAÇÕES',sobre:'SOBRE'};
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -5936,7 +6393,7 @@ function renderPage(id){
   const fns={dashboard:renderDashboard,gastos:renderGastos,cartoes:renderCartoes,parcelas:renderParcelas,
     lancamentos:renderLancamentos,faturas:renderFaturas,planejamento:renderPlanejamento,
     receita:renderReceita,investimentos:renderInvestimentos,bens:renderBens,
-    financiamentos:renderFinanciamentos,
+    financiamentos:renderFinanciamentos,documentos:renderDocumentosUsuario,
     compras:renderCompras,relatorios:renderRelatorios,semanal:renderSemanal,config:renderConfig,sobre:renderSobre};
   if(fns[id]) fns[id]();
 }
@@ -6198,6 +6655,21 @@ function renderDashboard(){
     if(diff>=0&&diff<=15){
       const bem=getBens().find(b=>b.id===ev.bemId);
       if(bem) alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">🔧</span><span>Manutenção do <b>${esc(bem.nome)}</b>: ${esc(ev.desc||ev.tipo)} em <b>${diff} dias</b></span></div>`;
+    }
+  });
+
+  // Alertas de revisão de KM
+  getBens().forEach(bem=>{
+    const reg=getBensKm().filter(k=>k.bemId===bem.id).sort((a,b)=>a.data.localeCompare(b.data));
+    if(!reg.length) return;
+    const kmAtualBem=reg[reg.length-1].km;
+    const comRevisao=[...reg].reverse().find(k=>k.kmRevisao);
+    if(!comRevisao) return;
+    const kmRest=comRevisao.kmRevisao-kmAtualBem;
+    if(kmRest<0){
+      alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">🔧</span><span><b>${esc(bem.nome)}</b>: revisão atrasada em <b>${Math.abs(kmRest).toLocaleString('pt-BR')} km</b>!${comRevisao.tipoRevisao?' ('+esc(comRevisao.tipoRevisao)+')':''}</span></div>`;
+    } else if(kmRest<1000){
+      alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">🔧</span><span><b>${esc(bem.nome)}</b>: revisão em <b>${kmRest.toLocaleString('pt-BR')} km</b>${comRevisao.tipoRevisao?' — '+esc(comRevisao.tipoRevisao):''}</span></div>`;
     }
   });
 
@@ -6876,7 +7348,10 @@ function renderParcelas(){
                 <div style="font-size:10px;color:var(--text3);margin-bottom:2px">${pct}%${restP>0?' ('+restP+'x)':' ✓'}</div>
                 <div class="progress-bar"><div class="progress-fill ${fillCls}" style="width:${pct}%"></div></div>
               </td>
-              <td><button class="btn btn-red btn-sm" onclick="delParcela(${p.id})">✕</button></td>
+              <td style="white-space:nowrap">
+                <button class="btn btn-sm" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3);margin-right:4px" onclick="editParcela(${p.id})">✎</button>
+                <button class="btn btn-red btn-sm" onclick="delParcela(${p.id})">✕</button>
+              </td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -6896,6 +7371,42 @@ function delParcela(id){
   });
 }
 
+let _epId=null;
+function editParcela(id){
+  const p=getData('parcelas').find(x=>x.id===id);
+  if(!p) return;
+  _epId=id;
+  document.getElementById('ep-desc').value=p.desc||'';
+  document.getElementById('ep-val').value=p.val||'';
+  document.getElementById('ep-total').value=p.total||1;
+  document.getElementById('ep-paga').value=p.paga||0;
+  document.getElementById('ep-inicio').value=p.inicio||'';
+  // popula cartões
+  const sel=document.getElementById('ep-cartao');
+  const carts=getData('cartoes');
+  sel.innerHTML=carts.map(c=>`<option value="${esc(c.nome)}"${c.nome===p.cartao?' selected':''}>${esc(c.nome)}</option>`).join('');
+  document.getElementById('edit-parcela-modal').style.display='flex';
+}
+
+function salvarEdicaoParcela(){
+  if(!_epId) return;
+  const parcelas=getData('parcelas');
+  const idx=parcelas.findIndex(x=>x.id===_epId);
+  if(idx===-1) return;
+  const desc=document.getElementById('ep-desc').value.trim();
+  const val=parseFloat(document.getElementById('ep-val').value)||0;
+  const total=Math.max(1,parseInt(document.getElementById('ep-total').value)||1);
+  const paga=Math.min(total,Math.max(0,parseInt(document.getElementById('ep-paga').value)||0));
+  const inicio=document.getElementById('ep-inicio').value;
+  const cartao=document.getElementById('ep-cartao').value;
+  if(!desc){alert('Informe a descrição.');return;}
+  if(val<=0){alert('Informe um valor válido.');return;}
+  parcelas[idx]={...parcelas[idx],desc,val,total,paga,inicio,cartao};
+  setData('parcelas',parcelas);
+  document.getElementById('edit-parcela-modal').style.display='none';
+  renderParcelas();
+}
+
 // ===================== LANÇAMENTOS =====================
 let semanaAtual=1;
 
@@ -6908,7 +7419,7 @@ function getSemanaFromData(dateStr){
   return Math.min(5,Math.ceil((d.getDate()+primeiroDia.getDay())/7));
 }
 
-let lancTipo='credito'; // 'credito' ou 'outros'
+let lancTipo='credito'; // 'credito' | 'emprestimo' | 'pix_credito' | 'outros'
 
 let _lancFormaAtual='pix'; // estado interno da forma selecionada
 
@@ -6924,12 +7435,18 @@ function setLancForma(forma){
   const credFields=document.getElementById('lanc-cred-fields');
   const outFields=document.getElementById('lanc-out-fields');
   const parcWrap=document.getElementById('lanc-parc-wrap');
+  const empFields=document.getElementById('lanc-emp-fields');
+  const pixCredFields=document.getElementById('lanc-pixcred-fields');
 
   // Limpa todos os botões
-  ['debito','cred-vista','cred-parc','pix','dinheiro'].forEach(f=>{
+  ['debito','cred-vista','cred-parc','pix','dinheiro','emprestimo','pix-credito'].forEach(f=>{
     const btn=document.getElementById('lb-'+f);
-    if(btn){btn.className='lanc-forma-btn';}
+    if(btn) btn.className='lanc-forma-btn';
   });
+  // Oculta mini-forms extras
+  if(empFields) empFields.style.display='none';
+  if(pixCredFields) pixCredFields.style.display='none';
+
   // Ativa botão correto
   const btnAtivo=document.getElementById('lb-'+forma);
   if(btnAtivo) btnAtivo.classList.add('ativo-'+forma);
@@ -6938,19 +7455,24 @@ function setLancForma(forma){
     lancTipo='credito';
     credFields.style.display='grid';
     outFields.style.display='none';
-    // Parcelamento: só mostra em cred-parc
     if(parcWrap){
       parcWrap.style.display=forma==='cred-parc'?'block':'none';
-      if(forma!=='cred-parc'){
-        const ps=document.getElementById('lanc-parcelas');
-        if(ps) ps.value='1'; // força à vista
-      }
+      if(forma!=='cred-parc'){const ps=document.getElementById('lanc-parcelas');if(ps)ps.value='1';}
     }
+  } else if(forma==='emprestimo'){
+    lancTipo='emprestimo';
+    credFields.style.display='none';
+    outFields.style.display='none';
+    if(empFields) empFields.style.display='block';
+  } else if(forma==='pix-credito'){
+    lancTipo='pix_credito';
+    credFields.style.display='none';
+    outFields.style.display='none';
+    if(pixCredFields) pixCredFields.style.display='block';
   } else {
     lancTipo='outros';
     credFields.style.display='none';
     outFields.style.display='block';
-    // Pre-seleciona o radio correto
     const radioMap={pix:'lanc-radio-pix',dinheiro:'lanc-radio-dinheiro'};
     const rid=radioMap[forma]||'lanc-radio-pix';
     const r=document.getElementById(rid);
@@ -7611,6 +8133,37 @@ function addLancamento(){
     all[semana].push({id,desc,data,forma,cat,val:valParc,valTotal:val,cartao,nParc,parcId,fatMes:mesIdx,fatVal:valParc});
     setData('lancamentos',all);
 
+  } else if(lancTipo==='emprestimo'){
+    // Empréstimo — registra no semanal + cria parcelas
+    const inst=(document.getElementById('lanc-emp-inst').value||'').trim();
+    const nParc=parseInt(document.getElementById('lanc-emp-nparc').value)||1;
+    const inicio=document.getElementById('lanc-emp-inicio').value||data;
+    const juros=parseFloat(document.getElementById('lanc-emp-juros').value)||0;
+    let valParc;
+    if(juros>0){const r=juros/100;valParc=val*(r*Math.pow(1+r,nParc))/(Math.pow(1+r,nParc)-1);}
+    else{valParc=val/nParc;}
+    valParc=parseFloat(valParc.toFixed(2));
+    const forma=inst?`Empréstimo — ${inst}`:'Empréstimo';
+    // Semanal
+    const allE=getData('lancamentos');
+    if(!allE[semana]) allE[semana]=[];
+    allE[semana].push({id,desc,data,forma,cat,val,tipo:'emprestimo',inst});
+    setData('lancamentos',allE);
+    // Parcelas
+    const parcelas=getData('parcelas');
+    const parcId=id+1;
+    parcelas.push({id:parcId,cartao:inst||'Empréstimo',desc,inicio:inicio.slice(0,7),paga:0,total:nParc,val:valParc});
+    setData('parcelas',parcelas);
+
+  } else if(lancTipo==='pix_credito'){
+    // PIX Crédito — registra no semanal
+    const inst=(document.getElementById('lanc-pixcred-inst').value||'').trim();
+    const forma=inst?`PIX Crédito — ${inst}`:'PIX Crédito';
+    const allPC=getData('lancamentos');
+    if(!allPC[semana]) allPC[semana]=[];
+    allPC[semana].push({id,desc,data,forma,cat,val,tipo:'pix_credito',inst});
+    setData('lancamentos',allPC);
+
   } else {
     // Pix / Débito / Dinheiro — só semanal
     const checked=document.querySelector('input[name="lanc-out"]:checked');
@@ -7625,6 +8178,10 @@ function addLancamento(){
   document.getElementById('lanc-desc').value='';
   document.getElementById('lanc-val').value='';
   document.getElementById('lanc-parcela-preview').textContent='';
+  // Limpa mini-forms extras
+  ['lanc-emp-inst','lanc-emp-nparc','lanc-emp-inicio','lanc-emp-juros','lanc-pixcred-inst'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
   const badge=document.getElementById('lanc-semana-badge');
   if(badge) badge.textContent='—';
 
@@ -7781,35 +8338,40 @@ function renderHistoricoFaturas(){
   if(!lista.length){el.innerHTML='';return;}
 
   const mesAtual=new Date().getMonth();
-  const headerCols=MESES_ABREV.map((m,i)=>`<div class="fat-hist-cell header" style="${i===mesAtual?'color:var(--neon-blue)':''}">${m}</div>`).join('');
+  const headerCols=MESES_ABREV.map((m,i)=>`<div class="fat-hist-cell header${i===mesAtual?' mes-atual':''}">${m}</div>`).join('');
   const totalPagas=lista.reduce((a,c)=>{const pg=pagas[c]||[];return a+pg.filter((v,i)=>v&&(fat[c]||[])[i]>0).length;},0);
   const totalCells=lista.reduce((a,c)=>a+(fat[c]||[]).filter(v=>v>0).length,0);
 
-  const rows=lista.map(c=>{
+  const rows=lista.map((c,ci)=>{
     const vals=fat[c]||Array(12).fill(0);
     const pg=pagas[c]||Array(12).fill(false);
     const cells=vals.map((v,i)=>{
       if(v<=0) return `<div class="fat-hist-cell vazia">—</div>`;
       const paga=pg[i];
       const cls=paga?'paga':'pendente';
-      return `<div class="fat-hist-cell ${cls}" onclick="toggleFatPaga('${esc(c)}',${i})" title="${paga?'Clique para desmarcar':'Clique para marcar como paga'}">${paga?'✓':fmt(v).replace('R$','')}</div>`;
+      const valStr=fmt(v).replace('R$ ','').replace('R$ ','').trim();
+      return `<div class="fat-hist-cell ${cls}${i===mesAtual?' mes-atual':''}" onclick="toggleFatPaga('${esc(c)}',${i})" title="${paga?'Paga — clique para desmarcar':'Pendente — clique para marcar como paga'}">${paga?'✓':valStr}</div>`;
     }).join('');
-    return `<div class="fat-hist-cart">${esc(c)}</div>${cells}`;
+    const sep=ci>0?`<div class="fat-hist-row-sep"></div>`:'';
+    return `${sep}<div class="fat-hist-cart">${esc(c)}</div>${cells}`;
   }).join('');
 
   el.innerHTML=`<div class="fat-hist-wrap">
     <div class="fat-hist-title">
-      <span>◉</span> HISTÓRICO DE PAGAMENTOS
-      <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3)">${totalPagas} de ${totalCells} faturas quitadas</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="color:var(--neon-blue)">◉</span>
+        <span style="font-size:12px;font-weight:800;color:var(--text);letter-spacing:.08em">HISTÓRICO DE PAGAMENTOS</span>
+      </div>
+      <span style="font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${totalPagas===totalCells&&totalCells>0?'var(--neon-green)':'var(--text3)'}">${totalPagas} DE ${totalCells} FATURAS QUITADAS</span>
     </div>
-    <div class="fat-hist-grid" style="grid-template-columns:auto repeat(12,1fr)">
-      <div class="fat-hist-cart" style="color:var(--text3)">CARTÃO</div>${headerCols}
+    <div class="fat-hist-grid">
+      <div class="fat-hist-cart" style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text3)">CARTÃO</div>${headerCols}
       ${rows}
     </div>
-    <div style="margin-top:10px;display:flex;gap:16px;font-size:11px">
-      <span style="color:var(--neon-green)">✓ = paga (clique para alternar)</span>
-      <span style="color:var(--neon-yellow)">valor = pendente</span>
-      <span style="color:var(--text3)">— = sem fatura</span>
+    <div style="margin-top:12px;display:flex;gap:18px;flex-wrap:wrap;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.04em">
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(0,255,157,0.15);display:inline-block"></span><span style="color:var(--neon-green)">✓ = paga (clique para alternar)</span></span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(255,215,0,0.1);display:inline-block"></span><span style="color:var(--neon-yellow)">valor = pendente</span></span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:transparent;border:1px solid var(--border);display:inline-block"></span><span style="color:var(--text3)">— = sem fatura</span></span>
     </div>
   </div>`;
 }
@@ -9924,16 +10486,20 @@ function renderInvestimentos(){
 
 // ===================== RELATÓRIOS =====================
 const REL_SECOES=[
-  {id:1, label:'Gastos Fixos',   icon:'◉', desc:'Lista completa de gastos fixos mensais'},
-  {id:2, label:'Cartões',        icon:'▧', desc:'Cartões cadastrados, limites e dívidas'},
-  {id:3, label:'Parcelas',       icon:'◐', desc:'Parcelas ativas por cartão e quitação'},
-  {id:5, label:'Faturas',        icon:'▣', desc:'Faturas anuais por cartão (mês destacado)'},
-  {id:6, label:'Planejamento',   icon:'◎', desc:'Projeção anual + cronograma de pagamento'},
-  {id:7, label:'Receita',        icon:'◈', desc:'Entradas de receita do mês selecionado'},
-  {id:8, label:'Investimentos',  icon:'◈', desc:'Carteira completa com rentabilidade'},
-  {id:9, label:'Avisos',         icon:'◬', desc:'Alertas automáticos do sistema'},
-  {id:10,label:'Compras',        icon:'◑', desc:'Lista de decisão consciente de compras'},
-  {id:11,label:'Semanal',        icon:'◆', desc:'Gastos semanais do mês vs. limite configurado'},
+  {id:1, label:'Gastos Fixos',        icon:'◉', desc:'Lista completa de gastos fixos mensais'},
+  {id:2, label:'Cartões',             icon:'▧', desc:'Cartões cadastrados, limites, juros e dívidas'},
+  {id:3, label:'Parcelas',            icon:'◐', desc:'Parcelas ativas por cartão e quitação'},
+  {id:20,label:'Financiamentos',      icon:'◫', desc:'Financiamentos e empréstimos parcelados'},
+  {id:5, label:'Faturas',             icon:'▣', desc:'Faturas anuais por cartão (mês destacado)'},
+  {id:6, label:'Planejamento',        icon:'◎', desc:'Projeção anual + cronograma de pagamento'},
+  {id:7, label:'Receita',             icon:'◈', desc:'Entradas de receita do mês selecionado'},
+  {id:8, label:'Investimentos',       icon:'◈', desc:'Carteira completa com rentabilidade'},
+  {id:9, label:'Avisos',              icon:'◬', desc:'Alertas automáticos do sistema'},
+  {id:10,label:'Compras',             icon:'◑', desc:'Lista de decisão consciente de compras'},
+  {id:11,label:'Semanal',             icon:'◆', desc:'Gastos semanais do mês vs. limite configurado'},
+  {id:21,label:'Meus Bens',           icon:'◆', desc:'Resumo de patrimônio, custos e manutenções'},
+  {id:22,label:'Débitos Parcelados',  icon:'◧', desc:'Débitos informais vinculados a lançamentos'},
+  {id:23,label:'Documentos Pessoais', icon:'📁', desc:'Documentos vencendo e resumo do databook'},
 ];
 
 // ===================== COMPRAS =====================
@@ -10608,6 +11174,69 @@ function gerarRelatorioCustom(secoesList,mesRef,anoRef){
           <tfoot><tr class="tr-tot"><td>TOTAL MÊS</td><td style="text-align:right">${lancsMes.length}</td><td class="mn y" style="text-align:right">${f(totalSemanas)}</td>${lmt>0?'<td></td>':''}</tr></tfoot>
         </table>`
         :'<div class="alb al-g"><span>✓</span><span>Nenhum lançamento com data em '+mesNome+'/'+anoRef+'.</span></div>'}
+      </div>`);
+    } else if(sid===20){
+      // FINANCIAMENTOS
+      const fins=getFinanciamentos();
+      const ativos=fins.filter(f2=>f2.pagas<f2.nParc);
+      const quitados=fins.filter(f2=>f2.pagas>=f2.nParc);
+      const totalEmp=fins.reduce((a,f2)=>a+(f2.valorTotal||f2.total||0),0);
+      corpos.push(`<div class="sec">
+        <div class="sec-h"><div class="sec-n">${sn}</div><div class="sec-t">FINANCIAMENTOS E EMPRÉSTIMOS</div><div class="sec-b">${fins.length} registro(s) · ${ativos.length} ativo(s)</div></div>
+        <div class="kr">
+          <div class="kp b"><div class="kp-l">Total Financiado</div><div class="kp-v b">${f(totalEmp)}</div></div>
+          <div class="kp r"><div class="kp-l">Em Aberto</div><div class="kp-v r">${ativos.length}</div></div>
+          <div class="kp g"><div class="kp-l">Quitados</div><div class="kp-v g">${quitados.length}</div></div>
+        </div>
+        ${fins.length?`<table>
+          <thead><tr><th>Descrição</th><th>Cartão/Inst.</th><th style="text-align:right">Total</th><th>Parcelas</th><th style="text-align:right">Parc./Mês</th><th>Status</th></tr></thead>
+          <tbody>${fins.map(f2=>{const pct=f2.nParc>0?Math.round(f2.pagas/f2.nParc*100):0;const ok=f2.pagas>=f2.nParc;
+            return`<tr><td style="font-weight:500">${e(f2.desc)}</td><td style="color:#64748b">${e(f2.cartao||'—')}</td><td class="mn r" style="text-align:right">${f(f2.valorTotal||f2.total||0)}</td><td style="color:#64748b;text-align:center">${f2.pagas}/${f2.nParc}</td><td class="mn y" style="text-align:right">${f(f2.valParc||0)}</td><td><span class="bdg ${ok?'bg':'by'}">${ok?'QUITADO':'EM ANDAMENTO'}</span></td></tr>`;}).join('')}</tbody>
+        </table>`:'<div class="alb al-b"><span>ℹ</span><span>Nenhum financiamento cadastrado.</span></div>'}
+      </div>`);
+    } else if(sid===21){
+      // MEUS BENS
+      const bens=getBens();
+      const evsBens=getBensEventos();
+      corpos.push(`<div class="sec">
+        <div class="sec-h"><div class="sec-n">${sn}</div><div class="sec-t">MEUS BENS — PATRIMÔNIO</div><div class="sec-b">${bens.length} bem(ns) cadastrado(s)</div></div>
+        ${bens.length?`<table>
+          <thead><tr><th>Bem</th><th>Tipo</th><th style="text-align:right">Valor Pago</th><th style="text-align:right">Valor Atual</th><th style="text-align:right">Total Gasto</th><th>Aquisição</th></tr></thead>
+          <tbody>${bens.map(b=>{const evs=evsBens.filter(ev=>ev.bemId===b.id);const totalGasto=evs.reduce((a,ev)=>a+(ev.valor||0),0);
+            return`<tr><td style="font-weight:600">${e(b.nome)}</td><td style="color:#64748b">${e(b.tipo||'—')}</td><td class="mn b" style="text-align:right">${b.valorPago?f(b.valorPago):'—'}</td><td class="mn g" style="text-align:right">${b.valorAtual?f(b.valorAtual):'—'}</td><td class="mn r" style="text-align:right">${f(totalGasto)}</td><td style="color:#64748b">${b.aquisicao?_fmtData(b.aquisicao):'—'}</td></tr>`;}).join('')}</tbody>
+          <tfoot><tr class="tr-tot"><td colspan="4">TOTAL PATRIMÔNIO ESTIMADO</td><td class="mn r" style="text-align:right">${f(bens.reduce((a,b)=>{const evs=evsBens.filter(ev=>ev.bemId===b.id);return a+evs.reduce((s,ev)=>s+(ev.valor||0),0);},0))}</td><td></td></tr></tfoot>
+        </table>`:'<div class="alb al-b"><span>ℹ</span><span>Nenhum bem cadastrado.</span></div>'}
+      </div>`);
+    } else if(sid===22){
+      // DÉBITOS PARCELADOS
+      const debs=getLancDebitos();
+      const ativos2=debs.filter(d=>d.pagas<d.nParc);
+      corpos.push(`<div class="sec">
+        <div class="sec-h"><div class="sec-n">${sn}</div><div class="sec-t">DÉBITOS PARCELADOS</div><div class="sec-b">${debs.length} registro(s) · ${ativos2.length} ativo(s)</div></div>
+        ${debs.length?`<table>
+          <thead><tr><th>Descrição</th><th>Tipo</th><th style="text-align:right">Liq.</th><th style="text-align:right">Com Juros</th><th>Parcelas</th><th style="text-align:right">Parcela/Mês</th></tr></thead>
+          <tbody>${debs.map(d=>`<tr><td style="font-weight:500">${e(d.desc)}</td><td style="color:#64748b">${e(d.tipo||'—')}</td><td class="mn b" style="text-align:right">${f(d.valorLiq||0)}</td><td class="mn r" style="text-align:right">${f(d.valorTotal||d.valorLiq||0)}</td><td style="text-align:center;color:#64748b">${d.pagas}/${d.nParc}</td><td class="mn y" style="text-align:right">${f(d.valorParc||0)}</td></tr>`).join('')}</tbody>
+        </table>`:'<div class="alb al-b"><span>ℹ</span><span>Nenhum débito parcelado.</span></div>'}
+      </div>`);
+    } else if(sid===23){
+      // DOCUMENTOS PESSOAIS
+      const docs=getDocsUsuario();
+      const hoje2=new Date();hoje2.setHours(0,0,0,0);
+      const vencidos=docs.filter(d=>{if(!d.validade)return false;const v=new Date(d.validade);v.setHours(0,0,0,0);return v<hoje2;});
+      const vencendo=docs.filter(d=>{if(!d.validade)return false;const v=new Date(d.validade);v.setHours(0,0,0,0);const df=Math.round((v-hoje2)/(864e5));return df>=0&&df<=30;});
+      corpos.push(`<div class="sec">
+        <div class="sec-h"><div class="sec-n">${sn}</div><div class="sec-t">DOCUMENTOS PESSOAIS — DATABOOK</div><div class="sec-b">${docs.length} documento(s) · ${vencidos.length} vencido(s) · ${vencendo.length} vencendo</div></div>
+        <div class="kr">
+          <div class="kp b"><div class="kp-l">Total Docs</div><div class="kp-v b">${docs.length}</div></div>
+          <div class="kp ${vencendo.length?'y':'g'}"><div class="kp-l">Vencendo 30d</div><div class="kp-v ${vencendo.length?'y':'g'}">${vencendo.length}</div></div>
+          <div class="kp ${vencidos.length?'r':'g'}"><div class="kp-l">Vencidos</div><div class="kp-v ${vencidos.length?'r':'g'}">${vencidos.length}</div></div>
+        </div>
+        ${[...vencidos,...vencendo].length?`<div class="gh" style="border-color:#dc2626;color:#dc2626">⚠ Atenção — Vencidos ou Vencendo em 30 dias</div>
+        <table>
+          <thead><tr><th>Documento</th><th>Categoria</th><th>Validade</th><th>Status</th></tr></thead>
+          <tbody>${[...vencidos,...vencendo].map(d=>{const v=new Date(d.validade);v.setHours(0,0,0,0);const df=Math.round((v-hoje2)/(864e5));const exp=df<0;
+            return`<tr><td style="font-weight:500">${e(d.nome)}</td><td style="color:#64748b">${e(d.categoria)}</td><td style="color:#64748b">${_fmtData(d.validade)}</td><td><span class="bdg ${exp?'br':'by'}">${exp?'VENCIDO':'VENCE EM '+df+'d'}</span></td></tr>`;}).join('')}</tbody>
+        </table>`:'<div class="alb al-g"><span>✓</span><span>Nenhum documento vencido ou vencendo nos próximos 30 dias.</span></div>'}
       </div>`);
     }
   });
@@ -11485,11 +12114,12 @@ const _NAV_META={
   bens:{icon:'◆',label:'MEUS BENS'},
   compras:{icon:'◑',label:'COMPRAS'},
   relatorios:{icon:'▦',label:'RELATÓRIOS'},
+  documentos:{icon:'🗂',label:'DOCUMENTOS'},
   config:{icon:'⚙',label:'CONFIGURAÇÕES'},
 };
 const _NAV_DEFAULT={
   b1:['dashboard','gastos','cartoes','financiamentos','parcelas','semanal','faturas'],
-  b2:['planejamento','receita','investimentos','bens','compras','relatorios']
+  b2:['planejamento','receita','investimentos','bens','compras','relatorios','documentos']
 };
 // páginas que saem dos blocos (ficam em ícones próprios)
 const _NAV_EXCLUDED=new Set(['config','lancamentos']);
@@ -13381,6 +14011,311 @@ function _ctFoiPago(nomeCartao,mes){
   return load('ct_pago_'+nomeCartao+'_'+mes)==='1';
 }
 
+// ===================== DÉBITOS PARCELADOS (LANÇAMENTOS) =====================
+function getLancDebitos(){return load('lancDebitos')||[];}
+function setLancDebitos(v){save('lancDebitos',v);}
+
+let _ldEditId=null;
+let _ldSectionOpen=false;
+
+function toggleLancDebSection(){
+  _ldSectionOpen=!_ldSectionOpen;
+  const body=document.getElementById('lanc-deb-body');
+  const chev=document.getElementById('lanc-deb-chevron');
+  if(body) body.classList.toggle('hidden',!_ldSectionOpen);
+  if(chev) chev.style.transform=_ldSectionOpen?'rotate(180deg)':'';
+  if(_ldSectionOpen) renderLancDebitos();
+}
+
+function abrirDebModal(id){
+  _ldEditId=id||null;
+  const title=document.getElementById('lanc-deb-modal-title');
+  if(title) title.textContent=id?'✎ EDITAR DÉBITO PARCELADO':'💳 REGISTRAR DÉBITO PARCELADO';
+  if(id){
+    const d=getLancDebitos().find(x=>x.id===id);
+    if(d){
+      document.getElementById('ld-desc').value=d.desc||'';
+      document.getElementById('ld-data').value=d.dataLanc||'';
+      document.getElementById('ld-inicio').value=d.dataInicio||'';
+      document.getElementById('ld-liq').value=d.valorLiq?fmt(d.valorLiq):'';
+      document.getElementById('ld-total').value=d.valorTotal?fmt(d.valorTotal):'';
+      document.getElementById('ld-nparc').value=d.nParc||'';
+      document.getElementById('ld-pagas').value=d.pagas||0;
+      document.getElementById('ld-forma').value=d.forma||'PIX';
+      document.getElementById('ld-obs').value=d.obs||'';
+    }
+  } else {
+    ['ld-desc','ld-liq','ld-total','ld-nparc','ld-obs'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
+    document.getElementById('ld-data').value=new Date().toISOString().slice(0,10);
+    document.getElementById('ld-inicio').value='';
+    document.getElementById('ld-pagas').value='0';
+    document.getElementById('ld-forma').value='PIX';
+  }
+  document.getElementById('ld-anexo').value='';
+  document.getElementById('ld-juros-preview').textContent='Preencha os valores acima para calcular os juros automaticamente.';
+  _initMascaraOnce(document.getElementById('ld-liq'));
+  _initMascaraOnce(document.getElementById('ld-total'));
+  document.getElementById('lanc-deb-modal').style.display='flex';
+}
+
+function fecharDebModal(){document.getElementById('lanc-deb-modal').style.display='none';}
+
+function calcDebJuros(){
+  const liq=parseBRL(document.getElementById('ld-liq').value||'0');
+  const total=parseBRL(document.getElementById('ld-total').value||'0');
+  const n=parseInt(document.getElementById('ld-nparc').value)||0;
+  const prev=document.getElementById('ld-juros-preview');
+  if(!liq||!total||!n){prev.textContent='Preencha os valores acima para calcular os juros automaticamente.';return;}
+  const juros=liq>0?((total-liq)/liq*100):0;
+  const parcel=total/n;
+  prev.textContent=`Juros: ${juros.toFixed(2)}% · Parcela mensal: ${fmt(parcel)} · Total: ${fmt(total)} · Encargo: ${fmt(total-liq)}`;
+}
+
+function ldTipoChange(){
+  const t=document.getElementById('ld-tipo').value;
+  const lbl=document.getElementById('ld-inst-label');
+  if(lbl) lbl.textContent=t==='Empréstimo'?'BANCO / CREDOR':
+    t==='PIX Crédito'?'INSTITUIÇÃO (de quem veio o PIX)':
+    t==='Crédito Parcelado'?'CARTÃO / BANCO':'INSTITUIÇÃO / BANCO';
+}
+
+function salvarDebito(){
+  const desc=document.getElementById('ld-desc').value.trim();
+  const valorLiq=parseBRL(document.getElementById('ld-liq').value||'0');
+  const valorTotalRaw=parseBRL(document.getElementById('ld-total').value||'0');
+  const valorTotal=valorTotalRaw>0?valorTotalRaw:valorLiq;
+  const nParc=parseInt(document.getElementById('ld-nparc').value)||0;
+  const dataLanc=document.getElementById('ld-data').value;
+  const inst=(document.getElementById('ld-inst').value||'').trim();
+  const tipo=document.getElementById('ld-tipo').value;
+  const cat=document.getElementById('ld-cat').value;
+
+  if(!desc){alert('Informe a descrição.');return;}
+  if(valorLiq<=0){alert('Informe o valor líquido.');return;}
+  if(nParc<1){alert('Informe o número de parcelas.');return;}
+  if(!dataLanc){alert('Informe a data do lançamento.');return;}
+
+  const pagas=Math.min(nParc,Math.max(0,parseInt(document.getElementById('ld-pagas').value)||0));
+  const dataInicio=document.getElementById('ld-inicio').value||dataLanc;
+  const obs=document.getElementById('ld-obs').value.trim();
+  const valorParc=parseFloat((valorTotal/nParc).toFixed(2));
+  const regSemanal=document.getElementById('ld-reg-semanal').checked;
+  const regParcelas=document.getElementById('ld-reg-parcelas').checked;
+  const arquivo=document.getElementById('ld-anexo').files[0];
+  const existente=_ldEditId?getLancDebitos().find(x=>x.id===_ldEditId):null;
+  const isNovo=!_ldEditId;
+
+  const _save=anexo=>{
+    const newId=_ldEditId||Date.now();
+    const formaLabel=inst?`${tipo} — ${inst}`:tipo;
+    const obj={
+      id:newId,desc,dataLanc,dataInicio,
+      valorLiq,valorTotal,nParc,valorParc,
+      tipo,inst,forma:formaLabel,cat,pagas,obs,
+      anexo:anexo||(existente?existente.anexo:null)||null,
+      _parcId:existente?existente._parcId:null,
+      _lancId:existente?existente._lancId:null,
+    };
+
+    // ── SEMANAL: cria lançamento na semana correta (apenas novo) ──
+    if(isNovo&&regSemanal){
+      const sem=getSemanaFromData(dataLanc);
+      const allLancs=getData('lancamentos');
+      if(!allLancs[sem]) allLancs[sem]=[];
+      const lancId=newId+1;
+      allLancs[sem].push({
+        id:lancId,desc,data:dataLanc,
+        forma:formaLabel,cat,val:valorLiq,
+        _debId:newId, // vinculo de volta ao débito
+      });
+      setData('lancamentos',allLancs);
+      obj._lancId=lancId;
+      renderUltimosLancs&&renderUltimosLancs();
+    }
+
+    // ── PARCELAS: cria entrada de parcela (apenas novo) ──
+    if(isNovo&&regParcelas){
+      const parcelas=getData('parcelas');
+      const parcId=newId+2;
+      const mesInicio=dataInicio.slice(0,7); // YYYY-MM
+      const cartaoNome=inst||tipo; // usa a instituição como "cartão"
+      parcelas.push({
+        id:parcId,
+        cartao:cartaoNome,
+        desc:`${desc}${inst?' ('+inst+')':''}`,
+        inicio:mesInicio,
+        paga:pagas,
+        total:nParc,
+        val:valorParc,
+      });
+      setData('parcelas',parcelas);
+      obj._parcId=parcId;
+    }
+
+    const lista=getLancDebitos();
+    if(_ldEditId){const i=lista.findIndex(x=>x.id===_ldEditId);if(i>-1)lista[i]=obj;else lista.push(obj);}
+    else lista.push(obj);
+    setLancDebitos(lista);
+    fecharDebModal();
+    renderLancDebitos();
+    if(!_ldSectionOpen) toggleLancDebSection();
+
+    // feedback visual
+    const msgs=[];
+    if(isNovo&&regSemanal) msgs.push('⚡ Lançado em Semanal');
+    if(isNovo&&regParcelas) msgs.push('◐ Parcela criada');
+    if(msgs.length){
+      const bar=document.getElementById('lanc-info-bar');
+      if(bar){const orig=bar.innerHTML;bar.innerHTML=`<span style="color:var(--neon-green);font-weight:700">✓ Débito salvo — ${msgs.join(' · ')}</span>`;setTimeout(()=>{bar.innerHTML=orig;},4000);}
+    }
+  };
+  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  else _save(null);
+}
+
+function renderLancDebitos(){
+  const lista=getLancDebitos();
+  // atualiza badge
+  const ativos=lista.filter(d=>d.pagas<d.nParc).length;
+  const countEl=document.getElementById('lanc-deb-count');
+  if(countEl) countEl.textContent=ativos+' ativo'+(ativos!==1?'s':'');
+
+  const tbody=document.getElementById('lanc-deb-tbody');
+  const tfoot=document.getElementById('lanc-deb-tfoot');
+  const cards=document.getElementById('lanc-deb-cards');
+  if(!tbody) return;
+
+  if(!lista.length){
+    tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:24px;font-size:13px">Nenhum débito parcelado registrado. Clique em + REGISTRAR DÉBITO para começar.</td></tr>`;
+    if(tfoot) tfoot.innerHTML='';
+    if(cards) cards.innerHTML='';
+    return;
+  }
+
+  // cards de resumo
+  const totalLiq=lista.reduce((a,d)=>a+d.valorLiq,0);
+  const totalComJuros=lista.reduce((a,d)=>a+(d.valorTotal||d.valorLiq),0);
+  const encargos=totalComJuros-totalLiq;
+  const parcMes=lista.filter(d=>d.pagas<d.nParc).reduce((a,d)=>a+d.valorParc,0);
+  const quitados=lista.filter(d=>d.pagas>=d.nParc).length;
+  if(cards) cards.innerHTML=`
+    <div class="lanc-deb-card"><div class="lanc-deb-card-label">TOTAL LÍQUIDO</div><div class="lanc-deb-card-val" style="color:var(--neon-blue)">${fmt(totalLiq)}</div></div>
+    <div class="lanc-deb-card"><div class="lanc-deb-card-label">TOTAL COM JUROS</div><div class="lanc-deb-card-val" style="color:var(--neon-red)">${fmt(totalComJuros)}</div></div>
+    <div class="lanc-deb-card"><div class="lanc-deb-card-label">ENCARGOS TOTAIS</div><div class="lanc-deb-card-val" style="color:var(--neon-yellow)">${fmt(encargos)}</div></div>
+    <div class="lanc-deb-card"><div class="lanc-deb-card-label">PARCELA ESTE MÊS</div><div class="lanc-deb-card-val" style="color:var(--neon-green)">${fmt(parcMes)}</div></div>
+    <div class="lanc-deb-card"><div class="lanc-deb-card-label">QUITADOS</div><div class="lanc-deb-card-val" style="color:var(--text3)">${quitados} / ${lista.length}</div></div>`;
+
+  // linhas da tabela
+  tbody.innerHTML=lista.map(d=>{
+    const vTotal=d.valorTotal||d.valorLiq;
+    const juros=d.valorLiq>0?((vTotal-d.valorLiq)/d.valorLiq*100):0;
+    const pct=d.nParc>0?Math.min(100,Math.round(d.pagas/d.nParc*100)):0;
+    const quitado=d.pagas>=d.nParc;
+    const fillColor=quitado?'var(--neon-blue)':pct>50?'var(--neon-green)':'var(--neon-yellow)';
+    const statusHtml=quitado
+      ?`<span class="lanc-deb-status-quit">✓ QUITADO</span>`
+      :`<span class="lanc-deb-status-and">EM ANDAMENTO</span>`;
+    return `<tr>
+      <td style="font-weight:600;max-width:180px">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.desc)}</div>
+        <div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap">
+          ${d._lancId?`<span style="font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(0,255,157,0.1);color:var(--neon-green);cursor:pointer" onclick="showPage('semanal')" title="Ver em Semanal">⚡ Semanal</span>`:''}
+          ${d._parcId?`<span style="font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(0,200,255,0.1);color:var(--neon-blue);cursor:pointer" onclick="showPage('parcelas')" title="Ver em Parcelas">◐ Parcela</span>`:''}
+        </div>
+        ${d.inst?`<div style="font-size:10px;color:var(--text3);margin-top:2px">🏦 ${esc(d.inst)}</div>`:''}
+        ${d.obs?`<div style="font-size:10px;color:var(--text3)">${esc(d.obs)}</div>`:''}
+      </td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">${_fmtData(d.dataLanc)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">${fmt(d.valorLiq)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--neon-red)">${fmt(vTotal)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:${juros>5?'var(--neon-red)':'var(--neon-yellow)'}">
+        ${juros.toFixed(2)}%
+        ${juros>0?`<div style="font-size:9px;color:var(--text3)">${fmt(vTotal-d.valorLiq)}</div>`:''}
+      </td>
+      <td style="font-family:'JetBrains Mono',monospace">${d.pagas}/${d.nParc}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(d.valorParc)}</td>
+      <td class="lanc-deb-prog">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:2px">${pct}%</div>
+        <div class="lanc-deb-prog-bar"><div class="lanc-deb-prog-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">${quitado?'Quitado':fmt((d.nParc-d.pagas)*d.valorParc)+' rest.'}</div>
+      </td>
+      <td>${statusHtml}</td>
+      <td>
+        ${d.anexo?`<button class="btn btn-sm" style="font-size:10px;color:var(--neon-yellow);border-color:rgba(255,215,0,0.3)" onclick="_verAnexoDebito(${d.id})">📎 Ver</button>`:'<span style="color:var(--text3);font-size:11px">—</span>'}
+      </td>
+      <td style="white-space:nowrap">
+        ${!quitado?`<button class="btn btn-sm" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3);margin-right:3px" onclick="pagarParcelaDebito(${d.id})" title="Marcar próxima parcela como paga">✓</button>`:''}
+        <button class="btn btn-sm" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3);margin-right:3px" onclick="abrirDebModal(${d.id})">✎</button>
+        <button class="btn btn-red btn-sm" onclick="delDebito(${d.id})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // rodapé com totais
+  const totalRestante=lista.filter(d=>d.pagas<d.nParc).reduce((a,d)=>a+(d.nParc-d.pagas)*d.valorParc,0);
+  if(tfoot) tfoot.innerHTML=`<tr>
+    <td style="text-align:left;font-weight:700;color:var(--text)">TOTAL (${lista.length} débito${lista.length!==1?'s':''})</td>
+    <td></td>
+    <td style="color:var(--neon-blue)">${fmt(totalLiq)}</td>
+    <td style="color:var(--neon-red)">${fmt(totalComJuros)}</td>
+    <td style="color:var(--neon-yellow)">${fmt(encargos)}</td>
+    <td></td>
+    <td style="color:var(--neon-green)">${fmt(parcMes)}/mês</td>
+    <td colspan="4" style="color:var(--text3);font-size:11px">Restante total: <b style="color:var(--neon-red)">${fmt(totalRestante)}</b></td>
+  </tr>`;
+}
+
+function pagarParcelaDebito(id){
+  const lista=getLancDebitos();
+  const d=lista.find(x=>x.id===id);
+  if(!d||d.pagas>=d.nParc) return;
+  d.pagas++;
+  setLancDebitos(lista);
+  // sincroniza parcela vinculada
+  if(d._parcId){
+    const parcelas=getData('parcelas');
+    const p=parcelas.find(x=>x.id===d._parcId);
+    if(p){p.paga=d.pagas;setData('parcelas',parcelas);}
+  }
+  renderLancDebitos();
+  if(currentPage==='parcelas') renderParcelas();
+}
+
+function delDebito(id){
+  const d=getLancDebitos().find(x=>x.id===id);
+  const extra=d&&(d._parcId||d._lancId)?' (a parcela e o lançamento vinculados também serão removidos)':'';
+  showConfirm('Excluir Débito',`Remover "${d?d.desc:'este débito'}"?${extra}`,()=>{
+    if(d&&d._parcId){
+      setData('parcelas',getData('parcelas').filter(p=>p.id!==d._parcId));
+    }
+    if(d&&d._lancId){
+      const allLancs=getData('lancamentos');
+      let changed=false;
+      for(let s=1;s<=5;s++){
+        if(allLancs[s]){
+          const before=allLancs[s].length;
+          allLancs[s]=allLancs[s].filter(l=>l.id!==d._lancId);
+          if(allLancs[s].length!==before) changed=true;
+        }
+      }
+      if(changed) setData('lancamentos',allLancs);
+    }
+    setLancDebitos(getLancDebitos().filter(x=>x.id!==id));
+    renderLancDebitos();
+    if(currentPage==='parcelas') renderParcelas();
+  });
+}
+
+function _verAnexoDebito(id){
+  const d=getLancDebitos().find(x=>x.id===id);
+  if(!d||!d.anexo) return;
+  const w=window.open('');
+  w.document.write(d.anexo.startsWith('data:application/pdf')
+    ?`<iframe src="${d.anexo}" style="width:100%;height:100vh;border:none"></iframe>`
+    :`<img src="${d.anexo}" style="max-width:100%;height:auto">`);
+  w.document.close();
+}
+
 // ===================== CARTÕES: ABAS =====================
 function switchCtTab(tab){
   document.querySelectorAll('.ct-panel').forEach(p=>p.classList.remove('active'));
@@ -13646,6 +14581,178 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
+// ===================== DOCUMENTOS PESSOAIS =====================
+const _DOC_CATS={
+  'Médico':     {icon:'🏥',cor:'rgba(0,200,255,0.1)',bord:'rgba(0,200,255,0.25)',text:'var(--neon-blue)'},
+  'Certidão':   {icon:'📋',cor:'rgba(0,255,157,0.1)',bord:'rgba(0,255,157,0.25)',text:'var(--neon-green)'},
+  'Identificação':{icon:'🪪',cor:'rgba(168,85,247,0.1)',bord:'rgba(168,85,247,0.25)',text:'var(--neon-purple)'},
+  'Trabalhista':{icon:'💼',cor:'rgba(255,215,0,0.1)',bord:'rgba(255,215,0,0.25)',text:'var(--neon-yellow)'},
+  'Financeiro': {icon:'💰',cor:'rgba(255,140,0,0.1)',bord:'rgba(255,140,0,0.25)',text:'#ff8c00'},
+  'Educação':   {icon:'🎓',cor:'rgba(34,211,238,0.1)',bord:'rgba(34,211,238,0.25)',text:'#22d3ee'},
+  'Outros':     {icon:'📁',cor:'rgba(107,114,128,0.1)',bord:'rgba(107,114,128,0.25)',text:'var(--text3)'},
+};
+let _docCatFiltro='TODOS', _duEditId=null;
+
+function getDocsUsuario(){return load('docsUsuario')||[];}
+function setDocsUsuario(v){save('docsUsuario',v);}
+
+function setDocCat(cat,btn){
+  _docCatFiltro=cat;
+  document.querySelectorAll('.docs-cat-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderDocumentosUsuario();
+}
+
+function renderDocumentosUsuario(){
+  const todos=getDocsUsuario();
+  const busca=(document.getElementById('docs-busca')?.value||'').toLowerCase();
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+
+  // Resumo cards
+  const total=todos.length;
+  const vencendo=todos.filter(d=>{
+    if(!d.validade)return false;
+    const v=new Date(d.validade);v.setHours(0,0,0,0);
+    return Math.round((v-hoje)/(864e5))<=30&&Math.round((v-hoje)/(864e5))>=0;
+  }).length;
+  const vencidos=todos.filter(d=>{
+    if(!d.validade)return false;
+    const v=new Date(d.validade);v.setHours(0,0,0,0);
+    return v<hoje;
+  }).length;
+  const cardsEl=document.getElementById('docs-resumo-cards');
+  if(cardsEl) cardsEl.innerHTML=`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:6px">TOTAL</div>
+      <div style="font-size:22px;font-weight:800;color:var(--text)">${total}</div>
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(255,215,0,0.25);border-radius:10px;padding:14px 16px">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:6px">VENCENDO (30d)</div>
+      <div style="font-size:22px;font-weight:800;color:var(--neon-yellow)">${vencendo}</div>
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(255,68,68,0.25);border-radius:10px;padding:14px 16px">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:6px">VENCIDOS</div>
+      <div style="font-size:22px;font-weight:800;color:var(--neon-red)">${vencidos}</div>
+    </div>`;
+
+  let lista=todos;
+  if(_docCatFiltro!=='TODOS') lista=lista.filter(d=>d.categoria===_docCatFiltro);
+  if(busca) lista=lista.filter(d=>(d.nome||'').toLowerCase().includes(busca)||(d.desc||'').toLowerCase().includes(busca));
+
+  const grid=document.getElementById('docs-grid');
+  if(!grid)return;
+  if(!lista.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text3)">
+      <div style="font-size:40px;margin-bottom:12px">📁</div>
+      <div style="font-size:13px;font-family:'JetBrains Mono',monospace">${todos.length===0?'Nenhum documento. Clique em + NOVO DOCUMENTO.':'Nenhum resultado para este filtro.'}</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML=lista.map(d=>{
+    const cfg=_DOC_CATS[d.categoria]||_DOC_CATS['Outros'];
+    let statusHtml='';
+    if(d.validade){
+      const v=new Date(d.validade);v.setHours(0,0,0,0);
+      const diff=Math.round((v-hoje)/(864e5));
+      if(diff<0) statusHtml=`<span class="doc-status-exp" style="font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700">⚠ VENCIDO</span>`;
+      else if(diff<=30) statusHtml=`<span class="doc-status-warn" style="font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700">⚡ VENCE EM ${diff}d</span>`;
+      else statusHtml=`<span class="doc-status-ok" style="font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700">✓ VÁLIDO</span>`;
+    }
+    return `<div class="doc-card" style="border-color:${cfg.bord}">
+      <div class="doc-card-head">
+        <div style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0">
+          <span class="doc-card-icon">${cfg.icon}</span>
+          <div style="min-width:0">
+            <div class="doc-card-nome">${esc(d.nome)}</div>
+            <span class="doc-card-cat" style="background:${cfg.cor};color:${cfg.text}">${esc(d.categoria)}</span>
+          </div>
+        </div>
+        ${statusHtml}
+      </div>
+      ${d.desc?`<div class="doc-card-desc">${esc(d.desc)}</div>`:''}
+      <div class="doc-card-datas">
+        ${d.emissao?`📅 Emissão: ${_fmtData(d.emissao)}`:''}
+        ${d.validade?`${d.emissao?' · ':''}⏳ Validade: ${_fmtData(d.validade)}`:''}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${d.arquivo?`<button class="btn btn-sm" onclick="verDocUsuario(${d.id})" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">📎 Ver</button>`:''}
+        <button class="btn btn-sm" onclick="editDocUsuario(${d.id})" style="color:var(--text3);border-color:var(--border)">✎ Editar</button>
+        <button class="btn btn-sm" onclick="delDocUsuario(${d.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirDocUsuarioModal(editId){
+  _duEditId=editId||null;
+  const titleEl=document.getElementById('docs-modal-title');
+  if(_duEditId){
+    const d=getDocsUsuario().find(x=>x.id===editId);
+    if(d){
+      document.getElementById('du-nome').value=d.nome||'';
+      document.getElementById('du-cat').value=d.categoria||'Outros';
+      document.getElementById('du-emissao').value=d.emissao||'';
+      document.getElementById('du-validade').value=d.validade||'';
+      document.getElementById('du-desc').value=d.desc||'';
+      document.getElementById('du-arquivo').value='';
+    }
+    if(titleEl) titleEl.textContent='✎ EDITAR DOCUMENTO';
+  } else {
+    ['du-nome','du-emissao','du-validade','du-desc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    document.getElementById('du-arquivo').value='';
+    document.getElementById('du-cat').value='Outros';
+    if(titleEl) titleEl.textContent='📄 ADICIONAR DOCUMENTO';
+  }
+  document.getElementById('docs-usuario-modal').style.display='flex';
+}
+
+function editDocUsuario(id){abrirDocUsuarioModal(id);}
+
+function salvarDocUsuario(){
+  const nome=(document.getElementById('du-nome').value||'').trim();
+  if(!nome){alert('Informe o nome do documento.');return;}
+  const arquivo=document.getElementById('du-arquivo').files[0];
+  const existente=_duEditId?getDocsUsuario().find(x=>x.id===_duEditId):null;
+  const _save=arq=>{
+    const obj={
+      id:_duEditId||Date.now(),
+      nome,
+      categoria:document.getElementById('du-cat').value,
+      emissao:document.getElementById('du-emissao').value||null,
+      validade:document.getElementById('du-validade').value||null,
+      desc:document.getElementById('du-desc').value.trim(),
+      arquivo:arq||(existente?existente.arquivo:null)||null,
+    };
+    const lista=getDocsUsuario();
+    if(_duEditId){const i=lista.findIndex(x=>x.id===_duEditId);if(i>-1)lista[i]=obj;else lista.push(obj);}
+    else lista.push(obj);
+    setDocsUsuario(lista);
+    document.getElementById('docs-usuario-modal').style.display='none';
+    renderDocumentosUsuario();
+  };
+  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  else _save(null);
+}
+
+function delDocUsuario(id){
+  const d=getDocsUsuario().find(x=>x.id===id);
+  showConfirm('Excluir Documento',`Remover "${d?d.nome:'este documento'}"?`,()=>{
+    setDocsUsuario(getDocsUsuario().filter(x=>x.id!==id));
+    renderDocumentosUsuario();
+  });
+}
+
+function verDocUsuario(id){
+  const d=getDocsUsuario().find(x=>x.id===id);
+  if(!d||!d.arquivo)return;
+  const w=window.open('');
+  w.document.write(d.arquivo.startsWith('data:application/pdf')
+    ?`<title>${esc(d.nome)}</title><iframe src="${d.arquivo}" style="width:100%;height:100vh;border:none"></iframe>`
+    :`<title>${esc(d.nome)}</title><img src="${d.arquivo}" style="max-width:100%;height:auto">`);
+  w.document.close();
+}
+
 // ===================== MEUS BENS =====================
 let _bemFiltro='TODOS', _bemFichaId=null, _bemTabAtiva='resumo';
 let _bemEditId=null, _chartBemPizza=null, _chartBemBarras=null, _chartBemKm=null;
@@ -13661,12 +14768,26 @@ function getBensDocumentos(){return load('bensDocumentos')||[];}
 function setBensDocumentos(v){save('bensDocumentos',v);}
 
 // — ícones
+// detecta se o evento veio da página de Lançamentos
+function _isLancEvento(e){return(e.desc||'').startsWith('[Lançamento]');}
+// remove o prefixo [Lançamento] para exibição limpa
+function _descLimpa(desc){return(desc||'').replace(/^\[Lançamento\]\s*/,'');}
+// gera o badge clicável "⚡ Via Lançamentos ↗"
+function _lancBadge(){
+  return`<span class="bem-lanc-badge" onclick="showPage('semanal')" title="Despesa registrada via página de Lançamentos — clique para visualizar">⚡ Via Lançamentos ↗</span>`;
+}
+
 function _bemIcone(tipo){return{Veículo:'🚗',Imóvel:'🏠',Eletrônico:'💻',Equipamento:'🔧',Outro:'📦'}[tipo]||'📦';}
 function _eventoIcone(tipo){return{'Manutenção':'🔧','Vistoria':'📋','Troca de Peça':'⚡','Revisão':'🔄','Seguro':'🛡','IPVA':'📄','IPTU':'📄','Outro':'📌'}[tipo]||'📌';}
 function _eventoCor(tipo){return'bem-evento-'+({'Manutenção':'blue','Vistoria':'green','Troca de Peça':'purple','Revisão':'blue','Seguro':'yellow','IPVA':'yellow','IPTU':'yellow','Outro':'gray'}[tipo]||'gray');}
 function _eventoTipoCor(tipo){return{'Manutenção':'var(--neon-blue)','Vistoria':'var(--neon-green)','Troca de Peça':'var(--neon-purple)','Revisão':'var(--neon-blue)','Seguro':'var(--neon-yellow)','IPVA':'var(--neon-yellow)','IPTU':'var(--neon-yellow)','Outro':'var(--text3)'}[tipo]||'var(--text3)';}
 function _eventoBadgeCor(tipo){return{'Manutenção':'blue','Vistoria':'green','Troca de Peça':'purple','Revisão':'blue','Seguro':'yellow','IPVA':'yellow','IPTU':'yellow','Outro':'graphite'}[tipo]||'graphite';}
-function _fmtData(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
+function _fmtData(s){
+  if(!s)return'—';
+  const p=s.split('-');
+  if(p.length<3)return s;
+  return`${p[2]}/${p[1]}/${p[0]}`;
+}
 function _initMascaraOnce(el){if(el&&!el._maskInit){el._maskInit=true;mascaraBRL(el);}}
 
 // — status do bem (verde/amarelo/vermelho)
@@ -13793,10 +14914,9 @@ function _renderFichaHeader(id){
   </div>`;
 }
 
-function _renderBemTabs(id){
-  const bem=getBens().find(b=>b.id===id);
+function _bemTabsMeta(bem){
   const isVeiculo=bem&&bem.tipo==='Veículo';
-  const tabs=[
+  return[
     {id:'resumo',    icon:'📊',label:'RESUMO'},
     {id:'timeline',  icon:'📅',label:'LINHA DO TEMPO'},
     {id:'manut',     icon:'🔧',label:'MANUTENÇÕES'},
@@ -13805,9 +14925,60 @@ function _renderBemTabs(id){
     {id:'financeiro',icon:'💰',label:'FINANCEIRO'},
     {id:'relatorio', icon:'📋',label:'RELATÓRIO'},
   ];
-  document.getElementById('bem-tabs-bar').innerHTML=tabs.map(t=>
-    `<button class="bem-tab" onclick="switchBemTab('${t.id}')">${t.icon} ${t.label}</button>`
+}
+function _bemTabsOrder(bemId){
+  return load('bensTabOrder_'+bemId)||null;
+}
+function _bemTabsSaveOrder(bemId,order){save('bensTabOrder_'+bemId,order);}
+
+function _renderBemTabs(id){
+  const bem=getBens().find(b=>b.id===id);
+  const allTabs=_bemTabsMeta(bem);
+  const savedOrder=_bemTabsOrder(id);
+  // reordena de acordo com a preferência salva (filtra abas que ainda existem)
+  let tabs=allTabs;
+  if(savedOrder){
+    const ordered=[];
+    savedOrder.forEach(tid=>{const t=allTabs.find(x=>x.id===tid);if(t)ordered.push(t);});
+    allTabs.forEach(t=>{if(!ordered.find(x=>x.id===t.id))ordered.push(t);});
+    tabs=ordered;
+  }
+  const bar=document.getElementById('bem-tabs-bar');
+  bar.innerHTML=tabs.map(t=>
+    `<button class="bem-tab" draggable="true"
+      onclick="switchBemTab('${t.id}')"
+      data-tabid="${t.id}"
+      ondragstart="_bemTabDragStart(event,'${t.id}')"
+      ondragover="_bemTabDragOver(event)"
+      ondragleave="_bemTabDragLeave(event)"
+      ondrop="_bemTabDrop(event,'${t.id}')"
+      ondragend="_bemTabDragEnd(event)"
+    >${t.icon} ${t.label}</button>`
   ).join('');
+}
+
+let _bemDragSrc=null;
+function _bemTabDragStart(e,tid){_bemDragSrc=tid;e.target.classList.add('bem-dragging');}
+function _bemTabDragOver(e){e.preventDefault();e.currentTarget.classList.add('bem-drag-over');}
+function _bemTabDragLeave(e){e.currentTarget.classList.remove('bem-drag-over');}
+function _bemTabDragEnd(e){e.target.classList.remove('bem-dragging');document.querySelectorAll('.bem-tab').forEach(t=>t.classList.remove('bem-drag-over'));}
+function _bemTabDrop(e,tid){
+  e.preventDefault();
+  e.currentTarget.classList.remove('bem-drag-over');
+  if(!_bemDragSrc||_bemDragSrc===tid) return;
+  const bem=getBens().find(b=>b.id===_bemFichaId);
+  const allTabs=_bemTabsMeta(bem);
+  const savedOrder=_bemTabsOrder(_bemFichaId)||allTabs.map(t=>t.id);
+  const from=savedOrder.indexOf(_bemDragSrc);
+  const to=savedOrder.indexOf(tid);
+  if(from===-1||to===-1) return;
+  const newOrder=[...savedOrder];
+  newOrder.splice(from,1);
+  newOrder.splice(to,0,_bemDragSrc);
+  _bemTabsSaveOrder(_bemFichaId,newOrder);
+  _renderBemTabs(_bemFichaId);
+  switchBemTab(_bemTabAtiva,true);
+  _bemDragSrc=null;
 }
 
 function switchBemTab(tab,silent){
@@ -13862,17 +15033,37 @@ function renderBemResumo(bem){
 
 // ── ABA 2: LINHA DO TEMPO ──
 function renderBemTimeline(bem){
-  const ev=getBensEventos().filter(e=>e.bemId===bem.id).sort((a,b)=>b.data.localeCompare(a.data));
-  if(ev.length===0){document.getElementById('bem-panel-timeline').innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px">Nenhum evento registrado ainda.</div>`;return;}
+  // inclui bensEventos + lançamentos vinculados a este bem (via bemId no lançamento)
+  const evBem=getBensEventos().filter(e=>e.bemId===bem.id);
+  // também inclui lançamentos não-convertidos que estejam vinculados pelo id
+  const allLancs=getData('lancamentos');
+  const lancsVinc=[];
+  for(let s=1;s<=5;s++){(allLancs[s]||[]).forEach(l=>{
+    if(l._bemId===bem.id&&!evBem.find(e=>e._lancId===l.id)){
+      lancsVinc.push({id:'lanc_'+l.id,bemId:bem.id,tipo:'Outro',
+        data:l.data||'',desc:'[Lançamento] '+l.desc,local:'',contato:'',
+        valor:l.val||0,proximaData:null,proximaKm:null,garantiaAte:null,anexo:null,
+        obs:l.cat?'Categoria: '+l.cat:'',_lancRef:true});
+    }
+  });}
+  const ev=[...evBem,...lancsVinc].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  if(ev.length===0){document.getElementById('bem-panel-timeline').innerHTML=`
+    <div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px">
+      Nenhum evento registrado ainda.<br>
+      <span style="font-size:11px">Use o botão + REGISTRAR EVENTO ou vincule lançamentos pela página de Lançamentos.</span>
+    </div>`;return;}
   document.getElementById('bem-panel-timeline').innerHTML=`<div class="bem-timeline">${ev.map(e=>`
   <div class="bem-evento">
-    <div class="bem-evento-icon ${_eventoCor(e.tipo)}">${_eventoIcone(e.tipo)}</div>
+    <div class="bem-evento-icon ${_eventoCor(e.tipo)}">${_isLancEvento(e)?'⚡':_eventoIcone(e.tipo)}</div>
     <div class="bem-evento-body">
       <div class="bem-evento-header">
         <span class="bem-evento-tipo" style="color:${_eventoTipoCor(e.tipo)}">${esc(e.tipo).toUpperCase()}</span>
-        <span class="bem-evento-data">${_fmtData(e.data)}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${_isLancEvento(e)?_lancBadge():''}
+          <span class="bem-evento-data">${_fmtData(e.data)}</span>
+        </div>
       </div>
-      <div class="bem-evento-desc">${esc(e.desc||'—')}</div>
+      <div class="bem-evento-desc">${esc(_descLimpa(e.desc))}</div>
       ${e.local||e.contato?`<div class="bem-evento-meta">${[e.local,e.contato].filter(Boolean).map(s=>esc(s)).join(' · ')}</div>`:''}
       <div class="bem-evento-footer">
         <span class="bem-evento-val">${e.valor?fmt(e.valor):'Sem custo'}</span>
@@ -13888,13 +15079,17 @@ function renderBemTimeline(bem){
 // ── ABA 3: MANUTENÇÕES ──
 let _bemEvFiltroTipo='Todos',_bemEvFiltroPer='';
 function renderBemManutencoes(bem){
-  let ev=getBensEventos().filter(e=>e.bemId===bem.id);
+  // MANUTENÇÕES: apenas eventos registrados diretamente nesta página (exclui os de Lançamentos)
+  let ev=getBensEventos().filter(e=>e.bemId===bem.id&&!_isLancEvento(e));
   if(_bemEvFiltroTipo!=='Todos')ev=ev.filter(e=>e.tipo===_bemEvFiltroTipo);
   if(_bemEvFiltroPer)ev=ev.filter(e=>e.data&&e.data.startsWith(_bemEvFiltroPer));
   ev.sort((a,b)=>b.data.localeCompare(a.data));
   const tipoSel=_bemEvFiltroTipo;const perSel=_bemEvFiltroPer;
   document.getElementById('bem-panel-manut').innerHTML=`
-  <div style="margin-bottom:16px"><button class="btn btn-green" onclick="abrirEventoModal()">+ REGISTRAR EVENTO</button></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <button class="btn btn-green" onclick="abrirEventoModal()">+ REGISTRAR EVENTO</button>
+    <span style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">◈ Apenas manutenções desta página · <span style="cursor:pointer;color:var(--neon-blue)" onclick="switchBemTab('timeline')">Ver todos na Linha do Tempo ↗</span></span>
+  </div>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
     <select onchange="_bemEvFiltroTipo=this.value;switchBemTab('manut')" style="padding:7px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
       <option${tipoSel==='Todos'?' selected':''}>Todos</option>
@@ -13915,12 +15110,16 @@ function renderBemManutencoes(bem){
     <thead><tr><th>DATA</th><th>TIPO</th><th>DESCRIÇÃO</th><th>LOCAL</th><th style="text-align:right">VALOR</th><th>PRÓXIMA</th><th></th></tr></thead>
     <tbody>${ev.map(e=>`<tr>
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${_fmtData(e.data)}</td>
-      <td><span class="badge badge-${_eventoBadgeCor(e.tipo)}">${esc(e.tipo)}</span></td>
-      <td>${esc(e.desc||'—')}</td>
+      <td>
+        <span class="badge badge-${_eventoBadgeCor(e.tipo)}">${esc(e.tipo)}</span>
+        ${_isLancEvento(e)?`<br>${_lancBadge()}`:''}
+      </td>
+      <td>${esc(_descLimpa(e.desc))}</td>
       <td style="font-size:11px;color:var(--text3)">${e.local?esc(e.local):'—'}</td>
       <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
       <td style="font-size:11px;color:var(--text3)">${e.proximaData?_fmtData(e.proximaData):'—'}</td>
       <td style="white-space:nowrap">
+        <button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3);margin-right:3px">✎</button>
         ${e.anexo?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver" style="margin-right:4px">📎</button>`:''}
         <button class="btn btn-sm" onclick="excluirEventoBem(${e.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕</button>
       </td>
@@ -13929,32 +15128,168 @@ function renderBemManutencoes(bem){
 }
 
 // ── ABA 4: KM E USO ──
+// helpers de combustível
+const _COMB_KW=['gasolina','etanol','combustível','abastec','flex','diesel','alcool','álcool'];
+function _isCombustivel(desc){const d=(desc||'').toLowerCase();return _COMB_KW.some(k=>d.includes(k));}
+function getBensKmConfig(){return load('bensKmConfig')||{};}
+function setBensKmConfig(v){save('bensKmConfig',v);}
+function _kmReminderStatus(bemId){
+  const cfg=getBensKmConfig()[bemId];
+  if(!cfg) return null;
+  const last=new Date(cfg.lastDate+'T12:00:00');
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const dias=Math.round((hoje-last)/(864e5));
+  const limite=cfg.freq==='semanal'?7:cfg.freq==='quinzenal'?15:30;
+  return{dias,limite,freq:cfg.freq,lastDate:cfg.lastDate,overdue:dias>limite,due:dias===limite};
+}
+
 function renderBemKm(bem){
   const reg=getBensKm().filter(k=>k.bemId===bem.id).sort((a,b)=>a.data.localeCompare(b.data));
   const ev=getBensEventos().filter(e=>e.bemId===bem.id);
+  const hoje=new Date();
+  // custo de combustível do mês vigente (combina eventos + lançamentos vinculados)
+  const mesAtualStr=hoje.toISOString().slice(0,7);
+  const allLancs=getData('lancamentos');
+  const lancsVinc=[];
+  for(let s=1;s<=5;s++){(allLancs[s]||[]).forEach(l=>{if(l._bemId===bem.id)lancsVinc.push(l);});}
+  const combustMes=[...ev,...lancsVinc].filter(e=>
+    _isCombustivel(_descLimpa(e.desc||''))&&(e.data||'').startsWith(mesAtualStr)
+  );
+  const totalCombMes=combustMes.reduce((a,e)=>a+(e.valor||0),0);
   const totalGasto=ev.reduce((a,e)=>a+(e.valor||0),0);
   const kmInicial=reg.length?reg[0].km:0;
   const kmAtual=reg.length?reg[reg.length-1].km:0;
   const kmTotal=kmAtual-kmInicial;
   const mediaKm=kmTotal/_mesesDesde(bem.aquisicao);
   const custoPorKm=kmTotal>0?totalGasto/kmTotal:0;
+  const custoCombKm=kmTotal>0?totalCombMes/kmTotal:0;
   if(_chartBemKm){try{_chartBemKm.destroy();}catch(e){}_chartBemKm=null;}
+
+  // Lembrete
+  const cfg=getBensKmConfig()[bem.id]||{freq:'mensal'};
+  const rem=_kmReminderStatus(bem.id);
+  const remClass=!rem?'bem-km-reminder-ok':rem.overdue?'bem-km-reminder-over':rem.due?'bem-km-reminder-due':'bem-km-reminder-ok';
+  const remMsg=!rem?'Nenhum registro ainda — registre o primeiro KM abaixo':
+    rem.overdue?`⚠ Atualização de KM ATRASADA há ${rem.dias-rem.limite} dia(s)! (${_fmtData(rem.lastDate)})`:
+    rem.due?`⏰ Hoje é o dia de atualizar o KM! (última: ${_fmtData(rem.lastDate)})`:
+    `✓ KM em dia · próxima atualização em ${rem.limite-rem.dias} dia(s)`;
+
+  // Médias por período
+  const freqAtual=cfg.freq||'mensal';
+  let mediasHtml='';
+  if(reg.length>=2){
+    // semanal
+    if(freqAtual==='semanal'||freqAtual==='quinzenal'||freqAtual==='mensal'){
+      const semanas=_kmAgrupar(reg,7);
+      const meses=_kmAgrupar(reg,30);
+      if(freqAtual==='semanal'&&semanas.length){
+        mediasHtml+=`<div class="card" style="margin-bottom:14px"><div class="sec-title" style="margin-bottom:10px">MÉDIAS SEMANAIS</div>
+          <div style="overflow-x:auto"><table><thead><tr><th>PERÍODO</th><th style="text-align:right">KM</th><th style="text-align:right">MÉDIA/DIA</th></tr></thead>
+          <tbody>${semanas.slice(-8).map(s=>`<tr>
+            <td style="font-size:11px;color:var(--text3)">${_fmtData(s.de)} → ${_fmtData(s.ate)}</td>
+            <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">${s.km.toLocaleString('pt-BR')} km</td>
+            <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--text3)">${(s.km/7).toFixed(0)} km/d</td>
+          </tr>`).join('')}</tbody></table></div></div>`;
+      }
+      if((freqAtual==='quinzenal'||freqAtual==='semanal')&&semanas.length){
+        const quinzenas=_kmAgrupar(reg,15);
+        mediasHtml+=`<div class="card" style="margin-bottom:14px"><div class="sec-title" style="margin-bottom:10px">MÉDIAS QUINZENAIS</div>
+          <div style="overflow-x:auto"><table><thead><tr><th>PERÍODO</th><th style="text-align:right">KM</th><th style="text-align:right">MÉDIA/DIA</th></tr></thead>
+          <tbody>${quinzenas.slice(-4).map(s=>`<tr>
+            <td style="font-size:11px;color:var(--text3)">${_fmtData(s.de)} → ${_fmtData(s.ate)}</td>
+            <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">${s.km.toLocaleString('pt-BR')} km</td>
+            <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--text3)">${(s.km/15).toFixed(0)} km/d</td>
+          </tr>`).join('')}</tbody></table></div></div>`;
+      }
+      if(meses.length){
+        mediasHtml+=`<div class="card" style="margin-bottom:14px"><div class="sec-title" style="margin-bottom:10px">MÉDIAS MENSAIS</div>
+          <div style="overflow-x:auto"><table><thead><tr><th>PERÍODO</th><th style="text-align:right">KM</th><th style="text-align:right">MÉDIA/DIA</th></tr></thead>
+          <tbody>${meses.slice(-6).map(s=>`<tr>
+            <td style="font-size:11px;color:var(--text3)">${_fmtData(s.de)} → ${_fmtData(s.ate)}</td>
+            <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">${s.km.toLocaleString('pt-BR')} km</td>
+            <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--text3)">${(s.km/30).toFixed(0)} km/d</td>
+          </tr>`).join('')}</tbody></table></div></div>`;
+      }
+    }
+  }
+
   document.getElementById('bem-panel-km').innerHTML=`
-  <div style="margin-bottom:16px"><button class="btn btn-green" onclick="abrirKmModal()">+ REGISTRAR KM</button></div>
-  <div class="bem-fin-cards">
-    <div class="bem-fin-card"><div class="bem-fin-card-label">KM TOTAL RODADO</div><div class="bem-fin-card-val" style="color:var(--neon-blue)">${kmTotal.toLocaleString('pt-BR')} km</div></div>
-    <div class="bem-fin-card"><div class="bem-fin-card-label">MÉDIA MENSAL</div><div class="bem-fin-card-val" style="color:var(--neon-blue)">${Math.round(mediaKm).toLocaleString('pt-BR')} km</div></div>
-    <div class="bem-fin-card"><div class="bem-fin-card-label">CUSTO POR KM</div><div class="bem-fin-card-val" style="color:var(--neon-yellow)">${custoPorKm.toFixed(2).replace('.',',')} R$/km</div></div>
-    <div class="bem-fin-card"><div class="bem-fin-card-label">KM ATUAL</div><div class="bem-fin-card-val">${kmAtual.toLocaleString('pt-BR')} km</div></div>
+  <!-- Lembrete -->
+  <div class="bem-km-reminder ${remClass}" style="margin-bottom:14px">
+    <div style="flex:1;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">${remMsg}</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <span style="font-size:10px;color:var(--text3)">LEMBRAR:</span>
+      <select onchange="_salvarKmFreq(${bem.id},this.value)" style="padding:5px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:11px">
+        <option value="semanal"${freqAtual==='semanal'?' selected':''}>Semanalmente</option>
+        <option value="quinzenal"${freqAtual==='quinzenal'?' selected':''}>Quinzenalmente</option>
+        <option value="mensal"${freqAtual==='mensal'?' selected':''}>Mensalmente</option>
+      </select>
+      <button class="btn btn-green btn-sm" onclick="abrirKmModal()">+ KM AGORA</button>
+    </div>
   </div>
+
+  <!-- Cards 2×2 -->
+  <div class="bem-fin-cards">
+    <div class="bem-fin-card">
+      <div class="bem-fin-card-label">📍 KM ATUAL</div>
+      <div class="bem-fin-card-val" style="color:var(--text)">${kmAtual.toLocaleString('pt-BR')} km</div>
+    </div>
+    <div class="bem-fin-card">
+      <div class="bem-fin-card-label">🛣 KM TOTAL RODADO</div>
+      <div class="bem-fin-card-val" style="color:var(--neon-blue)">${kmTotal.toLocaleString('pt-BR')} km</div>
+    </div>
+    <div class="bem-fin-card">
+      <div class="bem-fin-card-label">📅 MÉDIA MENSAL</div>
+      <div class="bem-fin-card-val" style="color:var(--neon-blue)">${Math.round(mediaKm).toLocaleString('pt-BR')} km/mês</div>
+    </div>
+    <div class="bem-fin-card">
+      <div class="bem-fin-card-label">💰 CUSTO POR KM</div>
+      <div class="bem-fin-card-val" style="color:var(--neon-yellow)">${custoPorKm.toFixed(2).replace('.',',')} R$/km</div>
+    </div>
+    ${totalCombMes>0?`<div class="bem-fin-card" style="border-color:rgba(0,200,255,0.25)"><div class="bem-fin-card-label">⛽ COMBUSTÍVEL ESTE MÊS</div><div class="bem-fin-card-val" style="color:var(--neon-green)">${fmt(totalCombMes)}</div></div>`:''}
+    ${custoCombKm>0?`<div class="bem-fin-card" style="border-color:rgba(0,200,255,0.25)"><div class="bem-fin-card-label">⛽ CUSTO COMB/KM</div><div class="bem-fin-card-val" style="color:var(--neon-green)">${custoCombKm.toFixed(2).replace('.',',')} R$/km</div></div>`:''}
+  </div>
+
+  <!-- Card próxima revisão -->
+  ${(()=>{
+    const ultimoComRevisao=[...reg].reverse().find(k=>k.kmRevisao);
+    if(!ultimoComRevisao) return '';
+    const kmRest=ultimoComRevisao.kmRevisao-kmAtual;
+    const atrasado=kmRest<0;
+    const proximo=kmRest>=0&&kmRest<1000;
+    const cor=atrasado?'var(--neon-red)':proximo?'var(--neon-yellow)':'var(--neon-green)';
+    const bg=atrasado?'rgba(255,68,68,0.08)':proximo?'rgba(255,215,0,0.07)':'rgba(0,255,157,0.06)';
+    const bord=atrasado?'rgba(255,68,68,0.25)':proximo?'rgba(255,215,0,0.25)':'rgba(0,255,157,0.2)';
+    const msg=atrasado?`⚠ Revisão atrasada! ${Math.abs(kmRest).toLocaleString('pt-BR')} km acima do previsto`:
+      proximo?`⚡ Revisão em apenas ${kmRest.toLocaleString('pt-BR')} km!`:
+      `✓ Revisão em ${kmRest.toLocaleString('pt-BR')} km restantes`;
+    return`<div style="background:${bg};border:1px solid ${bord};border-radius:10px;padding:14px 16px;margin-bottom:14px">
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:6px">🔧 PRÓXIMA REVISÃO${ultimoComRevisao.tipoRevisao?' — '+esc(ultimoComRevisao.tipoRevisao):''}</div>
+      <div style="font-size:15px;font-weight:700;color:${cor};font-family:'JetBrains Mono',monospace">${msg}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">KM previsto: ${ultimoComRevisao.kmRevisao.toLocaleString('pt-BR')} · Atual: ${kmAtual.toLocaleString('pt-BR')}</div>
+    </div>`;
+  })()}
+
+  ${combustMes.length?`<div style="padding:10px 14px;background:rgba(0,200,255,0.05);border:1px solid rgba(0,200,255,0.15);border-radius:8px;margin-bottom:14px;font-size:11px;color:var(--text2)">
+    <span style="font-weight:700;color:var(--neon-blue)">⛽ ${combustMes.length} gasto(s) de combustível em ${mesAtualStr.slice(0,7).split('-').reverse().join('/')}:</span>
+    ${combustMes.map(e=>`<span style="margin-left:8px">${esc(_descLimpa(e.desc||''))}: ${fmt(e.valor||0)}</span>`).join(' ·')}
+  </div>`:''}
+
+  ${mediasHtml}
+
   ${reg.length>1?`<div class="card" style="margin-bottom:20px"><div class="sec-title" style="margin-bottom:14px">EVOLUÇÃO DO KM</div><div style="height:180px"><canvas id="chartBemKm"></canvas></div></div>`:''}
-  ${reg.length?`<div class="tbl-wrap"><table><thead><tr><th>DATA</th><th style="text-align:right">KM</th><th>OBSERVAÇÃO</th><th></th></tr></thead>
+  ${reg.length?`<div class="tbl-wrap"><table>
+  <thead><tr><th>DATA</th><th style="text-align:right">KM</th><th>REVISÃO</th><th>OBSERVAÇÃO</th><th></th></tr></thead>
   <tbody>${[...reg].reverse().map(k=>`<tr>
     <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${_fmtData(k.data)}</td>
-    <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">${k.km.toLocaleString('pt-BR')}</td>
+    <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);font-weight:700">${k.km.toLocaleString('pt-BR')}</td>
+    <td style="font-size:10px;color:var(--text3)">${k.kmRevisao?k.kmRevisao.toLocaleString('pt-BR')+' km'+(k.tipoRevisao?' ('+esc(k.tipoRevisao)+')':''):'—'}</td>
     <td style="font-size:11px;color:var(--text3)">${k.obs?esc(k.obs):'—'}</td>
-    <td><button class="btn btn-sm" onclick="excluirKmBem(${k.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕</button></td>
-  </tr>`).join('')}</tbody></table></div>`:`<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">Nenhum registro de KM ainda.</div>`}`;
+    <td style="white-space:nowrap">
+      <button class="btn btn-sm" onclick="abrirKmModal(${k.id})" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3);margin-right:3px">✎</button>
+      <button class="btn btn-sm" onclick="excluirKmBem(${k.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕</button>
+    </td>
+  </tr>`).join('')}</tbody></table></div>`:`<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">Nenhum registro de KM ainda. Use "+ KM AGORA" acima.</div>`}`;
   if(reg.length>1){
     setTimeout(()=>{
       const el=document.getElementById('chartBemKm');if(!el)return;
@@ -14009,6 +15344,42 @@ function renderBemFinanceiro(bem){
   const anoAtual=String(hoje.getFullYear());
   const totalTodo=ev.reduce((a,e)=>a+(e.valor||0),0);
   const totalMes=ev.filter(e=>e.data&&e.data.startsWith(mesAtual)).reduce((a,e)=>a+(e.valor||0),0);
+  // INJETAR FORMULÁRIO RÁPIDO no início do painel depois de renderizar
+  setTimeout(()=>{
+    const panel=document.getElementById('bem-panel-financeiro');
+    if(!panel) return;
+    const existeForm=panel.querySelector('.bem-fin-quick');
+    if(existeForm) return; // já tem
+    const formHtml=`<div class="bem-fin-quick">
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:10px">⚡ LANÇAR DESPESA DIRETAMENTE</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 120px auto;gap:8px;align-items:end">
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">DESCRIÇÃO</div>
+          <input id="bfq-desc" type="text" placeholder="Ex: Gasolina, Revisão..." style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">TIPO</div>
+          <select id="bfq-tipo" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px">
+            <option>Manutenção</option><option>Combustível</option><option>Vistoria</option>
+            <option>Troca de Peça</option><option>Seguro</option><option>IPVA</option>
+            <option>IPTU</option><option>Outro</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">VALOR</div>
+          <input id="bfq-valor" type="text" placeholder="R$ 0,00" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:7px;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:700;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">DATA</div>
+          <input id="bfq-data" type="date" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;box-sizing:border-box" value="${hoje.toISOString().slice(0,10)}">
+        </div>
+        <button onclick="_addBemFinQuick(${bem.id})" class="btn btn-green" style="white-space:nowrap">+ LANÇAR</button>
+      </div>
+    </div>`;
+    panel.insertAdjacentHTML('afterbegin',formHtml);
+    const valEl=panel.querySelector('#bfq-valor');
+    if(valEl) _initMascaraOnce(valEl);
+  },80);
   const totalAno=ev.filter(e=>e.data&&e.data.startsWith(anoAtual)).reduce((a,e)=>a+(e.valor||0),0);
   const media=totalTodo/_mesesDesde(bem.aquisicao);
   const porCat={};ev.forEach(e=>{porCat[e.tipo]=(porCat[e.tipo]||0)+(e.valor||0);});
@@ -14032,11 +15403,12 @@ function renderBemFinanceiro(bem){
     <div class="card"><div class="sec-title" style="margin-bottom:14px">POR CATEGORIA</div><div style="height:180px"><canvas id="chartBemPizza"></canvas></div></div>
     <div class="card"><div class="sec-title" style="margin-bottom:14px">GASTOS MENSAIS</div><div style="height:180px"><canvas id="chartBemBarras"></canvas></div></div>
   </div>
-  ${ev.length?`<div class="tbl-wrap"><table><thead><tr><th>DATA</th><th>TIPO</th><th>DESCRIÇÃO</th><th style="text-align:right">VALOR</th></tr></thead>
+  ${ev.length?`<div class="tbl-wrap"><table><thead><tr><th>DATA</th><th>TIPO</th><th>DESCRIÇÃO</th><th>ORIGEM</th><th style="text-align:right">VALOR</th></tr></thead>
   <tbody>${[...ev].sort((a,b)=>b.data.localeCompare(a.data)).map(e=>`<tr>
     <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${_fmtData(e.data)}</td>
     <td><span class="badge badge-${_eventoBadgeCor(e.tipo)}">${esc(e.tipo)}</span></td>
-    <td>${esc(e.desc||'—')}</td>
+    <td>${esc(_descLimpa(e.desc))}</td>
+    <td>${_isLancEvento(e)?_lancBadge():'<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">◆ Meus Bens</span>'}</td>
     <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
   </tr>`).join('')}</tbody></table></div>`:''}`;
   const catColors=['#00ff9d','#00c8ff','#a855f7','#ffd700','#ff4444','#ff8c00','#1effe4'];
@@ -14087,17 +15459,26 @@ function renderBemRelatorio(bem){
   ${ev.length?`<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-bottom:14px">ÚLTIMOS 6 EVENTOS</div>
   <div class="bem-timeline">${ev.slice(0,6).map(e=>`
   <div class="bem-evento" style="padding:10px 12px">
-    <div class="bem-evento-icon ${_eventoCor(e.tipo)}" style="width:28px;height:28px;font-size:13px">${_eventoIcone(e.tipo)}</div>
+    <div class="bem-evento-icon ${_eventoCor(e.tipo)}" style="width:28px;height:28px;font-size:13px">${_isLancEvento(e)?'⚡':_eventoIcone(e.tipo)}</div>
     <div class="bem-evento-body">
-      <div class="bem-evento-header"><span class="bem-evento-tipo" style="color:${_eventoTipoCor(e.tipo)}">${esc(e.tipo)}</span><span class="bem-evento-data">${_fmtData(e.data)}</span></div>
-      <div class="bem-evento-desc" style="font-size:12px">${esc(e.desc||'—')}</div>
+      <div class="bem-evento-header">
+        <span class="bem-evento-tipo" style="color:${_eventoTipoCor(e.tipo)}">${esc(e.tipo)}</span>
+        <div style="display:flex;align-items:center;gap:5px">${_isLancEvento(e)?_lancBadge():''}<span class="bem-evento-data">${_fmtData(e.data)}</span></div>
+      </div>
+      <div class="bem-evento-desc" style="font-size:12px">${esc(_descLimpa(e.desc))}</div>
       <span class="bem-evento-val" style="font-size:12px">${fmt(e.valor||0)}</span>
     </div>
   </div>`).join('')}</div></div>`:''}
   ${top3.length?`<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-bottom:12px">TOP 3 MAIORES GASTOS</div>
   ${top3.map((e,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
     <div style="font-size:18px;font-weight:800;color:var(--text3);min-width:24px;text-align:center">${i+1}</div>
-    <div style="flex:1"><div style="font-size:13px;font-weight:700">${esc(e.desc||e.tipo)}</div><div style="font-size:11px;color:var(--text3)">${_fmtData(e.data)} · ${esc(e.tipo)}</div></div>
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:700">${esc(_descLimpa(e.desc||e.tipo))}</span>
+        ${_isLancEvento(e)?_lancBadge():''}
+      </div>
+      <div style="font-size:11px;color:var(--text3)">${_fmtData(e.data)} · ${esc(e.tipo)}</div>
+    </div>
     <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-red)">${fmt(e.valor)}</div>
   </div>`).join('')}</div>`:''}
   ${docsVenc.length?`<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-bottom:12px">⚠ DOCUMENTOS VENCENDO</div>
@@ -14108,6 +15489,25 @@ function renderBemRelatorio(bem){
   ${proxManuts.map(e=>`<div class="alert ${e.diff<=3?'alert-red':e.diff<=15?'alert-yellow':'alert-blue'}" style="margin-bottom:6px">
     <span class="alert-icon">🔧</span><span>${esc(e.desc||e.tipo)} — em ${e.diff} dias (${_fmtData(e.proximaData)})</span>
   </div>`).join('')}</div>`:''}`;
+}
+
+function _addBemFinQuick(bemId){
+  const desc=(document.getElementById('bfq-desc').value||'').trim();
+  const tipo=document.getElementById('bfq-tipo').value;
+  const valor=parseBRL(document.getElementById('bfq-valor').value||'0');
+  const data=document.getElementById('bfq-data').value;
+  if(!desc){alert('Informe a descrição.');return;}
+  if(valor<=0){alert('Informe o valor.');return;}
+  if(!data){alert('Informe a data.');return;}
+  const ev=getBensEventos();
+  ev.push({id:Date.now(),bemId,tipo,data,desc,local:'',contato:'',valor,
+    proximaData:null,proximaKm:null,garantiaAte:null,anexo:null,obs:''});
+  setBensEventos(ev);
+  document.getElementById('bfq-desc').value='';
+  document.getElementById('bfq-valor').value='';
+  // re-renderiza financeiro
+  const bem=getBens().find(b=>b.id===bemId);
+  if(bem){_renderFichaHeader(bemId);renderBemFinanceiro(bem);}
 }
 
 // ── MODAL BEM ──
@@ -14180,22 +15580,57 @@ function excluirBem(id){
 }
 
 // ── MODAL EVENTO ──
-function abrirEventoModal(){
-  ['tipo','data','desc','local','contato','proxData','proxKm','garantia','obs'].forEach(c=>{
-    const el=document.getElementById('bev-f-'+c);if(el)el.value='';
-  });
-  document.getElementById('bev-f-valor').value='';
-  document.getElementById('bev-f-anexo').value='';
-  document.getElementById('bev-f-vincular').checked=false;
-  document.getElementById('bev-f-data').value=new Date().toISOString().slice(0,10);
-  const outroInp=document.getElementById('bev-f-tipo-outro');
-  if(outroInp) outroInp.value='';
-  const outroWrap=document.getElementById('bev-outro-wrap');
-  if(outroWrap) outroWrap.style.display='none';
+let _bevEditId=null;
+function abrirEventoModal(editId){
+  _bevEditId=editId||null;
+  const titleEl=document.querySelector('#bem-evento-modal .bem-modal-title');
+  const saveBtn=document.querySelector('#bem-evento-modal .btn.btn-green');
+  if(_bevEditId){
+    const ev=getBensEventos().find(e=>e.id===editId);
+    if(ev){
+      document.getElementById('bev-f-tipo').value=ev.tipo||'Manutenção';
+      document.getElementById('bev-f-data').value=ev.data||'';
+      document.getElementById('bev-f-desc').value=ev.desc||'';
+      document.getElementById('bev-f-local').value=ev.local||'';
+      document.getElementById('bev-f-contato').value=ev.contato||'';
+      document.getElementById('bev-f-valor').value=ev.valor?fmt(ev.valor):'';
+      document.getElementById('bev-f-proxData').value=ev.proximaData||'';
+      document.getElementById('bev-f-proxKm').value=ev.proximaKm||'';
+      document.getElementById('bev-f-garantia').value=ev.garantiaAte||'';
+      document.getElementById('bev-f-obs').value=ev.obs||'';
+      document.getElementById('bev-f-anexo').value='';
+      document.getElementById('bev-f-vincular').checked=false;
+      bevTipoChange();
+    }
+    if(titleEl) titleEl.textContent='✎ EDITAR EVENTO / MANUTENÇÃO';
+    if(saveBtn) saveBtn.textContent='✓ ATUALIZAR EVENTO';
+  } else {
+    ['tipo','data','desc','local','contato','proxData','proxKm','garantia','obs'].forEach(c=>{
+      const el=document.getElementById('bev-f-'+c);if(el)el.value='';
+    });
+    document.getElementById('bev-f-valor').value='';
+    document.getElementById('bev-f-anexo').value='';
+    document.getElementById('bev-f-vincular').checked=false;
+    document.getElementById('bev-f-data').value=new Date().toISOString().slice(0,10);
+    const outroInp=document.getElementById('bev-f-tipo-outro');
+    if(outroInp) outroInp.value='';
+    const outroWrap=document.getElementById('bev-outro-wrap');
+    if(outroWrap) outroWrap.style.display='none';
+    if(titleEl) titleEl.textContent='🔧 REGISTRAR EVENTO / MANUTENÇÃO';
+    if(saveBtn) saveBtn.textContent='✓ SALVAR EVENTO';
+  }
   _initMascaraOnce(document.getElementById('bev-f-valor'));
   document.getElementById('bem-evento-modal').style.display='flex';
 }
-function fecharEventoModal(){document.getElementById('bem-evento-modal').style.display='none';}
+function fecharEventoModal(){
+  document.getElementById('bem-evento-modal').style.display='none';
+  _bevEditId=null;
+  // restaura título e botão ao padrão
+  const titleEl=document.querySelector('#bem-evento-modal .bem-modal-title');
+  const saveBtn=document.querySelector('#bem-evento-modal .btn.btn-green');
+  if(titleEl) titleEl.textContent='🔧 REGISTRAR EVENTO / MANUTENÇÃO';
+  if(saveBtn) saveBtn.textContent='✓ SALVAR EVENTO';
+}
 function salvarEventoBem(){
   const data=document.getElementById('bev-f-data').value;
   const desc=document.getElementById('bev-f-desc').value.trim();
@@ -14207,25 +15642,39 @@ function salvarEventoBem(){
   const _tipoSel=document.getElementById('bev-f-tipo').value;
   const _tipoOutro=(document.getElementById('bev-f-tipo-outro').value||'').trim();
   const tipoFinal=_tipoSel==='Outro'&&_tipoOutro?_tipoOutro:_tipoSel;
+  const local=document.getElementById('bev-f-local').value.trim();
+  const contato=document.getElementById('bev-f-contato').value.trim();
+  const proximaData=document.getElementById('bev-f-proxData').value||null;
+  const proximaKm=parseInt(document.getElementById('bev-f-proxKm').value)||null;
+  const garantiaAte=document.getElementById('bev-f-garantia').value||null;
+  const obs=document.getElementById('bev-f-obs').value.trim();
+  const evs=getBensEventos();
+
   const _save=anexo=>{
-    const obj={id:Date.now(),bemId:_bemFichaId,
-      tipo:tipoFinal,data,desc,
-      local:document.getElementById('bev-f-local').value.trim(),
-      contato:document.getElementById('bev-f-contato').value.trim(),
-      valor,
-      proximaData:document.getElementById('bev-f-proxData').value||null,
-      proximaKm:parseInt(document.getElementById('bev-f-proxKm').value)||null,
-      garantiaAte:document.getElementById('bev-f-garantia').value||null,
-      anexo:anexo||null,
-      obs:document.getElementById('bev-f-obs').value.trim(),
-    };
-    const ev=getBensEventos();ev.push(obj);setBensEventos(ev);
-    if(vincular&&valor>0){
-      const all=getData('lancamentos');const sem=getSemanaFromData(data);
-      if(!all[sem])all[sem]=[];
-      all[sem].push({id:Date.now()+1,desc:`[BEM] ${desc}`,data,val:valor,cat:'Despesas Pessoais',forma:'outro'});
-      setData('lancamentos',all);
+    if(_bevEditId){
+      // Modo edição — atualiza evento existente
+      const idx=evs.findIndex(e=>e.id===_bevEditId);
+      if(idx>-1){
+        evs[idx]={...evs[idx],tipo:tipoFinal,data,desc,local,contato,valor,
+          proximaData,proximaKm,garantiaAte,obs,
+          anexo:anexo||evs[idx].anexo||null};
+        setBensEventos(evs);
+      }
+    } else {
+      // Novo evento
+      const obj={id:Date.now(),bemId:_bemFichaId,
+        tipo:tipoFinal,data,desc,local,contato,valor,
+        proximaData,proximaKm,garantiaAte,
+        anexo:anexo||null,obs};
+      evs.push(obj);setBensEventos(evs);
+      if(vincular&&valor>0){
+        const all=getData('lancamentos');const sem=getSemanaFromData(data);
+        if(!all[sem])all[sem]=[];
+        all[sem].push({id:Date.now()+1,desc:`[BEM] ${desc}`,data,val:valor,cat:'Despesas Pessoais',forma:'outro'});
+        setData('lancamentos',all);
+      }
     }
+    _bevEditId=null;
     fecharEventoModal();_renderFichaHeader(_bemFichaId);switchBemTab('manut');
   };
   if(anexoFile){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(anexoFile);}
@@ -14239,20 +15688,76 @@ function excluirEventoBem(id){
 }
 
 // ── MODAL KM ──
-function abrirKmModal(){
-  document.getElementById('bkm-f-data').value=new Date().toISOString().slice(0,10);
-  document.getElementById('bkm-f-km').value='';
-  document.getElementById('bkm-f-obs').value='';
+let _bkmEditId=null;
+function abrirKmModal(editId){
+  _bkmEditId=editId||null;
+  const titleEl=document.getElementById('bkm-modal-title');
+  const btnEl=document.getElementById('bkm-save-btn');
+  if(_bkmEditId){
+    const reg=getBensKm().find(k=>k.id===editId);
+    if(reg){
+      document.getElementById('bkm-f-data').value=reg.data||'';
+      document.getElementById('bkm-f-km').value=reg.km||'';
+      document.getElementById('bkm-f-obs').value=reg.obs||'';
+      document.getElementById('bkm-f-revisao').value=reg.kmRevisao||'';
+      document.getElementById('bkm-f-tipo-revisao').value=reg.tipoRevisao||'';
+    }
+    if(titleEl) titleEl.textContent='✎ EDITAR REGISTRO DE KM';
+    if(btnEl) btnEl.textContent='✓ ATUALIZAR';
+  } else {
+    document.getElementById('bkm-f-data').value=new Date().toISOString().slice(0,10);
+    ['bkm-f-km','bkm-f-obs','bkm-f-revisao','bkm-f-tipo-revisao'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.value='';
+    });
+    if(titleEl) titleEl.textContent='🛣 REGISTRAR KM';
+    if(btnEl) btnEl.textContent='✓ REGISTRAR';
+  }
   document.getElementById('bem-km-modal').style.display='flex';
 }
-function fecharKmModal(){document.getElementById('bem-km-modal').style.display='none';}
+function fecharKmModal(){document.getElementById('bem-km-modal').style.display='none';_bkmEditId=null;}
+function _salvarKmFreq(bemId,freq){
+  const cfg=getBensKmConfig();
+  cfg[bemId]={...(cfg[bemId]||{}),freq};
+  setBensKmConfig(cfg);
+  // re-renderiza sem recarregar tudo
+  const bem=getBens().find(b=>b.id===bemId);
+  if(bem) renderBemKm(bem);
+}
+
+function _kmAgrupar(reg,dias){
+  if(reg.length<2) return[];
+  const grupos=[];
+  for(let i=1;i<reg.length;i++){
+    const prev=reg[i-1],cur=reg[i];
+    const dDe=new Date(prev.data+'T12:00:00');
+    const dAte=new Date(cur.data+'T12:00:00');
+    const diff=Math.round((dAte-dDe)/(864e5));
+    if(diff>=dias*0.5&&diff<=dias*2){
+      grupos.push({de:prev.data,ate:cur.data,km:cur.km-prev.km,dias:diff});
+    }
+  }
+  return grupos;
+}
+
 function salvarKmBem(){
   const data=document.getElementById('bkm-f-data').value;
   const km=parseInt(document.getElementById('bkm-f-km').value);
   if(!data||!km){alert('Informe data e KM.');return;}
+  const kmRevisao=parseInt(document.getElementById('bkm-f-revisao').value)||null;
+  const tipoRevisao=document.getElementById('bkm-f-tipo-revisao').value.trim()||null;
+  const obs=document.getElementById('bkm-f-obs').value.trim();
   const reg=getBensKm();
-  reg.push({id:Date.now(),bemId:_bemFichaId,data,km,obs:document.getElementById('bkm-f-obs').value.trim()});
-  setBensKm(reg);fecharKmModal();switchBemTab('km');
+  if(_bkmEditId){
+    const idx=reg.findIndex(k=>k.id===_bkmEditId);
+    if(idx>-1) reg[idx]={...reg[idx],data,km,obs,kmRevisao,tipoRevisao};
+  } else {
+    reg.push({id:Date.now(),bemId:_bemFichaId,data,km,obs,kmRevisao,tipoRevisao});
+  }
+  setBensKm(reg);
+  const cfg=getBensKmConfig();
+  cfg[_bemFichaId]={...(cfg[_bemFichaId]||{}),lastDate:data};
+  setBensKmConfig(cfg);
+  fecharKmModal();switchBemTab('km');
 }
 function excluirKmBem(id){
   showConfirm('Excluir Registro','Remover este registro de KM?',()=>{setBensKm(getBensKm().filter(k=>k.id!==id));switchBemTab('km');});

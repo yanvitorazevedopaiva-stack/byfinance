@@ -2139,6 +2139,19 @@
   .bem-modal-btns{display:flex;gap:10px;margin-top:20px;}
   @media(max-width:560px){.bem-form-grid{grid-template-columns:1fr;}.bem-form-full{grid-column:1;}}
   @media(max-width:768px){.bem-ficha-header{flex-direction:column;}.bem-ficha-foto{width:100%;height:180px;}.bens-grid{grid-template-columns:1fr;}}
+  /* ── Juros de cartão ── */
+  .ct-juros-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:6px;cursor:pointer;transition:all .15s;}
+  .ct-juros-badge:hover{filter:brightness(1.2);}
+  .ct-overdue-box{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.3);}
+  .ct-overdue-title{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-red);letter-spacing:.8px;margin-bottom:6px;}
+  .ct-overdue-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px;}
+  .ct-overdue-total{display:flex;justify-content:space-between;font-size:13px;font-weight:800;color:var(--neon-red);border-top:1px solid rgba(255,68,68,0.2);padding-top:6px;margin-top:6px;}
+  .ct-pago-btn{width:100%;margin-top:8px;padding:7px;border-radius:8px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.07);color:var(--neon-green);font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;cursor:pointer;letter-spacing:.5px;transition:all .18s;}
+  .ct-pago-btn:hover{background:rgba(0,255,157,0.16);}
+  .ct-pago-ok{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--neon-green);font-weight:700;letter-spacing:.5px;}
+  body.day .ct-overdue-box{background:rgba(220,38,38,0.05);border-color:rgba(220,38,38,0.25);}
+  body.day .ct-overdue-title,body.day .ct-overdue-total{color:#dc2626;}
+
   @media print{#sidebar,#mob-topbar,#fab-speed-dial,.bem-back-btn,.bem-tabs,.bem-modal-btns{display:none!important;}.bem-panel{display:block!important;}#page-bens{display:block!important;}body{background:#fff!important;color:#000!important;}}
 
   /* ══════════════════════════════════════════
@@ -3143,10 +3156,19 @@
   <!-- FORMULÁRIO: ADICIONAR CARTÃO -->
   <div class="card" style="margin-bottom:20px">
     <div class="sec-title">ADICIONAR CARTÃO</div>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px">
       <div>
         <div class="card-label" style="margin-bottom:4px">NOME</div>
         <input type="text" id="ct-new-nome" placeholder="Ex: Nubank, Inter..." style="width:100%">
+      </div>
+      <div>
+        <div class="card-label" style="margin-bottom:4px">TIPO</div>
+        <select id="ct-new-tipo" onchange="ctTipoChange()" style="width:100%">
+          <option value="">— selecione —</option>
+          <option value="Crédito">Crédito</option>
+          <option value="Débito">Débito</option>
+          <option value="Crédito e Débito">Crédito e Débito</option>
+        </select>
       </div>
       <div>
         <div class="card-label" style="margin-bottom:4px">COR</div>
@@ -3179,6 +3201,27 @@
       </div>
       <button class="btn" onclick="addCartao()">+ ADICIONAR</button>
     </div>
+
+    <!-- Área de anexo de contrato — aparece ao selecionar o tipo -->
+    <div id="ct-contrato-wrap" style="display:none;margin-top:4px;padding:14px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div class="card-label" style="margin-bottom:4px" id="ct-contrato-label">📄 CONTRATO DO CARTÃO</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Anexe o contrato em PDF ou imagem (opcional)</div>
+          <input type="file" id="ct-new-contrato" accept="image/*,application/pdf"
+            style="width:100%;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);
+                   color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box;cursor:pointer">
+        </div>
+        <div id="ct-contrato-preview" style="display:none;align-items:center;gap:8px;padding:8px 12px;
+          background:rgba(0,255,157,0.06);border:1px solid rgba(0,255,157,0.2);border-radius:8px">
+          <span style="font-size:18px">📎</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--neon-green)">Arquivo selecionado</div>
+            <div id="ct-contrato-fname" style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- LISTA DE CARTÕES -->
@@ -3186,7 +3229,7 @@
     <div class="sec-title">MEUS CARTÕES</div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>CARTÃO</th><th>LIMITE</th><th>FECHAMENTO</th><th>VENCIMENTO</th><th>FATURA ATUAL</th><th>DÍVIDA TOTAL</th><th>AÇÕES</th></tr></thead>
+        <thead><tr><th>CARTÃO</th><th>TIPO</th><th>LIMITE</th><th>FECHAMENTO</th><th>VENCIMENTO</th><th>FATURA ATUAL</th><th>DÍVIDA TOTAL</th><th>AÇÕES</th></tr></thead>
         <tbody id="ct-tbody"></tbody>
       </table>
     </div>
@@ -3377,6 +3420,14 @@
       <input type="radio" name="lanc-out" value="Pix" id="lanc-radio-pix" checked>
       <input type="radio" name="lanc-out" value="Débito" id="lanc-radio-debito">
       <input type="radio" name="lanc-out" value="Dinheiro" id="lanc-radio-dinheiro">
+    </div>
+
+    <!-- Vincular a Bem (opcional) -->
+    <div id="lanc-bem-wrap" style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:.5px;white-space:nowrap">🔗 VINCULAR A BEM:</div>
+      <select id="lanc-bem-sel" style="flex:1;min-width:180px;padding:7px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+        <option value="">— nenhum —</option>
+      </select>
     </div>
 
     <!-- Botão + info -->
@@ -4895,10 +4946,13 @@
 <div id="bem-evento-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.78);align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px">
   <div class="bem-modal-box">
     <div class="bem-modal-title">🔧 REGISTRAR EVENTO / MANUTENÇÃO</div>
-    <div class="bem-form-grid">
+
+    <!-- ◈ BLOCO 1: O QUE ACONTECEU -->
+    <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;color:var(--text3);margin-bottom:8px;padding:0 2px">◈ O QUE ACONTECEU</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
         <label class="bem-form-label">TIPO</label>
-        <select id="bev-f-tipo" class="bem-form-input">
+        <select id="bev-f-tipo" class="bem-form-input" onchange="bevTipoChange()">
           <option>Manutenção</option><option>Vistoria</option><option>Troca de Peça</option>
           <option>Revisão</option><option>Seguro</option><option>IPVA</option>
           <option>IPTU</option><option>Outro</option>
@@ -4908,10 +4962,28 @@
         <label class="bem-form-label">DATA</label>
         <input id="bev-f-data" type="date" class="bem-form-input">
       </div>
-      <div class="bem-form-full">
-        <label class="bem-form-label">DESCRIÇÃO</label>
-        <input id="bev-f-desc" type="text" class="bem-form-input" placeholder="Ex: Troca de óleo 5W-30">
-      </div>
+    </div>
+    <!-- Campo manual "Outro" -->
+    <div id="bev-outro-wrap" style="display:none;margin-bottom:10px">
+      <label class="bem-form-label">ESPECIFIQUE O TIPO</label>
+      <input id="bev-f-tipo-outro" type="text" class="bem-form-input" placeholder="Ex: Calibragem, Lavagem, Pintura...">
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="bem-form-label">DESCRIÇÃO</label>
+      <input id="bev-f-desc" type="text" class="bem-form-input" placeholder="Ex: Troca de óleo 5W-30 — 5.000km">
+    </div>
+
+    <!-- ◈ BLOCO 2: VALOR (destaque) -->
+    <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;color:var(--text3);margin-bottom:8px;padding:0 2px">◈ VALOR DA DESPESA</div>
+    <div style="background:rgba(0,255,157,0.05);border:1px solid rgba(0,255,157,0.2);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+      <label class="bem-form-label" style="color:var(--neon-green)">VALOR PAGO (R$)</label>
+      <input id="bev-f-valor" type="text" class="bem-form-input money" placeholder="R$ 0,00"
+        style="font-size:18px!important;font-weight:700;height:48px;background:transparent;border-color:rgba(0,255,157,0.3)">
+    </div>
+
+    <!-- ◈ BLOCO 3: ONDE / QUEM -->
+    <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;color:var(--text3);margin-bottom:8px;padding:0 2px">◈ ONDE / QUEM REALIZOU</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
         <label class="bem-form-label">ESTABELECIMENTO / PESSOA</label>
         <input id="bev-f-local" type="text" class="bem-form-input" placeholder="AutoCar Serviços">
@@ -4920,10 +4992,11 @@
         <label class="bem-form-label">TELEFONE / CONTATO</label>
         <input id="bev-f-contato" type="text" class="bem-form-input" placeholder="(11) 99999-9999">
       </div>
-      <div>
-        <label class="bem-form-label">VALOR</label>
-        <input id="bev-f-valor" type="text" class="bem-form-input money" placeholder="R$ 0,00">
-      </div>
+    </div>
+
+    <!-- ◈ BLOCO 4: PRÓXIMOS PASSOS -->
+    <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;color:var(--text3);margin-bottom:8px;padding:0 2px">◈ PRÓXIMOS PASSOS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
         <label class="bem-form-label">PRÓX. MANUTENÇÃO — DATA</label>
         <input id="bev-f-proxData" type="date" class="bem-form-input">
@@ -4936,21 +5009,32 @@
         <label class="bem-form-label">GARANTIA ATÉ</label>
         <input id="bev-f-garantia" type="date" class="bem-form-input">
       </div>
+    </div>
+
+    <!-- ◈ BLOCO 5: ANEXO E OBSERVAÇÕES -->
+    <div style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;color:var(--text3);margin-bottom:8px;padding:0 2px">◈ ANEXO E OBSERVAÇÕES</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
-        <label class="bem-form-label">COMPROVANTE / FOTO</label>
+        <label class="bem-form-label">COMPROVANTE / FOTO (PDF ou imagem)</label>
         <input id="bev-f-anexo" type="file" accept="image/*,application/pdf" class="bem-form-input" style="padding:6px 12px">
       </div>
-      <div class="bem-form-full">
+      <div>
         <label class="bem-form-label">OBSERVAÇÕES</label>
-        <textarea id="bev-f-obs" class="bem-form-input" rows="2"></textarea>
-      </div>
-      <div class="bem-form-full">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.5px">
-          <input id="bev-f-vincular" type="checkbox" style="width:14px;height:14px">
-          VINCULAR ESTE GASTO AOS LANÇAMENTOS DO SISTEMA
-        </label>
+        <textarea id="bev-f-obs" class="bem-form-input" rows="3"></textarea>
       </div>
     </div>
+
+    <!-- ◈ BLOCO 6: VINCULAR AO LANÇAMENTO -->
+    <div style="background:rgba(0,200,255,0.05);border:1px solid rgba(0,200,255,0.15);border-radius:10px;padding:12px 16px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <input id="bev-f-vincular" type="checkbox" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--neon-blue)">
+        <div>
+          <div style="font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);letter-spacing:.5px">REGISTRAR TAMBÉM NOS LANÇAMENTOS</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">O valor desta despesa será adicionado automaticamente à semana correspondente</div>
+        </div>
+      </label>
+    </div>
+
     <div class="bem-modal-btns">
       <button class="btn btn-green" style="flex:1" onclick="salvarEventoBem()">✓ SALVAR EVENTO</button>
       <button class="btn" style="flex:1;border-color:rgba(255,68,68,0.3);color:#ff6666" onclick="fecharEventoModal()">✕ CANCELAR</button>
@@ -5014,6 +5098,69 @@
     <div class="bem-modal-btns">
       <button class="btn btn-green" style="flex:1" onclick="salvarDocumentoBem()">✓ SALVAR DOCUMENTO</button>
       <button class="btn" style="flex:1;border-color:rgba(255,68,68,0.3);color:#ff6666" onclick="fecharDocModal()">✕ CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL JUROS DO CONTRATO ========== -->
+<div id="ct-juros-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.82);align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;width:min(540px,100%);margin:auto;box-shadow:0 8px 40px rgba(0,0,0,0.5)">
+    <div style="font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:6px">📋 TAXAS DO CONTRATO</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:20px" id="ct-juros-subtitle">Configure as taxas do contrato de crédito</div>
+
+    <div id="ct-juros-analise" style="display:none;padding:10px 14px;background:rgba(0,200,255,0.06);border:1px solid rgba(0,200,255,0.2);border-radius:8px;margin-bottom:16px;font-size:11px;color:var(--neon-blue);font-family:'JetBrains Mono',monospace"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.5px">💸 JUROS DE MORA (% a.m.)</div>
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">Taxa cobrada por mês de atraso</div>
+        <input id="ctj-mora-mes" type="number" step="0.01" min="0" max="30" placeholder="Ex: 3.5"
+          style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--neon-red);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.5px">🔒 MULTA POR ATRASO (%)</div>
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">Percentual fixo cobrado na 1ª ocorrência</div>
+        <input id="ctj-multa" type="number" step="0.01" min="0" max="10" placeholder="Ex: 2"
+          style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--neon-yellow);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.5px">🔄 JUROS ROTATIVOS (% a.m.)</div>
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">Para pagamento mínimo/parcial</div>
+        <input id="ctj-rotativo" type="number" step="0.01" min="0" max="30" placeholder="Ex: 14.9"
+          style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--neon-purple);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.5px">📅 JUROS AO DIA (% a.d.)</div>
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">Deixe 0 para calcular de % a.m. ÷ 30</div>
+        <input id="ctj-dia" type="number" step="0.001" min="0" max="1" placeholder="Ex: 0.117"
+          style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text2);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;box-sizing:border-box">
+      </div>
+    </div>
+
+    <!-- Simulador rápido -->
+    <div style="padding:14px;background:var(--bg3);border-radius:10px;margin-bottom:16px">
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:1px;margin-bottom:10px">🧮 SIMULAÇÃO DE ATRASO</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">FATURA (R$)</div>
+          <input id="ctj-sim-valor" type="number" placeholder="1500" oninput="ctjSimular()"
+            style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;box-sizing:border-box">
+        </div>
+        <div style="flex:0 0 80px">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">DIAS ATRASO</div>
+          <input id="ctj-sim-dias" type="number" placeholder="10" oninput="ctjSimular()"
+            style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;box-sizing:border-box">
+        </div>
+        <div id="ctj-sim-result" style="flex:1;min-width:140px;padding:10px 12px;border-radius:8px;background:rgba(255,68,68,0.07);border:1px solid rgba(255,68,68,0.2)">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">TOTAL A PAGAR</div>
+          <div style="font-size:15px;font-weight:800;color:var(--neon-red);font-family:'JetBrains Mono',monospace">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="ctjSalvar()" style="flex:1;padding:11px;background:rgba(0,255,157,0.15);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">✓ SALVAR TAXAS</button>
+      <button onclick="document.getElementById('ct-juros-modal').style.display='none'" style="flex:1;padding:11px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);color:#ff6666;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">✕ CANCELAR</button>
     </div>
   </div>
 </div>
@@ -6014,6 +6161,25 @@ function renderDashboard(){
   alertsHtml+=`<div class="alert ${dtiClass}"><span class="alert-icon">📊</span><span>Comprometimento de renda: <b>${dti}%</b> em gastos fixos</span></div>`;
   alertsHtml+=`<div class="alert alert-green"><span class="alert-icon">✦</span><span>Liberdade financeira prevista para <b>Agosto/2026</b>!</span></div>`;
 
+  // Alertas de cartões em atraso com juros
+  const _dHoje=new Date().getDate();
+  const _mesK=new Date().toISOString().slice(0,7);
+  getData('cartoes').forEach(c=>{
+    const isCredito=c.tipo==='Crédito'||c.tipo==='Crédito e Débito';
+    if(!isCredito||!c.vencimento) return;
+    const fatAtual=(getData('faturas')[c.nome]||[])[new Date().getMonth()]||0;
+    if(!fatAtual) return;
+    if(_ctFoiPago(c.nome,_mesK)) return;
+    const dias=_dHoje-c.vencimento;
+    if(dias>0){
+      const taxaDia=(c.jurosDia||(c.jurosMes?c.jurosMes/30:0))/100;
+      const total=_ctCalcularJuros(fatAtual,dias,c.multaAtraso||0,taxaDia*100);
+      alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">💳</span><span><b>${esc(c.nome)}</b> em atraso há ${dias} dia${dias>1?'s':''}. Fatura: ${fmt(fatAtual)} → com juros: <b>${fmt(total)}</b></span></div>`;
+    } else if(dias===0){
+      alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">💳</span><span><b>${esc(c.nome)}</b>: fatura vence <b>HOJE</b> — ${fmt(fatAtual)}</span></div>`;
+    }
+  });
+
   // Alertas de Meus Bens — documentos vencendo e manutenções próximas
   const _hoje=new Date(); _hoje.setHours(0,0,0,0);
   getBensDocumentos().forEach(doc=>{
@@ -6823,6 +6989,13 @@ function renderLancamentos(){
       ?carts.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('')
       :'<option value="">-- nenhum cartão --</option>';
   }
+  // Popula select de Bens
+  const bemSel=document.getElementById('lanc-bem-sel');
+  if(bemSel){
+    const bens=getBens();
+    bemSel.innerHTML='<option value="">— nenhum —</option>'+
+      bens.map(b=>`<option value="${b.id}">${esc(b.nome)}${b.tipo?' ('+b.tipo+')':''}</option>`).join('');
+  }
   // Inicializa forma padrão (Pix)
   if(document.getElementById('lb-pix')) setLancForma('pix');
   renderUltimosLancs();
@@ -7467,6 +7640,19 @@ function addLancamento(){
   }
   _updateLancStats();
   renderUltimosLancs();
+
+  // Vincular despesa a um Bem (se selecionado)
+  const bemSelEl=document.getElementById('lanc-bem-sel');
+  const bemIdSel=bemSelEl?parseInt(bemSelEl.value)||0:0;
+  if(bemIdSel&&val>0){
+    const ev=getBensEventos();
+    ev.push({id:Date.now()+2,bemId:bemIdSel,tipo:'Outro',data,
+      desc:`[Lançamento] ${desc}`,local:'',contato:'',
+      valor:val,proximaData:null,proximaKm:null,garantiaAte:null,anexo:null,obs:''});
+    setBensEventos(ev);
+    if(bemSelEl) bemSelEl.value='';
+  }
+
   const pctEl=document.getElementById('lanc-receita-pct');
   if(pctEl) pctEl.style.display='none';
 }
@@ -9174,7 +9360,7 @@ function renderCartoes(){
 
   const tbody=document.getElementById('ct-tbody');
   if(!cartoes.length){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Nenhum cartão cadastrado.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">Nenhum cartão cadastrado.</td></tr>';
     document.getElementById('ct-cards-visual').innerHTML='';
     return;
   }
@@ -9184,8 +9370,15 @@ function renderCartoes(){
     const neon=CT_COR[c.cor]||'neon-blue';
     const fatMes=(fat[c.nome]||[])[mesAtual]||0;
     const total=totalByCard[c.nome]||0;
+    const tipoCor=c.tipo==='Crédito'?'neon-blue':c.tipo==='Débito'?'neon-green':'neon-yellow';
+    const tipoIcon=c.tipo==='Crédito'?'💳':c.tipo==='Débito'?'🏧':'💳';
     return `<tr>
       <td><span class="badge badge-${c.cor}" style="color:var(--${neon});font-weight:700">${esc(c.nome)}</span></td>
+      <td>
+        ${c.tipo?`<span style="font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--${tipoCor})">${tipoIcon} ${esc(c.tipo)}</span>`:'<span style="color:var(--text3);font-size:11px">—</span>'}
+        ${c.contrato?`<br><button class="btn btn-sm" style="margin-top:3px;font-size:9px;color:var(--neon-yellow);border-color:rgba(255,215,0,0.3)" onclick="verContratoCartao(${c.id})">📎 Contrato</button>`:''}
+        ${(c.tipo==='Crédito'||c.tipo==='Crédito e Débito')?`<br><button class="ct-juros-badge" style="margin-top:4px;background:${c.jurosMes?'rgba(255,68,68,0.12)':'rgba(0,200,255,0.08)'};color:${c.jurosMes?'var(--neon-red)':'var(--text3)'};border:1px solid ${c.jurosMes?'rgba(255,68,68,0.3)':'var(--border)'}" onclick="abrirJurosModal(${c.id})">${c.jurosMes?'⚠ '+c.jurosMes+'% a.m.':'⚙ Config. juros'}</button>`:''}
+      </td>
       <td style="font-family:'JetBrains Mono',monospace;color:var(--text2)">${c.limite>0?fmt(c.limite):'—'}</td>
       <td style="color:var(--text2)">${c.fechamento?'Dia '+c.fechamento:'—'}</td>
       <td style="color:var(--text2)">${c.vencimento?'Dia '+c.vencimento:'—'}</td>
@@ -9237,22 +9430,53 @@ function renderCartoes(){
   }
 
   const parcListVis=getData('parcelas');
+  const mesChave=new Date().toISOString().slice(0,7); // YYYY-MM
   document.getElementById('ct-cards-visual').innerHTML=cartoes.map(c=>{
     const hex=NEON_HEX[c.cor]||'#00c8ff';
-    // Dívida total restante = parcelas não quitadas × valor
     const usado=parcListVis.filter(p=>p.cartao===c.nome&&p.paga<p.total).reduce((s,p)=>s+(p.total-p.paga)*p.val,0);
     const limite=c.limite||0;
     const pct=limite>0?Math.min(100,Math.round(usado/limite*100)):0;
-    // Semáforo: verde ≤50%, amarelo ≤80%, vermelho >80%
     const barColor=pct>80?'var(--neon-red)':pct>50?'var(--neon-yellow)':'var(--neon-green)';
     const pctLabel=pct>80?'🔴 Limite crítico':pct>50?'🟡 Uso elevado':'🟢 Uso saudável';
     const pctCor=pct>80?'var(--neon-red)':pct>50?'var(--neon-yellow)':'var(--neon-green)';
     const disponivel=Math.max(0,limite-usado);
+    const fatMesVis=(fat[c.nome]||[])[mesAtual]||0;
+
+    // ── Cálculo de atraso e juros ──────────────────────
+    let overdueHtml='';
+    const isCredito=c.tipo==='Crédito'||c.tipo==='Crédito e Débito';
+    const foiPago=_ctFoiPago(c.nome,mesChave);
+    if(isCredito&&c.vencimento&&fatMesVis>0&&!foiPago){
+      const diasAtraso=hoje-c.vencimento;
+      if(diasAtraso>0){
+        const taxaDia=(c.jurosDia||(c.jurosMes?c.jurosMes/30:0))/100;
+        const multaPct=c.multaAtraso||0;
+        const totalComJuros=_ctCalcularJuros(fatMesVis,diasAtraso,multaPct,taxaDia*100);
+        const jurosAcum=totalComJuros-fatMesVis;
+        overdueHtml=`
+        <div class="ct-overdue-box">
+          <div class="ct-overdue-title">🔴 EM ATRASO — ${diasAtraso} DIA${diasAtraso>1?'S':''}</div>
+          <div class="ct-overdue-row"><span>Fatura original</span><span>${fmt(fatMesVis)}</span></div>
+          ${multaPct>0?`<div class="ct-overdue-row"><span>+ Multa (${multaPct}%)</span><span style="color:var(--neon-yellow)">${fmt(fatMesVis*multaPct/100)}</span></div>`:''}
+          ${taxaDia>0?`<div class="ct-overdue-row"><span>+ Juros mora (${(taxaDia*100).toFixed(3)}% a.d. × ${diasAtraso}d)</span><span style="color:var(--neon-red)">${fmt(jurosAcum-fatMesVis*multaPct/100)}</span></div>`:''}
+          <div class="ct-overdue-total"><span>TOTAL A PAGAR</span><span>${fmt(totalComJuros)}</span></div>
+          ${c.jurosMes?'':`<div style="font-size:9px;color:var(--text3);margin-top:6px;font-family:'JetBrains Mono',monospace">⚙ Configure as taxas do contrato para cálculo preciso</div>`}
+          <button class="ct-pago-btn" onclick="ctMarcarPago('${esc(c.nome)}','${mesChave}')">✓ MARCAR FATURA COMO PAGA</button>
+        </div>`;
+      } else if(diasAtraso===0){
+        overdueHtml=`<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.25);font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--neon-yellow)">⚡ VENCE HOJE — ${fmt(fatMesVis)}<br><button class="ct-pago-btn" onclick="ctMarcarPago('${esc(c.nome)}','${mesChave}')">✓ MARCAR COMO PAGA</button></div>`;
+      }
+    } else if(isCredito&&foiPago&&fatMesVis>0){
+      overdueHtml=`<div class="ct-pago-ok">✓ FATURA PAGA — ${mesChave}</div>`;
+    }
 
     return `<div class="ct-vcard">
       <div class="ct-vcard-accent" style="background:${hex}"></div>
       <div class="ct-vcard-top">
-        <div class="ct-vcard-name" style="color:${hex}">${esc(c.nome)}</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div class="ct-vcard-name" style="color:${hex}">${esc(c.nome)}</div>
+          ${isCredito&&c.jurosMes?`<span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--neon-red);letter-spacing:.5px">⚠ Mora: ${c.jurosMes}% a.m. · Multa: ${c.multaAtraso||0}%</span>`:''}
+        </div>
         ${limite>0?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.05);color:var(--text3)">${pct}% usado</span>`:''}
       </div>
       ${limite>0?`
@@ -9266,17 +9490,56 @@ function renderCartoes(){
         </div>
         <div class="ct-limit-pct" style="color:${pctCor}">${pctLabel} · ${fmt(disponivel)} disponível</div>
       `:`<div style="font-size:11px;color:var(--text3);margin-bottom:12px">Limite não informado</div>`}
+      ${overdueHtml}
       <div class="ct-vcard-dates">
         ${datePill('FECHAMENTO',c.fechamento,hoje)}
         ${datePill('VENCIMENTO',c.vencimento,hoje)}
       </div>
+      ${isCredito?`<button class="ct-juros-badge" style="width:100%;margin-top:8px;justify-content:center;background:${c.jurosMes?'rgba(255,68,68,0.1)':'rgba(0,200,255,0.07)'};color:${c.jurosMes?'var(--neon-red)':'var(--text3)'};border:1px solid ${c.jurosMes?'rgba(255,68,68,0.25)':'var(--border)'}" onclick="abrirJurosModal(${c.id})">${c.jurosMes?`⚙ Editar taxas do contrato`:'⚙ Configurar juros do contrato'}</button>`:''}
     </div>`;
   }).join('');
 }
 
+function ctTipoChange(){
+  const tipo=document.getElementById('ct-new-tipo').value;
+  const wrap=document.getElementById('ct-contrato-wrap');
+  const label=document.getElementById('ct-contrato-label');
+  if(tipo){
+    wrap.style.display='block';
+    label.textContent=tipo==='Crédito'?'📄 CONTRATO DO CARTÃO DE CRÉDITO':
+                      tipo==='Débito'?'📄 CONTRATO DO CARTÃO DE DÉBITO':
+                      '📄 CONTRATO DO CARTÃO';
+  } else {
+    wrap.style.display='none';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const fi=document.getElementById('ct-new-contrato');
+  if(fi) fi.addEventListener('change',function(){
+    const prev=document.getElementById('ct-contrato-preview');
+    const fname=document.getElementById('ct-contrato-fname');
+    if(this.files[0]){
+      prev.style.display='flex';
+      fname.textContent=this.files[0].name;
+      // tenta analisar o PDF em segundo plano
+      _ctAnalisarArquivo(this.files[0],taxas=>{
+        if(taxas&&(taxas.jurosMes||taxas.multa||taxas.juroRotativo)){
+          // guarda para usar quando salvar o cartão
+          fi._taxasDetectadas=taxas;
+          fname.textContent=this.files[0].name+' ✓ Taxas detectadas!';
+        }
+      });
+    } else {
+      prev.style.display='none';
+    }
+  });
+});
+
 function addCartao(){
   const nome=document.getElementById('ct-new-nome').value.trim();
   const cor=document.getElementById('ct-new-cor').value;
+  const tipo=document.getElementById('ct-new-tipo').value;
   const limite=parseFloat(document.getElementById('ct-new-limite').value)||0;
   const fecha=parseInt(document.getElementById('ct-new-fecha').value)||0;
   const venc=parseInt(document.getElementById('ct-new-venc').value)||0;
@@ -9284,13 +9547,49 @@ function addCartao(){
   const cartoes=getData('cartoes');
   if(cartoes.find(c=>c.nome.toLowerCase()===nome.toLowerCase())){alert('Já existe um cartão com esse nome.');return;}
   const newId=cartoes.length?Math.max(...cartoes.map(c=>c.id))+1:1;
-  cartoes.push({id:newId,nome,cor,limite,fechamento:fecha,vencimento:venc});
-  setData('cartoes',cartoes);
-  document.getElementById('ct-new-nome').value='';
-  document.getElementById('ct-new-limite').value='';
-  document.getElementById('ct-new-fecha').value='';
-  document.getElementById('ct-new-venc').value='';
-  renderCartoes();
+  const arquivoEl=document.getElementById('ct-new-contrato');
+  const arquivo=arquivoEl.files[0];
+  const taxasDetectadas=arquivoEl._taxasDetectadas||null;
+  const _save=contrato=>{
+    const novoCartao={id:newId,nome,cor,tipo,limite,fechamento:fecha,vencimento:venc,
+      contrato:contrato||null,
+      // aplica taxas detectadas automaticamente (usuário pode editar depois)
+      jurosMes:taxasDetectadas?.jurosMes||0,
+      multaAtraso:taxasDetectadas?.multa||0,
+      juroRotativo:taxasDetectadas?.juroRotativo||0,
+      jurosDia:taxasDetectadas?.jurosDia||0,
+    };
+    cartoes.push(novoCartao);
+    setData('cartoes',cartoes);
+    document.getElementById('ct-new-nome').value='';
+    document.getElementById('ct-new-tipo').value='';
+    document.getElementById('ct-new-limite').value='';
+    document.getElementById('ct-new-fecha').value='';
+    document.getElementById('ct-new-venc').value='';
+    arquivoEl.value='';
+    arquivoEl._taxasDetectadas=null;
+    document.getElementById('ct-contrato-wrap').style.display='none';
+    document.getElementById('ct-contrato-preview').style.display='none';
+    renderCartoes();
+    // abre modal de juros automaticamente se for cartão de crédito
+    if(tipo==='Crédito'||tipo==='Crédito e Débito'){
+      setTimeout(()=>abrirJurosModal(newId),300);
+    }
+  };
+  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  else _save(null);
+}
+
+function verContratoCartao(id){
+  const c=getData('cartoes').find(x=>x.id===id);
+  if(!c||!c.contrato){alert('Nenhum contrato anexado para este cartão.');return;}
+  const w=window.open('');
+  if(c.contrato.startsWith('data:application/pdf')){
+    w.document.write(`<iframe src="${c.contrato}" style="width:100%;height:100vh;border:none"></iframe>`);
+  } else {
+    w.document.write(`<img src="${c.contrato}" style="max-width:100%;height:auto">`);
+  }
+  w.document.close();
 }
 
 function editCartao(id){
@@ -9303,15 +9602,26 @@ function editCartao(id){
   const row=rows[idx];
   if(!row) return;
   const CORES=['yellow','purple','blue','red','green','white'];
+  const sInl='padding:4px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px';
   row.innerHTML=`
-    <td><input id="ec-nome" value="${esc(c.nome)}" style="width:100px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px"><br>
+    <td><input id="ec-nome" value="${esc(c.nome)}" style="width:100px;${sInl}"><br>
       <select id="ec-cor" style="margin-top:4px;width:100px;padding:3px 6px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:11px">
         ${CORES.map(cor=>`<option value="${cor}" ${c.cor===cor?'selected':''}>${cor}</option>`).join('')}
       </select>
     </td>
-    <td><input id="ec-limite" type="number" min="0" step="0.01" value="${c.limite}" style="width:90px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px"></td>
-    <td><input id="ec-fecha" type="number" min="0" max="31" value="${c.fechamento}" style="width:60px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px"></td>
-    <td><input id="ec-venc" type="number" min="0" max="31" value="${c.vencimento}" style="width:60px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px"></td>
+    <td>
+      <select id="ec-tipo" style="width:110px;${sInl}">
+        <option value="">—</option>
+        <option value="Crédito" ${c.tipo==='Crédito'?'selected':''}>Crédito</option>
+        <option value="Débito" ${c.tipo==='Débito'?'selected':''}>Débito</option>
+        <option value="Crédito e Débito" ${c.tipo==='Crédito e Débito'?'selected':''}>Créd+Déb</option>
+      </select>
+      <br><input type="file" id="ec-contrato" accept="image/*,application/pdf" style="margin-top:4px;font-size:10px;width:110px">
+      ${c.contrato?`<br><button class="btn btn-sm" style="margin-top:3px;font-size:9px;color:var(--neon-yellow);border-color:rgba(255,215,0,0.3)" onclick="verContratoCartao(${c.id})">📎 Ver atual</button>`:''}
+    </td>
+    <td><input id="ec-limite" type="number" min="0" step="0.01" value="${c.limite}" style="width:90px;${sInl}"></td>
+    <td><input id="ec-fecha" type="number" min="0" max="31" value="${c.fechamento}" style="width:60px;${sInl}"></td>
+    <td><input id="ec-venc" type="number" min="0" max="31" value="${c.vencimento}" style="width:60px;${sInl}"></td>
     <td colspan="2"></td>
     <td><div style="display:flex;gap:6px">
       <button class="btn btn-sm" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green)" onclick="saveCartao(${id})">✔ SALVAR</button>
@@ -9322,6 +9632,7 @@ function editCartao(id){
 function saveCartao(id){
   const nome=document.getElementById('ec-nome').value.trim();
   const cor=document.getElementById('ec-cor').value;
+  const tipo=document.getElementById('ec-tipo').value;
   const limite=parseFloat(document.getElementById('ec-limite').value)||0;
   const fecha=parseInt(document.getElementById('ec-fecha').value)||0;
   const venc=parseInt(document.getElementById('ec-venc').value)||0;
@@ -9332,15 +9643,20 @@ function saveCartao(id){
   const idx=cartoes.findIndex(c=>c.id===id);
   if(idx===-1) return;
   const oldNome=cartoes[idx].nome;
-  cartoes[idx]={...cartoes[idx],nome,cor,limite,fechamento:fecha,vencimento:venc};
-  setData('cartoes',cartoes);
-  // Atualiza nome nas parcelas se mudou
-  if(oldNome!==nome){
-    const parc=getData('parcelas');
-    parc.forEach(p=>{if(p.cartao===oldNome) p.cartao=nome;});
-    setData('parcelas',parc);
-  }
-  renderCartoes();
+  const arquivo=document.getElementById('ec-contrato').files[0];
+  const _save=contrato=>{
+    cartoes[idx]={...cartoes[idx],nome,cor,tipo,limite,fechamento:fecha,vencimento:venc,
+      contrato:contrato||cartoes[idx].contrato||null};
+    setData('cartoes',cartoes);
+    if(oldNome!==nome){
+      const parc=getData('parcelas');
+      parc.forEach(p=>{if(p.cartao===oldNome) p.cartao=nome;});
+      setData('parcelas',parc);
+    }
+    renderCartoes();
+  };
+  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  else _save(null);
 }
 
 function delCartao(id){
@@ -12921,6 +13237,150 @@ function cfgMsgShow(el,type,text){
   setTimeout(()=>{el.className='cfg-msg';el.textContent='';},4000);
 }
 
+// ===================== SISTEMA DE JUROS DE CARTÃO =====================
+let _ctjCartaoId=null;
+
+// — Extrai taxas do texto bruto de um PDF (busca padrões BR de contratos)
+function _ctExtrairTaxas(rawText){
+  const t=rawText.toLowerCase().replace(/\s+/g,' ');
+  const found={jurosMes:null,multa:null,juroRotativo:null,jurosDia:null};
+  const pct=str=>{const m=str.match(/(\d+[,.]?\d*)\s*%/);return m?parseFloat(m[1].replace(',','.')):null;};
+
+  // Juros de mora mensal
+  [/juros de mora[^.]{0,120}/g,/taxa de mora[^.]{0,120}/g,
+   /juros por atraso[^.]{0,120}/g,/encargos de mora[^.]{0,120}/g,
+   /mora[^.]{0,40}mensal[^.]{0,80}/g].some(re=>{
+    const m=re.exec(t);if(!m)return false;
+    const v=pct(m[0]);if(v&&v>0&&v<25){found.jurosMes=v;return true;}return false;
+  });
+
+  // Multa
+  [/multa[^.]{0,100}/g,/encargo[^.]{0,30}multa[^.]{0,100}/g].some(re=>{
+    const m=re.exec(t);if(!m)return false;
+    const v=pct(m[0]);if(v&&v>0&&v<=10){found.multa=v;return true;}return false;
+  });
+
+  // Juros rotativos
+  [/cr[ée]dito rotativo[^.]{0,200}/g,/taxa rotativ[^.]{0,120}/g,
+   /rotativo[^.]{0,40}a\.m\.[^.]{0,80}/g].some(re=>{
+    const m=re.exec(t);if(!m)return false;
+    const v=pct(m[0]);if(v&&v>0&&v<30){found.juroRotativo=v;return true;}return false;
+  });
+
+  // Juros ao dia
+  [/(\d+[,.]?\d*)\s*%[^.]{0,30}ao dia/g,/juro[^.]{0,20}dia[^.]{0,100}/g].some(re=>{
+    const m=re.exec(t);if(!m)return false;
+    const v=pct(m[0]);if(v&&v>0&&v<1){found.jurosDia=v;return true;}return false;
+  });
+
+  return found;
+}
+
+// — Lê arquivo e tenta extrair texto (funciona para PDFs simples não encriptados)
+function _ctAnalisarArquivo(file, cb){
+  if(!file){cb(null);return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const bytes=new Uint8Array(e.target.result);
+      let raw='';
+      for(let i=0;i<Math.min(bytes.length,400000);i++){
+        const b=bytes[i];
+        if(b>=32&&b<127) raw+=String.fromCharCode(b);
+        else if(b===10||b===13) raw+=' ';
+      }
+      cb(_ctExtrairTaxas(raw));
+    }catch(err){cb(null);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// — Abre modal de configuração de juros
+function abrirJurosModal(cartaoId){
+  _ctjCartaoId=cartaoId;
+  const c=getData('cartoes').find(x=>x.id===cartaoId);
+  if(!c) return;
+  document.getElementById('ct-juros-subtitle').textContent=
+    `Cartão: ${c.nome}${c.tipo?' ('+c.tipo+')':''}`;
+  // Preenche com valores existentes
+  document.getElementById('ctj-mora-mes').value=c.jurosMes||'';
+  document.getElementById('ctj-multa').value=c.multaAtraso||'';
+  document.getElementById('ctj-rotativo').value=c.juroRotativo||'';
+  document.getElementById('ctj-dia').value=c.jurosDia||'';
+  document.getElementById('ctj-sim-valor').value='';
+  document.getElementById('ctj-sim-dias').value='';
+  document.getElementById('ctj-sim-result').querySelector('div:last-child').textContent='—';
+  document.getElementById('ct-juros-analise').style.display='none';
+  document.getElementById('ct-juros-modal').style.display='flex';
+}
+
+// — Tenta ler contrato e preencher taxas automaticamente
+function ctjAnalisarContrato(file){
+  if(!file) return;
+  const analise=document.getElementById('ct-juros-analise');
+  analise.style.display='block';
+  analise.textContent='🔍 Analisando contrato...';
+  _ctAnalisarArquivo(file, taxa=>{
+    if(!taxa){
+      analise.textContent='⚠ Não foi possível extrair taxas automaticamente. Preencha manualmente.';
+      return;
+    }
+    let encontrados=[];
+    if(taxa.jurosMes){document.getElementById('ctj-mora-mes').value=taxa.jurosMes;encontrados.push(`Mora: ${taxa.jurosMes}% a.m.`);}
+    if(taxa.multa){document.getElementById('ctj-multa').value=taxa.multa;encontrados.push(`Multa: ${taxa.multa}%`);}
+    if(taxa.juroRotativo){document.getElementById('ctj-rotativo').value=taxa.juroRotativo;encontrados.push(`Rotativo: ${taxa.juroRotativo}% a.m.`);}
+    if(taxa.jurosDia){document.getElementById('ctj-dia').value=taxa.jurosDia;encontrados.push(`Diário: ${taxa.jurosDia}% a.d.`);}
+    analise.textContent=encontrados.length
+      ?'✓ Encontrado: '+encontrados.join(' · ')+' — Confirme os valores abaixo.'
+      :'⚠ Nenhuma taxa identificada automaticamente. Preencha consultando o contrato.';
+  });
+}
+
+// — Simula juros
+function ctjSimular(){
+  const fatura=parseFloat(document.getElementById('ctj-sim-valor').value)||0;
+  const dias=parseInt(document.getElementById('ctj-sim-dias').value)||0;
+  const mora=parseFloat(document.getElementById('ctj-mora-mes').value)||0;
+  const multa=parseFloat(document.getElementById('ctj-multa').value)||0;
+  const diaRate=parseFloat(document.getElementById('ctj-dia').value)||(mora/30);
+  const el=document.getElementById('ctj-sim-result').querySelector('div:last-child');
+  if(!fatura||!dias){el.textContent='—';return;}
+  const total=_ctCalcularJuros(fatura,dias,multa,diaRate);
+  el.textContent=fmt(total)+` (+${fmt(total-fatura)})`;
+}
+
+// — Calcula fatura com juros: principal × (1+multa/100) × (1+diaRate/100)^dias
+function _ctCalcularJuros(fatura,dias,multaPct,taxaDia){
+  if(!fatura||!dias) return fatura;
+  const comMulta=fatura*(1+(multaPct||0)/100);
+  const rate=(taxaDia||0)/100;
+  return comMulta*Math.pow(1+rate,dias);
+}
+
+// — Salva taxas
+function ctjSalvar(){
+  if(!_ctjCartaoId) return;
+  const cartoes=getData('cartoes');
+  const idx=cartoes.findIndex(c=>c.id===_ctjCartaoId);
+  if(idx===-1) return;
+  cartoes[idx].jurosMes=parseFloat(document.getElementById('ctj-mora-mes').value)||0;
+  cartoes[idx].multaAtraso=parseFloat(document.getElementById('ctj-multa').value)||0;
+  cartoes[idx].juroRotativo=parseFloat(document.getElementById('ctj-rotativo').value)||0;
+  cartoes[idx].jurosDia=parseFloat(document.getElementById('ctj-dia').value)||0;
+  setData('cartoes',cartoes);
+  document.getElementById('ct-juros-modal').style.display='none';
+  renderCartoes();
+}
+
+// — Marca fatura do mês como paga
+function ctMarcarPago(nomeCartao,mes){
+  save('ct_pago_'+nomeCartao+'_'+mes,'1');
+  renderCartoes();
+}
+function _ctFoiPago(nomeCartao,mes){
+  return load('ct_pago_'+nomeCartao+'_'+mes)==='1';
+}
+
 // ===================== CARTÕES: ABAS =====================
 function switchCtTab(tab){
   document.querySelectorAll('.ct-panel').forEach(p=>p.classList.remove('active'));
@@ -13054,6 +13514,12 @@ function gfCatChange(v){
 function lancCatChange(v){
   const el=document.getElementById('lanc-cat-outros');
   if(el) el.style.display=v==='Outros'?'block':'none';
+}
+
+function bevTipoChange(){
+  const v=document.getElementById('bev-f-tipo').value;
+  const wrap=document.getElementById('bev-outro-wrap');
+  if(wrap) wrap.style.display=v==='Outro'?'block':'none';
 }
 
 // ===================== CALCULADORA =====================
@@ -13722,6 +14188,10 @@ function abrirEventoModal(){
   document.getElementById('bev-f-anexo').value='';
   document.getElementById('bev-f-vincular').checked=false;
   document.getElementById('bev-f-data').value=new Date().toISOString().slice(0,10);
+  const outroInp=document.getElementById('bev-f-tipo-outro');
+  if(outroInp) outroInp.value='';
+  const outroWrap=document.getElementById('bev-outro-wrap');
+  if(outroWrap) outroWrap.style.display='none';
   _initMascaraOnce(document.getElementById('bev-f-valor'));
   document.getElementById('bem-evento-modal').style.display='flex';
 }
@@ -13734,9 +14204,12 @@ function salvarEventoBem(){
   const valor=parseBRL(document.getElementById('bev-f-valor').value);
   const vincular=document.getElementById('bev-f-vincular').checked;
   const anexoFile=document.getElementById('bev-f-anexo').files[0];
+  const _tipoSel=document.getElementById('bev-f-tipo').value;
+  const _tipoOutro=(document.getElementById('bev-f-tipo-outro').value||'').trim();
+  const tipoFinal=_tipoSel==='Outro'&&_tipoOutro?_tipoOutro:_tipoSel;
   const _save=anexo=>{
     const obj={id:Date.now(),bemId:_bemFichaId,
-      tipo:document.getElementById('bev-f-tipo').value,data,desc,
+      tipo:tipoFinal,data,desc,
       local:document.getElementById('bev-f-local').value.trim(),
       contato:document.getElementById('bev-f-contato').value.trim(),
       valor,

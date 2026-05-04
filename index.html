@@ -4707,29 +4707,31 @@
     <!-- Índices -->
     <div id="inv-indices-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px">
       <div class="inv-mercado-card" id="imc-ibov"><div class="imc-label">IBOVESPA</div><div class="imc-val">—</div><div class="imc-delta">Carregando...</div></div>
-      <div class="inv-mercado-card" id="imc-sp500"><div class="imc-label">S&P 500</div><div class="imc-val">—</div><div class="imc-delta">Carregando...</div></div>
+      <div class="inv-mercado-card" id="imc-sp500"><div class="imc-label">EURO (R$)</div><div class="imc-val">—</div><div class="imc-delta">Carregando...</div></div>
       <div class="inv-mercado-card" id="imc-nasdaq"><div class="imc-label">NASDAQ</div><div class="imc-val">—</div><div class="imc-delta">Carregando...</div></div>
-      <div class="inv-mercado-card" id="imc-dolar"><div class="imc-label">DÓLAR (R$)</div><div class="imc-val">—</div><div class="imc-delta">Cotação do dia</div></div>
+      <div class="inv-mercado-card" id="imc-dolar"><div class="imc-label">DÓLAR (R$)</div><div class="imc-val">—</div><div class="imc-delta">Carregando...</div></div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <!-- Tickers B3 -->
       <div>
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:8px">◈ MEUS TICKERS B3</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input id="inv-ticker-inp" type="text" placeholder="Ex: PETR4" style="flex:1;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;text-transform:uppercase">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input id="inv-ticker-inp" type="text" placeholder="Ex: PETR4" style="flex:1;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;text-transform:uppercase"
+            onkeydown="if(event.key==='Enter')addInvTicker()">
           <button class="btn btn-sm" onclick="addInvTicker()">+</button>
         </div>
-        <div id="inv-tickers-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div id="inv-tickers-list"></div>
       </div>
       <!-- FIIs -->
       <div>
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:8px">◈ FUNDOS IMOBILIÁRIOS (FIIs)</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input id="inv-fii-inp" type="text" placeholder="Ex: HGLG11" style="flex:1;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;text-transform:uppercase">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input id="inv-fii-inp" type="text" placeholder="Ex: HGLG11" style="flex:1;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;text-transform:uppercase"
+            onkeydown="if(event.key==='Enter')addInvFii()">
           <button class="btn btn-sm" onclick="addInvFii()">+</button>
         </div>
-        <div id="inv-fiis-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div id="inv-fiis-list"></div>
       </div>
     </div>
   </div>
@@ -5966,6 +5968,17 @@
       <div style="grid-column:1/-1">
         <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR DA PARCELA (calculado)</div>
         <input id="fem-valparc" type="text" class="bem-form-input" readonly style="color:var(--neon-yellow);font-family:'JetBrains Mono',monospace;background:var(--bg3)">
+      </div>
+      <div style="grid-column:1/-1">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">📎 CONTRATO / DOCUMENTO (PDF ou imagem)</div>
+        <input id="fem-anexo" type="file" accept="image/*,application/pdf" class="bem-form-input" style="padding:6px 12px">
+        <div id="fem-anexo-info" style="margin-top:6px;display:none;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,255,157,0.06);border:1px solid rgba(0,255,157,0.2);border-radius:8px">
+          <span style="font-size:16px">📎</span>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:700;color:var(--neon-green)" id="fem-anexo-nome">Arquivo anexado</div>
+          </div>
+          <button onclick="_femLimparAnexo()" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:13px">✕</button>
+        </div>
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
@@ -14947,32 +14960,108 @@ function removerInvTicker(t){
   setInvTickers(getInvTickers().filter(x=>x!==t));
   renderInvTickers();
 }
-function renderInvTickers(){
-  const el=document.getElementById('inv-tickers-list');
+// Cache de cotações { PETR4: {price, change, pct, updated} }
+let _invCotacoes={};
+
+function _renderTickerTabela(lista, elId, removeFn, cor){
+  const el=document.getElementById(elId);
   if(!el)return;
-  const lista=getInvTickers();
-  el.innerHTML=lista.map(t=>`<span class="inv-ticker-badge">${esc(t)}<button onclick="removerInvTicker('${esc(t)}')">✕</button></span>`).join('');
+  if(!lista.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:4px 0">Nenhum cadastrado. Digite acima e pressione +</div>';return;}
+  el.innerHTML=`<table style="width:100%;font-size:11px;border-collapse:collapse">
+    <thead><tr style="border-bottom:1px solid var(--border)">
+      <th style="text-align:left;padding:5px 8px;font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;color:var(--text3)">ATIVO</th>
+      <th style="text-align:right;padding:5px 8px;font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;color:var(--text3)">PREÇO</th>
+      <th style="text-align:right;padding:5px 8px;font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;color:var(--text3)">VARIAÇÃO</th>
+      <th style="width:28px"></th>
+    </tr></thead>
+    <tbody>${lista.map(t=>{
+      const cot=_invCotacoes[t];
+      const preco=cot?.price?`R$ ${parseFloat(cot.price).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'—';
+      const pct=cot?.pct;
+      const pctStr=pct!=null?`${pct>=0?'+':''}${parseFloat(pct).toFixed(2)}%`:'—';
+      const pctCor=pct==null?'var(--text3)':pct>=0?'var(--neon-green)':'var(--neon-red)';
+      return`<tr style="border-bottom:1px solid var(--td-border)">
+        <td style="padding:6px 8px"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${cor}">${esc(t)}</span></td>
+        <td style="text-align:right;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text)">${preco}</td>
+        <td style="text-align:right;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${pctCor}">${pctStr}</td>
+        <td style="padding:4px"><button onclick="${removeFn}('${esc(t)}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:2px 4px">✕</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
 }
 
+function renderInvTickers(){
+  _renderTickerTabela(getInvTickers(),'inv-tickers-list','removerInvTicker','var(--neon-blue)');
+}
+function renderInvFiis(){
+  _renderTickerTabela(getInvFiis(),'inv-fiis-list','removerInvFii','var(--neon-green)');
+}
+
+async function _fetchTickersCotacoes(lista){
+  if(!lista.length) return;
+  try{
+    // Busca um ticker por vez para evitar erro de lista vazia
+    const symbols=lista.filter(Boolean).join(',');
+    if(!symbols) return;
+    const url=`https://brapi.dev/api/quote/${encodeURIComponent(symbols)}`;
+    const r=await fetch(url);
+    if(!r.ok){
+      // Tenta individualmente se falhar em lote
+      for(const t of lista){
+        try{
+          const r2=await fetch(`https://brapi.dev/api/quote/${encodeURIComponent(t)}`);
+          if(r2.ok){
+            const d2=await r2.json();
+            const s=(d2.results||[])[0];
+            if(s) _invCotacoes[s.symbol]={price:s.regularMarketPrice,pct:s.regularMarketChangePercent,change:s.regularMarketChange};
+          }
+        }catch(e2){}
+      }
+      return;
+    }
+    const data=await r.json();
+    (data.results||[]).forEach(s=>{
+      if(s.regularMarketPrice){
+        _invCotacoes[s.symbol]={
+          price:s.regularMarketPrice,
+          pct:s.regularMarketChangePercent,
+          change:s.regularMarketChange
+        };
+      }
+    });
+  }catch(e){/* API indisponível */}
+}
+
+function addInvTicker(){
+  const el=document.getElementById('inv-ticker-inp');
+  const t=(el.value||'').toUpperCase().trim().replace(/\s+/g,'');
+  if(!t)return;
+  const lista=getInvTickers();
+  if(!lista.includes(t)) lista.push(t);
+  setInvTickers(lista);
+  el.value='';
+  renderInvTickers();
+  // Busca cotação imediatamente
+  _fetchTickersCotacoes([t]).then(()=>renderInvTickers());
+}
+function removerInvTicker(t){
+  setInvTickers(getInvTickers().filter(x=>x!==t));
+  renderInvTickers();
+}
 function addInvFii(){
   const el=document.getElementById('inv-fii-inp');
-  const t=(el.value||'').toUpperCase().trim();
+  const t=(el.value||'').toUpperCase().trim().replace(/\s+/g,'');
   if(!t)return;
   const lista=getInvFiis();
   if(!lista.includes(t)) lista.push(t);
   setInvFiis(lista);
   el.value='';
   renderInvFiis();
+  _fetchTickersCotacoes([t]).then(()=>renderInvFiis());
 }
 function removerInvFii(t){
   setInvFiis(getInvFiis().filter(x=>x!==t));
   renderInvFiis();
-}
-function renderInvFiis(){
-  const el=document.getElementById('inv-fiis-list');
-  if(!el)return;
-  const lista=getInvFiis();
-  el.innerHTML=lista.map(t=>`<span class="inv-fii-badge">${esc(t)}<button onclick="removerInvFii('${esc(t)}')">✕</button></span>`).join('');
 }
 
 function _setMercadoCard(id,val,delta,pos){
@@ -14987,37 +15076,56 @@ function _setMercadoCard(id,val,delta,pos){
 async function atualizarMercado(){
   const upd=document.getElementById('inv-mercado-update');
   if(upd) upd.textContent='Atualizando...';
-  // Tenta buscar IBOVESPA via Yahoo Finance (CORS pode bloquear, usa fallback)
+
+  // ── IBOVESPA via brapi.dev (suporta CORS, gratuito) ──
   try{
-    const r=await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EBVSP?interval=1d&range=1d',{mode:'cors'});
+    const r=await fetch('https://brapi.dev/api/quote/%5EBVSP?interval=1d&range=1d&fundamental=false');
     if(r.ok){
       const d=await r.json();
-      const price=d?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      const prev=d?.chart?.result?.[0]?.meta?.previousClose;
-      if(price){
-        const delta=((price-prev)/prev*100);
-        _setMercadoCard('imc-ibov',price.toLocaleString('pt-BR',{maximumFractionDigits:0}),`${delta>=0?'+':''}${delta.toFixed(2)}%`,delta>=0);
+      const s=d?.results?.[0];
+      if(s?.regularMarketPrice){
+        const p=s.regularMarketPrice;
+        const pct=s.regularMarketChangePercent||0;
+        _setMercadoCard('imc-ibov',p.toLocaleString('pt-BR',{maximumFractionDigits:0}),`${pct>=0?'+':''}${pct.toFixed(2)}%`,pct>=0);
+      } else {
+        _setMercadoCard('imc-ibov','—','Fora do horário',null);
       }
     }
-  }catch(e){_setMercadoCard('imc-ibov','N/D','API indisponível',null);}
+  }catch(e){_setMercadoCard('imc-ibov','—','Indisponível',null);}
 
-  // Dólar via AwesomeAPI (gratuita)
+  // ── Dólar + Euro via AwesomeAPI ──
   try{
-    const r=await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+    const r=await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL');
     if(r.ok){
       const d=await r.json();
-      const v=parseFloat(d?.USDBRL?.bid||0);
-      const pct=parseFloat(d?.USDBRL?.pctChange||0);
-      if(v) _setMercadoCard('imc-dolar','R$ '+v.toFixed(4),`${pct>=0?'+':''}${pct.toFixed(2)}%`,pct>=0);
+      const usd=d?.USDBRL;
+      const eur=d?.EURBRL;
+      if(usd){
+        const v=parseFloat(usd.bid||0);
+        const pct=parseFloat(usd.pctChange||0);
+        if(v) _setMercadoCard('imc-dolar','R$ '+v.toFixed(4),`${pct>=0?'+':''}${pct.toFixed(2)}%`,pct>=0);
+      }
+      // Reutiliza card do S&P para EUR se disponível
+      if(eur){
+        const v=parseFloat(eur.bid||0);
+        const pct=parseFloat(eur.pctChange||0);
+        if(v) _setMercadoCard('imc-sp500','R$ '+v.toFixed(4),`${pct>=0?'+':''}${pct.toFixed(2)}%`,pct>=0);
+      }
     }
-  }catch(e){_setMercadoCard('imc-dolar','N/D','API indisponível',null);}
+  }catch(e){
+    _setMercadoCard('imc-dolar','—','Indisponível',null);
+    _setMercadoCard('imc-sp500','—','Indisponível',null);
+  }
 
-  // S&P e NASDAQ — valores de fallback/simulados quando CORS bloqueia
-  _setMercadoCard('imc-sp500','—','Dados indisponíveis',null);
-  _setMercadoCard('imc-nasdaq','—','Dados indisponíveis',null);
+  // ── NASDAQ — sem API pública de CORS; exibe link ──
+  const nasdaqEl=document.getElementById('imc-nasdaq');
+  if(nasdaqEl){
+    nasdaqEl.querySelector('.imc-val').innerHTML='<a href="https://finance.yahoo.com/quote/%5EIXIC" target="_blank" style="color:var(--neon-blue);font-size:11px;text-decoration:none">↗ Ver no Yahoo</a>';
+    nasdaqEl.querySelector('.imc-delta').textContent='Clique para abrir';
+    nasdaqEl.querySelector('.imc-delta').style.color='var(--text3)';
+  }
 
   if(upd) upd.textContent='Atualizado: '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  // Agenda próxima atualização (15 min)
   clearTimeout(_invMercadoTimer);
   _invMercadoTimer=setTimeout(atualizarMercado,15*60*1000);
 }
@@ -15026,6 +15134,14 @@ function renderInvMercado(){
   renderInvTickers();
   renderInvFiis();
   atualizarMercado();
+  // Busca cotações de todos os tickers e FIIs cadastrados
+  const todos=[...getInvTickers(),...getInvFiis()];
+  if(todos.length){
+    _fetchTickersCotacoes(todos).then(()=>{
+      renderInvTickers();
+      renderInvFiis();
+    });
+  }
 }
 
 // ===================== CARTÕES: ABAS =====================
@@ -15118,6 +15234,7 @@ function renderFinanciamentos(){
       </td>
       <td><div style="display:flex;gap:4px;white-space:nowrap">
         ${!quitado?`<button class="btn btn-sm" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green)" onclick="abrirFinQuitarModal(${f.id})">✓ PAGAR</button>`:''}
+        ${f.anexo?`<button class="btn btn-sm" style="color:var(--neon-yellow);border-color:rgba(255,215,0,0.3);font-size:10px" onclick="_verAnexoFin(${f.id})" title="Ver contrato">📎</button>`:''}
         <button class="btn btn-sm" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)" onclick="editarFinanciamento(${f.id})">✎</button>
         <button class="btn btn-red btn-sm" onclick="delFinanciamento(${f.id})">✕</button>
       </div></td>
@@ -15159,7 +15276,43 @@ function editarFinanciamento(id){
   }
   // Inicializa máscara no campo total
   _initMascaraOnce(document.getElementById('fem-total'));
+  // Mostra anexo existente
+  const info=document.getElementById('fem-anexo-info');
+  const nomeEl=document.getElementById('fem-anexo-nome');
+  document.getElementById('fem-anexo').value='';
+  if(f.anexo){
+    info.style.display='flex';
+    nomeEl.textContent=f.anexoNome||'Contrato/Documento anexado';
+  } else {
+    info.style.display='none';
+  }
+  // Listener para preview do novo arquivo
+  const inp=document.getElementById('fem-anexo');
+  inp.onchange=function(){
+    if(this.files[0]){
+      info.style.display='flex';
+      nomeEl.textContent=this.files[0].name;
+    }
+  };
   document.getElementById('fin-edit-modal').style.display='flex';
+}
+
+function _verAnexoFin(id){
+  const f=getFinanciamentos().find(x=>x.id===id);
+  if(!f||!f.anexo)return;
+  const w=window.open('');
+  w.document.write(f.anexo.startsWith('data:application/pdf')
+    ?`<iframe src="${f.anexo}" style="width:100%;height:100vh;border:none"></iframe>`
+    :`<img src="${f.anexo}" style="max-width:100%;height:auto">`);
+  w.document.close();
+}
+
+function _femLimparAnexo(){
+  document.getElementById('fem-anexo').value='';
+  document.getElementById('fem-anexo-info').style.display='none';
+  document.getElementById('fem-anexo-nome').textContent='';
+  // Marca para remover ao salvar
+  document.getElementById('fem-anexo').dataset.clear='1';
 }
 
 function fecharFinEditModal(){
@@ -15189,16 +15342,25 @@ function salvarFinEdit(){
     pagas,
     valParc:parseFloat(vp.toFixed(2)),
   };
-  setFinanciamentos(fins);
-  // Sincroniza parcela vinculada
-  if(fins[idx]._parcId){
-    const parcelas=getData('parcelas');
-    const p=parcelas.find(x=>x.id===fins[idx]._parcId);
-    if(p){p.paga=pagas;p.total=nParc;p.val=parseFloat(vp.toFixed(2));setData('parcelas',parcelas);}
-  }
-  fecharFinEditModal();
-  renderFinanciamentos();
-  if(currentPage==='parcelas') renderParcelas();
+  const arquivoEl=document.getElementById('fem-anexo');
+  const arquivo=arquivoEl.files[0];
+  const limpar=arquivoEl.dataset.clear==='1';
+  delete arquivoEl.dataset.clear;
+  const _save=anexoData=>{
+    if(limpar) {fins[idx].anexo=null;fins[idx].anexoNome=null;}
+    else if(anexoData){fins[idx].anexo=anexoData;fins[idx].anexoNome=arquivo.name;}
+    setFinanciamentos(fins);
+    if(fins[idx]._parcId){
+      const parcelas=getData('parcelas');
+      const p=parcelas.find(x=>x.id===fins[idx]._parcId);
+      if(p){p.paga=pagas;p.total=nParc;p.val=parseFloat(vp.toFixed(2));setData('parcelas',parcelas);}
+    }
+    fecharFinEditModal();
+    renderFinanciamentos();
+    if(currentPage==='parcelas') renderParcelas();
+  };
+  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  else _save(null);
 }
 
 function cancelarEdicaoFin(){

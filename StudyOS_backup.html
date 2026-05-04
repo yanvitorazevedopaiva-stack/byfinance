@@ -461,6 +461,24 @@ canvas { max-height: 220px; }
 }
 .config-input:focus { outline: none; border-color: var(--accent-mid); background: #fff; }
 
+/* ── MATÉRIAS LIST PAGE ── */
+.materias-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.materia-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  transition: box-shadow 0.2s;
+}
+.materia-card:hover { box-shadow: var(--shadow-lg); }
+.materia-card-name { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 12px; }
+.materia-card-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+.materia-stat { display: flex; flex-direction: column; gap: 2px; }
+.materia-stat-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--ink); }
+.materia-stat-label { font-size: 10px; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.8px; }
+.materia-bar-wrap { margin-top: 12px; height: 4px; background: var(--surface2); border-radius: 10px; overflow: hidden; }
+.materia-bar { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
@@ -490,10 +508,14 @@ canvas { max-height: 220px; }
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
         Planilha Semanal
       </button>
+      <button class="nav-item" data-page="lista-materias">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Matérias
+      </button>
       <div class="nav-label">Análise</div>
       <button class="nav-item" data-page="materias">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-6"/></svg>
-        Por Matéria
+        Desenvolvimento por Matéria
       </button>
       <button class="nav-item" data-page="revisoes">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -657,6 +679,15 @@ canvas { max-height: 220px; }
         </div>
       </div>
       <p style="font-size:11px;color:var(--ink3);margin-top:12px;padding:0 4px;">💡 Formato de observações: "Acertos 8 / Erros 2" ou "8/2"</p>
+    </div>
+
+    <!-- PAGE: LISTA MATÉRIAS -->
+    <div class="page" id="page-lista-materias">
+      <div class="page-header">
+        <h1>Matérias</h1>
+        <p>Todas as matérias registradas no seu estudo</p>
+      </div>
+      <div id="listaMaterias"></div>
     </div>
 
     <!-- PAGE: MATÉRIAS -->
@@ -1069,6 +1100,7 @@ function updateDashboard() {
   renderChartHoras(d);
   renderChartQuestoes(d);
   renderMateriasPage(d);
+  renderListaMateriasPage();
   renderRevisoesPage();
 }
 
@@ -1213,6 +1245,75 @@ function renderMateriasPage(d) {
   });
 }
 
+function renderListaMateriasPage() {
+  let matH = {}, matA = {}, matE = {}, matSemanas = {};
+
+  weeksData.forEach(week => {
+    week.rows.forEach(row => {
+      if(!row.aulaDesc || row.act === "Intervalo") return;
+      let mat = row.aulaDesc;
+      if(!matH[mat]) { matH[mat]=0; matA[mat]=0; matE[mat]=0; matSemanas[mat]=new Set(); }
+      matH[mat] += getMinutos(row);
+      matSemanas[mat].add(week.id);
+      if(row.act === "Questões" && row.check) {
+        let {a,e} = parseObs(row.observacoes);
+        matA[mat] += a;
+        matE[mat] += e;
+      }
+    });
+  });
+
+  let mats = Object.keys(matH).sort((a,b) => (matH[b]||0)-(matH[a]||0));
+  let el = document.getElementById("listaMaterias");
+
+  if(!mats.length) {
+    el.innerHTML = '<div class="empty">Nenhuma matéria registrada ainda.<br>Preencha a coluna "Aula / Descrição" na planilha.</div>';
+    return;
+  }
+
+  let grid = document.createElement("div");
+  grid.className = "materias-grid";
+
+  mats.forEach(m => {
+    let hrs = matH[m] || 0;
+    let a = matA[m] || 0;
+    let e = matE[m] || 0;
+    let total = a + e;
+    let taxa = total > 0 ? Math.round(a/total*100) : null;
+    let semanas = matSemanas[m].size;
+    let barColor = taxa === null ? "#1d3d2f" : taxa >= 70 ? "#3a6b50" : taxa >= 50 ? "#c9943a" : "#9b2c2c";
+
+    let card = document.createElement("div");
+    card.className = "materia-card";
+    card.innerHTML = `
+      <div class="materia-card-name">${m}</div>
+      <div class="materia-card-stats">
+        <div class="materia-stat">
+          <span class="materia-stat-val">${(hrs/60).toFixed(1)}h</span>
+          <span class="materia-stat-label">Horas</span>
+        </div>
+        <div class="materia-stat">
+          <span class="materia-stat-val">${total || "—"}</span>
+          <span class="materia-stat-label">Questões</span>
+        </div>
+        <div class="materia-stat">
+          <span class="materia-stat-val" style="color:${taxa===null?'var(--ink)':barColor}">${taxa !== null ? taxa+"%" : "—"}</span>
+          <span class="materia-stat-label">Acerto</span>
+        </div>
+        <div class="materia-stat">
+          <span class="materia-stat-val">${semanas}</span>
+          <span class="materia-stat-label">${semanas === 1 ? "Semana" : "Semanas"}</span>
+        </div>
+      </div>
+      ${taxa !== null ? `<div class="materia-bar-wrap"><div class="materia-bar" style="width:${taxa}%;background:${barColor}"></div></div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+
+  el.innerHTML = "";
+  el.appendChild(grid);
+}
+
 function renderRevisoesPage() {
   let td = today();
   let pendentes = [], proximas = [];
@@ -1331,7 +1432,7 @@ function setPage(page) {
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   document.getElementById("page-"+page).classList.add("active");
   document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
-  let titles = { dashboard:"Dashboard", planilha:"Planilha Semanal", materias:"Análise por Matéria", revisoes:"Revisões Programadas" };
+  let titles = { dashboard:"Dashboard", planilha:"Planilha Semanal", "lista-materias":"Matérias", materias:"Desenvolvimento por Matéria", revisoes:"Revisões Programadas" };
   document.getElementById("topbarTitle").textContent = titles[page] || "StudyOS";
 }
 

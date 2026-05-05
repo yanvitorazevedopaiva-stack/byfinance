@@ -479,6 +479,68 @@ canvas { max-height: 220px; }
 .materia-bar-wrap { margin-top: 12px; height: 4px; background: var(--surface2); border-radius: 10px; overflow: hidden; }
 .materia-bar { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
 
+/* ── EDITAL PAGE ── */
+.edital-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 14px;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  resize: vertical;
+  background: var(--surface2);
+  line-height: 1.6;
+}
+.edital-textarea:focus { outline: none; border-color: var(--accent-mid); background: #fff; }
+
+.edital-result-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-top: 20px;
+}
+.edital-result-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+.edital-result-sub { font-size: 12px; color: var(--ink3); margin-bottom: 18px; }
+
+.edital-cargo-box {
+  background: var(--gold-light);
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.edital-cargo-box strong { color: var(--gold); }
+
+.materia-check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.materia-check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--surface);
+}
+.materia-check-item:hover { border-color: var(--accent-mid); background: var(--accent-light); }
+.materia-check-item.checked { border-color: var(--accent); background: var(--accent-light); }
+.materia-check-item input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.materia-check-item label { font-size: 13px; color: var(--ink); cursor: pointer; flex: 1; }
+
+.edital-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.edital-sel-all { font-size: 12px; color: var(--accent-mid); cursor: pointer; border: none; background: none; font-family: inherit; text-decoration: underline; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
@@ -511,6 +573,10 @@ canvas { max-height: 220px; }
       <button class="nav-item" data-page="lista-materias">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         Matérias
+      </button>
+      <button class="nav-item" data-page="edital">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Análise de Edital
       </button>
       <div class="nav-label">Análise</div>
       <button class="nav-item" data-page="materias">
@@ -660,7 +726,7 @@ canvas { max-height: 220px; }
           <table class="study-table" id="studyTable">
             <thead>
               <tr>
-                <th style="min-width:110px">Atividade</th>
+                <th style="min-width:150px">Atividade</th>
                 <th style="width:36px;text-align:center">✓</th>
                 <th style="min-width:72px">Horário</th>
                 <th style="min-width:160px">Aula / Descrição</th>
@@ -679,6 +745,26 @@ canvas { max-height: 220px; }
         </div>
       </div>
       <p style="font-size:11px;color:var(--ink3);margin-top:12px;padding:0 4px;">💡 Formato de observações: "Acertos 8 / Erros 2" ou "8/2"</p>
+    </div>
+
+    <!-- PAGE: ANÁLISE DE EDITAL -->
+    <div class="page" id="page-edital">
+      <div class="page-header">
+        <h1>Análise de Edital</h1>
+        <p>Cole o texto do edital para extrair as matérias automaticamente</p>
+      </div>
+
+      <div class="config-card">
+        <div class="config-label" style="margin-bottom:10px">Texto do Edital</div>
+        <textarea class="edital-textarea" id="editalTextarea" placeholder="Cole aqui o conteúdo do edital (conteúdo programático, lista de disciplinas, etc.)…"></textarea>
+        <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary" id="btnAnalisarEdital">Analisar Edital</button>
+          <button class="btn btn-ghost" id="btnLimparEdital">Limpar</button>
+          <span style="font-size:11px;color:var(--ink3)">As matérias serão identificadas e você escolhe quais quer adicionar</span>
+        </div>
+      </div>
+
+      <div id="editalResult"></div>
     </div>
 
     <!-- PAGE: LISTA MATÉRIAS -->
@@ -750,6 +836,7 @@ const DEFAULT_TIMES = ["19:00","19:25","19:50","20:15","20:30"];
 const DEFAULT_MINS = ["25","25","25","10","20"];
 
 let weeksData = [];
+let materiasList = [];
 let currentWeekIdx = 0;
 let notesCtx = null;
 let charts = {};
@@ -812,14 +899,23 @@ function createWeek(idx, monStr) {
 function load() {
   try {
     let s = localStorage.getItem("studyos_v2");
-    if(s) { let p = JSON.parse(s); if(p && p.length) { weeksData = p; return; } }
-  } catch(e) {}
-  weeksData = [createWeek(0)];
+    if(s) { let p = JSON.parse(s); if(p && p.length) { weeksData = p; } }
+    else weeksData = [createWeek(0)];
+  } catch(e) { weeksData = [createWeek(0)]; }
+  try {
+    let ml = localStorage.getItem("studyos_materias");
+    if(ml) materiasList = JSON.parse(ml) || [];
+  } catch(e) { materiasList = []; }
 }
 
 function save() {
   localStorage.setItem("studyos_v2", JSON.stringify(weeksData));
+  localStorage.setItem("studyos_materias", JSON.stringify(materiasList));
   showToast("✓ Dados salvos");
+}
+
+function saveMaterias() {
+  localStorage.setItem("studyos_materias", JSON.stringify(materiasList));
 }
 
 function showToast(msg) {
@@ -1248,6 +1344,11 @@ function renderMateriasPage(d) {
 function renderListaMateriasPage() {
   let matH = {}, matA = {}, matE = {}, matSemanas = {};
 
+  // Inclui matérias do edital mesmo sem dados de estudo
+  materiasList.forEach(m => {
+    if(!matH[m]) { matH[m]=0; matA[m]=0; matE[m]=0; matSemanas[m]=new Set(); }
+  });
+
   weeksData.forEach(week => {
     week.rows.forEach(row => {
       if(!row.aulaDesc || row.act === "Intervalo") return;
@@ -1263,7 +1364,11 @@ function renderListaMateriasPage() {
     });
   });
 
-  let mats = Object.keys(matH).sort((a,b) => (matH[b]||0)-(matH[a]||0));
+  // Ordena: com horas primeiro, depois alfabético para as sem estudo
+  let mats = Object.keys(matH).sort((a,b) => {
+    let diff = (matH[b]||0)-(matH[a]||0);
+    return diff !== 0 ? diff : a.localeCompare(b, 'pt-BR');
+  });
   let el = document.getElementById("listaMaterias");
 
   if(!mats.length) {
@@ -1312,6 +1417,176 @@ function renderListaMateriasPage() {
 
   el.innerHTML = "";
   el.appendChild(grid);
+}
+
+// ── ANÁLISE DE EDITAL ──
+function detectCargo(text) {
+  // Tenta detectar cargo único no edital
+  let patterns = [
+    /cargo[:\s]+([^\n,;.]{3,60})/i,
+    /função[:\s]+([^\n,;.]{3,60})/i,
+    /vaga[:\s]+([^\n,;.]{3,60})/i,
+  ];
+  for(let pat of patterns) {
+    let m = text.match(pat);
+    if(m) return m[1].trim();
+  }
+  return null;
+}
+
+function detectMultipleCargos(text) {
+  // Conta ocorrências de "cargo" — muitas indicam edital multi-cargo
+  let matches = text.match(/\bcargo\b/gi) || [];
+  return matches.length > 4;
+}
+
+function extractMaterias(text) {
+  let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+  let found = [];
+  let seen = new Set();
+
+  // Padrões de listas numeradas/letradas
+  let numPat = /^(?:\d{1,2}[.)]\s*|[IVXivxa-z]\)\s*|[•\-–]\s*)(.{3,80})$/;
+  // Cabeçalho de seção de conteúdo
+  let sectionPat = /programa|conteúdo programático|disciplinas|matérias|conhecimentos|habilidades|componentes/i;
+  // Exclui linhas que são claramente não-matérias
+  let excludePat = /art\.|§|inciso|alínea|decreto|lei n|portaria|instrução|diário|publica|inscri|taxa|valor|pag|edital n|\d{4}\/\d{4}|www\.|http|@/i;
+
+  let inSection = false;
+
+  lines.forEach(line => {
+    if(sectionPat.test(line)) { inSection = true; return; }
+
+    let m = line.match(numPat);
+    if(m) {
+      let candidate = m[1].replace(/[;:,]$/, '').trim();
+      if(!excludePat.test(candidate) && !seen.has(candidate.toLowerCase()) && candidate.length >= 4 && candidate.length <= 80) {
+        seen.add(candidate.toLowerCase());
+        found.push(candidate);
+      }
+      return;
+    }
+
+    // Em seção de conteúdo, pega linhas curtas que parecem nomes de matéria
+    if(inSection && !excludePat.test(line) && line.length >= 4 && line.length <= 70) {
+      let normalized = line.replace(/[;:,]$/, '').trim();
+      if(!seen.has(normalized.toLowerCase())) {
+        seen.add(normalized.toLowerCase());
+        found.push(normalized);
+      }
+    }
+  });
+
+  return found.slice(0, 60); // limita a 60 itens para não poluir
+}
+
+function analisarEdital() {
+  let text = document.getElementById("editalTextarea").value.trim();
+  if(!text) { showToast("Cole o texto do edital primeiro"); return; }
+
+  let resultEl = document.getElementById("editalResult");
+  let mats = extractMaterias(text);
+
+  if(!mats.length) {
+    resultEl.innerHTML = `
+      <div class="edital-result-card">
+        <div class="edital-result-title">Nenhuma matéria identificada automaticamente</div>
+        <div class="edital-result-sub">Tente colar apenas a seção de "Conteúdo Programático" ou "Disciplinas" do edital.</div>
+      </div>`;
+    return;
+  }
+
+  let cargo = detectCargo(text);
+  let isMulti = detectMultipleCargos(text);
+  let isSingleCargo = cargo && !isMulti;
+
+  let cargoHTML = "";
+  if(isSingleCargo) {
+    cargoHTML = `<div class="edital-cargo-box">
+      <strong>Edital de cargo único detectado:</strong> ${cargo}<br>
+      <span style="font-size:11px;color:var(--ink3);margin-top:4px;display:block">Selecione as matérias que pretende estudar e confirme para adicioná-las.</span>
+    </div>`;
+  } else {
+    cargoHTML = `<div class="edital-cargo-box" style="background:var(--blue-light);border-color:var(--blue)">
+      <strong style="color:var(--blue)">Edital com múltiplos cargos ou geral.</strong><br>
+      <span style="font-size:11px;color:var(--ink3);margin-top:4px;display:block">Selecione apenas as matérias dos cargos que você pretende participar.</span>
+    </div>`;
+  }
+
+  let checkItems = mats.map((m, i) => `
+    <label class="materia-check-item" id="mci-${i}">
+      <input type="checkbox" class="edital-mat-chk" data-mat="${m.replace(/"/g,'&quot;')}" checked onchange="toggleCheckItem(${i}, this.checked)">
+      <span>${m}</span>
+    </label>
+  `).join("");
+
+  let confirmLabel = isSingleCargo
+    ? `Confirmar e adicionar à página Matérias`
+    : `Adicionar matérias selecionadas`;
+
+  resultEl.innerHTML = `
+    <div class="edital-result-card">
+      ${cargoHTML}
+      <div class="edital-result-title">${mats.length} matérias identificadas — escolha quais quer adicionar:</div>
+      <div class="edital-result-sub">Desmarque as matérias que não pretende estudar.</div>
+      <div style="display:flex;gap:12px;margin-bottom:14px;align-items:center">
+        <button class="edital-sel-all" onclick="selectAllEdital(true)">Selecionar todas</button>
+        <button class="edital-sel-all" onclick="selectAllEdital(false)">Desmarcar todas</button>
+      </div>
+      <div class="materia-check-grid">${checkItems}</div>
+      <div class="edital-actions">
+        <button class="btn btn-primary" id="btnConfirmarEdital" onclick="confirmarEdital(${isSingleCargo})">${confirmLabel}</button>
+        <span id="editalSelCount" style="font-size:12px;color:var(--ink3)">${mats.length} selecionadas</span>
+      </div>
+    </div>`;
+
+  updateEditalSelCount();
+}
+
+function toggleCheckItem(i, checked) {
+  let el = document.getElementById("mci-"+i);
+  if(el) el.classList.toggle("checked", checked);
+  updateEditalSelCount();
+}
+
+function selectAllEdital(val) {
+  document.querySelectorAll(".edital-mat-chk").forEach((chk, i) => {
+    chk.checked = val;
+    let el = document.getElementById("mci-"+i);
+    if(el) el.classList.toggle("checked", val);
+  });
+  updateEditalSelCount();
+}
+
+function updateEditalSelCount() {
+  let chks = document.querySelectorAll(".edital-mat-chk");
+  let sel = [...chks].filter(c => c.checked).length;
+  let el = document.getElementById("editalSelCount");
+  if(el) el.textContent = `${sel} selecionada${sel !== 1 ? "s" : ""}`;
+}
+
+function confirmarEdital(isSingleCargo) {
+  let chks = document.querySelectorAll(".edital-mat-chk:checked");
+  let selected = [...chks].map(c => c.dataset.mat);
+  if(!selected.length) { showToast("Selecione ao menos uma matéria"); return; }
+
+  if(isSingleCargo) {
+    if(!confirm(`Adicionar ${selected.length} matéria(s) à página Matérias?\n\nIsso irá registrá-las para acompanhamento no sistema.`)) return;
+  }
+
+  let added = 0;
+  selected.forEach(m => {
+    if(!materiasList.includes(m)) { materiasList.push(m); added++; }
+  });
+
+  saveMaterias();
+  renderListaMateriasPage();
+  showToast(`✓ ${added} matéria(s) adicionada(s)`);
+
+  // Limpa resultado e vai para a página de matérias
+  document.getElementById("editalResult").innerHTML = "";
+  document.getElementById("editalTextarea").value = "";
+  setPage("lista-materias");
 }
 
 function renderRevisoesPage() {
@@ -1432,7 +1707,7 @@ function setPage(page) {
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   document.getElementById("page-"+page).classList.add("active");
   document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
-  let titles = { dashboard:"Dashboard", planilha:"Planilha Semanal", "lista-materias":"Matérias", materias:"Desenvolvimento por Matéria", revisoes:"Revisões Programadas" };
+  let titles = { dashboard:"Dashboard", planilha:"Planilha Semanal", "lista-materias":"Matérias", materias:"Desenvolvimento por Matéria", revisoes:"Revisões Programadas", edital:"Análise de Edital" };
   document.getElementById("topbarTitle").textContent = titles[page] || "StudyOS";
 }
 
@@ -1449,6 +1724,11 @@ document.querySelectorAll(".nav-item").forEach(btn => {
 document.getElementById("btnSave").addEventListener("click", save);
 document.getElementById("btnCSV").addEventListener("click", exportCSV);
 document.getElementById("btnPDF").addEventListener("click", exportPDF);
+document.getElementById("btnAnalisarEdital").addEventListener("click", analisarEdital);
+document.getElementById("btnLimparEdital").addEventListener("click", () => {
+  document.getElementById("editalTextarea").value = "";
+  document.getElementById("editalResult").innerHTML = "";
+});
 document.getElementById("modalClose").addEventListener("click", closeModal);
 document.getElementById("modalCancel").addEventListener("click", closeModal);
 document.getElementById("modalSave").addEventListener("click", saveModal);

@@ -54,8 +54,11 @@ body {
   position: sticky;
   top: 0;
   height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
 
 .logo {
   padding: 0 24px 32px;
@@ -479,6 +482,69 @@ canvas { max-height: 220px; }
 .materia-bar-wrap { margin-top: 12px; height: 4px; background: var(--surface2); border-radius: 10px; overflow: hidden; }
 .materia-bar { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
 
+/* ── CONCURSOS PAGE ── */
+.concurso-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.concurso-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.concurso-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border2); }
+.concurso-card.ativo { border-color: var(--accent-mid); background: var(--accent-light); }
+.concurso-card-info { flex: 1; }
+.concurso-card-nome { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.concurso-card-meta { font-size: 11px; color: var(--ink3); display: flex; gap: 12px; flex-wrap: wrap; }
+.concurso-badge { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; background: var(--accent-light); color: var(--accent); }
+.concurso-badge.ativo { background: var(--accent); color: #fff; }
+
+.concurso-detail {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.concurso-detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
+.concurso-detail-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 22px; color: var(--ink); }
+.concurso-detail-sub { font-size: 12px; color: var(--ink3); margin-top: 4px; }
+
+.materia-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.materia-row:last-child { border-bottom: none; }
+.materia-row-nome { flex: 1; font-size: 13px; color: var(--ink); }
+.materia-row-peso { font-size: 11px; color: var(--ink3); min-width: 60px; }
+.peso-stars { display: flex; gap: 2px; }
+.peso-star { width: 10px; height: 10px; border-radius: 50%; background: var(--border2); }
+.peso-star.on { background: var(--gold); }
+
+.cp-list { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+.cp-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--surface2); color: var(--ink2); border: 1px solid var(--border); }
+
+/* ── WIZARD ── */
+.wizard-step { display: none; }
+.wizard-step.active { display: block; }
+.wizard-nav { display: flex; gap: 6px; margin-bottom: 24px; }
+.wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border2); }
+.wizard-dot.active { background: var(--accent); }
+
+/* ── CRONOGRAMA MODAL ── */
+.crono-week { border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.crono-week-title { font-size: 12px; font-weight: 500; color: var(--ink2); margin-bottom: 8px; }
+.crono-dia { margin-bottom: 6px; }
+.crono-dia-nome { font-size: 11px; font-weight: 500; color: var(--ink); }
+.crono-bloco { font-size: 11px; color: var(--ink2); padding-left: 12px; }
+
 /* ── EDITAL PAGE ── */
 .edital-textarea {
   width: 100%;
@@ -577,6 +643,11 @@ canvas { max-height: 220px; }
       <button class="nav-item" data-page="edital">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         Análise de Edital
+      </button>
+      <div class="nav-label">Concursos</div>
+      <button class="nav-item" data-page="concursos">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        Meus Concursos
       </button>
       <div class="nav-label">Análise</div>
       <button class="nav-item" data-page="materias">
@@ -747,6 +818,58 @@ canvas { max-height: 220px; }
       <p style="font-size:11px;color:var(--ink3);margin-top:12px;padding:0 4px;">💡 Formato de observações: "Acertos 8 / Erros 2" ou "8/2"</p>
     </div>
 
+    <!-- PAGE: MEUS CONCURSOS -->
+    <div class="page" id="page-concursos">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1>Meus Concursos</h1>
+          <p>Gerencie concursos, matérias e gere cronogramas inteligentes</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirWizardConcurso()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Concurso
+        </button>
+      </div>
+
+      <!-- LISTA DE CONCURSOS -->
+      <div id="concursosList"></div>
+
+      <!-- DETALHE DO CONCURSO ATIVO -->
+      <div id="concursoDetalhe" style="display:none">
+        <div class="concurso-detail">
+          <div class="concurso-detail-header">
+            <div>
+              <div class="concurso-detail-title" id="cdNome">—</div>
+              <div class="concurso-detail-sub" id="cdMeta">—</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn" onclick="iniciarGeracaoCronograma()">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Gerar Cronograma
+              </button>
+              <button class="btn" onclick="abrirWizardMateria()">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                + Matéria
+              </button>
+              <button class="btn btn-ghost" style="color:var(--red)" onclick="excluirConcurso()">Excluir</button>
+            </div>
+          </div>
+
+          <!-- Cargos -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink3);margin-bottom:8px">Cargos selecionados</div>
+            <div id="cdCargos" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+          </div>
+
+          <!-- Matérias -->
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink3);margin-bottom:8px">Matérias e Conteúdo Programático</div>
+            <div id="cdMaterias"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- PAGE: ANÁLISE DE EDITAL -->
     <div class="page" id="page-edital">
       <div class="page-header">
@@ -812,6 +935,116 @@ canvas { max-height: 220px; }
   </main>
 </div>
 
+<!-- MODAL: NOVO CONCURSO -->
+<div class="modal-overlay" id="modalConcurso">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <div class="modal-title">Novo Concurso</div>
+      <button class="modal-close" onclick="fecharModal('modalConcurso')">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="config-field">
+        <label class="config-label">Nome do concurso</label>
+        <input class="config-input" id="cnNome" placeholder="Ex: Concurso Nacional Unificado 2026" style="width:100%">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="config-field">
+          <label class="config-label">Data da prova</label>
+          <input class="config-input" id="cnData" type="date">
+        </div>
+        <div class="config-field">
+          <label class="config-label">Banca</label>
+          <input class="config-input" id="cnBanca" placeholder="Ex: Cespe, FCC, Vunesp">
+        </div>
+      </div>
+      <div class="config-field">
+        <label class="config-label">Cargos que vai concorrer <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink3)">(separe por vírgula)</span></label>
+        <input class="config-input" id="cnCargos" placeholder="Ex: Analista - TI, Analista - Direito" style="width:100%">
+      </div>
+      <div style="background:var(--gold-light);border:1px solid var(--gold);border-radius:10px;padding:12px;font-size:12px;color:var(--ink2)">
+        Após criar, você poderá adicionar matérias manualmente ou importar pelo edital.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal('modalConcurso')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarConcurso()">Criar Concurso</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVA MATÉRIA -->
+<div class="modal-overlay" id="modalMateria">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <div class="modal-title">Adicionar Matéria</div>
+      <button class="modal-close" onclick="fecharModal('modalMateria')">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="config-field">
+        <label class="config-label">Nome da matéria</label>
+        <input class="config-input" id="mnNome" placeholder="Ex: Direito Constitucional" style="width:100%">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="config-field">
+          <label class="config-label">Peso (1–5)</label>
+          <input class="config-input" id="mnPeso" type="number" min="1" max="5" value="3">
+        </div>
+        <div class="config-field">
+          <label class="config-label">Dificuldade (1–5)</label>
+          <input class="config-input" id="mnDif" type="number" min="1" max="5" value="3">
+        </div>
+      </div>
+      <div class="config-field">
+        <label class="config-label">Conteúdo programático <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink3)">(um assunto por linha)</span></label>
+        <textarea class="edital-textarea" id="mnCP" style="min-height:120px" placeholder="Interpretação de texto&#10;Ortografia&#10;Coesão e coerência"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal('modalMateria')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMateria()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CRONOGRAMA PREVIEW -->
+<div class="modal-overlay" id="modalCronograma">
+  <div class="modal" style="width:700px;max-width:96vw;max-height:85vh;overflow-y:auto">
+    <div class="modal-header">
+      <div class="modal-title">Sugestão de Cronograma — <span id="crNoNome"></span></div>
+      <button class="modal-close" onclick="fecharModal('modalCronograma')">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:16px" id="crNoSub"></div>
+
+    <!-- Configurações -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+      <div class="config-field">
+        <label class="config-label">Semanas</label>
+        <input class="config-input" id="crNoSemanas" type="number" min="1" max="52" value="8">
+      </div>
+      <div class="config-field">
+        <label class="config-label">Horas/dia</label>
+        <input class="config-input" id="crNoHoras" type="number" min="1" max="12" value="4">
+      </div>
+      <div class="config-field">
+        <label class="config-label">Dias/semana</label>
+        <select class="config-input" id="crNoDias">
+          <option value="5">5 dias (Seg–Sex)</option>
+          <option value="6">6 dias (Seg–Sáb)</option>
+          <option value="7">7 dias</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" style="margin-bottom:16px" onclick="regenerarPreview()">↻ Atualizar prévia</button>
+
+    <div id="crNoPreview"></div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal('modalCronograma')">Cancelar</button>
+      <button class="btn btn-primary" id="btnAprovarCronograma">✓ Aprovar e criar planilha</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOTAS -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -837,9 +1070,14 @@ const DEFAULT_MINS = ["25","25","25","10","20"];
 
 let weeksData = [];
 let materiasList = [];
+let concursos = [];
+let concursoAtivoId = null;
+let _cronogramaAtual = null;
 let currentWeekIdx = 0;
 let notesCtx = null;
 let charts = {};
+
+function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
 function today() { return new Date().toISOString().slice(0,10); }
 
@@ -906,16 +1144,25 @@ function load() {
     let ml = localStorage.getItem("studyos_materias");
     if(ml) materiasList = JSON.parse(ml) || [];
   } catch(e) { materiasList = []; }
+  try {
+    let cc = localStorage.getItem("studyos_concursos");
+    if(cc) { let p = JSON.parse(cc); concursos = p.list || []; concursoAtivoId = p.ativo || null; }
+  } catch(e) { concursos = []; concursoAtivoId = null; }
 }
 
 function save() {
   localStorage.setItem("studyos_v2", JSON.stringify(weeksData));
   localStorage.setItem("studyos_materias", JSON.stringify(materiasList));
+  saveConcursos();
   showToast("✓ Dados salvos");
 }
 
 function saveMaterias() {
   localStorage.setItem("studyos_materias", JSON.stringify(materiasList));
+}
+
+function saveConcursos() {
+  localStorage.setItem("studyos_concursos", JSON.stringify({ list: concursos, ativo: concursoAtivoId }));
 }
 
 function showToast(msg) {
@@ -1419,6 +1666,359 @@ function renderListaMateriasPage() {
   el.appendChild(grid);
 }
 
+// ── CONCURSOS ──
+function renderConcursosPage() {
+  let listEl = document.getElementById("concursosList");
+  let detEl  = document.getElementById("concursoDetalhe");
+
+  if(!concursos.length) {
+    listEl.innerHTML = '<div class="empty" style="padding:48px 0">Nenhum concurso cadastrado.<br>Clique em <strong>Novo Concurso</strong> para começar.</div>';
+    detEl.style.display = "none";
+    return;
+  }
+
+  listEl.innerHTML = "";
+  concursos.forEach(c => {
+    let ativo = c.id === concursoAtivoId;
+    let diasProva = c.dataProva ? Math.ceil((new Date(c.dataProva+"T12:00:00") - new Date()) / 86400000) : null;
+    let card = document.createElement("div");
+    card.className = "concurso-card" + (ativo ? " ativo" : "");
+    card.innerHTML = `
+      <div class="concurso-card-info">
+        <div class="concurso-card-nome">${c.nome}</div>
+        <div class="concurso-card-meta">
+          ${c.banca ? `<span>Banca: ${c.banca}</span>` : ""}
+          ${c.dataProva ? `<span>Prova: ${fmtDate(c.dataProva)}${diasProva > 0 ? ` · ${diasProva} dias` : " · Encerrado"}</span>` : ""}
+          <span>${c.materias.length} matéria(s)</span>
+          ${c.cargosSelecionados?.length ? `<span>${c.cargosSelecionados.join(", ")}</span>` : ""}
+        </div>
+      </div>
+      <span class="concurso-badge${ativo?" ativo":""}">${ativo?"Ativo":"Selecionar"}</span>
+    `;
+    card.onclick = () => selecionarConcurso(c.id);
+    listEl.appendChild(card);
+  });
+
+  if(concursoAtivoId) renderDetalhe();
+}
+
+function selecionarConcurso(id) {
+  concursoAtivoId = id;
+  saveConcursos();
+  renderConcursosPage();
+}
+
+function renderDetalhe() {
+  let c = concursos.find(x => x.id === concursoAtivoId);
+  if(!c) return;
+  document.getElementById("concursoDetalhe").style.display = "block";
+  document.getElementById("cdNome").textContent = c.nome;
+
+  let diasProva = c.dataProva ? Math.ceil((new Date(c.dataProva+"T12:00:00") - new Date()) / 86400000) : null;
+  document.getElementById("cdMeta").textContent =
+    [c.banca, c.dataProva ? `Prova ${fmtDate(c.dataProva)}` + (diasProva > 0 ? ` · ${diasProva} dias restantes` : "") : null]
+    .filter(Boolean).join(" · ");
+
+  // Cargos
+  let cargosEl = document.getElementById("cdCargos");
+  cargosEl.innerHTML = "";
+  (c.cargosSelecionados||[]).forEach(cargo => {
+    let sp = document.createElement("span");
+    sp.className = "concurso-badge ativo";
+    sp.textContent = cargo;
+    cargosEl.appendChild(sp);
+  });
+  if(!c.cargosSelecionados?.length) cargosEl.innerHTML = '<span style="font-size:12px;color:var(--ink3)">Nenhum cargo definido</span>';
+
+  // Matérias
+  let matsEl = document.getElementById("cdMaterias");
+  if(!c.materias.length) {
+    matsEl.innerHTML = '<div class="empty" style="padding:20px 0">Nenhuma matéria. Clique em <strong>+ Matéria</strong> ou importe do edital.</div>';
+    return;
+  }
+  matsEl.innerHTML = "";
+  c.materias.forEach((m, mi) => {
+    let stars = Array.from({length:5}, (_,i) => `<span class="peso-star${i<m.peso?" on":""}"></span>`).join("");
+    let cpTags = (m.conteudoProgramatico||[]).map(cp =>
+      `<span class="cp-tag">${cp.nome}</span>`
+    ).join("");
+    let row = document.createElement("div");
+    row.className = "materia-row";
+    row.style.flexWrap = "wrap";
+    row.innerHTML = `
+      <div style="flex:1;min-width:200px">
+        <div class="materia-row-nome">${m.nome}</div>
+        ${cpTags ? `<div class="cp-list">${cpTags}</div>` : ""}
+      </div>
+      <div class="materia-row-peso">
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Peso</div>
+        <div class="peso-stars">${stars}</div>
+      </div>
+      <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;color:var(--red)" onclick="removerMateria(${mi})">✕</button>
+    `;
+    matsEl.appendChild(row);
+  });
+}
+
+function abrirWizardConcurso() {
+  document.getElementById("cnNome").value = "";
+  document.getElementById("cnData").value = "";
+  document.getElementById("cnBanca").value = "";
+  document.getElementById("cnCargos").value = "";
+  document.getElementById("modalConcurso").classList.add("open");
+}
+
+function salvarConcurso() {
+  let nome = document.getElementById("cnNome").value.trim();
+  if(!nome) { showToast("Informe o nome do concurso"); return; }
+  let cargos = document.getElementById("cnCargos").value.split(",").map(s=>s.trim()).filter(Boolean);
+  let novo = {
+    id: uid(),
+    nome,
+    dataProva: document.getElementById("cnData").value || null,
+    banca: document.getElementById("cnBanca").value.trim() || null,
+    cargosSelecionados: cargos,
+    materias: []
+  };
+  concursos.push(novo);
+  concursoAtivoId = novo.id;
+  saveConcursos();
+  fecharModal("modalConcurso");
+  renderConcursosPage();
+  showToast("✓ Concurso criado");
+
+  // Pergunta se quer adicionar matérias via edital
+  setTimeout(() => {
+    if(confirm("Deseja importar as matérias de um edital agora?\n\nOK = Ir para Análise de Edital\nCancelar = Adicionar manualmente")) {
+      setPage("edital");
+    }
+  }, 300);
+}
+
+function excluirConcurso() {
+  let c = concursos.find(x => x.id === concursoAtivoId);
+  if(!c || !confirm(`Excluir "${c.nome}" e todas as suas matérias?`)) return;
+  concursos = concursos.filter(x => x.id !== concursoAtivoId);
+  concursoAtivoId = concursos.length ? concursos[0].id : null;
+  saveConcursos();
+  renderConcursosPage();
+  showToast("Concurso excluído");
+}
+
+function abrirWizardMateria() {
+  if(!concursoAtivoId) { showToast("Selecione um concurso primeiro"); return; }
+  document.getElementById("mnNome").value = "";
+  document.getElementById("mnPeso").value = "3";
+  document.getElementById("mnDif").value = "3";
+  document.getElementById("mnCP").value = "";
+  document.getElementById("modalMateria").classList.add("open");
+}
+
+function salvarMateria() {
+  let nome = document.getElementById("mnNome").value.trim();
+  if(!nome) { showToast("Informe o nome da matéria"); return; }
+  let c = concursos.find(x => x.id === concursoAtivoId);
+  if(!c) return;
+  let cpLines = document.getElementById("mnCP").value.split("\n").map(l=>l.trim()).filter(Boolean);
+  let nova = {
+    id: uid(),
+    nome,
+    peso: parseInt(document.getElementById("mnPeso").value) || 3,
+    dificuldade: parseInt(document.getElementById("mnDif").value) || 3,
+    conteudoProgramatico: cpLines.map(l => ({ id: uid(), nome: l, status: "nao_iniciado" })),
+    metaHorasSemanais: 0
+  };
+  c.materias.push(nova);
+  saveConcursos();
+  fecharModal("modalMateria");
+  renderDetalhe();
+  showToast(`✓ Matéria "${nome}" adicionada`);
+}
+
+function removerMateria(mi) {
+  let c = concursos.find(x => x.id === concursoAtivoId);
+  if(!c || !confirm(`Remover "${c.materias[mi].nome}"?`)) return;
+  c.materias.splice(mi, 1);
+  saveConcursos();
+  renderDetalhe();
+}
+
+// ── GERAÇÃO DE CRONOGRAMA ──
+const PRIORIDADE_MATS = ["português","matemática","raciocínio lógico","língua portuguesa","mat.","r.l.","rl","lógica"];
+
+function iniciarGeracaoCronograma() {
+  let c = concursos.find(x => x.id === concursoAtivoId);
+  if(!c) { showToast("Selecione um concurso"); return; }
+  if(!c.materias.length) { showToast("Adicione matérias ao concurso antes de gerar o cronograma"); return; }
+
+  document.getElementById("crNoNome").textContent = c.nome;
+  document.getElementById("crNoSub").textContent =
+    `${c.materias.length} matéria(s) · Prévia das primeiras semanas. Ajuste os parâmetros e clique em Atualizar.`;
+  document.getElementById("modalCronograma").classList.add("open");
+  regenerarPreview();
+}
+
+function regenerarPreview() {
+  let c = concursos.find(x => x.id === concursoAtivoId);
+  if(!c) return;
+  let semanas = parseInt(document.getElementById("crNoSemanas").value) || 8;
+  let horasDia = parseInt(document.getElementById("crNoHoras").value) || 4;
+  let diasSemana = parseInt(document.getElementById("crNoDias").value) || 5;
+  _cronogramaAtual = gerarCronogramaSugerido(c, semanas, horasDia, diasSemana);
+  renderCronogramaPreview(_cronogramaAtual);
+}
+
+function gerarCronogramaSugerido(concurso, semanas, horasDia, diasSemana) {
+  let mats = [...concurso.materias];
+
+  // Ordena por prioridade (Português/Mat/RL primeiro) depois por peso desc
+  mats.sort((a, b) => {
+    let ia = PRIORIDADE_MATS.findIndex(p => a.nome.toLowerCase().includes(p));
+    let ib = PRIORIDADE_MATS.findIndex(p => b.nome.toLowerCase().includes(p));
+    ia = ia === -1 ? 999 : ia;
+    ib = ib === -1 ? 999 : ib;
+    if(ia !== ib) return ia - ib;
+    return (b.peso||1) - (a.peso||1);
+  });
+
+  let totalPeso = mats.reduce((s, m) => s + (m.peso||1), 0);
+  let blocosHora = 2; // cada bloco = 2h
+  let cronoSemanas = [];
+
+  // Ponteiro de conteúdo por matéria
+  let cpIdx = {};
+  mats.forEach(m => { cpIdx[m.id] = 0; });
+
+  // Distribuição ponderada: quantos blocos cada matéria recebe por dia
+  let blocosPorDia = Math.floor(horasDia / blocosHora);
+  if(blocosPorDia < 1) blocosPorDia = 1;
+
+  // Fila circular de matérias ponderada
+  let fila = [];
+  mats.forEach(m => {
+    let slots = Math.max(1, Math.round((m.peso||1) / totalPeso * blocosPorDia * diasSemana));
+    for(let i=0; i<slots; i++) fila.push(m.id);
+  });
+  // Garante ao menos 1 slot por matéria
+  mats.forEach(m => { if(!fila.includes(m.id)) fila.push(m.id); });
+
+  let filaIdx = 0;
+
+  for(let s=0; s<semanas; s++) {
+    let semanaObj = { num: s+1, dias: [] };
+    for(let d=0; d<diasSemana; d++) {
+      let diaObj = { dia: DAYS[d], blocos: [] };
+      let horasRestantes = horasDia;
+      while(horasRestantes >= blocosHora) {
+        let matId = fila[filaIdx % fila.length];
+        filaIdx++;
+        let mat = mats.find(m => m.id === matId);
+        if(!mat) continue;
+        // Pega próximo assunto do conteúdo programático
+        let cp = mat.conteudoProgramatico || [];
+        let assunto = cp[cpIdx[mat.id] % Math.max(cp.length,1)];
+        if(cp.length) cpIdx[mat.id]++;
+        diaObj.blocos.push({
+          matNome: mat.nome,
+          assunto: assunto ? assunto.nome : "Estudo Geral",
+          horas: blocosHora,
+          tipo: horasRestantes === horasDia ? "Conteúdo Novo" : "Revisão"
+        });
+        horasRestantes -= blocosHora;
+      }
+      semanaObj.dias.push(diaObj);
+    }
+    cronoSemanas.push(semanaObj);
+  }
+  return cronoSemanas;
+}
+
+function renderCronogramaPreview(crono) {
+  let el = document.getElementById("crNoPreview");
+  if(!crono||!crono.length) { el.innerHTML = ""; return; }
+  let html = "";
+  crono.slice(0, 4).forEach(sem => { // mostra só 4 semanas na prévia
+    html += `<div class="crono-week"><div class="crono-week-title">Semana ${sem.num}</div>`;
+    sem.dias.forEach(dia => {
+      html += `<div class="crono-dia"><div class="crono-dia-nome">${dia.dia}</div>`;
+      dia.blocos.forEach(b => {
+        html += `<div class="crono-bloco">📘 ${b.matNome} — ${b.assunto} (${b.horas}h)</div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+  if(crono.length > 4) html += `<div style="font-size:12px;color:var(--ink3);text-align:center;padding:8px">… e mais ${crono.length-4} semana(s). Serão todas criadas na planilha.</div>`;
+  el.innerHTML = html;
+
+  document.getElementById("btnAprovarCronograma").onclick = () => aplicarCronogramaNaPlanilha(crono);
+}
+
+function aplicarCronogramaNaPlanilha(crono) {
+  if(!confirm(`Criar ${crono.length} semana(s) na Planilha Semanal?\n\nIsso substituirá as semanas existentes.`)) return;
+
+  weeksData = [];
+  let baseMonStr = monday();
+
+  crono.forEach((sem, si) => {
+    let monStr = addDays(baseMonStr, si * 7);
+    let [y,m,d] = monStr.split("-");
+    let rows = [];
+    sem.dias.forEach((dia, di) => {
+      let dataAtividade = addDays(monStr, di);
+      dia.blocos.forEach((bloco, bi) => {
+        rows.push({
+          id: uid(),
+          day: dia.dia,
+          act: bloco.tipo,
+          check: false,
+          horario: `${7 + bi*2}:00`.padStart(5,"0"),
+          aulaDesc: bloco.matNome,
+          minuto: String(bloco.horas * 60),
+          dataAtividade,
+          observacoes: bloco.assunto !== "Estudo Geral" ? bloco.assunto : "",
+          rev15done: false,
+          rev30done: false,
+          notes: ""
+        });
+      });
+    });
+    weeksData.push({
+      id: uid(),
+      name: `Sem. ${d}/${m}`,
+      monStr,
+      rows
+    });
+  });
+
+  currentWeekIdx = 0;
+  save();
+  fecharModal("modalCronograma");
+  renderAll();
+  setPage("planilha");
+  showToast(`✓ ${crono.length} semana(s) criadas na planilha!`);
+}
+
+function fecharModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+// Integração edital → concurso: após confirmar edital, oferece vincular ao concurso ativo
+function confirmarEditalParaConcurso(selected) {
+  if(!concursoAtivoId) return false;
+  let c = concursos.find(x => x.id === concursoAtivoId);
+  if(!c) return false;
+  if(!confirm(`Vincular as matérias ao concurso "${c.nome}" também?`)) return false;
+  selected.forEach(nome => {
+    if(!c.materias.find(m => m.nome === nome)) {
+      c.materias.push({ id: uid(), nome, peso: 3, dificuldade: 3, conteudoProgramatico: [], metaHorasSemanais: 0 });
+    }
+  });
+  saveConcursos();
+  showToast(`✓ Matérias vinculadas ao concurso "${c.nome}"`);
+  return true;
+}
+
 // ── ANÁLISE DE EDITAL ──
 function detectCargo(text) {
   // Tenta detectar cargo único no edital
@@ -1583,6 +2183,9 @@ function confirmarEdital(isSingleCargo) {
   renderListaMateriasPage();
   showToast(`✓ ${added} matéria(s) adicionada(s)`);
 
+  // Tenta vincular ao concurso ativo
+  confirmarEditalParaConcurso(selected);
+
   // Limpa resultado e vai para a página de matérias
   document.getElementById("editalResult").innerHTML = "";
   document.getElementById("editalTextarea").value = "";
@@ -1707,8 +2310,9 @@ function setPage(page) {
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   document.getElementById("page-"+page).classList.add("active");
   document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
-  let titles = { dashboard:"Dashboard", planilha:"Planilha Semanal", "lista-materias":"Matérias", materias:"Desenvolvimento por Matéria", revisoes:"Revisões Programadas", edital:"Análise de Edital" };
+  let titles = { dashboard:"Dashboard", planilha:"Planilha Semanal", "lista-materias":"Matérias", materias:"Desenvolvimento por Matéria", revisoes:"Revisões Programadas", edital:"Análise de Edital", concursos:"Meus Concursos" };
   document.getElementById("topbarTitle").textContent = titles[page] || "StudyOS";
+  if(page === "concursos") renderConcursosPage();
 }
 
 function renderAll() {
@@ -1733,6 +2337,9 @@ document.getElementById("modalClose").addEventListener("click", closeModal);
 document.getElementById("modalCancel").addEventListener("click", closeModal);
 document.getElementById("modalSave").addEventListener("click", saveModal);
 document.getElementById("modalOverlay").addEventListener("click", e => { if(e.target === document.getElementById("modalOverlay")) closeModal(); });
+["modalConcurso","modalMateria","modalCronograma"].forEach(id => {
+  document.getElementById(id).addEventListener("click", e => { if(e.target.id === id) fecharModal(id); });
+});
 
 // Sidebar date
 let now = new Date();

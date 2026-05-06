@@ -61,6 +61,12 @@
   body.day .val-blue  { text-shadow:none; }
   body.day .fill-green { box-shadow:none; }
   body.day .card { box-shadow:var(--shadow-card); }
+  /* Formulários de adicionar meta — fundo branco no diurno */
+  body.day #page-metas .plan-panel .card > div[style*="var(--bg3)"],
+  body.day #page-metas .plan-panel .card > div[style*="--bg3"] {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+  }
   body.day .alert-red    { background:#fef2f2; border-color:#fca5a5; color:#b91c1c; }
   body.day .alert-yellow { background:#fffbeb; border-color:#fcd34d; color:#92400e; }
   body.day .alert-green  { background:#f0fdf4; border-color:#86efac; color:#065f46; }
@@ -4477,12 +4483,32 @@
     <button class="plan-tab" onclick="switchMetasTab('semanal')"><span class="plan-tab-icon">📅</span>SEMANAL</button>
     <button class="plan-tab" onclick="switchMetasTab('5anos')"><span class="plan-tab-icon">⭐</span>5 ANOS</button>
     <button class="plan-tab" onclick="switchMetasTab('10anos')"><span class="plan-tab-icon">🔮</span>10 ANOS</button>
-    <button class="plan-tab" onclick="switchMetasTab('metag')"><span class="plan-tab-icon">◎</span>META GASTO</button>
+    <button class="plan-tab" onclick="switchMetasTab('metag')"><span class="plan-tab-icon">◎</span>GASTOS SEMANAIS</button>
   </div>
 
-  <!-- ANUAL (primeiro painel visível) -->
+  <!-- ANUAL -->
   <div id="metas-panel-anual" class="plan-panel">
-    <div id="meta-planejamento-wrap"></div>
+    <div id="meta-planejamento-wrap" style="display:none"></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div><div class="sec-title" style="margin:0;color:var(--neon-yellow)">QUADRO DE METAS ANUAIS</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Metas com horizonte de até 1 ano</div></div>
+        <select id="meta-filtro-aw" onchange="renderMetasSimples('anual_p','aw')" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
+        </select>
+      </div>
+      <div style="background:var(--bg3);border:1px solid rgba(255,215,0,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--neon-yellow);letter-spacing:1px;margin-bottom:12px">ADICIONAR META ANUAL</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-aw" type="text" placeholder="Ex: Comprar carro, Viagem, Certificação..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-aw" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO</div><input id="meta-valor-aw" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO</div><input id="meta-prazo-aw" type="month" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+          <button class="btn" style="background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.4);color:var(--neon-yellow)" onclick="addMetaSimples('anual_p','aw')">+ META</button>
+        </div>
+        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO (opcional)</div><input id="meta-desc-aw" type="text" placeholder="Detalhes, milestones, referências..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+      </div>
+      <div class="tbl-wrap"><table id="meta-board-aw"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-aw"></tbody></table></div>
+    </div>
   </div>
 
   <!-- SEMESTRAL -->
@@ -4639,31 +4665,41 @@
     </div>
   </div>
 
-  <!-- META DE GASTO -->
+  <!-- META DE GASTOS SEMANAIS -->
   <div id="metas-panel-metag" class="plan-panel">
-    <div class="card" style="margin-bottom:16px" id="plan-metag-resumo"></div>
-    <div class="card meta-gasto-card">
-      <div class="meta-gasto-head">
-        <div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);letter-spacing:1px">◎ META DE GASTO MENSAL</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Defina o limite máximo de gastos por mês</div></div>
+    <!-- Quadro de cenário (renderizado pelo JS) -->
+    <div id="metag-quadro-cenario" style="margin-bottom:20px"></div>
+    <!-- Formulário definir / atualizar -->
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">◎ DEFINIR META DE GASTOS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-weight:700">LIMITE MENSAL DE GASTOS (R$)</div>
+          <input id="meta-gasto-val" type="number" step="0.01" min="0" placeholder="0,00"
+            oninput="metaGastoPreview(this.value);renderMetaGastoQuadro()"
+            style="width:100%;padding:11px 14px;background:var(--bg2);border:1px solid rgba(0,255,157,0.35);color:var(--neon-yellow);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:16px;outline:none;box-sizing:border-box">
+          <div style="font-size:11px;color:var(--text3);margin-top:8px">Informe o valor máximo que deseja gastar por mês. O sistema calcula semanal e diário automaticamente.</div>
+        </div>
+        <div>
+          <div id="meta-gasto-preview" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:10px">PRÉVIA</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Por semana</span><b id="mgp-semana" style="font-family:'JetBrains Mono',monospace;color:var(--neon-green)">—</b></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Por dia</span><b id="mgp-dia" style="font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">—</b></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">% da receita mensal</span><b id="mgp-pct-mes" style="font-family:'JetBrains Mono',monospace;color:var(--neon-yellow)">—</b></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">% da receita anual</span><b id="mgp-pct-ano" style="font-family:'JetBrains Mono',monospace;color:var(--text2)">—</b></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style="padding:18px">
-        <div style="max-width:300px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-weight:700">VALOR DA META MENSAL (R$)</div>
-          <input id="meta-gasto-val" type="number" step="0.01" min="0" placeholder="0,00" oninput="metaGastoPreview(this.value)"
-            style="width:100%;padding:10px 14px;background:var(--bg2);border:1px solid rgba(0,255,157,0.35);color:var(--neon-yellow);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:15px;outline:none;box-sizing:border-box">
-        </div>
-        <div class="meta-gasto-info" id="meta-gasto-preview" style="display:none">
-          <div>📅 Equivale a <b id="mgp-semana">—</b> por semana</div>
-          <div>📊 Representa <b id="mgp-pct-mes">—</b> da receita mensal</div>
-          <div>📈 Representa <b id="mgp-pct-ano">—</b> da receita anual</div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-          <button class="btn btn-green" onclick="salvarMetaGasto()">✓ SALVAR META</button>
-          <button class="btn" onclick="showPage('semanal')" style="border-color:rgba(0,200,255,0.3);color:var(--neon-blue)">IR PARA SEMANAL →</button>
-        </div>
-        <div class="cfg-msg" id="meta-gasto-msg"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn btn-green" onclick="salvarMetaGasto();renderMetaGastoQuadro()">✓ SALVAR META</button>
+        <button class="btn" onclick="showPage('semanal')" style="border-color:rgba(0,200,255,0.3);color:var(--neon-blue)">VER SEMANAL →</button>
       </div>
+      <div class="cfg-msg" id="meta-gasto-msg"></div>
     </div>
+    <!-- resumo legado (compatibilidade com _planAtualizaResumoMetaG) -->
+    <div id="plan-metag-resumo" style="display:none"></div>
   </div>
 </div>
 
@@ -4735,6 +4771,7 @@
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--text3)">Restante:</span>
             <span id="mkt-total-restante" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--neon-green)">R$ 0,00</span>
+            <button onclick="mktGerarPDF()" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(168,85,247,0.4);background:rgba(168,85,247,0.1);color:var(--neon-purple);cursor:pointer;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;white-space:nowrap">📄 GERAR PDF</button>
           </div>
         </div>
         <div id="mkt-lista-itens">
@@ -4748,6 +4785,62 @@
         <div id="mkt-historico">
           <div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhuma lista salva ainda.</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR ITEM -->
+  <div id="mkt-edit-modal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;width:min(440px,94vw);box-shadow:0 0 60px rgba(0,0,0,0.5);animation:confirm-pop .22s cubic-bezier(.34,1.56,.64,1) both">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:18px">✎ EDITAR ITEM</div>
+
+      <!-- Foto do produto / placeholder carrinho -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+        <div id="mkt-edit-foto-wrap" style="width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:36px">
+          🛒
+        </div>
+        <div style="flex:1">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Foto do produto</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <label style="cursor:pointer;padding:7px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace">
+              📷 Trocar foto
+              <input id="mkt-edit-foto-input" type="file" accept="image/*" style="display:none" onchange="mktPreviewEditFoto(this)">
+            </label>
+            <button id="mkt-edit-foto-del" onclick="mktClearEditFoto()" style="display:none;background:none;border:1px solid rgba(255,68,68,0.3);color:var(--neon-red);cursor:pointer;font-size:11px;padding:6px 10px;border-radius:8px;font-family:'JetBrains Mono',monospace">✕ Remover</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">NOME DO ITEM</div>
+          <input id="mkt-edit-nome" type="text" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
+          <select id="mkt-edit-cat" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option><option value="Laticinios">🥛 Laticínios</option>
+            <option value="Padaria">🍞 Padaria</option><option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option>
+            <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">QUANTIDADE</div>
+            <input id="mkt-edit-qtd" type="number" min="1" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PREÇO UNITÁRIO (R$)</div>
+            <input id="mkt-edit-preco" type="number" min="0" step="0.01" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" id="mkt-edit-id">
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="btn btn-green" onclick="mktSalvarEdit()" style="flex:1">✓ SALVAR</button>
+        <button class="btn" onclick="mktFecharEdit()" style="border-color:var(--border);color:var(--text3)">CANCELAR</button>
       </div>
     </div>
   </div>
@@ -13692,14 +13785,17 @@ function metaGastoPreview(raw){
   if(val<=0){prev.style.display='none';return;}
   prev.style.display='block';
   const semana=val/4.33;
-  const recMes=_receitaMensalAtual();
-  document.getElementById('mgp-semana').textContent=fmt(semana)+'/sem';
+  const dia=val/30;
+  const recMes=_receitaMensalAtual()||getSalario();
+  const g=id=>document.getElementById(id);
+  if(g('mgp-semana')) g('mgp-semana').textContent=fmt(semana);
+  if(g('mgp-dia')) g('mgp-dia').textContent=fmt(dia);
   if(recMes>0){
-    document.getElementById('mgp-pct-mes').textContent=(val/recMes*100).toFixed(1)+'% ('+fmt(recMes)+')';
-    document.getElementById('mgp-pct-ano').textContent=(val/(recMes*12)*100).toFixed(1)+'% ('+fmt(recMes*12)+')';
+    if(g('mgp-pct-mes')) g('mgp-pct-mes').textContent=(val/recMes*100).toFixed(1)+'%';
+    if(g('mgp-pct-ano')) g('mgp-pct-ano').textContent=(val/(recMes*12)*100).toFixed(1)+'%';
   } else {
-    document.getElementById('mgp-pct-mes').textContent='— sem receita cadastrada';
-    document.getElementById('mgp-pct-ano').textContent='—';
+    if(g('mgp-pct-mes')) g('mgp-pct-mes').textContent='—';
+    if(g('mgp-pct-ano')) g('mgp-pct-ano').textContent='—';
   }
 }
 
@@ -17770,6 +17866,146 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 <script>
+// ===================== META DE GASTOS SEMANAIS — QUADRO =====================
+function renderMetaGastoQuadro(){
+  const el=document.getElementById('metag-quadro-cenario');
+  if(!el) return;
+
+  const meta=getMetaGastoMensal();
+  const recMes=_receitaMensalAtual()||getSalario();
+  const fixos=getData('gastosFixos').reduce((a,g)=>a+(g.val||0),0);
+  const parcAtivas=getData('parcelas').filter(p=>p.paga<p.total);
+  const parcelas=parcAtivas.reduce((a,p)=>a+(p.val||0),0);
+  const dividas=fixos+parcelas;
+  const saldoLivre=Math.max(0,recMes-dividas);
+  const gastoSemana=_gastoSemanalSemParcelas();
+
+  // Sem meta e sem receita: mostra aviso
+  if(!meta?.valor && !recMes){
+    el.innerHTML=`<div class="card" style="border:1px solid rgba(255,215,0,0.2);background:rgba(255,215,0,0.04);padding:18px">
+      <div style="font-size:13px;font-weight:700;color:var(--neon-yellow);margin-bottom:8px">◎ META DE GASTOS SEMANAIS</div>
+      <div style="font-size:12px;color:var(--text3)">Cadastre sua receita e defina uma meta abaixo para ver o quadro de cenário completo.</div>
+    </div>`;
+    return;
+  }
+
+  const metaMensal=meta?.valor||0;
+  const metaSemanal=metaMensal/4.33;
+  const metaDiaria=metaMensal/30;
+
+  // Percentuais
+  const pctReceita=recMes>0?(metaMensal/recMes*100):0;
+  const pctSaldo=saldoLivre>0?(metaMensal/saldoLivre*100):0;
+  const pctSemana=metaSemanal>0?Math.min(200,Math.round(gastoSemana/metaSemanal*100)):0;
+  const saldoSemana=metaSemanal-gastoSemana;
+  const saldoMensal=metaMensal-gastoSemana*4.33;
+
+  // Cor de status da semana
+  const semColor=pctSemana>=100?'var(--neon-red)':pctSemana>=75?'var(--neon-yellow)':'var(--neon-green)';
+  const semBg=pctSemana>=100?'rgba(255,68,68,0.1)':pctSemana>=75?'rgba(255,215,0,0.1)':'rgba(0,255,157,0.1)';
+  const semBorder=pctSemana>=100?'rgba(255,68,68,0.3)':pctSemana>=75?'rgba(255,215,0,0.3)':'rgba(0,255,157,0.3)';
+  const semStatus=pctSemana>=100?'✕ META ESTOURADA':pctSemana>=75?'⚠ ATENÇÃO':'✓ DENTRO DO LIMITE';
+  const barColor=pctSemana>=100?'var(--neon-red)':pctSemana>=75?'var(--neon-yellow)':'var(--neon-green)';
+
+  // Projeção: se mantiver ritmo desta semana no mês inteiro
+  const projecaoMes=gastoSemana*4.33;
+  const projecaoStatus=projecaoMes>metaMensal?
+    `<span style="color:var(--neon-red)">⚠ Projeção: ${fmt(projecaoMes)} — <b>estourará a meta em ${fmt(projecaoMes-metaMensal)}</b></span>`:
+    `<span style="color:var(--neon-green)">✓ Projeção: ${fmt(projecaoMes)} — abaixo da meta em ${fmt(metaMensal-projecaoMes)}</span>`;
+
+  const dataDef=meta?.dataCriacao?new Date(meta.dataCriacao).toLocaleDateString('pt-BR'):'—';
+
+  el.innerHTML=`
+  <!-- KPIs principais -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+    <div class="card card-green">
+      <div class="card-label">META MENSAL</div>
+      <div class="card-value val-green" style="font-size:20px">${metaMensal>0?fmt(metaMensal):'—'}</div>
+      ${dataDef!=='—'?`<div style="font-size:10px;color:var(--text3);margin-top:4px">def. em ${dataDef}</div>`:''}
+    </div>
+    <div class="card card-blue">
+      <div class="card-label">META SEMANAL</div>
+      <div class="card-value val-blue" style="font-size:20px">${metaSemanal>0?fmt(metaSemanal):'—'}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">mensal ÷ 4,33 semanas</div>
+    </div>
+    <div class="card">
+      <div class="card-label">META DIÁRIA</div>
+      <div class="card-value" style="font-size:20px;color:var(--neon-purple)">${metaDiaria>0?fmt(metaDiaria):'—'}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">mensal ÷ 30 dias</div>
+    </div>
+    <div class="card card-yellow">
+      <div class="card-label">% DA RECEITA</div>
+      <div class="card-value val-yellow" style="font-size:20px">${recMes>0?pctReceita.toFixed(1)+'%':'—'}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">${recMes>0?fmt(recMes)+'/mês':'sem receita'}</div>
+    </div>
+  </div>
+
+  <!-- Linha dupla: cenário de receita + status da semana -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+    <!-- Cenário de receita -->
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">📊 CENÁRIO DA RECEITA</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--bg2)">
+          <span style="font-size:12px;color:var(--text2)">Receita cadastrada</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green)">${fmt(recMes)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--bg2)">
+          <span style="font-size:12px;color:var(--text2)">Gastos fixos</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-red)">${fmt(fixos)}</span>
+        </div>
+        ${parcelas>0?`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--bg2)">
+          <span style="font-size:12px;color:var(--text2)">Parcelas ativas (${parcAtivas.length})</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-red)">${fmt(parcelas)}</span>
+        </div>`:''}
+        <div style="height:1px;background:var(--border);margin:2px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:${saldoLivre>0?'rgba(0,255,157,0.06)':'rgba(255,68,68,0.06)'};border:1px solid ${saldoLivre>0?'rgba(0,255,157,0.2)':'rgba(255,68,68,0.2)'}">
+          <span style="font-size:12px;font-weight:700;color:${saldoLivre>0?'var(--neon-green)':'var(--neon-red)'}">Saldo livre</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:${saldoLivre>0?'var(--neon-green)':'var(--neon-red)'}">${fmt(saldoLivre)}</span>
+        </div>
+        ${metaMensal>0?`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2)">
+          <span style="font-size:12px;font-weight:700;color:var(--neon-yellow)">Meta de gasto</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-yellow)">${fmt(metaMensal)} <span style="font-size:10px;font-weight:400;color:var(--text3)">(${pctSaldo>0?pctSaldo.toFixed(1)+'% do saldo':'—'})</span></span>
+        </div>`:''}
+      </div>
+    </div>
+
+    <!-- Status da semana atual -->
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">📅 SEMANA ATUAL</div>
+      ${metaMensal<=0?`<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Defina a meta abaixo para ver o progresso semanal.</div>`:`
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:6px">
+          <span>Gasto esta semana</span><span style="font-weight:700;color:${semColor}">${pctSemana}% da meta</span>
+        </div>
+        <div style="height:14px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+          <div style="height:100%;width:${Math.min(100,pctSemana)}%;background:${barColor};border-radius:8px;transition:width .4s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px">
+          <span>${fmt(gastoSemana)} gastos</span><span>meta: ${fmt(metaSemanal)}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--bg2)">
+          <span style="font-size:12px;color:var(--text2)">Gasto esta semana</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${semColor}">${fmt(gastoSemana)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:${saldoSemana>=0?'rgba(0,255,157,0.06)':'rgba(255,68,68,0.06)'};border:1px solid ${saldoSemana>=0?'rgba(0,255,157,0.2)':'rgba(255,68,68,0.2)'}">
+          <span style="font-size:12px;font-weight:700;color:${saldoSemana>=0?'var(--neon-green)':'var(--neon-red)'}">Saldo da semana</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${saldoSemana>=0?'var(--neon-green)':'var(--neon-red)'}">${fmt(Math.abs(saldoSemana))} ${saldoSemana<0?'<span style="font-size:10px">acima</span>':'<span style="font-size:10px">restante</span>'}</span>
+        </div>
+        <div style="padding:8px 12px;border-radius:8px;background:var(--bg2);font-size:11px">
+          ${projecaoStatus}
+        </div>
+        <div style="padding:8px 12px;border-radius:8px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${semColor};background:${semBg};border:1px solid ${semBorder}">
+          ${semStatus}
+        </div>
+      </div>`}
+    </div>
+  </div>`;
+}
+
 // ===================== METAS PAGE =====================
 let _metasTabAtual='semanal';
 function switchMetasTab(id){
@@ -17782,7 +18018,7 @@ function switchMetasTab(id){
   const idx=ordem.indexOf(id);
   const tabs=document.querySelectorAll('#page-metas .plan-tab');
   if(tabs[idx]) tabs[idx].classList.add('active');
-  if(id==='anual') renderMetaPlanejamento();
+  if(id==='anual') renderMetasSimples('anual_p','aw');
   else if(id==='semestral'){ metaSemSel=getSemestreAtual(); renderMetaBoard('semestral'); }
   else if(id==='trimestral'){ metaTriSel=getTrimestreAtual(); renderMetaBoard('trimestral'); }
   else if(id==='mensal') renderMetasSimples('mensal_p','mw');
@@ -17790,10 +18026,10 @@ function switchMetasTab(id){
   else if(id==='5anos') renderMetas5Anos();
   else if(id==='10anos') renderMetas10Anos();
   else if(id==='metag'){
-    _planAtualizaResumoMetaG();
     const metaExist=getMetaGastoMensal();
     const inp=document.getElementById('meta-gasto-val');
     if(inp&&metaExist?.valor){inp.value=metaExist.valor;metaGastoPreview(metaExist.valor);}
+    renderMetaGastoQuadro();
   }
 }
 
@@ -17811,7 +18047,11 @@ function renderMetasPage(){
   const atrasadas=todas.filter(m=>{
     if(m.status==='concluida') return false;
     if(!m.prazo) return false;
-    const p=new Date(m.prazo+'T00:00:00');
+    const prazoStr=String(m.prazo);
+    // prazo pode ser YYYY-MM (semestral/tri) ou YYYY (5/10 anos) ou YYYY-MM-DD
+    const p=prazoStr.length===4
+      ? new Date(parseInt(prazoStr),11,31)
+      : new Date(prazoStr.length===7 ? prazoStr+'-01' : prazoStr);
     return p<hoje;
   }).length;
   const g=n=>document.getElementById(n);
@@ -17840,6 +18080,25 @@ function addMetaSimples(periodo, sfx){
   renderMetasPage();
 }
 
+function _parsePrazoDate(prazo){
+  if(!prazo) return null;
+  const s=String(prazo);
+  // YYYY → último dia do ano
+  if(s.length===4) return new Date(parseInt(s),11,31);
+  // YYYY-MM → primeiro dia do mês
+  if(s.length===7) return new Date(s+'-01T00:00:00');
+  // YYYY-MM-DD
+  return new Date(s+'T00:00:00');
+}
+function _fmtPrazo(prazo){
+  const d=_parsePrazoDate(prazo);
+  if(!d||isNaN(d)) return '-';
+  const s=String(prazo);
+  if(s.length===4) return s; // só o ano
+  if(s.length===7) return d.toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
+  return d.toLocaleDateString('pt-BR');
+}
+
 function renderMetasSimples(periodo, sfx){
   const filtroEl=document.getElementById('meta-filtro-'+sfx);
   const filtro=filtroEl?filtroEl.value:'todas';
@@ -17852,23 +18111,33 @@ function renderMetasSimples(periodo, sfx){
     return;
   }
   const hoje=new Date(); hoje.setHours(0,0,0,0);
+  // status badge — rgba fixos para evitar CSS inválido com var()
+  const stMap={
+    pendente:{l:'PENDENTE',   c:'var(--neon-yellow)', bg:'rgba(255,215,0,0.12)',   bd:'rgba(255,215,0,0.3)'},
+    andamento:{l:'EM ANDAMENTO',c:'var(--neon-blue)',  bg:'rgba(0,200,255,0.12)',   bd:'rgba(0,200,255,0.3)'},
+    concluida:{l:'CONCLUÍDA', c:'var(--neon-green)',  bg:'rgba(0,255,157,0.12)',   bd:'rgba(0,255,157,0.3)'},
+  };
   tbody.innerHTML=lista.map(m=>{
-    const cfg=TIPO_CFG[m.tipo]||{icon:'📌',label:m.tipo,cls:'badge-blue'};
-    const statusMap={pendente:{l:'PENDENTE',c:'var(--neon-yellow)'},andamento:{l:'EM ANDAMENTO',c:'var(--neon-blue)'},concluida:{l:'CONCLUÍDA',c:'var(--neon-green)'}};
-    const st=statusMap[m.status||'pendente']||statusMap.pendente;
-    const atrasada=m.prazo&&new Date(m.prazo+'T00:00:00')<hoje&&m.status!=='concluida';
-    const prazoFmt=m.prazo?new Date(m.prazo+'T00:00:00').toLocaleDateString('pt-BR'):'-';
+    const cfg=TIPO_CFG[m.tipo]||{icon:'📌',label:m.tipo||'Outro',cls:'badge-blue'};
+    const st=stMap[m.status||'pendente']||stMap.pendente;
+    const prazoDate=_parsePrazoDate(m.prazo);
+    const atrasada=prazoDate&&prazoDate<hoje&&m.status!=='concluida';
+    const prazoFmt=_fmtPrazo(m.prazo);
     return `<tr style="${m.status==='concluida'?'opacity:.55':''}">
       <td><span class="badge ${cfg.cls}">${cfg.icon} ${cfg.label}</span></td>
       <td><div style="font-weight:600;font-size:12px">${esc(m.titulo)}</div>${m.desc?`<div style="font-size:10px;color:var(--text3)">${esc(m.desc)}</div>`:''}</td>
       <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-yellow)">${m.valor>0?fmt(m.valor):'-'}</td>
       <td style="${atrasada?'color:var(--neon-red);font-weight:700':''}">${prazoFmt}${atrasada?' ⚠':''}</td>
-      <td><div style="display:flex;align-items:center;gap:8px"><input type="range" min="0" max="100" value="${m.progresso||0}"
-        oninput="setMetaProgresso(${m.id},this.value);renderMetasSimples('${periodo}','${sfx}')"
-        style="flex:1;accent-color:var(--neon-green)"><span style="font-size:11px;font-family:'JetBrains Mono',monospace;min-width:30px">${m.progresso||0}%</span></div></td>
-      <td><span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${st.c.replace(')',',0.12)')};color:${st.c}">${st.l}</span></td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <input type="range" min="0" max="100" value="${m.progresso||0}"
+          oninput="setMetaProgresso(${m.id},this.value);renderMetasSimples('${periodo}','${sfx}')"
+          style="flex:1;accent-color:var(--neon-green)">
+        <span style="font-size:11px;font-family:'JetBrains Mono',monospace;min-width:30px">${m.progresso||0}%</span>
+      </div></td>
+      <td><span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${st.bg};border:1px solid ${st.bd};color:${st.c}">${st.l}</span></td>
       <td style="white-space:nowrap">
-        <button class="btn btn-sm btn-green" style="font-size:10px;margin-right:4px" onclick="setMetaStatus(${m.id},'${m.status==='concluida'?'pendente':'concluida'}');renderMetasSimples('${periodo}','${sfx}');renderMetasPage()">${m.status==='concluida'?'↺':'✓'}</button>
+        <button class="btn btn-sm btn-green" style="font-size:10px;margin-right:4px"
+          onclick="setMetaStatus(${m.id},'${m.status==='concluida'?'pendente':'concluida'}');renderMetasSimples('${periodo}','${sfx}');renderMetasPage()">${m.status==='concluida'?'↺':'✓'}</button>
         <button class="btn btn-sm btn-red" style="font-size:10px" onclick="delMetaSimples(${m.id},'${periodo}','${sfx}')">✕</button>
       </td>
     </tr>`;
@@ -17962,17 +18231,20 @@ function _mktRenderLista(){
   if(kpiComp) kpiComp.textContent=fmt(totalComp);
   if(kpiItens) kpiItens.textContent=lista.length;
   el.innerHTML=lista.map(it=>{
-    const emoji=it.foto?'':((_MKT_EMOJI[it.cat])||'📦');
     const total=it.qtd*it.preco;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);${it.comprado?'opacity:.5;text-decoration:line-through':''}">
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);${it.comprado?'opacity:.5':''}">
       <input type="checkbox" ${it.comprado?'checked':''} onchange="mktToggleComprado(${it.id})" style="accent-color:var(--neon-green);width:18px;height:18px;flex-shrink:0;cursor:pointer">
-      ${it.foto?`<img src="${it.foto}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0">`:`<span style="font-size:24px;flex-shrink:0">${emoji}</span>`}
+      ${it.foto
+        ? `<img src="${it.foto}" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">`
+        : `<div style="width:44px;height:44px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🛒</div>`
+      }
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.nome)}</div>
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${it.comprado?'text-decoration:line-through':''}">${esc(it.nome)}</div>
         <div style="font-size:11px;color:var(--text3)">${it.cat} · ${it.qtd}x ${it.preco>0?fmt(it.preco):'-'}</div>
       </div>
       <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-yellow);flex-shrink:0">${total>0?fmt(total):'-'}</div>
-      <button onclick="mktRemoveItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:16px;flex-shrink:0;padding:0">✕</button>
+      <button onclick="mktEditItem(${it.id})" title="Editar" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);cursor:pointer;font-size:13px;flex-shrink:0;padding:5px 9px;border-radius:7px;line-height:1">✎</button>
+      <button onclick="mktRemoveItem(${it.id})" title="Remover" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:16px;flex-shrink:0;padding:0">✕</button>
     </div>`;
   }).join('');
 }
@@ -18021,6 +18293,216 @@ function mktDelHist(id){
   _mktSetHist(_mktGetHist().filter(x=>x.id!==id));
   _mktRenderHist();
 }
+let _mktEditFotoB64=null; // null = sem alteração, '' = remover, 'data:...' = nova foto
+
+function mktEditItem(id){
+  const lista=_mktGetLista();
+  const it=lista.find(x=>x.id===id);
+  if(!it) return;
+  const m=document.getElementById('mkt-edit-modal');
+  if(!m) return;
+
+  // Preenche campos
+  document.getElementById('mkt-edit-id').value=id;
+  document.getElementById('mkt-edit-nome').value=it.nome||'';
+  document.getElementById('mkt-edit-qtd').value=it.qtd||1;
+  document.getElementById('mkt-edit-preco').value=it.preco||'';
+  const catSel=document.getElementById('mkt-edit-cat');
+  if(catSel) catSel.value=it.cat||'Outros';
+
+  // Foto
+  _mktEditFotoB64=null;
+  document.getElementById('mkt-edit-foto-input').value='';
+  _mktAtualizaEditFoto(it.foto||'');
+
+  m.style.display='flex';
+  setTimeout(()=>document.getElementById('mkt-edit-nome')?.focus(),80);
+}
+
+function _mktAtualizaEditFoto(src){
+  const wrap=document.getElementById('mkt-edit-foto-wrap');
+  const delBtn=document.getElementById('mkt-edit-foto-del');
+  if(!wrap) return;
+  if(src){
+    wrap.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover">`;
+    if(delBtn) delBtn.style.display='inline-block';
+  } else {
+    wrap.innerHTML='🛒';
+    wrap.style.fontSize='36px';
+    if(delBtn) delBtn.style.display='none';
+  }
+}
+
+function mktPreviewEditFoto(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    _mktEditFotoB64=e.target.result;
+    _mktAtualizaEditFoto(_mktEditFotoB64);
+  };
+  r.readAsDataURL(f);
+}
+
+function mktClearEditFoto(){
+  _mktEditFotoB64=''; // marca para remover
+  document.getElementById('mkt-edit-foto-input').value='';
+  _mktAtualizaEditFoto('');
+}
+
+function mktFecharEdit(){
+  const m=document.getElementById('mkt-edit-modal');
+  if(m) m.style.display='none';
+  _mktEditFotoB64=null;
+}
+
+function mktSalvarEdit(){
+  const id=parseInt(document.getElementById('mkt-edit-id')?.value)||0;
+  const nome=(document.getElementById('mkt-edit-nome')?.value||'').trim();
+  const cat=document.getElementById('mkt-edit-cat')?.value||'Outros';
+  const qtd=parseInt(document.getElementById('mkt-edit-qtd')?.value)||1;
+  const preco=parseFloat(document.getElementById('mkt-edit-preco')?.value)||0;
+  if(!nome){alert('Informe o nome do item.');return;}
+
+  const lista=_mktGetLista();
+  const it=lista.find(x=>x.id===id);
+  if(!it){mktFecharEdit();return;}
+
+  it.nome=nome; it.cat=cat; it.qtd=qtd; it.preco=preco;
+  if(_mktEditFotoB64===''){ it.foto=''; }           // removeu foto
+  else if(_mktEditFotoB64){ it.foto=_mktEditFotoB64; } // nova foto
+
+  _mktSetLista(lista);
+  mktFecharEdit();
+  _mktRenderLista();
+}
+
+// Fecha modal ao clicar fora
+document.addEventListener('click',e=>{
+  const modal=document.getElementById('mkt-edit-modal');
+  if(modal&&modal.style.display==='flex'&&e.target===modal) mktFecharEdit();
+});
+
+function mktGerarPDF(){
+  const lista=_mktGetLista().filter(it=>!it.comprado);
+  if(!lista.length){alert('Nenhum item pendente na lista.');return;}
+
+  const hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const totalGeral=lista.reduce((a,it)=>a+it.qtd*(it.preco||0),0);
+  const fmtR=v=>v>0?v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'—';
+  const e=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Agrupa por categoria
+  const grupos={};
+  lista.forEach(it=>{
+    const cat=it.cat||'Outros';
+    if(!grupos[cat]) grupos[cat]=[];
+    grupos[cat].push(it);
+  });
+
+  const catEmoji={Hortifruti:'🥦',Carnes:'🥩',Laticinios:'🥛',Padaria:'🍞',Higiene:'🧴',Limpeza:'🧹',Mercearia:'🛒',Frios:'🧀',Outros:'📦'};
+
+  // Linhas da tabela agrupadas
+  let rowsHtml='';
+  Object.entries(grupos).forEach(([cat,itens])=>{
+    const subtotal=itens.reduce((a,it)=>a+it.qtd*(it.preco||0),0);
+    rowsHtml+=`<tr class="cat-row"><td colspan="5">${catEmoji[cat]||'📦'} ${e(cat)} <span class="cat-sub">${itens.length} item${itens.length!==1?'s':''} · ${fmtR(subtotal)}</span></td></tr>`;
+    itens.forEach((it,idx)=>{
+      const total=it.qtd*(it.preco||0);
+      const fotoCell=it.foto
+        ?`<img src="${it.foto}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;display:block">`
+        :`<div style="width:44px;height:44px;border-radius:8px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:22px;background:#f8fafc">🛒</div>`;
+      rowsHtml+=`<tr class="${idx%2===1?'alt':''}">
+        <td style="padding:8px 10px">${fotoCell}</td>
+        <td><div class="item-nome">${e(it.nome)}</div></td>
+        <td style="text-align:center">${it.qtd}</td>
+        <td style="text-align:right">${it.preco>0?fmtR(it.preco):'—'}</td>
+        <td style="text-align:right"><b>${total>0?fmtR(total):'—'}</b></td>
+        <td style="text-align:center"><div class="chk"></div></td>
+      </tr>`;
+    });
+  });
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Lista de Compras — ${hoje}</title>
+  <style>
+    @page{size:A4 portrait;margin:18mm 16mm 22mm}
+    @media print{.nopr{display:none!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',Segoe UI,sans-serif;font-size:13px;color:#1e293b;background:#fff;line-height:1.5}
+    /* CAPA */
+    .cover{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:28px 32px 24px;margin-bottom:24px;border-radius:0 0 16px 16px;position:relative;overflow:hidden}
+    .cover::after{content:'';position:absolute;top:-60px;right:-40px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.18) 0%,transparent 70%)}
+    .brand{font-size:9px;font-weight:700;letter-spacing:3px;color:#a78bfa;text-transform:uppercase;margin-bottom:6px}
+    .title{font-size:26px;font-weight:800;color:#fff;line-height:1.15}
+    .title em{color:#a78bfa;font-style:normal}
+    .subtitle{font-size:12px;color:#94a3b8;margin-top:5px}
+    .div{width:40px;height:3px;background:linear-gradient(90deg,#a78bfa,#818cf8);border-radius:2px;margin:12px 0 0}
+    /* RESUMO */
+    .resumo{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+    .rk{flex:1;min-width:120px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px}
+    .rk.p{border-left:4px solid #7c3aed}.rk.g{border-left:4px solid #059669}.rk.b{border-left:4px solid #0284c7}
+    .rk-l{font-size:9px;letter-spacing:1px;color:#64748b;text-transform:uppercase;font-weight:600;margin-bottom:5px}
+    .rk-v{font-size:20px;font-weight:700;color:#1e293b}
+    .rk-v.p{color:#7c3aed}.rk-v.g{color:#059669}.rk-v.b{color:#0284c7}
+    /* TABELA */
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    .cat-row td{background:linear-gradient(135deg,#1e3a5f,#1e40af);color:#e2e8f0;padding:9px 13px;font-weight:700;font-size:11px;letter-spacing:.4px;border-radius:6px 6px 0 0}
+    .cat-sub{font-weight:400;color:#94a3b8;font-size:10px;margin-left:8px}
+    tr.alt td{background:#f8fafc}
+    td{padding:6px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+    .item-nome{font-weight:600;font-size:12px;color:#1e293b}
+    /* Checkbox de marcação manual */
+    .chk{width:18px;height:18px;border:2px solid #cbd5e1;border-radius:4px;margin:0 auto}
+    /* TOTAL */
+    .total-row td{background:#0f172a;color:#fff;font-weight:700;font-size:14px;padding:12px 14px;border-radius:0 0 6px 6px}
+    /* RODAPÉ */
+    .footer{margin-top:28px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px}
+    .btn-print{display:block;margin:0 auto 20px;padding:10px 28px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px}
+  </style></head><body>
+
+  <button class="btn-print nopr" onclick="window.print()">🖨 IMPRIMIR / SALVAR PDF</button>
+
+  <div class="cover">
+    <div class="brand">BY Persona Finance</div>
+    <div class="title">Lista de <em>Compras</em></div>
+    <div class="subtitle">📅 Gerada em ${hoje} · ${lista.length} item${lista.length!==1?'s':''} pendente${lista.length!==1?'s':''}</div>
+    <div class="div"></div>
+  </div>
+
+  <div class="resumo">
+    <div class="rk p"><div class="rk-l">Itens a comprar</div><div class="rk-v p">${lista.length}</div></div>
+    <div class="rk b"><div class="rk-l">Categorias</div><div class="rk-v b">${Object.keys(grupos).length}</div></div>
+    <div class="rk g"><div class="rk-l">Total estimado</div><div class="rk-v g">${fmtR(totalGeral)}</div></div>
+  </div>
+
+  <table>
+    <thead><tr>
+      <th style="width:54px"></th>
+      <th style="text-align:left">Item</th>
+      <th style="width:60px;text-align:center">Qtd.</th>
+      <th style="width:100px;text-align:right">Unit.</th>
+      <th style="width:100px;text-align:right">Total</th>
+      <th style="width:40px;text-align:center">✓</th>
+    </tr></thead>
+    <tbody>${rowsHtml}</tbody>
+    <tfoot><tr class="total-row">
+      <td colspan="4" style="text-align:right;letter-spacing:.5px">TOTAL ESTIMADO</td>
+      <td style="text-align:right;font-size:16px;color:#a78bfa">${fmtR(totalGeral)}</td>
+      <td></td>
+    </tr></tfoot>
+  </table>
+
+  <div class="footer">BY Persona Finance · Lista gerada automaticamente com base nos itens pendentes do Mercado</div>
+
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank','width=900,height=700');
+  if(!w){alert('Permita pop-ups para gerar o PDF.');return;}
+  w.document.write(html);
+  w.document.close();
+}
+
 function renderMercado(){
   _mktRenderLista();
   _mktRenderHist();

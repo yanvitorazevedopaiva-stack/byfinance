@@ -1974,6 +1974,7 @@
   body.day .plan-tab.active{color:#059669;background:rgba(5,150,105,0.07);border-color:rgba(5,150,105,0.25);}
   body.day .plan-tab:hover{background:rgba(0,0,0,0.04);}
   @media(max-width:640px){.plan-tabs{gap:4px;padding:4px;}.plan-tab{padding:7px 10px;font-size:10px;gap:5px;}}
+  @media(max-width:768px){#mkt-grid,#trf-grid{grid-template-columns:1fr!important;}}
 
   /* Simulador */
   .sim-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
@@ -2111,6 +2112,24 @@
   .gf-sim-rcard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;}
   .gf-sim-rcard-label{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:4px;}
   .gf-sim-rcard-val{font-size:16px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+
+  /* Linha inativa em Gastos Fixos */
+  .gf-row-inativo td{opacity:.38;text-decoration:line-through;}
+  .gf-row-inativo td:last-child{text-decoration:none;opacity:1;}
+  .gf-inativo-badge{font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;
+    padding:2px 7px;border-radius:5px;letter-spacing:.5px;
+    background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);
+    display:inline-block;margin-left:6px;}
+  .gf-btn-inativar{font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,215,0,0.3);
+    background:rgba(255,215,0,0.07);color:var(--neon-yellow);font-family:'JetBrains Mono',monospace;
+    font-weight:700;transition:all .15s;}
+  .gf-btn-inativar:hover{background:rgba(255,215,0,0.15);}
+  .gf-btn-reativar{font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;border:1px solid rgba(0,255,157,0.3);
+    background:rgba(0,255,157,0.07);color:var(--neon-green);font-family:'JetBrains Mono',monospace;
+    font-weight:700;transition:all .15s;}
+  .gf-btn-reativar:hover{background:rgba(0,255,157,0.15);}
+  .gf-venc-badge{font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;
+    padding:2px 6px;border-radius:5px;letter-spacing:.4px;}
 
   .gf-sim-tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;
     font-weight:700;letter-spacing:.5px;cursor:pointer;border:1px solid var(--border);
@@ -3362,7 +3381,7 @@
   <!-- FORMULÁRIO DE ADIÇÃO -->
   <div class="card" style="margin-bottom:20px">
     <div class="sec-title">ADICIONAR DESPESA</div>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 80px auto;gap:10px;align-items:end">
       <div>
         <div class="card-label" style="margin-bottom:4px">DESCRIÇÃO</div>
         <input type="text" id="gf-new-desc" placeholder="Ex: Academia, Streaming..." style="width:100%">
@@ -3389,6 +3408,10 @@
         <div class="card-label" style="margin-bottom:4px">VALOR (R$)</div>
         <input type="number" id="gf-new-val" placeholder="0,00" step="0.01" min="0" style="width:100%">
       </div>
+      <div>
+        <div class="card-label" style="margin-bottom:4px">VENCE DIA</div>
+        <input type="number" id="gf-new-venc" placeholder="1-31" min="1" max="31" style="width:100%;padding:8px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:center">
+      </div>
       <button class="btn" onclick="addGastoFixo()">+ ADICIONAR</button>
     </div>
   </div>
@@ -3411,7 +3434,7 @@
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>DESCRIÇÃO</th><th>CATEGORIA</th><th>PRIORIDADE</th><th>VALOR</th><th>VALOR ANUAL</th><th>COMPROVANTE</th><th>AÇÕES</th></tr></thead>
+        <thead><tr><th>DESCRIÇÃO</th><th>CATEGORIA</th><th>PRIORIDADE</th><th>VALOR</th><th>VALOR ANUAL</th><th>VENCE</th><th>COMPROVANTE</th><th>AÇÕES</th></tr></thead>
         <tbody id="gf-tbody"></tbody>
       </table>
     </div>
@@ -4258,15 +4281,13 @@
 <!-- ========== PLANEJAMENTO ========== -->
 <div id="page-planejamento" class="page">
   <div class="page-title">PLANEJAMENTO</div>
-  <div class="page-sub">// PROJEÇÃO ANUAL · METAS · CRONOGRAMA · SIMULADOR</div>
+  <div class="page-sub">// PROJEÇÃO ANUAL · CRONOGRAMA</div>
 
   <!-- BARRA DE ABAS -->
   <div class="plan-tabs">
     <button class="plan-tab" onclick="switchPlanTab('visao')"><span class="plan-tab-icon">📊</span>VISÃO ANUAL</button>
-    <button class="plan-tab" onclick="switchPlanTab('metas')"><span class="plan-tab-icon">🎯</span>METAS</button>
-    <button class="plan-tab" onclick="switchPlanTab('metag')"><span class="plan-tab-icon">◎</span>META DE GASTO</button>
     <button class="plan-tab" onclick="switchPlanTab('crono')"><span class="plan-tab-icon">📅</span>CRONOGRAMA</button>
-    <button class="plan-tab" onclick="switchPlanTab('simul')"><span class="plan-tab-icon">🔮</span>SIMULADOR</button>
+    <button class="plan-tab" onclick="showPage('metas')" style="border-color:rgba(0,255,157,0.3);color:var(--neon-green)"><span class="plan-tab-icon">🎯</span>→ METAS</button>
   </div>
 
   <!-- Banner novo usuário -->
@@ -4331,142 +4352,10 @@
     </div>
   </div>
 
-  <!-- ABA 2: METAS -->
-  <div id="plan-panel-metas" class="plan-panel">
-    <!-- Mini resumo de metas -->
-    <div class="plan-metas-kpis" id="plan-metas-kpis">
-      <div class="plan-meta-kpi"><div class="plan-meta-kpi-label">ATIVAS</div><div class="plan-meta-kpi-val" id="pmk-ativas" style="color:var(--neon-blue)">—</div></div>
-      <div class="plan-meta-kpi"><div class="plan-meta-kpi-label">CONCLUÍDAS</div><div class="plan-meta-kpi-val" id="pmk-concluidas" style="color:var(--neon-green)">—</div></div>
-      <div class="plan-meta-kpi"><div class="plan-meta-kpi-label">PENDENTES</div><div class="plan-meta-kpi-val" id="pmk-pendentes" style="color:var(--neon-yellow)">—</div></div>
-    </div>
-    <div id="meta-planejamento-wrap" style="margin-bottom:20px"></div>
-    <!-- METAS SEMESTRAL -->
-    <div class="card" style="margin-bottom:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-        <div><div class="sec-title" style="margin:0">QUADRO DE METAS SEMESTRAL</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Metas de 3 a 6 meses de horizonte</div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <div id="meta-period-tabs-sem" style="display:flex;gap:4px"></div>
-          <select id="meta-filtro-sem" onchange="renderMetas()" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif">
-            <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
-          </select>
-        </div>
-      </div>
-      <div id="meta-period-info-sem" style="margin-bottom:14px"></div>
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:18px">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:12px">ADICIONAR META SEMESTRAL</div>
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-sem" type="text" placeholder="Ex: Quitar Nubank, Academia, Ler 12 livros..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-sem" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO (opcional)</div><input id="meta-valor-sem" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO (opcional)</div><input id="meta-prazo-sem" type="month" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"></div>
-          <button class="btn btn-green" onclick="addMeta('semestral')">+ META</button>
-        </div>
-        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO (opcional)</div><input id="meta-desc-sem" type="text" placeholder="Detalhes, como medir, referências..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"></div>
-      </div>
-      <div id="meta-resumo-sem" style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap"></div>
-      <div class="tbl-wrap"><table id="meta-board-sem"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-sem"></tbody></table></div>
-    </div>
-    <!-- METAS TRIMESTRAL -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-        <div><div class="sec-title" style="margin:0;color:var(--neon-blue)">QUADRO DE METAS TRIMESTRAL</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Metas de curto prazo — até 3 meses</div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <div id="meta-period-tabs-tri" style="display:flex;gap:4px"></div>
-          <select id="meta-filtro-tri" onchange="renderMetas()" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif">
-            <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
-          </select>
-        </div>
-      </div>
-      <div id="meta-period-info-tri" style="margin-bottom:14px"></div>
-      <div style="background:var(--bg3);border:1px solid rgba(0,200,255,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
-        <div style="font-size:11px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:12px">ADICIONAR META TRIMESTRAL</div>
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-tri" type="text" placeholder="Ex: Cortar fast food, Estudar inglês, Poupar R$300..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-tri" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO (opcional)</div><input id="meta-valor-tri" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO (opcional)</div><input id="meta-prazo-tri" type="month" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"></div>
-          <button class="btn btn-blue" onclick="addMeta('trimestral')">+ META</button>
-        </div>
-        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO (opcional)</div><input id="meta-desc-tri" type="text" placeholder="Detalhes, como medir, referências..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"></div>
-      </div>
-      <div id="meta-resumo-tri" style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap"></div>
-      <div class="tbl-wrap"><table id="meta-board-tri"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-tri"></tbody></table></div>
-    </div>
+  <!-- ABA 2: METAS (conteúdo movido para page-metas) -->
+  <div id="plan-panel-metas" class="plan-panel"></div>
 
-    <!-- METAS 5 ANOS -->
-    <div class="card" style="margin-top:20px;margin-bottom:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-        <div><div class="sec-title" style="margin:0;color:var(--neon-purple)">QUADRO DE METAS — 5 ANOS</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Visão de médio prazo — horizonte de 5 anos</div></div>
-        <select id="meta-filtro-5a" onchange="renderMetas5Anos()" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif">
-          <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
-        </select>
-      </div>
-      <div style="background:var(--bg3);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
-        <div style="font-size:11px;font-weight:700;color:var(--neon-purple);letter-spacing:1px;margin-bottom:12px">ADICIONAR META DE 5 ANOS</div>
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-5a" type="text" placeholder="Ex: Quitar imóvel, Fundo de R$200k..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-5a" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO (opcional)</div><input id="meta-valor-5a" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO (ano)</div><input id="meta-prazo-5a" type="number" min="2025" max="2040" placeholder="2029" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px"></div>
-          <button class="btn" style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.4);color:var(--neon-purple)" onclick="addMeta5Anos()">+ META</button>
-        </div>
-        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO (opcional)</div><input id="meta-desc-5a" type="text" placeholder="Detalhes da meta de 5 anos..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"></div>
-      </div>
-      <div class="tbl-wrap"><table id="meta-board-5a"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-5a"></tbody></table></div>
-    </div>
-    <!-- METAS 10 ANOS -->
-    <div class="card" style="margin-bottom:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-        <div><div class="sec-title" style="margin:0;color:#f59e0b">QUADRO DE METAS — 10 ANOS</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Visão de longo prazo — horizonte de 10 anos</div></div>
-        <select id="meta-filtro-10a" onchange="renderMetas10Anos()" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif">
-          <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
-        </select>
-      </div>
-      <div style="background:var(--bg3);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
-        <div style="font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:1px;margin-bottom:12px">ADICIONAR META DE 10 ANOS</div>
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-10a" type="text" placeholder="Ex: Aposentadoria, Patrimônio R$1M..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-10a" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO (opcional)</div><input id="meta-valor-10a" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO (ano)</div><input id="meta-prazo-10a" type="number" min="2025" max="2050" placeholder="2035" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px"></div>
-          <button class="btn" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#f59e0b" onclick="addMeta10Anos()">+ META</button>
-        </div>
-        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO (opcional)</div><input id="meta-desc-10a" type="text" placeholder="Detalhes da meta de 10 anos..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px"></div>
-      </div>
-      <div class="tbl-wrap"><table id="meta-board-10a"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-10a"></tbody></table></div>
-    </div>
-  </div><!-- fecha plan-panel-metas -->
-
-  <!-- ABA 3: META DE GASTO -->
-  <div id="plan-panel-metag" class="plan-panel">
-    <!-- Card atual salvo -->
-    <div class="card" style="margin-bottom:16px" id="plan-metag-resumo" style="display:none"></div>
-    <!-- Formulário -->
-    <div class="card meta-gasto-card" style="margin-bottom:16px">
-      <div class="meta-gasto-head">
-        <div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);letter-spacing:1px">◎ META DE GASTO MENSAL</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Defina o limite máximo de gastos por mês</div></div>
-      </div>
-      <div style="padding:18px">
-        <div style="max-width:300px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-weight:700">VALOR DA META MENSAL (R$)</div>
-          <input id="meta-gasto-val" type="number" step="0.01" min="0" placeholder="0,00" oninput="metaGastoPreview(this.value)"
-            style="width:100%;padding:10px 14px;background:var(--bg2);border:1px solid rgba(0,255,157,0.35);color:var(--neon-yellow);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:15px;outline:none;box-sizing:border-box">
-        </div>
-        <div class="meta-gasto-info" id="meta-gasto-preview" style="display:none">
-          <div>📅 Equivale a <b id="mgp-semana">—</b> por semana</div>
-          <div>📊 Representa <b id="mgp-pct-mes">—</b> da receita mensal</div>
-          <div>📈 Representa <b id="mgp-pct-ano">—</b> da receita anual</div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-          <button class="btn btn-green" onclick="salvarMetaGasto()">✓ SALVAR META</button>
-          <button class="btn" onclick="showPage('semanal')" style="border-color:rgba(0,200,255,0.3);color:var(--neon-blue)">IR PARA SEMANAL →</button>
-        </div>
-        <div class="cfg-msg" id="meta-gasto-msg"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ABA 4: CRONOGRAMA -->
+  <!-- ABA 3: CRONOGRAMA -->
   <div id="plan-panel-crono" class="plan-panel">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -4491,59 +4380,6 @@
     </div>
   </div>
 
-  <!-- ABA 5: SIMULADOR -->
-  <div id="plan-panel-simul" class="plan-panel">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-
-      <!-- Cenário A: Quitação de dívida -->
-      <div class="sim-card">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-red);letter-spacing:1px;margin-bottom:14px">💳 CENÁRIO A — QUITAÇÃO DE DÍVIDA</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR DA DÍVIDA (R$)</div><input id="simA-divida" type="number" step="0.01" placeholder="5.000,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box;outline:none"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PAGAMENTO MENSAL (R$)</div><input id="simA-parcela" type="number" step="0.01" placeholder="500,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box;outline:none"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">JUROS (% ao mês)</div><input id="simA-juros" type="number" step="0.01" placeholder="0 (sem juros)" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box;outline:none"></div>
-        </div>
-        <button onclick="simularA()" class="btn btn-red" style="width:100%;margin-top:14px">CALCULAR</button>
-        <div id="simA-result" class="sim-result">
-          <div class="sim-row"><span>Meses para quitar</span><span class="sim-kpi" id="simA-meses">—</span></div>
-          <div class="sim-row"><span>Total pago</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-yellow)" id="simA-total">—</span></div>
-          <div class="sim-row"><span>Total em juros</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-red)" id="simA-juros-total">—</span></div>
-        </div>
-      </div>
-
-      <!-- Cenário B: Objetivo de economia -->
-      <div class="sim-card">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);letter-spacing:1px;margin-bottom:14px">💰 CENÁRIO B — OBJETIVO DE ECONOMIA</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">OBJETIVO (R$)</div><input id="simB-objetivo" type="number" step="0.01" placeholder="10.000,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box;outline:none"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">GUARDAR POR MÊS (R$)</div><input id="simB-mensal" type="number" step="0.01" placeholder="500,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box;outline:none"></div>
-          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">RENDIMENTO (% ao mês)</div><input id="simB-rend" type="number" step="0.01" placeholder="0 (sem rendimento)" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box;outline:none"></div>
-        </div>
-        <button onclick="simularB()" class="btn btn-green" style="width:100%;margin-top:14px">CALCULAR</button>
-        <div id="simB-result" class="sim-result">
-          <div class="sim-row"><span>Meses para atingir</span><span class="sim-kpi" id="simB-meses">—</span></div>
-          <div class="sim-row"><span>Sem rendimento</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text2)" id="simB-sem-rend">—</span></div>
-          <div class="sim-row"><span>Com rendimento</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-green)" id="simB-com-rend">—</span></div>
-          <div class="sim-row"><span>Ganho extra</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-blue)" id="simB-ganho">—</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Cenário C: Impacto de um gasto -->
-    <div class="sim-card">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-yellow);letter-spacing:1px;margin-bottom:14px">🔍 CENÁRIO C — IMPACTO DE UM GASTO</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end">
-        <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR DO GASTO (R$)</div><input id="simC-gasto" type="number" step="0.01" placeholder="1.200,00" oninput="simularC()" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid rgba(255,215,0,0.3);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box;outline:none"></div>
-        <div style="font-size:11px;color:var(--text3);padding-bottom:4px">Lê automaticamente a meta de gasto e a receita salvas no sistema.</div>
-      </div>
-      <div id="simC-result" class="sim-result" style="margin-top:12px">
-        <div class="sim-row"><span>Meta mensal atual</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700" id="simC-meta-mes">—</span></div>
-        <div class="sim-row"><span>Meta semanal restante</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-blue)" id="simC-meta-sem">—</span></div>
-        <div class="sim-row"><span>Saldo livre do mês</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700" id="simC-saldo">—</span></div>
-        <div class="sim-row"><span>% da receita mensal</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-red)" id="simC-pct">—</span></div>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -4617,6 +4453,376 @@
     </div>
 
     <div id="metas-list"></div>
+  </div>
+</div>
+
+<!-- ========== METAS ========== -->
+<div id="page-metas" class="page">
+  <div class="page-title">METAS</div>
+  <div class="page-sub">// SEMANAL · MENSAL · TRIMESTRAL · SEMESTRAL · ANUAL · 5 ANOS · 10 ANOS</div>
+
+  <!-- KPIs topo -->
+  <div class="grid3" style="margin-bottom:20px">
+    <div class="card card-blue"><div class="card-label">EM ANDAMENTO</div><div class="card-value val-blue" id="pmk-ativas">—</div></div>
+    <div class="card card-green"><div class="card-label">CONCLUÍDAS</div><div class="card-value val-green" id="pmk-concluidas">—</div></div>
+    <div class="card card-red"><div class="card-label">ATRASADAS</div><div class="card-value val-red" id="pmk-pendentes">—</div></div>
+  </div>
+
+  <!-- Abas -->
+  <div class="plan-tabs" style="flex-wrap:wrap;gap:6px;margin-bottom:20px">
+    <button class="plan-tab" onclick="switchMetasTab('anual')"><span class="plan-tab-icon">🗓</span>ANUAL</button>
+    <button class="plan-tab" onclick="switchMetasTab('semestral')"><span class="plan-tab-icon">🎯</span>SEMESTRAL</button>
+    <button class="plan-tab" onclick="switchMetasTab('trimestral')"><span class="plan-tab-icon">📊</span>TRIMESTRAL</button>
+    <button class="plan-tab" onclick="switchMetasTab('mensal')"><span class="plan-tab-icon">📆</span>MENSAL</button>
+    <button class="plan-tab" onclick="switchMetasTab('semanal')"><span class="plan-tab-icon">📅</span>SEMANAL</button>
+    <button class="plan-tab" onclick="switchMetasTab('5anos')"><span class="plan-tab-icon">⭐</span>5 ANOS</button>
+    <button class="plan-tab" onclick="switchMetasTab('10anos')"><span class="plan-tab-icon">🔮</span>10 ANOS</button>
+    <button class="plan-tab" onclick="switchMetasTab('metag')"><span class="plan-tab-icon">◎</span>META GASTO</button>
+  </div>
+
+  <!-- ANUAL (primeiro painel visível) -->
+  <div id="metas-panel-anual" class="plan-panel">
+    <div id="meta-planejamento-wrap"></div>
+  </div>
+
+  <!-- SEMESTRAL -->
+  <div id="metas-panel-semestral" class="plan-panel">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div><div class="sec-title" style="margin:0">QUADRO DE METAS SEMESTRAL</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Metas de 3 a 6 meses de horizonte</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div id="meta-period-tabs-sem" style="display:flex;gap:4px"></div>
+          <select id="meta-filtro-sem" onchange="renderMetas()" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
+          </select>
+        </div>
+      </div>
+      <div id="meta-period-info-sem" style="margin-bottom:14px"></div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:12px">ADICIONAR META SEMESTRAL</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-sem" type="text" placeholder="Ex: Quitar Nubank, Academia..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-sem" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO</div><input id="meta-valor-sem" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO</div><input id="meta-prazo-sem" type="month" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+          <button class="btn btn-green" onclick="addMeta('semestral')">+ META</button>
+        </div>
+        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div><input id="meta-desc-sem" type="text" placeholder="Detalhes..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+      </div>
+      <div id="meta-resumo-sem" style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap"></div>
+      <div class="tbl-wrap"><table id="meta-board-sem"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-sem"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TRIMESTRAL -->
+  <div id="metas-panel-trimestral" class="plan-panel">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div><div class="sec-title" style="margin:0;color:var(--neon-blue)">QUADRO DE METAS TRIMESTRAL</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Metas de curto prazo — até 3 meses</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div id="meta-period-tabs-tri" style="display:flex;gap:4px"></div>
+          <select id="meta-filtro-tri" onchange="renderMetas()" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
+          </select>
+        </div>
+      </div>
+      <div id="meta-period-info-tri" style="margin-bottom:14px"></div>
+      <div style="background:var(--bg3);border:1px solid rgba(0,200,255,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:12px">ADICIONAR META TRIMESTRAL</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-tri" type="text" placeholder="Ex: Cortar fast food, Estudar inglês..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-tri" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO</div><input id="meta-valor-tri" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO</div><input id="meta-prazo-tri" type="month" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+          <button class="btn btn-blue" onclick="addMeta('trimestral')">+ META</button>
+        </div>
+        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div><input id="meta-desc-tri" type="text" placeholder="Detalhes..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+      </div>
+      <div id="meta-resumo-tri" style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap"></div>
+      <div class="tbl-wrap"><table id="meta-board-tri"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-tri"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- SEMANAL -->
+  <div id="metas-panel-semanal" class="plan-panel">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div><div class="sec-title" style="margin:0;color:var(--neon-green)">METAS SEMANAIS</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Metas de curto prazo — horizonte de 1 semana</div></div>
+        <select id="meta-filtro-sw" onchange="renderMetasSimples('semanal_p','sw')" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
+        </select>
+      </div>
+      <div style="background:var(--bg3);border:1px solid rgba(0,255,157,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--neon-green);letter-spacing:1px;margin-bottom:12px">ADICIONAR META SEMANAL</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end;flex-wrap:wrap">
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO</div><input id="meta-titulo-sw" type="text" placeholder="Ex: Caminhada diária, Estudar 1h..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-sw" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO</div><input id="meta-valor-sw" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO</div><input id="meta-prazo-sw" type="date" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+          <button class="btn btn-green" onclick="addMetaSimples('semanal_p','sw')">+ META</button>
+        </div>
+        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div><input id="meta-desc-sw" type="text" placeholder="Detalhes..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+      </div>
+      <div class="tbl-wrap"><table id="meta-board-sw"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-sw"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- MENSAL -->
+  <div id="metas-panel-mensal" class="plan-panel">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div><div class="sec-title" style="margin:0;color:var(--neon-blue)">METAS MENSAIS</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Metas com horizonte de 1 mês</div></div>
+        <select id="meta-filtro-mw" onchange="renderMetasSimples('mensal_p','mw')" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
+        </select>
+      </div>
+      <div style="background:var(--bg3);border:1px solid rgba(0,200,255,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:12px">ADICIONAR META MENSAL</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO</div><input id="meta-titulo-mw" type="text" placeholder="Ex: Economizar R$500, Ler 2 livros..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-mw" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO</div><input id="meta-valor-mw" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO</div><input id="meta-prazo-mw" type="month" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+          <button class="btn btn-blue" onclick="addMetaSimples('mensal_p','mw')">+ META</button>
+        </div>
+        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div><input id="meta-desc-mw" type="text" placeholder="Detalhes..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+      </div>
+      <div class="tbl-wrap"><table id="meta-board-mw"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-mw"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- 5 ANOS -->
+  <div id="metas-panel-5anos" class="plan-panel">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div><div class="sec-title" style="margin:0;color:var(--neon-purple)">QUADRO DE METAS — 5 ANOS</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Visão de médio prazo — horizonte de 5 anos</div></div>
+        <select id="meta-filtro-5a" onchange="renderMetas5Anos()" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
+        </select>
+      </div>
+      <div style="background:var(--bg3);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--neon-purple);letter-spacing:1px;margin-bottom:12px">ADICIONAR META DE 5 ANOS</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-5a" type="text" placeholder="Ex: Quitar imóvel, Fundo de R$200k..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-5a" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO</div><input id="meta-valor-5a" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO (ano)</div><input id="meta-prazo-5a" type="number" min="2025" max="2040" placeholder="2029" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px"></div>
+          <button class="btn" style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.4);color:var(--neon-purple)" onclick="addMeta5Anos()">+ META</button>
+        </div>
+        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div><input id="meta-desc-5a" type="text" placeholder="Detalhes da meta de 5 anos..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+      </div>
+      <div class="tbl-wrap"><table id="meta-board-5a"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-5a"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- 10 ANOS -->
+  <div id="metas-panel-10anos" class="plan-panel">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div><div class="sec-title" style="margin:0;color:#f59e0b">QUADRO DE METAS — 10 ANOS</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Visão de longo prazo — horizonte de 10 anos</div></div>
+        <select id="meta-filtro-10a" onchange="renderMetas10Anos()" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          <option value="todas">TODAS</option><option value="pendente">PENDENTES</option><option value="andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDAS</option>
+        </select>
+      </div>
+      <div style="background:var(--bg3);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:1px;margin-bottom:12px">ADICIONAR META DE 10 ANOS</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO DA META</div><input id="meta-titulo-10a" type="text" placeholder="Ex: Aposentadoria, Patrimônio R$1M..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-10a" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO</div><input id="meta-valor-10a" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
+          <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO (ano)</div><input id="meta-prazo-10a" type="number" min="2025" max="2050" placeholder="2035" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px"></div>
+          <button class="btn" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#f59e0b" onclick="addMeta10Anos()">+ META</button>
+        </div>
+        <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div><input id="meta-desc-10a" type="text" placeholder="Detalhes da meta de 10 anos..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+      </div>
+      <div class="tbl-wrap"><table id="meta-board-10a"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-10a"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- META DE GASTO -->
+  <div id="metas-panel-metag" class="plan-panel">
+    <div class="card" style="margin-bottom:16px" id="plan-metag-resumo"></div>
+    <div class="card meta-gasto-card">
+      <div class="meta-gasto-head">
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);letter-spacing:1px">◎ META DE GASTO MENSAL</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Defina o limite máximo de gastos por mês</div></div>
+      </div>
+      <div style="padding:18px">
+        <div style="max-width:300px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-weight:700">VALOR DA META MENSAL (R$)</div>
+          <input id="meta-gasto-val" type="number" step="0.01" min="0" placeholder="0,00" oninput="metaGastoPreview(this.value)"
+            style="width:100%;padding:10px 14px;background:var(--bg2);border:1px solid rgba(0,255,157,0.35);color:var(--neon-yellow);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:15px;outline:none;box-sizing:border-box">
+        </div>
+        <div class="meta-gasto-info" id="meta-gasto-preview" style="display:none">
+          <div>📅 Equivale a <b id="mgp-semana">—</b> por semana</div>
+          <div>📊 Representa <b id="mgp-pct-mes">—</b> da receita mensal</div>
+          <div>📈 Representa <b id="mgp-pct-ano">—</b> da receita anual</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="salvarMetaGasto()">✓ SALVAR META</button>
+          <button class="btn" onclick="showPage('semanal')" style="border-color:rgba(0,200,255,0.3);color:var(--neon-blue)">IR PARA SEMANAL →</button>
+        </div>
+        <div class="cfg-msg" id="meta-gasto-msg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MERCADO ========== -->
+<div id="page-mercado" class="page">
+  <div class="page-title">MERCADO</div>
+  <div class="page-sub">// LISTA DE COMPRAS · HISTÓRICO · CONTROLE DE GASTOS</div>
+
+  <!-- KPIs -->
+  <div class="grid3" style="margin-bottom:20px">
+    <div class="card card-green"><div class="card-label">TOTAL PREVISTO</div><div class="card-value val-green" id="mkt-kpi-total">R$ 0,00</div></div>
+    <div class="card card-blue"><div class="card-label">JÁ COMPRADO</div><div class="card-value val-blue" id="mkt-kpi-comprado">R$ 0,00</div></div>
+    <div class="card"><div class="card-label">ITENS NA LISTA</div><div class="card-value" id="mkt-kpi-itens">0</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start" id="mkt-grid">
+    <!-- Formulário -->
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:16px">ADICIONAR ITEM</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">NOME DO ITEM *</div>
+          <input id="mkt-nome" type="text" placeholder="Ex: Arroz, Frango, Sabão..." style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
+          <select id="mkt-cat" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option><option value="Laticinios">🥛 Laticínios</option>
+            <option value="Padaria">🍞 Padaria</option><option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option>
+            <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">QUANTIDADE</div>
+            <input id="mkt-qtd" type="number" min="1" value="1" placeholder="1" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PREÇO UNITÁRIO (R$)</div>
+            <input id="mkt-preco" type="number" min="0" step="0.01" placeholder="0,00" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">FOTO (opcional)</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="cursor:pointer;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text2)">
+              📷 Escolher foto
+              <input id="mkt-foto-input" type="file" accept="image/*" style="display:none" onchange="mktPreviewFoto(this)">
+            </label>
+            <span id="mkt-foto-nome" style="font-size:11px;color:var(--text3)">Sem foto</span>
+            <button id="mkt-foto-clear" onclick="mktClearFoto()" style="display:none;background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px">✕</button>
+          </div>
+          <div id="mkt-foto-preview" style="margin-top:8px;display:none"><img id="mkt-foto-img" style="max-width:100%;max-height:80px;border-radius:8px;object-fit:cover"></div>
+        </div>
+        <div id="mkt-add-msg" style="font-size:11px;min-height:16px"></div>
+        <button class="btn btn-green" onclick="mktAddItem()" style="width:100%">+ ADICIONAR À LISTA</button>
+      </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="mktSalvarLista()" style="flex:1;border-color:rgba(0,200,255,0.3);color:var(--neon-blue)">💾 SALVAR LISTA</button>
+        <button class="btn" onclick="mktNovaLista()" style="flex:1;border-color:rgba(255,68,68,0.3);color:var(--neon-red)">🗑 NOVA LISTA</button>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div class="sec-title" style="margin:0">LISTA DE COMPRAS</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--text3)">Restante:</span>
+            <span id="mkt-total-restante" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--neon-green)">R$ 0,00</span>
+          </div>
+        </div>
+        <div id="mkt-lista-itens">
+          <div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Lista vazia. Adicione itens ao lado.</div>
+        </div>
+      </div>
+
+      <!-- Histórico -->
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:14px">HISTÓRICO DE LISTAS</div>
+        <div id="mkt-historico">
+          <div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhuma lista salva ainda.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TAREFAS ========== -->
+<div id="page-tarefas" class="page">
+  <div class="page-title">TAREFAS</div>
+  <div class="page-sub">// PENDENTES · CONCLUÍDAS · VINCULADAS A METAS</div>
+
+  <!-- KPIs -->
+  <div class="grid3" style="margin-bottom:20px">
+    <div class="card card-red"><div class="card-label">PENDENTES</div><div class="card-value val-red" id="trf-kpi-pendentes">0</div></div>
+    <div class="card card-green"><div class="card-label">CONCLUÍDAS HOJE</div><div class="card-value val-green" id="trf-kpi-hoje">0</div></div>
+    <div class="card card-yellow"><div class="card-label">ATRASADAS</div><div class="card-value val-yellow" id="trf-kpi-atrasadas">0</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start" id="trf-grid">
+    <!-- Formulário nova tarefa -->
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:16px">NOVA TAREFA</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO *</div>
+          <input id="trf-titulo" type="text" placeholder="O que precisa ser feito?" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO (opcional)</div>
+          <input id="trf-desc" type="text" placeholder="Detalhes adicionais..." style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
+            <select id="trf-cat" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+              <option value="Estudo">📚 Estudo</option><option value="Casa">🏠 Casa</option><option value="Trabalho">💼 Trabalho</option>
+              <option value="Compromisso">📅 Compromisso</option><option value="Pessoal">⭐ Pessoal</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRIORIDADE</div>
+            <select id="trf-prio" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+              <option value="Alta">🔴 Alta</option><option value="Media" selected>🟡 Média</option><option value="Baixa">🔵 Baixa</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO (opcional)</div>
+          <input id="trf-prazo" type="date" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VINCULAR A META (opcional)</div>
+          <select id="trf-meta" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option value="">— Sem vínculo —</option>
+          </select>
+        </div>
+        <div id="trf-add-msg" style="font-size:11px;min-height:16px"></div>
+        <button class="btn btn-green" onclick="trfAddTarefa()" style="width:100%">+ ADICIONAR TAREFA</button>
+      </div>
+    </div>
+
+    <!-- Lista de tarefas -->
+    <div>
+      <!-- Filtros -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="plan-tab active" onclick="trfSetFiltro('todas',this)" style="padding:7px 14px;font-size:11px">TODAS</button>
+        <button class="plan-tab" onclick="trfSetFiltro('hoje',this)" style="padding:7px 14px;font-size:11px">HOJE</button>
+        <button class="plan-tab" onclick="trfSetFiltro('semana',this)" style="padding:7px 14px;font-size:11px">ESTA SEMANA</button>
+        <button class="plan-tab" onclick="trfSetFiltro('atrasadas',this)" style="padding:7px 14px;font-size:11px">ATRASADAS</button>
+        <button class="plan-tab" onclick="trfSetFiltro('metas',this)" style="padding:7px 14px;font-size:11px">COM META</button>
+        <button class="plan-tab" onclick="trfSetFiltro('concluidas',this)" style="padding:7px 14px;font-size:11px">CONCLUÍDAS</button>
+      </div>
+      <div id="trf-lista">
+        <div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">Nenhuma tarefa encontrada.</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -6828,8 +7034,8 @@ function closeSidebar(){
 
 // ===================== NAVIGATION =====================
 let currentPage='dashboard', _currentPage='dashboard';
-const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,financiamentos:3,parcelas:4,lancamentos:5,semanal:6,faturas:7,planejamento:8,receita:9,investimentos:10,bens:11,compras:12,relatorios:13,documentos:14,config:15,sobre:16};
-const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',financiamentos:'FINANCIAMENTOS',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',compras:'COMPRAS',relatorios:'RELATÓRIOS',documentos:'DOCUMENTOS PESSOAIS',config:'CONFIGURAÇÕES',sobre:'SOBRE'};
+const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,financiamentos:3,parcelas:4,lancamentos:5,semanal:6,faturas:7,planejamento:8,receita:9,investimentos:10,bens:11,compras:12,relatorios:13,documentos:14,config:15,sobre:16,metas:17,mercado:18,tarefas:19};
+const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',financiamentos:'FINANCIAMENTOS',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',compras:'COMPRAS',relatorios:'RELATÓRIOS',documentos:'DOCUMENTOS PESSOAIS',config:'CONFIGURAÇÕES',sobre:'SOBRE',metas:'METAS',mercado:'MERCADO',tarefas:'TAREFAS'};
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -6852,7 +7058,8 @@ function renderPage(id){
     lancamentos:renderLancamentos,faturas:renderFaturas,planejamento:renderPlanejamento,
     receita:renderReceita,investimentos:renderInvestimentos,bens:renderBens,
     financiamentos:renderFinanciamentos,documentos:renderDocumentosUsuario,
-    compras:renderCompras,relatorios:renderRelatorios,semanal:renderSemanal,config:renderConfig,sobre:renderSobre};
+    compras:renderCompras,relatorios:renderRelatorios,semanal:renderSemanal,config:renderConfig,sobre:renderSobre,
+    metas:renderMetasPage,mercado:renderMercado,tarefas:renderTarefas};
   if(fns[id]) fns[id]();
 }
 
@@ -7256,10 +7463,35 @@ function renderDashboard(){
 // ===================== GASTOS FIXOS =====================
 let gfEditingId = null; // id da linha em edição (null = nenhuma)
 
+function _gfMesVigente(){
+  // Retorna YYYY-MM do mês sendo visualizado nos gastos fixos
+  const ano=gfAnoSel||new Date().getFullYear();
+  const mes=gfMesSel||new Date().getMonth()+1;
+  return `${ano}-${String(mes).padStart(2,'0')}`;
+}
+
+function toggleGfInativo(id){
+  const data=getData('gastosFixos');
+  const g=data.find(x=>x.id===id);
+  if(!g) return;
+  if(!g.inativosMeses) g.inativosMeses=[];
+  const mes=_gfMesVigente();
+  const idx=g.inativosMeses.indexOf(mes);
+  if(idx>-1) g.inativosMeses.splice(idx,1);
+  else g.inativosMeses.push(mes);
+  setData('gastosFixos',data);
+  renderGastos();
+}
+
 function renderGastos(){
   const salario=getSalario();
   const data=getData('gastosFixos');
-  const total=data.reduce((a,i)=>a+i.val,0);
+  const mesVig=_gfMesVigente();
+  // Total exclui itens inativos no mês vigente
+  const total=data.reduce((a,i)=>{
+    const inativo=(i.inativosMeses||[]).includes(mesVig);
+    return a+(inativo?0:i.val);
+  },0);
   const sobra=salario-total;
   const pct=(total/salario*100).toFixed(1);
 
@@ -7315,6 +7547,7 @@ function renderGastos(){
         <td><input type="number" id="gf-edit-val" value="${g.val.toFixed(2)}" step="0.01" min="0" style="width:110px"></td>
         <td style="color:var(--text3);font-size:11px">—</td>
         <td style="color:var(--text3);font-size:11px">—</td>
+        <td style="color:var(--text3);font-size:11px">—</td>
         <td><div style="display:flex;gap:6px;white-space:nowrap">
           <button class="btn btn-sm" onclick="saveEditGF(${g.id})">✓ SALVAR</button>
           <button class="btn btn-red btn-sm" onclick="cancelEditGF()">✕</button>
@@ -7322,24 +7555,41 @@ function renderGastos(){
       </tr>`;
     }
     const cor=CAT_COLOR[g.cat]||'blue';
-    return `<tr>
-      <td style="font-weight:500"><input type="checkbox" class="gf-corte-check" data-id="${g.id}" style="margin-right:6px;accent-color:var(--neon-yellow)">${esc(g.desc)}</td>
+    const inativo=(g.inativosMeses||[]).includes(mesVig);
+    // Vencimento badge
+    const hojeDia=new Date().getDate();
+    let vencBadge='';
+    if(g.vencimento){
+      const dv=parseInt(g.vencimento);
+      const diasFaltam=dv-hojeDia;
+      const vencCor=diasFaltam<0?'var(--neon-red)':diasFaltam<=5?'var(--neon-yellow)':'var(--text3)';
+      const vencBg=diasFaltam<0?'rgba(255,68,68,0.1)':diasFaltam<=5?'rgba(255,215,0,0.08)':'rgba(107,114,128,0.1)';
+      vencBadge=`<span class="gf-venc-badge" style="background:${vencBg};color:${vencCor};border:1px solid ${vencCor}20">Dia ${dv}${diasFaltam<0?' ⚠':diasFaltam===0?' ● HOJE':''}</span>`;
+    }
+    return `<tr class="${inativo?'gf-row-inativo':''}">
+      <td style="font-weight:500">
+        <input type="checkbox" class="gf-corte-check" data-id="${g.id}" style="margin-right:6px;accent-color:var(--neon-yellow)">
+        ${esc(g.desc)}
+        ${inativo?`<span class="gf-inativo-badge">INATIVO ${mesVig}</span>`:''}
+      </td>
       <td><span class="badge badge-${cor}">${esc(g.cat)}</span></td>
       <td><span class="prio-badge ${PRIO_CLASS[gPrio]}" onclick="cycleGFPrio(${g.id})" title="Clique para trocar" style="cursor:pointer">${PRIO_LABEL[gPrio]}</span></td>
-      <td style="font-family:'JetBrains Mono',monospace;color:var(--neon-blue);font-weight:600">${fmt(g.val)}</td>
-      <td style="font-family:'JetBrains Mono',monospace;color:var(--neon-yellow);font-size:12px">${fmt(g.val*12)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:${inativo?'var(--text3)':'var(--neon-blue)'};font-weight:600">${fmt(g.val)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:${inativo?'var(--text3)':'var(--neon-yellow)'};font-size:12px">${inativo?'—':fmt(g.val*12)}</td>
+      <td>${vencBadge}</td>
       <td><div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${gfAnxCell(g.id,curGfMes)}</div></td>
-      <td><div style="display:flex;gap:6px;white-space:nowrap">
+      <td><div style="display:flex;gap:4px;white-space:nowrap">
+        <button class="${inativo?'gf-btn-reativar':'gf-btn-inativar'}" onclick="toggleGfInativo(${g.id})">${inativo?'▶ REATIVAR':'⏸ INATIVAR'}</button>
         <button class="btn btn-blue btn-sm" onclick="startEditGF(${g.id})">✎</button>
         <button class="btn btn-red btn-sm" onclick="delGF(${g.id})">✕</button>
       </div></td>
     </tr>`;
   }).join('')+
   `<tr style="background:rgba(0,255,157,0.05)">
-    <td colspan="3" style="font-weight:700;color:var(--text)">TOTAL</td>
+    <td colspan="3" style="font-weight:700;color:var(--text)">TOTAL (ativos)</td>
     <td style="font-family:'JetBrains Mono',monospace;color:var(--neon-green);font-weight:700">${fmt(total)}</td>
     <td style="font-family:'JetBrains Mono',monospace;color:var(--neon-yellow);font-size:12px;font-weight:700">${fmt(total*12)}</td>
-    <td></td><td></td>
+    <td></td><td></td><td></td>
   </tr>`;
 
   // ── Projeção Anual ──────────────────────────────────────
@@ -7464,11 +7714,14 @@ function addGastoFixo(){
   if(isNaN(val)||val<=0){alert('Informe um valor maior que zero.');valEl.focus();return;}
   const prioEl=document.getElementById('gf-new-prio');
   const prio=prioEl?prioEl.value:'essencial';
+  const vencEl=document.getElementById('gf-new-venc');
+  const vencimento=vencEl?parseInt(vencEl.value)||0:0;
   const data=getData('gastosFixos');
-  data.push({id:Date.now(),desc,cat,val,prio});
+  data.push({id:Date.now(),desc,cat,val,prio,vencimento,inativosMeses:[]});
   setData('gastosFixos',data);
   descEl.value='';
   valEl.value='';
+  if(vencEl) vencEl.value='';
   descEl.focus();
   renderGastos();
 }
@@ -10354,7 +10607,7 @@ function renderProgresso(){
     el.innerHTML=`<div style="text-align:center;padding:24px 0">
       <div style="font-size:32px;margin-bottom:12px">🎯</div>
       <div style="font-size:14px;color:var(--text2);margin-bottom:16px">Nenhuma meta financeira de longo prazo definida.</div>
-      <button class="btn btn-blue" onclick="switchPlanTab('metas');renderPlanejamento()">+ DEFINIR META</button>
+      <button class="btn btn-blue" onclick="showPage('metas')">+ DEFINIR META</button>
     </div>`;
     return;
   }
@@ -12630,18 +12883,21 @@ const _NAV_META={
   semanal:{icon:'◇',label:'SEMANAL'},
   faturas:{icon:'▣',label:'FATURAS'},
   planejamento:{icon:'◎',label:'PLANEJAMENTO'},
+  metas:{icon:'🎯',label:'METAS'},
   receita:{icon:'◈',label:'RECEITA'},
   financiamentos:{icon:'◫',label:'FINANCIAMENTOS'},
   investimentos:{icon:'◈',label:'INVESTIMENTOS'},
   bens:{icon:'◆',label:'MEUS BENS'},
   compras:{icon:'◑',label:'COMPRAS'},
+  mercado:{icon:'🛒',label:'MERCADO'},
+  tarefas:{icon:'✓',label:'TAREFAS'},
   relatorios:{icon:'▦',label:'RELATÓRIOS'},
   documentos:{icon:'🗂',label:'DOCUMENTOS'},
   config:{icon:'⚙',label:'CONFIGURAÇÕES'},
 };
 const _NAV_DEFAULT={
   b1:['dashboard','gastos','cartoes','parcelas','semanal','faturas'],
-  b2:['planejamento','receita','investimentos','bens','compras','relatorios','documentos']
+  b2:['planejamento','metas','receita','investimentos','bens','compras','mercado','tarefas','relatorios','documentos']
 };
 // páginas que saem dos blocos (ficam em ícones próprios)
 const _NAV_EXCLUDED=new Set(['config','lancamentos']);
@@ -13555,7 +13811,7 @@ function _renderMetaGastoSemanal(){
   el.innerHTML=`<div class="meta-gasto-card">
     <div class="meta-gasto-head">
       <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);letter-spacing:1px">◎ META DE GASTO — ${MESES_ABREV[semMesSel]?.toUpperCase()||''} ${semAnoSel}</span>
-      <button onclick="showPage('planejamento');setTimeout(()=>switchPlanTab('metag'),100)" style="font-size:11px;padding:4px 12px;border-radius:7px;border:1px solid rgba(0,200,255,0.3);background:rgba(0,200,255,0.07);color:var(--neon-blue);cursor:pointer;font-family:'JetBrains Mono',monospace">→ PLANEJAMENTO</button>
+      <button onclick="showPage('metas');setTimeout(()=>switchMetasTab('metag'),100)" style="font-size:11px;padding:4px 12px;border-radius:7px;border:1px solid rgba(0,200,255,0.3);background:rgba(0,200,255,0.07);color:var(--neon-blue);cursor:pointer;font-family:'JetBrains Mono',monospace">→ META DE GASTO</button>
     </div>
 
     <!-- KPIs semana atual -->
@@ -13715,17 +13971,15 @@ function fecharDiaModal(){
 
 // ===================== ABAS PLANEJAMENTO =====================
 function switchPlanTab(id, silent){
-  // Painel + tabs
-  document.querySelectorAll('.plan-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.plan-tab').forEach(t=>t.classList.remove('active'));
+  if(id==='metas'||id==='metag'||id==='simul') id='visao';
+  document.querySelectorAll('#page-planejamento .plan-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#page-planejamento .plan-tab').forEach(t=>t.classList.remove('active'));
   const panel=document.getElementById('plan-panel-'+id);
   if(panel) panel.classList.add('active');
-  // Destaca tab correta pela ordem
-  const ordem=['visao','metas','metag','crono','simul'];
+  const ordem=['visao','crono'];
   const idx=ordem.indexOf(id);
-  const tabs=document.querySelectorAll('.plan-tab');
+  const tabs=document.querySelectorAll('#page-planejamento .plan-tab');
   if(tabs[idx]) tabs[idx].classList.add('active');
-  // Salva aba (não salva durante restauração silenciosa)
   if(!silent) save('planTabAtiva',id);
 }
 
@@ -13767,75 +14021,55 @@ function _planAtualizaResumoMetaG(){
   </div>`;
 }
 
-// ===================== SIMULADORES =====================
-function simularA(){
-  const divida=parseFloat(document.getElementById('simA-divida')?.value)||0;
-  const parcela=parseFloat(document.getElementById('simA-parcela')?.value)||0;
-  const juros=(parseFloat(document.getElementById('simA-juros')?.value)||0)/100;
-  const res=document.getElementById('simA-result');
-  if(!divida||!parcela||parcela<=0||!res) return;
-  let saldo=divida, meses=0, totalPago=0;
-  if(juros===0){
-    meses=Math.ceil(divida/parcela);
-    totalPago=meses*parcela;
-  } else {
-    while(saldo>0&&meses<600){
-      saldo=saldo*(1+juros)-parcela;
-      totalPago+=parcela; meses++;
-      if(saldo<0){totalPago+=saldo;break;}
-    }
+
+function _initFabDrag(){
+  const fab=document.getElementById('fab-lanc');
+  if(!fab) return;
+  const saved=JSON.parse(localStorage.getItem('fab_drag_pos')||'null');
+  if(saved){
+    fab.style.top=saved.top; fab.style.left=saved.left;
+    fab.style.right='auto'; fab.style.bottom='auto';
+    const d0=document.getElementById('fab-speed-dial');
+    if(d0&&saved.dialTop){d0.style.top=saved.dialTop;d0.style.left=saved.dialLeft;d0.style.right='auto';d0.style.bottom='auto';}
   }
-  document.getElementById('simA-meses').textContent=meses<=600?meses+'m':'Não quita';
-  document.getElementById('simA-total').textContent=fmt(Math.max(0,totalPago));
-  document.getElementById('simA-juros-total').textContent=fmt(Math.max(0,totalPago-divida));
-  res.classList.add('visible');
-}
-
-function simularB(){
-  const objetivo=parseFloat(document.getElementById('simB-objetivo')?.value)||0;
-  const mensal=parseFloat(document.getElementById('simB-mensal')?.value)||0;
-  const rend=(parseFloat(document.getElementById('simB-rend')?.value)||0)/100;
-  const res=document.getElementById('simB-result');
-  if(!objetivo||!mensal||!res) return;
-  // Sem rendimento
-  const mesesSimples=Math.ceil(objetivo/mensal);
-  // Com rendimento (juros compostos)
-  let acum=0, mesesRend=0;
-  if(rend>0){
-    while(acum<objetivo&&mesesRend<600){acum=acum*(1+rend)+mensal;mesesRend++;}
-  } else { mesesRend=mesesSimples; }
-  const ganho=acum-mesesRend*mensal;
-  document.getElementById('simB-meses').textContent=mesesRend+'m';
-  document.getElementById('simB-sem-rend').textContent=mesesSimples+'m';
-  document.getElementById('simB-com-rend').textContent=mesesRend+'m';
-  document.getElementById('simB-ganho').textContent=rend>0?fmt(Math.max(0,ganho)):'R$ 0,00';
-  res.classList.add('visible');
-}
-
-function simularC(){
-  const gasto=parseFloat(document.getElementById('simC-gasto')?.value)||0;
-  const res=document.getElementById('simC-result');
-  if(!res) return;
-  const meta=getMetaGastoMensal();
-  const metaMensal=meta?.valor||0;
-  const metaSemanal=metaMensal/4.33;
-  const recMes=_receitaMensalAtual();
-  const salario=getSalario();
-  const fixos=getData('gastosFixos').reduce((a,g)=>a+g.val,0);
-  const saldoLivre=salario-fixos;
-  const saldoAposGasto=saldoLivre-gasto;
-  const metaApos=metaMensal-gasto;
-  const semApos=metaApos/4.33;
-  const pct=recMes>0?(gasto/recMes*100).toFixed(1)+'%':'—';
-  const saldoColor=saldoAposGasto<0?'var(--neon-red)':'var(--neon-green)';
-  const semColor=semApos<0?'var(--neon-red)':semApos<50?'var(--neon-yellow)':'var(--neon-blue)';
-  document.getElementById('simC-meta-mes').textContent=metaMensal?fmt(metaMensal):'Não definida';
-  document.getElementById('simC-meta-sem').style.color=semColor;
-  document.getElementById('simC-meta-sem').textContent=metaMensal?(semApos>=0?fmt(semApos):'— (estourado)'):'—';
-  document.getElementById('simC-saldo').style.color=saldoColor;
-  document.getElementById('simC-saldo').textContent=fmt(saldoAposGasto);
-  document.getElementById('simC-pct').textContent=pct;
-  res.classList.add('visible');
+  let dragging=false,hasMoved=false,ox=0,oy=0,sx=0,sy=0;
+  const onStart=e=>{
+    if(e.button!==undefined&&e.button!==0) return;
+    const pt=e.touches?e.touches[0]:e;
+    const r=fab.getBoundingClientRect();
+    ox=pt.clientX-r.left; oy=pt.clientY-r.top;
+    sx=pt.clientX; sy=pt.clientY;
+    dragging=true; hasMoved=false;
+    fab.style.transition='none';
+  };
+  const onMove=e=>{
+    if(!dragging) return;
+    const pt=e.touches?e.touches[0]:e;
+    if(!hasMoved&&(Math.abs(pt.clientX-sx)>6||Math.abs(pt.clientY-sy)>6)) hasMoved=true;
+    if(!hasMoved) return;
+    const dial=document.getElementById('fab-speed-dial');
+    const x=Math.max(0,Math.min(window.innerWidth-60,pt.clientX-ox));
+    const y=Math.max(0,Math.min(window.innerHeight-60,pt.clientY-oy));
+    fab.style.left=x+'px'; fab.style.top=y+'px';
+    fab.style.right='auto'; fab.style.bottom='auto';
+    if(dial){dial.style.left=x+'px';dial.style.top=Math.max(0,y-200)+'px';dial.style.right='auto';dial.style.bottom='auto';}
+    if(e.cancelable) e.preventDefault();
+  };
+  const onEnd=()=>{
+    if(!dragging) return; dragging=false;
+    fab.style.transition='';
+    if(hasMoved){
+      const dial=document.getElementById('fab-speed-dial');
+      localStorage.setItem('fab_drag_pos',JSON.stringify({top:fab.style.top,left:fab.style.left,dialTop:dial?.style.top||'',dialLeft:dial?.style.left||''}));
+    }
+  };
+  fab.addEventListener('click',e=>{if(hasMoved){e.stopImmediatePropagation();e.preventDefault();hasMoved=false;}},true);
+  fab.addEventListener('mousedown',onStart);
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onEnd);
+  fab.addEventListener('touchstart',onStart,{passive:true});
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('touchend',onEnd);
 }
 
 function _initApp(){
@@ -13848,6 +14082,7 @@ function _initApp(){
   document.getElementById('ct-desp-inicio').value=hoje.getFullYear()+'-'+(String(hoje.getMonth()+1).padStart(2,'0'));
   initPerfil();
   renderDashboard();
+  _initFabDrag();
   // Máscara monetária universal em todos os campos financeiros
   applyMascaraBRL();
   [
@@ -17533,6 +17768,373 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(typeof renderNav==='function') renderNav('dashboard');
   _mobUpdateBar('dashboard');
 });
+</script>
+<script>
+// ===================== METAS PAGE =====================
+let _metasTabAtual='semanal';
+function switchMetasTab(id){
+  _metasTabAtual=id;
+  document.querySelectorAll('#page-metas .plan-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#page-metas .plan-tab').forEach(t=>t.classList.remove('active'));
+  const panel=document.getElementById('metas-panel-'+id);
+  if(panel) panel.classList.add('active');
+  const ordem=['anual','semestral','trimestral','mensal','semanal','5anos','10anos','metag'];
+  const idx=ordem.indexOf(id);
+  const tabs=document.querySelectorAll('#page-metas .plan-tab');
+  if(tabs[idx]) tabs[idx].classList.add('active');
+  if(id==='anual') renderMetaPlanejamento();
+  else if(id==='semestral'){ metaSemSel=getSemestreAtual(); renderMetaBoard('semestral'); }
+  else if(id==='trimestral'){ metaTriSel=getTrimestreAtual(); renderMetaBoard('trimestral'); }
+  else if(id==='mensal') renderMetasSimples('mensal_p','mw');
+  else if(id==='semanal') renderMetasSimples('semanal_p','sw');
+  else if(id==='5anos') renderMetas5Anos();
+  else if(id==='10anos') renderMetas10Anos();
+  else if(id==='metag'){
+    _planAtualizaResumoMetaG();
+    const metaExist=getMetaGastoMensal();
+    const inp=document.getElementById('meta-gasto-val');
+    if(inp&&metaExist?.valor){inp.value=metaExist.valor;metaGastoPreview(metaExist.valor);}
+  }
+}
+
+function renderMetasPage(){
+  // KPIs agregados de todos os períodos
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const todas=[
+    ...getMetas(),
+    ..._getMetas5Anos(),
+    ..._getMetas10Anos(),
+    ...getMetasAnuais()
+  ];
+  const andamento=todas.filter(m=>m.status==='andamento'||(m.titulo&&!m.status)).length;
+  const concluidas=todas.filter(m=>m.status==='concluida').length;
+  const atrasadas=todas.filter(m=>{
+    if(m.status==='concluida') return false;
+    if(!m.prazo) return false;
+    const p=new Date(m.prazo+'T00:00:00');
+    return p<hoje;
+  }).length;
+  const g=n=>document.getElementById(n);
+  if(g('pmk-ativas')) g('pmk-ativas').textContent=andamento;
+  if(g('pmk-concluidas')) g('pmk-concluidas').textContent=concluidas;
+  if(g('pmk-pendentes')) g('pmk-pendentes').textContent=atrasadas;
+  // Ativa aba e renderiza
+  switchMetasTab(_metasTabAtual||'anual');
+}
+
+function addMetaSimples(periodo, sfx){
+  const titulo=(document.getElementById('meta-titulo-'+sfx)?.value||'').trim();
+  const tipo=document.getElementById('meta-tipo-'+sfx)?.value||'outro';
+  const valorRaw=document.getElementById('meta-valor-'+sfx)?.value||'0';
+  const valor=parseBRL(valorRaw)||parseFloat(valorRaw)||0;
+  const prazo=document.getElementById('meta-prazo-'+sfx)?.value||'';
+  const desc=(document.getElementById('meta-desc-'+sfx)?.value||'').trim();
+  if(!titulo){alert('Informe o título da meta.');return;}
+  const lista=getMetas();
+  lista.push({id:Date.now(),titulo,tipo,valor,prazo,desc,status:'pendente',progresso:0,periodo,criadaEm:new Date().toISOString()});
+  setMetas(lista);
+  ['meta-titulo-'+sfx,'meta-valor-'+sfx,'meta-prazo-'+sfx,'meta-desc-'+sfx].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  renderMetasSimples(periodo,sfx);
+  renderMetasPage();
+}
+
+function renderMetasSimples(periodo, sfx){
+  const filtroEl=document.getElementById('meta-filtro-'+sfx);
+  const filtro=filtroEl?filtroEl.value:'todas';
+  const tbody=document.getElementById('meta-tbody-'+sfx);
+  if(!tbody) return;
+  let lista=getMetas().filter(m=>(m.periodo||'semestral')===periodo);
+  if(filtro!=='todas') lista=lista.filter(m=>m.status===filtro);
+  if(!lista.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Nenhuma meta cadastrada.</td></tr>';
+    return;
+  }
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  tbody.innerHTML=lista.map(m=>{
+    const cfg=TIPO_CFG[m.tipo]||{icon:'📌',label:m.tipo,cls:'badge-blue'};
+    const statusMap={pendente:{l:'PENDENTE',c:'var(--neon-yellow)'},andamento:{l:'EM ANDAMENTO',c:'var(--neon-blue)'},concluida:{l:'CONCLUÍDA',c:'var(--neon-green)'}};
+    const st=statusMap[m.status||'pendente']||statusMap.pendente;
+    const atrasada=m.prazo&&new Date(m.prazo+'T00:00:00')<hoje&&m.status!=='concluida';
+    const prazoFmt=m.prazo?new Date(m.prazo+'T00:00:00').toLocaleDateString('pt-BR'):'-';
+    return `<tr style="${m.status==='concluida'?'opacity:.55':''}">
+      <td><span class="badge ${cfg.cls}">${cfg.icon} ${cfg.label}</span></td>
+      <td><div style="font-weight:600;font-size:12px">${esc(m.titulo)}</div>${m.desc?`<div style="font-size:10px;color:var(--text3)">${esc(m.desc)}</div>`:''}</td>
+      <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-yellow)">${m.valor>0?fmt(m.valor):'-'}</td>
+      <td style="${atrasada?'color:var(--neon-red);font-weight:700':''}">${prazoFmt}${atrasada?' ⚠':''}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><input type="range" min="0" max="100" value="${m.progresso||0}"
+        oninput="setMetaProgresso(${m.id},this.value);renderMetasSimples('${periodo}','${sfx}')"
+        style="flex:1;accent-color:var(--neon-green)"><span style="font-size:11px;font-family:'JetBrains Mono',monospace;min-width:30px">${m.progresso||0}%</span></div></td>
+      <td><span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${st.c.replace(')',',0.12)')};color:${st.c}">${st.l}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-green" style="font-size:10px;margin-right:4px" onclick="setMetaStatus(${m.id},'${m.status==='concluida'?'pendente':'concluida'}');renderMetasSimples('${periodo}','${sfx}');renderMetasPage()">${m.status==='concluida'?'↺':'✓'}</button>
+        <button class="btn btn-sm btn-red" style="font-size:10px" onclick="delMetaSimples(${m.id},'${periodo}','${sfx}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function delMetaSimples(id, periodo, sfx){
+  const m=getMetas().find(x=>x.id===id);
+  showConfirm('Remover Meta',`"${m?m.titulo:'esta meta'}" será removida permanentemente.`,()=>{
+    setMetas(getMetas().filter(x=>x.id!==id));
+    renderMetasSimples(periodo,sfx);
+    renderMetasPage();
+  });
+}
+
+// ===================== MERCADO PAGE =====================
+function _mktGetLista(){return JSON.parse(localStorage.getItem(_authUser+'_mkt_lista')||'[]');}
+function _mktSetLista(d){localStorage.setItem(_authUser+'_mkt_lista',JSON.stringify(d));}
+function _mktGetHist(){return JSON.parse(localStorage.getItem(_authUser+'_mkt_historico')||'[]');}
+function _mktSetHist(d){localStorage.setItem(_authUser+'_mkt_historico',JSON.stringify(d));}
+
+const _MKT_EMOJI={Hortifruti:'🥦',Carnes:'🥩',Laticinios:'🥛',Padaria:'🍞',Higiene:'🧴',Limpeza:'🧹',Mercearia:'🛒',Frios:'🧀',Outros:'📦'};
+let _mktFotoB64='';
+
+function mktPreviewFoto(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    _mktFotoB64=e.target.result;
+    document.getElementById('mkt-foto-img').src=_mktFotoB64;
+    document.getElementById('mkt-foto-preview').style.display='block';
+    document.getElementById('mkt-foto-nome').textContent=f.name;
+    document.getElementById('mkt-foto-clear').style.display='inline';
+  };
+  r.readAsDataURL(f);
+}
+function mktClearFoto(){
+  _mktFotoB64='';
+  document.getElementById('mkt-foto-input').value='';
+  document.getElementById('mkt-foto-preview').style.display='none';
+  document.getElementById('mkt-foto-nome').textContent='Sem foto';
+  document.getElementById('mkt-foto-clear').style.display='none';
+}
+function mktAddItem(){
+  const nome=(document.getElementById('mkt-nome')?.value||'').trim();
+  const cat=document.getElementById('mkt-cat')?.value||'Outros';
+  const qtd=parseInt(document.getElementById('mkt-qtd')?.value)||1;
+  const preco=parseFloat(document.getElementById('mkt-preco')?.value)||0;
+  const msg=document.getElementById('mkt-add-msg');
+  if(!nome){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o nome do item.';}return;}
+  const lista=_mktGetLista();
+  lista.push({id:Date.now(),nome,cat,qtd,preco,foto:_mktFotoB64,comprado:false});
+  _mktSetLista(lista);
+  ['mkt-nome','mkt-qtd','mkt-preco'].forEach(id=>{const el=document.getElementById(id);if(el){el.value=id==='mkt-qtd'?'1':'';}});
+  mktClearFoto();
+  if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Item adicionado!';setTimeout(()=>{if(msg)msg.textContent='';},1800);}
+  _mktRenderLista();
+}
+function mktToggleComprado(id){
+  const lista=_mktGetLista();
+  const it=lista.find(x=>x.id===id);
+  if(it) it.comprado=!it.comprado;
+  _mktSetLista(lista);
+  _mktRenderLista();
+}
+function mktRemoveItem(id){
+  _mktSetLista(_mktGetLista().filter(x=>x.id!==id));
+  _mktRenderLista();
+}
+function _mktRenderLista(){
+  const lista=_mktGetLista();
+  const el=document.getElementById('mkt-lista-itens');
+  const totalEl=document.getElementById('mkt-total-restante');
+  const kpiTotal=document.getElementById('mkt-kpi-total');
+  const kpiComp=document.getElementById('mkt-kpi-comprado');
+  const kpiItens=document.getElementById('mkt-kpi-itens');
+  if(!el) return;
+  if(!lista.length){
+    el.innerHTML='<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Lista vazia. Adicione itens ao lado.</div>';
+    if(totalEl) totalEl.textContent='R$ 0,00';
+    if(kpiTotal) kpiTotal.textContent='R$ 0,00';
+    if(kpiComp) kpiComp.textContent='R$ 0,00';
+    if(kpiItens) kpiItens.textContent='0';
+    return;
+  }
+  let totalGeral=0, totalComp=0;
+  lista.forEach(it=>{const t=it.qtd*it.preco;totalGeral+=t;if(it.comprado)totalComp+=t;});
+  const restante=totalGeral-totalComp;
+  if(totalEl) totalEl.textContent=fmt(restante);
+  if(kpiTotal) kpiTotal.textContent=fmt(totalGeral);
+  if(kpiComp) kpiComp.textContent=fmt(totalComp);
+  if(kpiItens) kpiItens.textContent=lista.length;
+  el.innerHTML=lista.map(it=>{
+    const emoji=it.foto?'':((_MKT_EMOJI[it.cat])||'📦');
+    const total=it.qtd*it.preco;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);${it.comprado?'opacity:.5;text-decoration:line-through':''}">
+      <input type="checkbox" ${it.comprado?'checked':''} onchange="mktToggleComprado(${it.id})" style="accent-color:var(--neon-green);width:18px;height:18px;flex-shrink:0;cursor:pointer">
+      ${it.foto?`<img src="${it.foto}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0">`:`<span style="font-size:24px;flex-shrink:0">${emoji}</span>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.nome)}</div>
+        <div style="font-size:11px;color:var(--text3)">${it.cat} · ${it.qtd}x ${it.preco>0?fmt(it.preco):'-'}</div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-yellow);flex-shrink:0">${total>0?fmt(total):'-'}</div>
+      <button onclick="mktRemoveItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:16px;flex-shrink:0;padding:0">✕</button>
+    </div>`;
+  }).join('');
+}
+function mktSalvarLista(){
+  const lista=_mktGetLista();
+  if(!lista.length){alert('Lista vazia!');return;}
+  const total=lista.reduce((a,it)=>a+it.qtd*it.preco,0);
+  const hist=_mktGetHist();
+  hist.unshift({id:Date.now(),data:new Date().toLocaleDateString('pt-BR'),total,itens:lista.length,lista:[...lista]});
+  _mktSetHist(hist.slice(0,30));
+  _mktRenderHist();
+  alert('Lista salva no histórico!');
+}
+function mktNovaLista(){
+  if(!_mktGetLista().length){return;}
+  showConfirm('Nova Lista','Isso limpará todos os itens da lista atual. Deseja continuar?',()=>{
+    _mktSetLista([]);_mktRenderLista();
+  });
+}
+function _mktRenderHist(){
+  const hist=_mktGetHist();
+  const el=document.getElementById('mkt-historico');
+  if(!el) return;
+  if(!hist.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhuma lista salva ainda.</div>';return;}
+  el.innerHTML=hist.map(h=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:8px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border)">
+      <div>
+        <div style="font-size:12px;font-weight:600">${h.data}</div>
+        <div style="font-size:11px;color:var(--text3)">${h.itens} item${h.itens!==1?'s':''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--neon-green)">${fmt(h.total)}</span>
+        <button onclick="mktRestaurarLista(${h.id})" style="font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);background:rgba(0,200,255,0.07);cursor:pointer;font-family:'JetBrains Mono',monospace">↺ USAR</button>
+        <button onclick="mktDelHist(${h.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px">✕</button>
+      </div>
+    </div>`).join('');
+}
+function mktRestaurarLista(id){
+  const h=_mktGetHist().find(x=>x.id===id);
+  if(!h) return;
+  showConfirm('Restaurar Lista',`Carregar a lista de ${h.data} (${h.itens} itens)? A lista atual será substituída.`,()=>{
+    _mktSetLista(h.lista||[]);_mktRenderLista();
+  });
+}
+function mktDelHist(id){
+  _mktSetHist(_mktGetHist().filter(x=>x.id!==id));
+  _mktRenderHist();
+}
+function renderMercado(){
+  _mktRenderLista();
+  _mktRenderHist();
+}
+
+// ===================== TAREFAS PAGE =====================
+function _trfGet(){return JSON.parse(localStorage.getItem(_authUser+'_tarefas')||'[]');}
+function _trfSet(d){localStorage.setItem(_authUser+'_tarefas',JSON.stringify(d));}
+let _trfFiltro='todas';
+
+function trfSetFiltro(f,btn){
+  _trfFiltro=f;
+  document.querySelectorAll('#page-tarefas .plan-tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  _trfRenderLista();
+}
+
+function trfAddTarefa(){
+  const titulo=(document.getElementById('trf-titulo')?.value||'').trim();
+  const desc=(document.getElementById('trf-desc')?.value||'').trim();
+  const cat=document.getElementById('trf-cat')?.value||'Pessoal';
+  const prio=document.getElementById('trf-prio')?.value||'Media';
+  const prazo=document.getElementById('trf-prazo')?.value||'';
+  const metaId=parseInt(document.getElementById('trf-meta')?.value)||0;
+  const msg=document.getElementById('trf-add-msg');
+  if(!titulo){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o título da tarefa.';}return;}
+  let metaNome='';
+  if(metaId){
+    const todas=[...getMetas(),..._getMetas5Anos(),..._getMetas10Anos(),...getMetasAnuais()];
+    const m=todas.find(x=>x.id===metaId);
+    metaNome=m?(m.titulo||m.nome||''):'';
+  }
+  const lista=_trfGet();
+  lista.push({id:Date.now(),titulo,desc,cat,prio,prazo,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString()});
+  _trfSet(lista);
+  ['trf-titulo','trf-desc','trf-prazo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const metaSel=document.getElementById('trf-meta');if(metaSel)metaSel.value='';
+  if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Tarefa adicionada!';setTimeout(()=>{if(msg)msg.textContent='';},1800);}
+  _trfRenderLista();_trfRenderKpis();
+}
+
+function trfToggle(id){
+  const lista=_trfGet();
+  const t=lista.find(x=>x.id===id);
+  if(t){t.concluida=!t.concluida;t.concluidaEm=t.concluida?new Date().toISOString():null;}
+  _trfSet(lista);
+  _trfRenderLista();_trfRenderKpis();
+}
+function trfDel(id){
+  _trfSet(_trfGet().filter(x=>x.id!==id));
+  _trfRenderLista();_trfRenderKpis();
+}
+function _trfRenderKpis(){
+  const hoje=new Date().toISOString().split('T')[0];
+  const lista=_trfGet();
+  const pendentes=lista.filter(t=>!t.concluida).length;
+  const concHoje=lista.filter(t=>t.concluida&&t.concluidaEm&&t.concluidaEm.startsWith(hoje)).length;
+  const atras=lista.filter(t=>!t.concluida&&t.prazo&&t.prazo<hoje).length;
+  const g=n=>document.getElementById(n);
+  if(g('trf-kpi-pendentes')) g('trf-kpi-pendentes').textContent=pendentes;
+  if(g('trf-kpi-hoje')) g('trf-kpi-hoje').textContent=concHoje;
+  if(g('trf-kpi-atrasadas')) g('trf-kpi-atrasadas').textContent=atras;
+}
+function _trfRenderLista(){
+  const hoje=new Date().toISOString().split('T')[0];
+  const semFim=new Date();semFim.setDate(semFim.getDate()+(6-semFim.getDay()||7));
+  const semFimStr=semFim.toISOString().split('T')[0];
+  const el=document.getElementById('trf-lista');
+  if(!el) return;
+  let lista=_trfGet();
+  if(_trfFiltro==='hoje') lista=lista.filter(t=>!t.concluida&&t.prazo===hoje);
+  else if(_trfFiltro==='semana') lista=lista.filter(t=>!t.concluida&&t.prazo&&t.prazo<=semFimStr);
+  else if(_trfFiltro==='atrasadas') lista=lista.filter(t=>!t.concluida&&t.prazo&&t.prazo<hoje);
+  else if(_trfFiltro==='metas') lista=lista.filter(t=>t.metaId>0);
+  else if(_trfFiltro==='concluidas') lista=lista.filter(t=>t.concluida);
+  else lista=lista.filter(t=>!t.concluida);
+  if(!lista.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">Nenhuma tarefa encontrada.</div>';return;}
+  const prioClr={Alta:'var(--neon-red)',Media:'var(--neon-yellow)',Baixa:'var(--neon-blue)'};
+  const catIco={Estudo:'📚',Casa:'🏠',Trabalho:'💼',Compromisso:'📅',Pessoal:'⭐'};
+  lista.sort((a,b)=>{if(a.concluida!==b.concluida)return a.concluida?1:-1;const po={Alta:0,Media:1,Baixa:2};return (po[a.prio]||1)-(po[b.prio]||1);});
+  el.innerHTML=lista.map(t=>{
+    const atrasada=!t.concluida&&t.prazo&&t.prazo<hoje;
+    const prazoFmt=t.prazo?new Date(t.prazo+'T00:00:00').toLocaleDateString('pt-BR'):'-';
+    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:10px;background:var(--card);border:1px solid var(--border);${t.concluida?'opacity:.5':''}">
+      <input type="checkbox" ${t.concluida?'checked':''} onchange="trfToggle(${t.id})" style="accent-color:var(--neon-green);width:18px;height:18px;flex-shrink:0;margin-top:2px;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          <span style="font-weight:600;font-size:13px;${t.concluida?'text-decoration:line-through':''}">${esc(t.titulo)}</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(0,0,0,0.15);color:var(--text2)">${catIco[t.cat]||'📌'} ${t.cat}</span>
+          <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;color:${prioClr[t.prio]||'var(--text3)'};background:${(prioClr[t.prio]||'var(--text3)').replace(')',',0.12)')}">${t.prio}</span>
+          ${atrasada?`<span style="font-size:10px;font-weight:700;color:var(--neon-red)">⚠ ATRASADA</span>`:''}
+        </div>
+        ${t.desc?`<div style="font-size:11px;color:var(--text3);margin-bottom:4px">${esc(t.desc)}</div>`:''}
+        <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);flex-wrap:wrap">
+          ${t.prazo?`<span style="${atrasada?'color:var(--neon-red);font-weight:700':''}">📅 ${prazoFmt}</span>`:''}
+          ${t.metaNome?`<span style="color:var(--neon-purple)">🎯 ${esc(t.metaNome)}</span>`:''}
+        </div>
+      </div>
+      <button onclick="trfDel(${t.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:16px;flex-shrink:0;padding:0">✕</button>
+    </div>`;
+  }).join('');
+}
+function _trfPopulaMetasSel(){
+  const sel=document.getElementById('trf-meta');
+  if(!sel) return;
+  const todas=[...getMetas(),..._getMetas5Anos(),..._getMetas10Anos(),...getMetasAnuais()].filter(m=>m.status!=='concluida'&&(m.titulo||m.nome));
+  sel.innerHTML='<option value="">— Sem vínculo —</option>'+
+    todas.map(m=>`<option value="${m.id}">${esc(m.titulo||m.nome||'')}</option>`).join('');
+}
+function renderTarefas(){
+  _trfPopulaMetasSel();
+  _trfRenderKpis();
+  _trfRenderLista();
+}
 </script>
 </body>
 </html>

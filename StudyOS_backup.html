@@ -464,6 +464,24 @@ canvas { max-height: 220px; }
 }
 .config-input:focus { outline: none; border-color: var(--accent-mid); background: #fff; }
 
+/* ── SELETOR 1-5 ── */
+.rating-selector { display: flex; gap: 6px; }
+.rating-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.rating-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+.rating-btn.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+
 /* ── MATÉRIAS LIST PAGE ── */
 .materias-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .materia-card {
@@ -984,14 +1002,28 @@ canvas { max-height: 220px; }
         <label class="config-label">Nome da matéria</label>
         <input class="config-input" id="mnNome" placeholder="Ex: Direito Constitucional" style="width:100%">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="config-field">
-          <label class="config-label">Peso (1–5)</label>
-          <input class="config-input" id="mnPeso" type="number" min="1" max="5" value="3">
+          <label class="config-label">Peso <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink3)">(prioridade no cronograma)</span></label>
+          <div class="rating-selector" id="ratingPeso">
+            <button class="rating-btn" onclick="setRating('mnPeso','ratingPeso',1)">1</button>
+            <button class="rating-btn" onclick="setRating('mnPeso','ratingPeso',2)">2</button>
+            <button class="rating-btn selected" onclick="setRating('mnPeso','ratingPeso',3)">3</button>
+            <button class="rating-btn" onclick="setRating('mnPeso','ratingPeso',4)">4</button>
+            <button class="rating-btn" onclick="setRating('mnPeso','ratingPeso',5)">5</button>
+          </div>
+          <input type="hidden" id="mnPeso" value="3">
         </div>
         <div class="config-field">
-          <label class="config-label">Dificuldade (1–5)</label>
-          <input class="config-input" id="mnDif" type="number" min="1" max="5" value="3">
+          <label class="config-label">Dificuldade <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink3)">(sua percepção)</span></label>
+          <div class="rating-selector" id="ratingDif">
+            <button class="rating-btn" onclick="setRating('mnDif','ratingDif',1)">1</button>
+            <button class="rating-btn" onclick="setRating('mnDif','ratingDif',2)">2</button>
+            <button class="rating-btn selected" onclick="setRating('mnDif','ratingDif',3)">3</button>
+            <button class="rating-btn" onclick="setRating('mnDif','ratingDif',4)">4</button>
+            <button class="rating-btn" onclick="setRating('mnDif','ratingDif',5)">5</button>
+          </div>
+          <input type="hidden" id="mnDif" value="3">
         </div>
       </div>
       <div class="config-field">
@@ -1805,12 +1837,19 @@ function excluirConcurso() {
   showToast("Concurso excluído");
 }
 
+function setRating(inputId, groupId, val) {
+  document.getElementById(inputId).value = val;
+  document.querySelectorAll(`#${groupId} .rating-btn`).forEach((btn, i) => {
+    btn.classList.toggle("selected", i + 1 === val);
+  });
+}
+
 function abrirWizardMateria() {
   if(!concursoAtivoId) { showToast("Selecione um concurso primeiro"); return; }
   document.getElementById("mnNome").value = "";
-  document.getElementById("mnPeso").value = "3";
-  document.getElementById("mnDif").value = "3";
   document.getElementById("mnCP").value = "";
+  setRating("mnPeso", "ratingPeso", 3);
+  setRating("mnDif", "ratingDif", 3);
   document.getElementById("modalMateria").classList.add("open");
 }
 
@@ -2020,122 +2059,179 @@ function confirmarEditalParaConcurso(selected) {
 }
 
 // ── ANÁLISE DE EDITAL ──
-function detectCargo(text) {
-  // Tenta detectar cargo único no edital
-  let patterns = [
-    /cargo[:\s]+([^\n,;.]{3,60})/i,
-    /função[:\s]+([^\n,;.]{3,60})/i,
-    /vaga[:\s]+([^\n,;.]{3,60})/i,
-  ];
-  for(let pat of patterns) {
-    let m = text.match(pat);
-    if(m) return m[1].trim();
+let _editalTexto = "";   // guarda o texto completo para uso no passo 2
+
+/* ── Extrai nomes de cargo do texto do edital ── */
+function extrairCargosEdital(text) {
+  let found = [];
+  let seen = new Set();
+
+  // Padrão principal: "CARGO: Nome", "CARGO - Nome", "EMPREGO: Nome", etc.
+  let pat = /(?:^|\n)\s*(?:CARGO|EMPREGO|FUNÇÃO|PERFIL|VAGA)(?:\s*\/\s*(?:EMPREGO|FUNÇÃO))?\s*[:\-–]+\s*([^\n]{3,100})/gi;
+  let m;
+  while((m = pat.exec(text)) !== null) {
+    let nome = m[1].trim().replace(/[.:;,]$/, '').replace(/\s+/g,' ');
+    if(nome.length >= 3 && !seen.has(nome.toLowerCase())) {
+      seen.add(nome.toLowerCase());
+      found.push(nome);
+    }
   }
-  return null;
+  return found;
 }
 
-function detectMultipleCargos(text) {
-  // Conta ocorrências de "cargo" — muitas indicam edital multi-cargo
-  let matches = text.match(/\bcargo\b/gi) || [];
-  return matches.length > 4;
+/* ── Extrai a seção de texto referente a um cargo específico ── */
+function extrairSecaoCargo(text, cargoNome) {
+  // Encontra onde o cargo aparece e pega o bloco até o próximo cargo
+  let escaped = cargoNome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let inicio = new RegExp(escaped, 'i').exec(text);
+  if(!inicio) return text;
+  let slice = text.slice(inicio.index);
+  // Corta no próximo cabeçalho de cargo (se houver)
+  let proximo = /\n\s*(?:CARGO|EMPREGO|FUNÇÃO|PERFIL|VAGA)\s*[:\-–]+/i.exec(slice.slice(1));
+  if(proximo) slice = slice.slice(0, proximo.index + 1);
+  return slice;
 }
 
+/* ── Extrai matérias de um bloco de texto (só do edital) ── */
 function extractMaterias(text) {
   let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
   let found = [];
   let seen = new Set();
 
-  // Padrões de listas numeradas/letradas
-  let numPat = /^(?:\d{1,2}[.)]\s*|[IVXivxa-z]\)\s*|[•\-–]\s*)(.{3,80})$/;
-  // Cabeçalho de seção de conteúdo
-  let sectionPat = /programa|conteúdo programático|disciplinas|matérias|conhecimentos|habilidades|componentes/i;
-  // Exclui linhas que são claramente não-matérias
-  let excludePat = /art\.|§|inciso|alínea|decreto|lei n|portaria|instrução|diário|publica|inscri|taxa|valor|pag|edital n|\d{4}\/\d{4}|www\.|http|@/i;
+  let numPat    = /^(?:\d{1,2}[.)]\s*|[IVXivx]+[.)]\s*|[a-z]\)\s*|[•·\-–]\s*)(.{3,80})$/;
+  let sectionPat = /conteúdo programático|programa de|disciplinas|matérias|conhecimentos específicos|conhecimentos gerais|habilidades|componentes curriculares/i;
+  let excludePat = /art\.\s*\d|§\s*\d|inciso|alínea|decreto|lei\s+n[°º]?|portaria|instrução\s+norm|diário\s+ofic|publicação|inscri[çc]|taxa|valor\s+da|pag[ao]mento|edital\s+n[°º]?|\d{4}\/\d{4}|www\.|https?:|@|\bCNPJ\b|\bCPF\b|processo seletivo|período de|cronograma de/i;
 
   let inSection = false;
 
-  lines.forEach(line => {
-    if(sectionPat.test(line)) { inSection = true; return; }
+  for(let line of lines) {
+    if(sectionPat.test(line)) { inSection = true; continue; }
+
+    // Para de coletar se chega em seção administrativa
+    if(/(?:inscrição|cronograma|requisito|remuneração|benefício|jornada|documentação|prova objetiva|gabarito)/i.test(line) && inSection) {
+      inSection = false; continue;
+    }
 
     let m = line.match(numPat);
     if(m) {
-      let candidate = m[1].replace(/[;:,]$/, '').trim();
+      let candidate = m[1].replace(/[;:,.]$/, '').trim();
       if(!excludePat.test(candidate) && !seen.has(candidate.toLowerCase()) && candidate.length >= 4 && candidate.length <= 80) {
         seen.add(candidate.toLowerCase());
         found.push(candidate);
       }
-      return;
+      continue;
     }
 
-    // Em seção de conteúdo, pega linhas curtas que parecem nomes de matéria
     if(inSection && !excludePat.test(line) && line.length >= 4 && line.length <= 70) {
-      let normalized = line.replace(/[;:,]$/, '').trim();
+      let normalized = line.replace(/[;:,.]$/, '').trim();
       if(!seen.has(normalized.toLowerCase())) {
         seen.add(normalized.toLowerCase());
         found.push(normalized);
       }
     }
-  });
+  }
 
-  return found.slice(0, 60); // limita a 60 itens para não poluir
+  return found.slice(0, 80);
 }
 
+/* ── PASSO 1: analisa e decide fluxo ── */
 function analisarEdital() {
   let text = document.getElementById("editalTextarea").value.trim();
   if(!text) { showToast("Cole o texto do edital primeiro"); return; }
+  _editalTexto = text;
 
   let resultEl = document.getElementById("editalResult");
-  let mats = extractMaterias(text);
+  let cargos = extrairCargosEdital(text);
+
+  if(cargos.length > 1) {
+    // Multi-cargo → Passo 1: escolher cargo
+    mostrarPassoCargo(cargos, resultEl);
+  } else {
+    // Cargo único ou nenhum detectado → vai direto às matérias
+    let nomeCargo = cargos.length === 1 ? cargos[0] : null;
+    mostrarPassoMaterias(text, nomeCargo, resultEl);
+  }
+}
+
+/* ── PASSO 1 UI: seleção de cargo ── */
+function mostrarPassoCargo(cargos, resultEl) {
+  let cards = cargos.map((c, i) => `
+    <button class="materia-check-item" style="cursor:pointer;text-align:left;border:none;width:100%;background:var(--surface)"
+      onclick="escolherCargo(${i})">
+      <span style="font-size:20px">📋</span>
+      <span style="font-size:13px;font-weight:500;color:var(--ink)">${c}</span>
+    </button>
+  `).join("");
+
+  resultEl.innerHTML = `
+    <div class="edital-result-card">
+      <div class="edital-cargo-box" style="background:var(--blue-light);border-color:var(--blue)">
+        <strong style="color:var(--blue)">${cargos.length} cargos detectados no edital.</strong><br>
+        <span style="font-size:11px;color:var(--ink3);margin-top:4px;display:block">
+          Selecione o cargo para o qual quer estudar. O sistema filtrará as matérias correspondentes.
+        </span>
+      </div>
+      <div class="edital-result-title" style="margin-bottom:12px">Qual cargo você vai concorrer?</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">${cards}</div>
+      <button class="edital-sel-all" onclick="escolherCargo(-1)">Não encontrei meu cargo — usar texto completo</button>
+    </div>`;
+
+  // Guarda lista de cargos no DOM para o onclick usar
+  resultEl.dataset.cargos = JSON.stringify(cargos);
+}
+
+function escolherCargo(idx) {
+  let resultEl = document.getElementById("editalResult");
+  let cargos = JSON.parse(resultEl.dataset.cargos || "[]");
+  let cargoNome = idx >= 0 ? cargos[idx] : null;
+  let secao = cargoNome ? extrairSecaoCargo(_editalTexto, cargoNome) : _editalTexto;
+  mostrarPassoMaterias(secao, cargoNome, resultEl);
+}
+
+/* ── PASSO 2 UI: seleção de matérias ── */
+function mostrarPassoMaterias(textoSecao, cargoNome, resultEl) {
+  let mats = extractMaterias(textoSecao);
 
   if(!mats.length) {
     resultEl.innerHTML = `
       <div class="edital-result-card">
         <div class="edital-result-title">Nenhuma matéria identificada automaticamente</div>
-        <div class="edital-result-sub">Tente colar apenas a seção de "Conteúdo Programático" ou "Disciplinas" do edital.</div>
+        <div class="edital-result-sub">
+          Tente colar apenas a seção de "Conteúdo Programático" ou "Disciplinas" do edital.
+          ${cargoNome ? `<br>Cargo selecionado: <strong>${cargoNome}</strong>` : ""}
+        </div>
+        <button class="btn" style="margin-top:12px" onclick="analisarEdital()">← Voltar</button>
       </div>`;
     return;
   }
 
-  let cargo = detectCargo(text);
-  let isMulti = detectMultipleCargos(text);
-  let isSingleCargo = cargo && !isMulti;
-
-  let cargoHTML = "";
-  if(isSingleCargo) {
-    cargoHTML = `<div class="edital-cargo-box">
-      <strong>Edital de cargo único detectado:</strong> ${cargo}<br>
-      <span style="font-size:11px;color:var(--ink3);margin-top:4px;display:block">Selecione as matérias que pretende estudar e confirme para adicioná-las.</span>
-    </div>`;
-  } else {
-    cargoHTML = `<div class="edital-cargo-box" style="background:var(--blue-light);border-color:var(--blue)">
-      <strong style="color:var(--blue)">Edital com múltiplos cargos ou geral.</strong><br>
-      <span style="font-size:11px;color:var(--ink3);margin-top:4px;display:block">Selecione apenas as matérias dos cargos que você pretende participar.</span>
-    </div>`;
-  }
+  let cargoBox = cargoNome
+    ? `<div class="edital-cargo-box">
+        <strong>Cargo selecionado:</strong> ${cargoNome}
+        <button class="edital-sel-all" style="margin-left:12px" onclick="analisarEdital()">← Trocar cargo</button>
+       </div>`
+    : `<div class="edital-cargo-box" style="background:var(--blue-light);border-color:var(--blue)">
+        <strong style="color:var(--blue)">Cargo não identificado — mostrando todas as matérias encontradas.</strong>
+       </div>`;
 
   let checkItems = mats.map((m, i) => `
     <label class="materia-check-item" id="mci-${i}">
       <input type="checkbox" class="edital-mat-chk" data-mat="${m.replace(/"/g,'&quot;')}" checked onchange="toggleCheckItem(${i}, this.checked)">
       <span>${m}</span>
-    </label>
-  `).join("");
-
-  let confirmLabel = isSingleCargo
-    ? `Confirmar e adicionar à página Matérias`
-    : `Adicionar matérias selecionadas`;
+    </label>`).join("");
 
   resultEl.innerHTML = `
     <div class="edital-result-card">
-      ${cargoHTML}
-      <div class="edital-result-title">${mats.length} matérias identificadas — escolha quais quer adicionar:</div>
-      <div class="edital-result-sub">Desmarque as matérias que não pretende estudar.</div>
+      ${cargoBox}
+      <div class="edital-result-title" style="margin-top:4px">${mats.length} matérias encontradas no edital — escolha as que vai estudar:</div>
+      <div class="edital-result-sub">Todas marcadas por padrão. Desmarque as que não quer adicionar.</div>
       <div style="display:flex;gap:12px;margin-bottom:14px;align-items:center">
         <button class="edital-sel-all" onclick="selectAllEdital(true)">Selecionar todas</button>
         <button class="edital-sel-all" onclick="selectAllEdital(false)">Desmarcar todas</button>
       </div>
       <div class="materia-check-grid">${checkItems}</div>
       <div class="edital-actions">
-        <button class="btn btn-primary" id="btnConfirmarEdital" onclick="confirmarEdital(${isSingleCargo})">${confirmLabel}</button>
+        <button class="btn btn-primary" onclick="confirmarEdital()">Adicionar matérias selecionadas</button>
         <span id="editalSelCount" style="font-size:12px;color:var(--ink3)">${mats.length} selecionadas</span>
       </div>
     </div>`;
@@ -2165,14 +2261,10 @@ function updateEditalSelCount() {
   if(el) el.textContent = `${sel} selecionada${sel !== 1 ? "s" : ""}`;
 }
 
-function confirmarEdital(isSingleCargo) {
+function confirmarEdital() {
   let chks = document.querySelectorAll(".edital-mat-chk:checked");
   let selected = [...chks].map(c => c.dataset.mat);
   if(!selected.length) { showToast("Selecione ao menos uma matéria"); return; }
-
-  if(isSingleCargo) {
-    if(!confirm(`Adicionar ${selected.length} matéria(s) à página Matérias?\n\nIsso irá registrá-las para acompanhamento no sistema.`)) return;
-  }
 
   let added = 0;
   selected.forEach(m => {

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PERSONA OS - Secure Access</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#f26420",
+                        "inverse-surface": "#e0e2ed",
+                        "outline-variant": "#414655",
+                        "secondary-fixed": "#d9e2ff",
+                        "surface-container-low": "#181c24",
+                        "on-surface": "#e0e2ed",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#98b4f8",
+                        "surface-container-lowest": "#0b0e16",
+                        "surface": "#10131b",
+                        "on-tertiary-container": "#4f1800",
+                        "on-background": "#e0e2ed",
+                        "surface-tint": "#b0c6ff",
+                        "secondary": "#afc6ff",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "primary-fixed": "#d9e2ff",
+                        "primary-container": "#558dff",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "surface-dim": "#10131b",
+                        "secondary-fixed-dim": "#afc6ff",
+                        "surface-container": "#1c2028",
+                        "on-tertiary-fixed": "#370e00",
+                        "inverse-on-surface": "#2d3039",
+                        "outline": "#8c90a1",
+                        "primary-fixed-dim": "#b0c6ff",
+                        "on-error": "#690005",
+                        "surface-variant": "#31353d",
+                        "on-secondary": "#082e69",
+                        "tertiary": "#ffb599",
+                        "on-primary-container": "#002761",
+                        "on-primary-fixed": "#001944",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#274581",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#5a1c00",
+                        "on-surface-variant": "#c2c6d8",
+                        "on-primary": "#002d6e",
+                        "on-secondary-fixed-variant": "#274581",
+                        "surface-bright": "#363942",
+                        "background": "#10131b",
+                        "surface-container-highest": "#31353d",
+                        "on-primary-fixed-variant": "#00429b",
+                        "inverse-primary": "#0058ca",
+                        "primary": "#b0c6ff",
+                        "on-secondary-fixed": "#001944",
+                        "surface-container-high": "#262a32",
+                        "tertiary-fixed": "#ffdbce"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "grid-gutter": "20px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "container-margin": "32px"
+                    },
+                    "fontFamily": {
+                        "body-main": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "label-caps": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #050a0f;
+            overflow: hidden;
+        }
+        .glass-card {
+            background: rgba(16, 19, 27, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(176, 198, 255, 0.1);
+        }
+        .glow-blue {
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.15) 0%, rgba(0, 200, 255, 0) 70%);
+        }
+        .glow-emerald {
+            background: radial-gradient(circle, rgba(0, 255, 157, 0.1) 0%, rgba(0, 255, 157, 0) 70%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-main text-on-surface flex items-center justify-center min-h-screen relative">
+<!-- Background Blobs -->
+<div class="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] glow-blue rounded-full"></div>
+<div class="fixed bottom-[-20%] right-[-10%] w-[60%] h-[60%] glow-emerald rounded-full"></div>
+<div class="fixed top-[20%] right-[10%] w-[30%] h-[30%] glow-blue opacity-50 rounded-full"></div>
+<!-- Main Content Container -->
+<main class="z-10 w-full max-w-md px-6">
+<!-- Logo Section -->
+<div class="flex flex-col items-center mb-md">
+<div class="w-16 h-16 bg-gradient-to-br from-primary-container to-secondary-container rounded-xl flex items-center justify-center shadow-[0_0_30px_rgba(85,141,255,0.3)] mb-md">
+<span class="text-white font-label-caps text-headline-md tracking-tighter">BY</span>
+</div>
+<h1 class="text-headline-md font-headline-md tracking-tight text-primary">PERSONA OS</h1>
+<p class="text-data-mono text-outline uppercase tracking-widest text-xs mt-xs">Financial Operating System</p>
+</div>
+<!-- Centralized Auth Card -->
+<div class="glass-card rounded-xl overflow-hidden shadow-2xl border border-outline-variant/30">
+<!-- Tabs Navigation -->
+<div class="flex border-b border-outline-variant/20">
+<button class="flex-1 py-md text-label-caps text-primary border-b-2 border-primary bg-primary/5 transition-all">
+                    Login
+                </button>
+<button class="flex-1 py-md text-label-caps text-outline hover:text-on-surface hover:bg-surface-container-high/40 transition-all">
+                    Register
+                </button>
+<button class="flex-1 py-md text-label-caps text-outline hover:text-on-surface hover:bg-surface-container-high/40 transition-all">
+                    Recover
+                </button>
+</div>
+<!-- Form Content -->
+<div class="p-lg">
+<form class="space-y-md">
+<!-- Username/ID Field -->
+<div class="space-y-xs">
+<label class="text-label-caps text-outline block ml-1">Operator ID</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">person</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg py-3 pl-10 pr-4 text-on-surface font-data-mono text-sm focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all placeholder:text-outline-variant" placeholder="SECURE_USER_01" type="text"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-xs">
+<label class="text-label-caps text-outline block ml-1">Access Key</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">lock</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg py-3 pl-10 pr-4 text-on-surface font-data-mono text-sm focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all placeholder:text-outline-variant" placeholder="••••••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</div>
+</div>
+<!-- Email Verification Notice (Contextual for higher security flow) -->
+<div class="bg-primary/5 border border-primary/20 rounded-lg p-md flex items-start gap-md">
+<span class="material-symbols-outlined text-primary text-md mt-0.5">verified_user</span>
+<div>
+<p class="text-xs font-bold text-primary uppercase font-label-caps">MFA Active</p>
+<p class="text-[11px] text-outline mt-1 leading-relaxed">System will request email verification code after primary credential validation.</p>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="pt-md">
+<button class="w-full bg-primary-container text-on-primary-container font-headline-md py-3 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(85,141,255,0.2)] flex items-center justify-center gap-sm" type="submit">
+<span class="text-sm font-bold">INITIALIZE SESSION</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="flex justify-between items-center pt-sm">
+<label class="flex items-center gap-sm cursor-pointer">
+<input class="rounded bg-surface-container-lowest border-outline-variant/50 text-primary-container focus:ring-offset-surface" type="checkbox"/>
+<span class="text-xs text-outline font-data-mono uppercase tracking-tighter">Remember Terminal</span>
+</label>
+<a class="text-xs text-primary/80 hover:text-primary font-data-mono uppercase tracking-tighter transition-colors" href="#">Lost Access?</a>
+</div>
+</form>
+</div>
+</div>
+<!-- Footer / Technical Specs -->
+<div class="mt-xl grid grid-cols-3 gap-md opacity-40">
+<div class="text-center">
+<p class="text-[10px] font-label-caps text-outline uppercase">Latency</p>
+<p class="text-xs font-data-mono text-on-surface">14ms</p>
+</div>
+<div class="text-center border-x border-outline-variant/30">
+<p class="text-[10px] font-label-caps text-outline uppercase">Node</p>
+<p class="text-xs font-data-mono text-on-surface">VA-04</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-label-caps text-outline uppercase">Status</p>
+<p class="text-xs font-data-mono text-on-surface text-secondary">ACTIVE</p>
+</div>
+</div>
+</main>
+<!-- Aesthetic Decorative Image for Background Context -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+<img class="w-full h-full object-cover mix-blend-screen" data-alt="A highly sophisticated cinematic shot of a futuristic data terminal server room. The environment is dominated by deep obsidian textures and sleek metallic surfaces. Glowing fiber optic cables in electric blue and vibrant cyan pulse with digital energy, snaking through geometric architectural structures. The lighting is low-key and atmospheric, creating a sense of absolute security and high-performance technology. Shallow depth of field emphasizes a sharp technological aesthetic with soft bokeh of status indicators in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe86mAhnGCaXJelzfg17ofN8b8BV2v__n0kFCsKyVeUp31sVuLsjGkzljwYA5boGlDNpSH0ceWf6SukhIafctG0H6EIp4u6_p8oHuhkBz-6AxlXfsv5opq-N_52GYIrBUX9-bVWb1JFBOFILsWmBxMm1E5YrEsTNJ88B7D7zRl2S8OKMDrj9UCFUGY-SKLjKqY5VWrMN9KHUqYE8socoB_Drer5sWsGa714fnA2aYhy9OZgdiuVhX12zIpUkYN-HLcvZmohcGtOLU"/>
+</div>
+</body></html>

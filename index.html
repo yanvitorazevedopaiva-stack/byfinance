@@ -750,15 +750,6 @@
   }
   tr:hover td { background:var(--td-hover); color:var(--text); }
 
-  /* ===== SYNC INDICATOR ===== */
-  #sync-indicator{
-    position:fixed;bottom:12px;left:70px;z-index:999;
-    font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;
-    letter-spacing:.5px;opacity:0;transition:opacity .3s ease;
-    pointer-events:none;padding:3px 8px;border-radius:6px;
-    background:var(--bg2);border:1px solid var(--border);}
-  body.day #sync-indicator{background:#f1f5f9;border-color:#e2e8f0;}
-
   /* ===== BADGES ===== */
   .badge {
     display:inline-block; padding:2px 8px; border-radius:4px;
@@ -1568,6 +1559,7 @@
   }
 
   /* ===== LOGIN SCREEN ===== */
+  /* ===== LOGIN SCREEN ===== */
   @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
   .rk-sending{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--neon-blue);
     display:flex;align-items:center;gap:8px;margin-bottom:14px;}
@@ -1589,9 +1581,8 @@
   #login-screen{
     position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;
     width:100%;height:100%;
-    background:var(--bg);overflow-y:auto;
-    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-    padding:40px 24px;
+    background:var(--bg);overflow:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
     transition:opacity .4s ease;}
   #login-screen::before{content:'';position:absolute;inset:0;
     background-image:linear-gradient(rgba(0,200,255,0.04) 1px,transparent 1px),
@@ -1719,13 +1710,11 @@
       linear-gradient(135deg,rgba(37,99,235,0.3),rgba(5,150,105,0.2)) border-box;
     box-shadow:0 0 40px rgba(0,0,0,0.06),0 0 80px rgba(37,99,235,0.04),0 16px 40px rgba(0,0,0,0.12);}
 
-  @media(min-height:780px) and (min-width:1025px){
-    #login-screen{justify-content:center;padding:20px 24px;}}
   @media(max-width:600px){
-    #login-screen{padding:20px 14px;}
+    #login-screen{align-items:center;justify-content:flex-start;overflow-y:auto;padding:20px 14px;}
     .login-box{padding:26px 20px;max-width:100%;width:100%;margin:auto 0;}}
   @media(min-width:601px) and (max-width:1024px){
-    #login-screen{padding:32px 24px;}
+    #login-screen{align-items:center;justify-content:flex-start;overflow-y:auto;padding:32px 24px;}
     .login-box{max-width:500px;width:100%;padding:36px 32px;margin:auto;}
     .login-logo{margin-bottom:0;}
     .login-tabs{margin-bottom:20px;}}
@@ -2823,7 +2812,6 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -2888,7 +2876,7 @@
         <label>E-MAIL DE RECUPERAÇÃO</label>
         <div class="login-field-wrap">
           <svg class="login-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
-          <input id="ca-email" type="email" placeholder="seu@email.com" autocomplete="email">
+          <input id="ca-email" type="email" placeholder="seu@email.com" autocomplete="email" class="no-icon" style="padding-left:42px">
         </div>
       </div>
       <div class="login-field">
@@ -4259,7 +4247,7 @@
       </div>
       <div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:4px">VALOR (R$)</div>
-        <input type="text" id="fat-val" inputmode="numeric" placeholder="R$ 0,00" style="width:100%">
+        <input type="number" id="fat-val" placeholder="0,00" step="0.01" style="width:100%">
       </div>
       <button class="btn btn-blue" onclick="saveFatura()">SALVAR</button>
     </div>
@@ -4267,7 +4255,17 @@
 
   <div style="margin-bottom:20px">
     <div class="sec-title">ORDEM DE PAGAMENTO</div>
-    <div id="fat-ordem-badges" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <span class="badge badge-purple">Paula · dia 5</span>
+      <span class="badge badge-blue">Inter · dia 5</span>
+      <span class="badge badge-green">C6 · dia 10</span>
+      <span class="badge badge-yellow">Santander · dia 10</span>
+      <span class="badge badge-red">BRB · dia 16</span>
+      <span class="badge badge-purple">Will · dia 13</span>
+      <span class="badge badge-blue">Pag. Altos · —</span>
+      <span class="badge badge-green">PicPay · dia 10</span>
+      <span class="badge badge-yellow">Rener · —</span>
+    </div>
   </div>
 
   <div class="card">
@@ -4370,13 +4368,6 @@
         <div><div class="sec-title" style="margin:0">QUADRO DE CRONOGRAMA DE PAGAMENTO</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Arraste os cartões para definir a ordem de pagamento</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="crono-mes-sel" onchange="renderCronoPag()" style="padding:6px 10px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;font-family:'Inter',sans-serif"></select>
-          <div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 10px">
-            <span style="font-size:10px;color:var(--text3);white-space:nowrap">🔔 Lembrar dia</span>
-            <input type="number" id="crono-dia-lembrete" min="1" max="31" placeholder="—"
-              style="width:44px;background:transparent;border:none;color:var(--neon-blue);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-align:center;outline:none"
-              onchange="saveCronoDiaLembrete(this.value)" title="Melhor dia do mês para receber lembrete de fazer o cronograma">
-            <span style="font-size:10px;color:var(--text3)">do mês</span>
-          </div>
           <button class="btn btn-sm btn-blue" onclick="resetCronoOrder()">↺ Resetar ordem</button>
         </div>
       </div>
@@ -6464,61 +6455,6 @@ const DEFAULT = {
   receitas: {},
 };
 
-// ===================== SUPABASE =====================
-const SUPABASE_URL = 'https://wrgqwzfbiatsdhkxdtgk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_ANZFNtpvkjmvubNTuorZXw_PNfEMtF5';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let _syncTimer = null;
-
-function _setSyncIndicator(state){
-  const el=document.getElementById('sync-indicator');
-  if(!el) return;
-  const cfg={
-    saving: {text:'↑ Salvando...', color:'var(--neon-yellow)'},
-    ok:     {text:'☁ Sincronizado', color:'var(--neon-green)'},
-    error:  {text:'⚠ Offline',      color:'var(--neon-red)'}
-  }[state]||{};
-  el.textContent=cfg.text||'';
-  el.style.color=cfg.color||'var(--text3)';
-  el.style.opacity='1';
-  if(state==='ok') setTimeout(()=>{if(el)el.style.opacity='0';},3000);
-}
-
-async function _syncToSupabase(){
-  if(!_authUser) return;
-  _setSyncIndicator('saving');
-  try{
-    const prefix=_userPrefix();
-    const data={};
-    for(let i=0;i<localStorage.length;i++){
-      const k=localStorage.key(i);
-      if(k&&k.startsWith(prefix)){
-        try{data[k]=JSON.parse(localStorage.getItem(k));}catch(e){data[k]=localStorage.getItem(k);}
-      }
-    }
-    const {error}=await _supabase.from('user_data').upsert(
-      {user_id:_authUser, data, updated_at:new Date().toISOString()},
-      {onConflict:'user_id'}
-    );
-    _setSyncIndicator(error?'error':'ok');
-  }catch(e){_setSyncIndicator('error');}
-}
-
-async function _loadFromSupabase(){
-  if(!_authUser) return false;
-  try{
-    const {data,error}=await _supabase.from('user_data')
-      .select('data').eq('user_id',_authUser).single();
-    if(error||!data||!data.data) return false;
-    const obj=data.data;
-    Object.keys(obj).forEach(k=>{
-      try{localStorage.setItem(k,typeof obj[k]==='string'?obj[k]:JSON.stringify(obj[k]));}catch(e){}
-    });
-    return true;
-  }catch(e){return false;}
-}
-
 // ===================== AUTH =====================
 let _authUser='';
 function _userPrefix(){return _authUser?_authUser+'_':'';}
@@ -6768,8 +6704,6 @@ function doCadastro(){
   users[u]=_hashPass(p);
   _saveUsers(users);
   if(email) _setUserEmail(u,email);
-  // Cria registro inicial no Supabase para o novo usuário
-  _supabase.from('user_data').upsert({user_id:u,data:{},updated_at:new Date().toISOString()},{onConflict:'user_id'}).catch(()=>{});
   // gera e salva chave de recuperação
   const rk=Math.floor(100000+Math.random()*900000).toString();
   localStorage.setItem('financeOS_rk_'+u,rk);
@@ -6872,8 +6806,6 @@ function confirmarVerificacao(){
   users[u]=_hashPass(p);
   _saveUsers(users);
   _setUserEmail(u,email);
-  // Cria registro inicial no Supabase para o novo usuário
-  _supabase.from('user_data').upsert({user_id:u,data:{},updated_at:new Date().toISOString()},{onConflict:'user_id'}).catch(()=>{});
   // Login imediato após verificação
   _startSession(u);
 }
@@ -6912,14 +6844,13 @@ function doLoginAfterRegister(){
   if(_pendingRegisterUser) _startSession(_pendingRegisterUser);
 }
 
-async function _startSession(u){
+function _startSession(u){
   _authUser=u;
   sessionStorage.setItem('financeOS_user',u);
+  // Registra log de acesso (chamado após _authUser ser definido)
   setTimeout(()=>_registrarAcesso&&_registrarAcesso(),100);
   const scr=document.getElementById('login-screen');
   scr.classList.add('fading');
-  // Restaura dados do Supabase antes de iniciar o app
-  await _loadFromSupabase();
   setTimeout(()=>{scr.style.display='none';_initApp();},420);
 }
 
@@ -6956,7 +6887,7 @@ function initAuth(){
   }
   // Enter key support
   ['li-user','li-pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
-  ['ca-user','ca-email','ca-pass','ca-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')iniciarVerificacaoCadastro();});});
+  ['ca-user','ca-pass','ca-pass2'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doCadastro();}));
   // Enter key: recovery fields (rk-user foi removido; rk-key/pass ficam em painéis separados)
   document.getElementById('rk-email-inp')?.addEventListener('keydown',e=>{if(e.key==='Enter')rkVerificarEmail();});
   document.getElementById('rk-key')?.addEventListener('keydown',e=>{if(e.key==='Enter')rkConfirmarCodigo();});
@@ -6966,14 +6897,7 @@ function initAuth(){
 
 // ===================== STORAGE =====================
 function load(key){try{const v=localStorage.getItem(_userPrefix()+key);return v?JSON.parse(v):null;}catch(e){return null;}}
-function save(key,val){
-  try{localStorage.setItem(_userPrefix()+key,JSON.stringify(val));}catch(e){}
-  if(_authUser){
-    _setSyncIndicator('saving');
-    clearTimeout(_syncTimer);
-    _syncTimer=setTimeout(_syncToSupabase,2000);
-  }
-}
+function save(key,val){try{localStorage.setItem(_userPrefix()+key,JSON.stringify(val));}catch(e){}}
 function getData(key){return load(key)||JSON.parse(JSON.stringify(DEFAULT[key]));}
 function setData(key,val){save(key,val);}
 function getSalario(){const v=load('salario');return(v!=null)?v:DEFAULT.salario;}
@@ -7087,14 +7011,13 @@ function onAnexoSelected(inp){
 }
 
 function verAnexo(nome,tipo,dados,sub){
-  if(!dados||!tipo) return;
-  document.getElementById('anx-modal-title').textContent=nome||'Anexo';
+  document.getElementById('anx-modal-title').textContent=nome;
   document.getElementById('anx-modal-sub').textContent=sub||'';
   const body=document.getElementById('anx-modal-body');
   if(tipo.startsWith('image/')){
-    body.innerHTML=`<img src="${dados}" alt="${esc(nome||'')}">`;
+    body.innerHTML=`<img src="${dados}" alt="${esc(nome)}">`;
   } else {
-    body.innerHTML=`<iframe src="${dados}" title="${esc(nome||'')}"></iframe>`;
+    body.innerHTML=`<iframe src="${dados}" title="${esc(nome)}"></iframe>`;
   }
   const m=document.getElementById('anx-modal');
   m.style.display=''; // remove inline para o CSS (position:fixed + display:flex) funcionar
@@ -7514,44 +7437,6 @@ function renderDashboard(){
       alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">🔧</span><span><b>${esc(bem.nome)}</b>: revisão em <b>${kmRest.toLocaleString('pt-BR')} km</b>${comRevisao.tipoRevisao?' — '+esc(comRevisao.tipoRevisao):''}</span></div>`;
     }
   });
-
-  // ── Lembrete: lançar despesas semanais ──
-  const _semAtual=Math.ceil(new Date().getDate()/7);
-  const _semKey='sem_'+new Date().getFullYear()+'_'+String(new Date().getMonth()+1).padStart(2,'0')+'_'+_semAtual;
-  const _todosLanc=getData('lancamentos');
-  const _lancSemana=[1,2,3,4,5].flatMap(s=>_todosLanc[s]||[]);
-  const _lemDespDismiss=load('lembrete_desp_dismiss')||'';
-  if(_lemDespDismiss!==_semKey&&_lancSemana.filter(l=>{
-    const d=new Date(l.data||'');
-    const hoje2=new Date();
-    const inicioSem=new Date(hoje2); inicioSem.setDate(hoje2.getDate()-hoje2.getDay());
-    return d>=inicioSem&&d<=hoje2;
-  }).length===0&&new Date().getDay()>=2){
-    alertsHtml+=`<div class="alert alert-yellow" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <span><span class="alert-icon">📋</span><b>Lembrete:</b> Nenhuma despesa lançada esta semana! Não esqueça de lançar suas despesas semanais.</span>
-      <button onclick="save('lembrete_desp_dismiss','${_semKey}');renderDashboard()" style="flex-shrink:0;font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">OK</button>
-    </div>`;
-  }
-
-  // ── Lembrete: fazer cronograma de pagamento ──
-  const _diaCrono=parseInt(load('crono_dia_lembrete'))||0;
-  const _mesCronoKey=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-  const _cronoDismiss=load('lembrete_crono_dismiss')||'';
-  if(_diaCrono>0&&new Date().getDate()>=_diaCrono&&_cronoDismiss!==_mesCronoKey){
-    alertsHtml+=`<div class="alert alert-blue" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <span><span class="alert-icon">📅</span><b>Lembrete:</b> Dia ${_diaCrono} chegou! Acesse <b>Planejamento → Cronograma</b> para atualizar o cronograma de pagamento deste mês.</span>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        <button onclick="save('lembrete_crono_dismiss','${_mesCronoKey}');renderDashboard()" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.08);color:var(--neon-green);cursor:pointer">✓ Feito</button>
-        <button onclick="save('lembrete_crono_dismiss','${_mesCronoKey}');renderDashboard()" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">OK</button>
-      </div>
-    </div>`;
-  }
-
-  // ── Lembrete: cartão(ões) bloqueado(s) ──
-  const _cartBloq=getData('cartoes').filter(c=>c.bloqueado);
-  if(_cartBloq.length>0){
-    alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">🔒</span><span>${_cartBloq.length} cartão${_cartBloq.length>1?'s':''} bloqueado${_cartBloq.length>1?'s':''}: <b>${_cartBloq.map(c=>esc(c.nome)).join(', ')}</b></span></div>`;
-  }
 
   daAlertas.innerHTML=alertsHtml;
 
@@ -9314,14 +9199,6 @@ function toggleFatPaga(cartao,mes){
   p[cartao][mes]=isNowPaid;
   setFatPagas(p);
 
-  // Sincroniza crono_quitado: quando fatura é quitada/desquitada, reflete no cronograma
-  const cronoYear=(typeof fatAnoSel!=='undefined'?fatAnoSel:new Date().getFullYear());
-  const cronoMesKey=cronoYear+'-'+String(mes+1).padStart(2,'0');
-  const q=getCronoQuitado();
-  if(!q[cartao]) q[cartao]={};
-  q[cartao][cronoMesKey]=isNowPaid;
-  setCronoQuitado(q);
-
   // Sincroniza parcelas.paga: quando fatura do mês é quitada/desquitada,
   // avança/reverte o contador de parcelas pagas para os cartões correspondentes
   const year=new Date().getFullYear();
@@ -9347,7 +9224,6 @@ function toggleFatPaga(cartao,mes){
   if(document.getElementById('parc-timeline')) renderParcelas();
   if(document.getElementById('ct-cards-visual')) renderCartoes();
   if(document.getElementById('d-fat-cartoes')) renderDashboard();
-  if(document.getElementById('crono-tbody')) renderCronoPag();
 }
 
 // ── Menu flutuante de fatura ──
@@ -9486,10 +9362,10 @@ function fatQuitarDrop(evt){
 function _fatQuitarMostrarPreview(comp){
   const prev=document.getElementById('fat-quitar-preview');
   const hint=document.getElementById('fat-quitar-drop-hint');
-  if(!comp||!comp.dados){prev.style.display='none';if(hint)hint.style.display='';return;}
+  if(!comp){prev.style.display='none';if(hint)hint.style.display='';return;}
   prev.style.display='block';
   if(hint) hint.style.display='none';
-  if(comp.tipo&&comp.tipo.startsWith('image/')){
+  if(comp.tipo.startsWith('image/')){
     prev.innerHTML=`<img src="${comp.dados}" alt="comprovante">
       <div style="padding:8px 12px;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between">
         <span>📎 ${esc(comp.nome)}</span>
@@ -9602,35 +9478,6 @@ function renderFaturas(){
   const lista=getCartoesNomes(); // usa cartões registrados pelo usuário
   lista.forEach(c=>{if(!fat[c])fat[c]=Array(12).fill(0);});
 
-  // ── Ordem de Pagamento: renderiza dinamicamente dos cartões cadastrados ──
-  const ordemBadgesEl=document.getElementById('fat-ordem-badges');
-  if(ordemBadgesEl){
-    const cartoesData=getData('cartoes')||[];
-    const order=getCronoOrder();
-    const badgeMap={purple:'badge-purple',blue:'badge-blue',green:'badge-green',
-      red:'badge-red',yellow:'badge-yellow',pink:'badge-pink'};
-    ordemBadgesEl.innerHTML=order.map(nome=>{
-      const cart=cartoesData.find(c=>c.nome===nome);
-      if(!cart) return'';
-      const dia=cart.vencimento?'dia '+cart.vencimento:'—';
-      const bc=badgeMap[cart.cor];
-      if(bc) return`<span class="badge ${bc}">${esc(nome)} · ${dia}</span>`;
-      const cor=({purple:{t:'var(--neon-purple)',b:'rgba(168,85,247,.14)'},
-        blue:{t:'var(--neon-blue)',b:'rgba(0,200,255,.14)'},
-        green:{t:'var(--neon-green)',b:'rgba(0,255,157,.14)'},
-        red:{t:'var(--neon-red)',b:'rgba(255,68,68,.14)'},
-        yellow:{t:'var(--neon-yellow)',b:'rgba(255,215,0,.14)'},
-        pink:{t:'#f472b6',b:'rgba(244,114,182,.14)'},
-        orange:{t:'#fb923c',b:'rgba(251,146,60,.14)'},
-        cyan:{t:'#22d3ee',b:'rgba(34,211,238,.14)'},
-        gold:{t:'#d4a017',b:'rgba(212,160,23,.14)'},
-        graphite:{t:'#6b7280',b:'rgba(107,114,128,.14)'},
-        indigo:{t:'#6366f1',b:'rgba(99,102,241,.14)'},
-        white:{t:'var(--text)',b:'rgba(255,255,255,.1)'}})[cart.cor]||{t:'var(--neon-blue)',b:'rgba(0,200,255,.14)'};
-      return`<span class="badge" style="background:${cor.b};color:${cor.t}">${esc(nome)} · ${dia}</span>`;
-    }).join('');
-  }
-
   // Atualiza select de cartão
   const fatCartaoSel=document.getElementById('fat-cartao');
   if(fatCartaoSel){
@@ -9686,7 +9533,7 @@ function renderFaturas(){
 function saveFatura(){
   const cartao=document.getElementById('fat-cartao').value;
   const mes=parseInt(document.getElementById('fat-mes').value);
-  const val=getMoneyVal('fat-val');
+  const val=parseFloat(document.getElementById('fat-val').value);
   if(isNaN(val)||val<0){alert('Valor inválido.');return;}
   const fat=getData('faturas');
   if(!fat[cartao]) fat[cartao]=Array(12).fill(0);
@@ -10953,9 +10800,8 @@ function renderCartoes(){
     const total=totalByCard[c.nome]||0;
     const tipoCor=c.tipo==='Crédito'?'neon-blue':c.tipo==='Débito'?'neon-green':'neon-yellow';
     const tipoIcon=c.tipo==='Crédito'?'💳':c.tipo==='Débito'?'🏧':'💳';
-    const bloq=!!c.bloqueado;
-    return `<tr style="${bloq?'opacity:0.55;background:rgba(107,114,128,0.08);':''}">
-      <td><span class="badge badge-${c.cor}" style="color:var(--${neon});font-weight:700;${bloq?'text-decoration:line-through;filter:grayscale(0.7)':''}">${bloq?'🔒 ':''} ${esc(c.nome)}</span></td>
+    return `<tr>
+      <td><span class="badge badge-${c.cor}" style="color:var(--${neon});font-weight:700">${esc(c.nome)}</span></td>
       <td>
         ${c.tipo?`<span style="font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--${tipoCor})">${tipoIcon} ${esc(c.tipo)}</span>`:'<span style="color:var(--text3);font-size:11px">—</span>'}
         ${c.contrato?`<br><button class="btn btn-sm" style="margin-top:3px;font-size:9px;color:var(--neon-yellow);border-color:rgba(255,215,0,0.3)" onclick="verContratoCartao(${c.id})">📎 Contrato</button>`:''}
@@ -10973,9 +10819,8 @@ function renderCartoes(){
         <b>${total>0?fmt(total):'—'}</b>
         ${total>0?`<span style="font-size:9px;opacity:.6;display:block;letter-spacing:.5px;font-family:'Inter',sans-serif">↗ VER LANÇAMENTOS</span>`:''}
       </td>
-      <td><div style="display:flex;gap:6px;flex-wrap:wrap">
+      <td><div style="display:flex;gap:6px">
         <button class="btn btn-sm" style="background:rgba(0,200,255,0.12);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue)" onclick="editCartao(${c.id})">✎ EDITAR</button>
-        <button class="btn btn-sm" style="background:${bloq?'rgba(0,255,157,0.1)':'rgba(255,68,68,0.08)'};border:1px solid ${bloq?'rgba(0,255,157,0.3)':'rgba(255,68,68,0.25)'};color:${bloq?'var(--neon-green)':'#ff9955'}" onclick="toggleBloquearCartao(${c.id})">${bloq?'🔓 DESBLOQUEAR':'🔒 BLOQUEAR'}</button>
         <button class="btn btn-red btn-sm" onclick="delCartao(${c.id})">✕ DEL</button>
       </div></td>
     </tr>`;
@@ -11053,12 +10898,11 @@ function renderCartoes(){
       overdueHtml=`<div class="ct-pago-ok">✓ FATURA PAGA — ${mesChave}</div>`;
     }
 
-    return `<div class="ct-vcard" style="${c.bloqueado?'opacity:0.5;filter:grayscale(0.7)':''}">
-      ${c.bloqueado?`<div style="position:absolute;top:8px;right:8px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;color:#6b7280;background:rgba(107,114,128,0.15);border:1px solid rgba(107,114,128,0.3);padding:2px 7px;border-radius:5px">🔒 BLOQUEADO</div>`:''}
-      <div class="ct-vcard-accent" style="background:${c.bloqueado?'#6b7280':hex}"></div>
+    return `<div class="ct-vcard">
+      <div class="ct-vcard-accent" style="background:${hex}"></div>
       <div class="ct-vcard-top">
         <div style="display:flex;flex-direction:column;gap:2px">
-          <div class="ct-vcard-name" style="color:${c.bloqueado?'#6b7280':hex};${c.bloqueado?'text-decoration:line-through':''}">${c.bloqueado?'🔒 ':''}${esc(c.nome)}</div>
+          <div class="ct-vcard-name" style="color:${hex}">${esc(c.nome)}</div>
           ${isCredito&&c.jurosMes?`<span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--neon-red);letter-spacing:.5px">⚠ Mora: ${c.jurosMes}% a.m. · Multa: ${c.multaAtraso||0}%</span>`:''}
         </div>
         ${limite>0?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.05);color:var(--text3)">${pct}% usado</span>`:''}
@@ -11136,7 +10980,7 @@ function addCartao(){
   const taxasDetectadas=arquivoEl._taxasDetectadas||null;
   const _save=contrato=>{
     const novoCartao={id:newId,nome,cor,tipo,limite,fechamento:fecha,vencimento:venc,
-      contrato:contrato||null,bloqueado:false,
+      contrato:contrato||null,
       // aplica taxas detectadas automaticamente (usuário pode editar depois)
       jurosMes:taxasDetectadas?.jurosMes||0,
       multaAtraso:taxasDetectadas?.multa||0,
@@ -11241,15 +11085,6 @@ function saveCartao(id){
   };
   if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
   else _save(null);
-}
-
-function toggleBloquearCartao(id){
-  const cartoes=getData('cartoes');
-  const c=cartoes.find(x=>x.id===id);
-  if(!c) return;
-  c.bloqueado=!c.bloqueado;
-  setData('cartoes',cartoes);
-  renderCartoes();
 }
 
 function delCartao(id){
@@ -14242,11 +14077,6 @@ function switchPlanTab(id, silent){
   const tabs=document.querySelectorAll('#page-planejamento .plan-tab');
   if(tabs[idx]) tabs[idx].classList.add('active');
   if(!silent) save('planTabAtiva',id);
-  // Auto-dismiss lembrete de cronograma ao acessar a aba
-  if(id==='crono'){
-    const mk=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-    save('lembrete_crono_dismiss',mk);
-  }
 }
 
 function _planAtualizaKpisMetas(){
@@ -14414,12 +14244,6 @@ const PILL_COLORS={
   indigo: {bg:'rgba(99,102,241,.2)', border:'rgba(99,102,241,.4)', text:'#6366f1'},
 };
 
-function saveCronoDiaLembrete(v){
-  const d=parseInt(v)||0;
-  if(d>=1&&d<=31) save('crono_dia_lembrete',d);
-  else save('crono_dia_lembrete',0);
-}
-
 function getCronoPagamento(){return load('cronoPagamento')||{};}
 function setCronoPagamento(v){save('cronoPagamento',v);}
 function getCronoContatos(){return load('crono_contatos')||{};}
@@ -14511,10 +14335,6 @@ function renderCronoPag(){
   try{
     const sel=document.getElementById('crono-mes-sel');
     if(!sel||!sel.options.length) buildCronoMesSel();
-
-    // Carrega dia de lembrete salvo
-    const diaLembEl=document.getElementById('crono-dia-lembrete');
-    if(diaLembEl){const dl=parseInt(load('crono_dia_lembrete'))||'';diaLembEl.value=dl||'';}
 
     // Decodifica valor único YYYY*100+MM
     const rawVal=sel?parseInt(sel.value)||0:0;
@@ -14618,15 +14438,15 @@ function renderCronoPag(){
       const isQuitado=!!(cronoQuit[nome]&&cronoQuit[nome][mesKey]);
       const quitadoBtn=isQuitado
         ?`<span style="color:var(--neon-green);font-weight:700;font-size:11px;font-family:'JetBrains Mono',monospace">✓ PAGO</span>
-          <button onclick="toggleCronoQuitadoB64('${n64}','${esc(mesKey)}')"
+          <button onclick="toggleCronoQuitado(${JSON.stringify(nome)},${JSON.stringify(mesKey)})"
             style="margin-left:6px;font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid rgba(255,68,68,0.3);background:transparent;color:var(--neon-red);cursor:pointer;font-family:'JetBrains Mono',monospace">↩ desfazer</button>`
-        :`<button onclick="toggleCronoQuitadoB64('${n64}','${esc(mesKey)}')"
+        :`<button onclick="toggleCronoQuitado(${JSON.stringify(nome)},${JSON.stringify(mesKey)})"
             style="font-size:10px;padding:3px 9px;border-radius:5px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.06);color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:700">✓ Quitar</button>`;
       return `<tr draggable="true" data-nome64="${n64}"
           ondragstart="cronoDragStart(event)" ondragover="cronoDragOver(event)"
           ondrop="cronoDrop(event)" ondragend="cronoDragEnd(event)"
           class="${hasEmp?'crono-tr-emp':''}"
-          style="${isQuitado?'opacity:0.52;background:rgba(107,114,128,0.10);':''}">
+          style="${isQuitado?'opacity:0.58;':''}">
         <td><div class="crono-td-cart">
           <span class="crono-drag-handle" title="Arraste para reordenar">⠿</span>
           <span class="crono-ord-badge">${idx+1}</span>
@@ -14680,7 +14500,6 @@ function _b64Nome(b64){try{return decodeURIComponent(escape(atob(b64)));}catch(e
 function saveCronoPagB64(b64,val){saveCronoPag(_b64Nome(b64),val);}
 function openCronoFormB64(b64){openCronoForm(_b64Nome(b64));}
 function delCronoEmpB64(b64,id){delCronoEmp(_b64Nome(b64),id);}
-function toggleCronoQuitadoB64(n64,mesKey){toggleCronoQuitado(_b64Nome(n64),mesKey);}
 
 function saveCronoPag(nome,val){
   const p=getCronoPagamento();
@@ -18335,10 +18154,10 @@ function delMetaSimples(id, periodo, sfx){
 }
 
 // ===================== MERCADO PAGE =====================
-function _mktGetLista(){return load('mkt_lista')||[];}
-function _mktSetLista(d){save('mkt_lista',d);}
-function _mktGetHist(){return load('mkt_historico')||[];}
-function _mktSetHist(d){save('mkt_historico',d);}
+function _mktGetLista(){return JSON.parse(localStorage.getItem(_authUser+'_mkt_lista')||'[]');}
+function _mktSetLista(d){localStorage.setItem(_authUser+'_mkt_lista',JSON.stringify(d));}
+function _mktGetHist(){return JSON.parse(localStorage.getItem(_authUser+'_mkt_historico')||'[]');}
+function _mktSetHist(d){localStorage.setItem(_authUser+'_mkt_historico',JSON.stringify(d));}
 
 const _MKT_EMOJI={Hortifruti:'🥦',Carnes:'🥩',Laticinios:'🥛',Padaria:'🍞',Higiene:'🧴',Limpeza:'🧹',Mercearia:'🛒',Frios:'🧀',Outros:'📦'};
 let _mktFotoB64='';
@@ -18690,8 +18509,8 @@ function renderMercado(){
 }
 
 // ===================== TAREFAS PAGE =====================
-function _trfGet(){return load('tarefas')||[];}
-function _trfSet(d){save('tarefas',d);}
+function _trfGet(){return JSON.parse(localStorage.getItem(_authUser+'_tarefas')||'[]');}
+function _trfSet(d){localStorage.setItem(_authUser+'_tarefas',JSON.stringify(d));}
 let _trfFiltro='todas';
 
 function trfSetFiltro(f,btn){
@@ -18799,9 +18618,5 @@ function renderTarefas(){
   _trfRenderLista();
 }
 </script>
-
-<!-- SYNC INDICATOR -->
-<div id="sync-indicator"></div>
-
 </body>
 </html>

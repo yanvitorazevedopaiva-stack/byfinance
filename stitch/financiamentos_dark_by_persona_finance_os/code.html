@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#f26420",
+                        "inverse-surface": "#e0e2ed",
+                        "outline-variant": "#414655",
+                        "secondary-fixed": "#d9e2ff",
+                        "surface-container-low": "#181c24",
+                        "on-surface": "#e0e2ed",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#98b4f8",
+                        "surface-container-lowest": "#0b0e16",
+                        "surface": "#10131b",
+                        "on-tertiary-container": "#4f1800",
+                        "on-background": "#e0e2ed",
+                        "surface-tint": "#b0c6ff",
+                        "secondary": "#afc6ff",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "primary-fixed": "#d9e2ff",
+                        "primary-container": "#558dff",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "surface-dim": "#10131b",
+                        "secondary-fixed-dim": "#afc6ff",
+                        "surface-container": "#1c2028",
+                        "on-tertiary-fixed": "#370e00",
+                        "inverse-on-surface": "#2d3039",
+                        "outline": "#8c90a1",
+                        "primary-fixed-dim": "#b0c6ff",
+                        "on-error": "#690005",
+                        "surface-variant": "#31353d",
+                        "on-secondary": "#082e69",
+                        "tertiary": "#ffb599",
+                        "on-primary-container": "#002761",
+                        "on-primary-fixed": "#001944",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#274581",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#5a1c00",
+                        "on-surface-variant": "#c2c6d8",
+                        "on-primary": "#002d6e",
+                        "on-secondary-fixed-variant": "#274581",
+                        "surface-bright": "#363942",
+                        "background": "#10131b",
+                        "surface-container-highest": "#31353d",
+                        "on-primary-fixed-variant": "#00429b",
+                        "inverse-primary": "#0058ca",
+                        "primary": "#b0c6ff",
+                        "on-secondary-fixed": "#001944",
+                        "surface-container-high": "#262a32",
+                        "tertiary-fixed": "#ffdbce"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "grid-gutter": "20px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "container-margin": "32px"
+                    },
+                    "fontFamily": {
+                        "body-main": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "label-caps": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #050a0f;
+            color: #e0e2ed;
+        }
+        .glass-card {
+            background: rgba(16, 19, 27, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(140, 144, 161, 0.1);
+        }
+        .glow-blue {
+            box-shadow: 0 0 30px rgba(176, 198, 255, 0.1);
+        }
+        .progress-glow {
+            box-shadow: 0 0 10px rgba(176, 198, 255, 0.4);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-main text-body-main selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#050a0f]/80 backdrop-blur-xl dark:bg-[#050a0f]/80 border-b border-slate-800/50 shadow-[0_4px_20px_rgba(0,200,255,0.05)]">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-sky-400">grid_view</span>
+<h1 class="text-xl font-black tracking-tighter text-sky-400 font-mono">PERSONA OS</h1>
+</div>
+<div class="hidden md:flex items-center space-x-8">
+<nav class="flex gap-6">
+<a class="text-sky-400 border-b-2 border-sky-400 font-['Inter'] tracking-tight text-sm font-semibold uppercase font-mono py-5" href="#">Markets</a>
+<a class="text-slate-500 hover:bg-slate-800/40 hover:text-emerald-400 transition-colors font-['Inter'] tracking-tight text-sm font-semibold uppercase font-mono py-5" href="#">Assets</a>
+<a class="text-slate-500 hover:bg-slate-800/40 hover:text-emerald-400 transition-colors font-['Inter'] tracking-tight text-sm font-semibold uppercase font-mono py-5" href="#">Intelligence</a>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-[10px] font-bold text-sky-400 tracking-widest uppercase font-data-mono">OPERATOR_01</p>
+<p class="text-[9px] text-slate-500 uppercase font-data-mono">LEVEL 4 ACCESS</p>
+</div>
+<img alt="User Profile Avatar" class="w-10 h-10 rounded-full border border-sky-400/30 object-cover" data-alt="A professional headshot of a high-tech financial executive with sharp features, set against a dark background with subtle blue geometric light patterns. The lighting is dramatic and cinematic, emphasizing a futuristic and secure persona. The aesthetic is clean and high-performance, fitting for a premium financial operating system interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRTklxvD8oKfibc91nGP1miu7v4sryK6bZNa6TSWBQ4vKRhAoFo9kKExfcHMOR74kJNf165mzhCkikBt0do4MO-aIeXvGBk5wjClUS7vw0aalOQ6BXJXhAeLGHxMXYE3_2VmtRurSzzzVN5eaDVU4IIXOLTotK-5_1wUSdtwe9m-hahZzQJpBGWeb5pOagNqiXQfFraEcEFNR--Bfz6oS9ykeBSL_h6rkiilF8xQ91e-xpkJbIWZpZnXjRDfcC8j0dnYQriyCShGc"/>
+</div>
+</header>
+<!-- Side Navigation -->
+<aside class="hidden md:flex flex-col fixed left-0 top-0 h-full z-40 h-screen w-64 border-r border-slate-800 bg-[#050a0f] pt-24">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/50 border border-slate-800">
+<span class="material-symbols-outlined text-sky-400" style="font-variation-settings: 'FILL' 1;">shield</span>
+<div>
+<p class="font-data-mono text-xs tracking-widest uppercase text-sky-400">Verified Session</p>
+<p class="text-[10px] text-slate-500">SECURE_NODE_049</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-4 px-6 py-4 text-slate-500 hover:bg-slate-900 hover:text-emerald-400 cursor-pointer transition-all duration-150 font-data-mono text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined">terminal</span> Terminal
+            </a>
+<a class="flex items-center gap-4 px-6 py-4 text-slate-500 hover:bg-slate-900 hover:text-emerald-400 cursor-pointer transition-all duration-150 font-data-mono text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined">account_balance_wallet</span> Assets
+            </a>
+<a class="bg-sky-500/10 text-sky-400 border-l-4 border-sky-400 font-bold flex items-center gap-4 px-6 py-4 cursor-pointer transition-all duration-150 font-data-mono text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitoring</span> Markets
+            </a>
+<a class="flex items-center gap-4 px-6 py-4 text-slate-500 hover:bg-slate-900 hover:text-emerald-400 cursor-pointer transition-all duration-150 font-data-mono text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined">psychology</span> Intelligence
+            </a>
+<a class="flex items-center gap-4 px-6 py-4 text-slate-500 hover:bg-slate-900 hover:text-emerald-400 cursor-pointer transition-all duration-150 font-data-mono text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined">shield</span> Security
+            </a>
+</nav>
+</aside>
+<!-- Main Content -->
+<main class="pt-24 pb-24 md:pl-72 md:pr-8 px-6 min-h-screen">
+<header class="mb-10">
+<h2 class="font-display-lg text-display-lg text-on-surface mb-2">Financing Core</h2>
+<p class="text-on-surface-variant max-w-2xl">Real-time oversight of capital deployment, installment velocity, and credit utilization across your portfolio.</p>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-grid-gutter">
+<!-- Summary Card 1 -->
+<div class="lg:col-span-4 glass-card p-6 rounded-xl glow-blue">
+<div class="flex justify-between items-start mb-6">
+<span class="material-symbols-outlined text-primary p-2 bg-primary/10 rounded-lg">account_balance</span>
+<span class="text-[10px] font-data-mono text-slate-500 tracking-tighter">LIQUIDITY_INDEX: 0.94</span>
+</div>
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">TOTAL FINANCED</p>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-4">$1,240,500.00</h3>
+<div class="flex items-center gap-2 text-xs text-emerald-400">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>+2.4% APY EFFICIENCY</span>
+</div>
+</div>
+<!-- Summary Card 2 -->
+<div class="lg:col-span-4 glass-card p-6 rounded-xl">
+<div class="flex justify-between items-start mb-6">
+<span class="material-symbols-outlined text-tertiary p-2 bg-tertiary/10 rounded-lg">schedule</span>
+<span class="text-[10px] font-data-mono text-slate-500 tracking-tighter">NEXT_REFRESH: 14:00H</span>
+</div>
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">UPCOMING INSTALLMENTS</p>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-4">$42,180.50</h3>
+<div class="flex items-center gap-2 text-xs text-tertiary">
+<span class="material-symbols-outlined text-sm">event</span>
+<span>3 PAYMENTS DUE IN 48H</span>
+</div>
+</div>
+<!-- Summary Card 3 (Credit Health) -->
+<div class="lg:col-span-4 glass-card p-6 rounded-xl">
+<div class="flex justify-between items-start mb-6">
+<span class="material-symbols-outlined text-secondary p-2 bg-secondary/10 rounded-lg">speed</span>
+<span class="text-[10px] font-data-mono text-slate-500 tracking-tighter">OS_HEALTH: OPTIMAL</span>
+</div>
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">CREDIT UTILIZATION</p>
+<div class="flex items-end gap-3 mb-4">
+<h3 class="text-headline-md font-headline-md text-on-surface">32.4%</h3>
+<div class="flex-1 h-1.5 bg-slate-800 rounded-full mb-2">
+<div class="h-full bg-secondary rounded-full" style="width: 32.4%"></div>
+</div>
+</div>
+<p class="text-xs text-slate-500 font-data-mono">AVAILABLE LIMIT: $3.8M</p>
+</div>
+<!-- Active Financing Table / Detailed View -->
+<div class="lg:col-span-12 glass-card rounded-xl overflow-hidden mt-4">
+<div class="p-6 border-b border-slate-800 flex justify-between items-center bg-surface-container-low/30">
+<h4 class="font-headline-md text-lg text-on-surface">Active Deployments</h4>
+<button class="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-xs font-label-caps tracking-widest transition-all">NEW FINANCING</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="px-6 py-4 font-label-caps text-[10px] text-slate-500 tracking-widest">ASSET_ID</th>
+<th class="px-6 py-4 font-label-caps text-[10px] text-slate-500 tracking-widest">FINANCING_TYPE</th>
+<th class="px-6 py-4 font-label-caps text-[10px] text-slate-500 tracking-widest">TOTAL_VALUE</th>
+<th class="px-6 py-4 font-label-caps text-[10px] text-slate-500 tracking-widest">INSTALLMENT_PROGRESS</th>
+<th class="px-6 py-4 font-label-caps text-[10px] text-slate-500 tracking-widest">REMAINING</th>
+<th class="px-6 py-4 font-label-caps text-[10px] text-slate-500 tracking-widest text-right">ACTION</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-800/50">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-800/20 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-slate-800 overflow-hidden flex-shrink-0">
+<img alt="Asset Preview" class="w-full h-full object-cover" data-alt="A minimalist 3D rendering of a futuristic luxury apartment building with glowing neon blue architectural accents against a dark night sky. The style is sleek, architectural, and highly refined, representing a premium real estate asset in a digital portfolio environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvt2pwYY7zjqMnRzhz-_g2P5J3VdrpmqWhyTu5vZiY5i96uH_wBvY3oO_YuxFblQoXz2uAbp2_hioQ6fhzVXoJYWS8prLKtGGqZEmhbrARp9NhI7yP4ilSJfhnBIMTfb7qIJMcoh8m_nMV1DStL1znAkl94Bkqz9j8o9O3iFNUJSt_9Knf-icSZdyykVvQ8II3sktfYQa3ngxu6oDbS1br9IfmAiJI9nIFc1VwIkSpCeFSr2FPiHhjLyaHOU5cv8OWXCc_NGhBc8A"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Skyline_Loft_X</p>
+<p class="text-[10px] text-slate-500 font-data-mono">REAL_ESTATE_001</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-label-caps rounded">MORTGAGE_ECHO</span>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-data-mono text-on-surface">$850,000</p>
+</td>
+<td class="px-6 py-5">
+<div class="w-48">
+<div class="flex justify-between text-[10px] mb-1 font-data-mono">
+<span class="text-sky-400">14/24 Paid</span>
+<span class="text-slate-500">58%</span>
+</div>
+<div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary progress-glow" style="width: 58%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-data-mono text-on-surface">$357,000</p>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="material-symbols-outlined text-slate-500 hover:text-sky-400 transition-colors">more_vert</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-800/20 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-slate-800 overflow-hidden flex-shrink-0">
+<img alt="Asset Preview" class="w-full h-full object-cover" data-alt="Close-up of high-end computer server hardware with pulsing orange and blue LED indicators. The image focuses on technical precision and high-performance computing power, conveying the sense of a significant technological asset being financed in a modern data-driven economy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcV-dEVbQjWFyu19FzKDdd3PK2O3GlX7ZyMFka79Po0S4SnhLH5euEdJE2aXEfIuIdmgzkV2SUoTYUj2PpYLqA1ezL942kf2kV6EZLWZFd_vYIoHELER1RwZ_a3vW-GgZmYnBwU1qi-PibvEH4GI1Ig1c50MzrYL7BXxw2GFTAMMRKxXH-sXD6sn8smXvk2KGwr6tsFBZQSD9bwuPRyH8MkUWpBNk1T2vRPEXVSgG5NxWFOxoIPl10yZplFK_Dtl2etoT7b8yPsD8"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Data_Grid_Prime</p>
+<p class="text-[10px] text-slate-500 font-data-mono">HARDWARE_NODES</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 bg-tertiary/10 text-tertiary text-[10px] font-label-caps rounded">EQUIPMENT_LEASE</span>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-data-mono text-on-surface">$240,000</p>
+</td>
+<td class="px-6 py-5">
+<div class="w-48">
+<div class="flex justify-between text-[10px] mb-1 font-data-mono">
+<span class="text-tertiary">08/36 Paid</span>
+<span class="text-slate-500">22%</span>
+</div>
+<div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-tertiary" style="width: 22%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-data-mono text-on-surface">$187,200</p>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="material-symbols-outlined text-slate-500 hover:text-sky-400 transition-colors">more_vert</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-800/20 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-slate-800 overflow-hidden flex-shrink-0">
+<img alt="Asset Preview" class="w-full h-full object-cover" data-alt="Digital representation of complex global logistics networks using glowing orange paths on a stylized world map. The visual style is highly abstract and data-focused, illustrating the concept of trade financing and global capital flow within a futuristic digital operating system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkddIcKYOC_0X7z0NKaghHG9ez4qwV45o9-pQ4HXN2-2f9g4sZoIpRAeqAit3xeioVfPqmIoAYWGHe6nv1SpxRtZ-eW-QnYUyIXpBcq25J3iTT9uk-QuAlKVTX37o7BgLZGG_oSF4LznVsAOO04OebXDKkF2cEo_m-0WxhO3qXIvFgciK1wl_7B-Jqje3S2sgH4H4oZ8e9S7iFVPqaU01RMGm0jSa2vHs6f6tXG8OUnfooJxlbESOd7sSKxMv_rYGYWJfe5qaeC2o"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Venture_Capital_S3</p>
+<p class="text-[10px] text-slate-500 font-data-mono">EQUITY_STRATEGY</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 bg-secondary/10 text-secondary text-[10px] font-label-caps rounded">EQUITY_CREDIT</span>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-data-mono text-on-surface">$150,500</p>
+</td>
+<td class="px-6 py-5">
+<div class="w-48">
+<div class="flex justify-between text-[10px] mb-1 font-data-mono">
+<span class="text-secondary">03/06 Paid</span>
+<span class="text-slate-500">50%</span>
+</div>
+<div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 50%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-data-mono text-on-surface">$75,250</p>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="material-symbols-outlined text-slate-500 hover:text-sky-400 transition-colors">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Analytics Visual Card -->
+<div class="lg:col-span-8 glass-card p-6 rounded-xl mt-4">
+<div class="flex justify-between items-center mb-8">
+<h4 class="font-headline-md text-lg text-on-surface">Projected Debt Velocity</h4>
+<select class="bg-surface-container-low border border-slate-800 rounded px-3 py-1 text-xs font-data-mono text-sky-400 focus:outline-none">
+<option>Q3 FISCAL</option>
+<option>Q4 FISCAL</option>
+</select>
+</div>
+<div class="h-64 flex items-end justify-between gap-2 px-2">
+<!-- Stylized Bar Chart -->
+<div class="flex-1 bg-slate-800/40 rounded-t-sm h-[40%] group relative">
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="flex-1 bg-slate-800/40 rounded-t-sm h-[60%] group relative">
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="flex-1 bg-primary/40 rounded-t-sm h-[85%] relative">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-primary font-data-mono">PEAK</div>
+</div>
+<div class="flex-1 bg-slate-800/40 rounded-t-sm h-[70%] group relative"></div>
+<div class="flex-1 bg-slate-800/40 rounded-t-sm h-[45%] group relative"></div>
+<div class="flex-1 bg-slate-800/40 rounded-t-sm h-[30%] group relative"></div>
+<div class="flex-1 bg-slate-800/40 rounded-t-sm h-[20%] group relative"></div>
+<div class="flex-1 bg-slate-800/40 rounded-t-sm h-[15%] group relative"></div>
+</div>
+<div class="flex justify-between mt-4 font-data-mono text-[10px] text-slate-500 uppercase">
+<span>JUL</span><span>AUG</span><span>SEP</span><span>OCT</span><span>NOV</span><span>DEC</span><span>JAN</span><span>FEB</span>
+</div>
+</div>
+<!-- Secondary Insight -->
+<div class="lg:col-span-4 glass-card p-6 rounded-xl mt-4 flex flex-col">
+<h4 class="font-headline-md text-lg text-on-surface mb-6">Risk Protocol</h4>
+<div class="flex-1 flex flex-col justify-center gap-6">
+<div class="p-4 bg-error/5 border border-error/20 rounded-lg">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-error">warning</span>
+<p class="text-xs font-bold text-error uppercase font-label-caps">High Interest Alert</p>
+</div>
+<p class="text-[11px] text-on-surface-variant">Data_Grid_Prime lease rate increases by 1.2% in 30 days. Recommend early settlement.</p>
+</div>
+<div class="p-4 bg-emerald-400/5 border border-emerald-400/20 rounded-lg">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-emerald-400">check_circle</span>
+<p class="text-xs font-bold text-emerald-400 uppercase font-label-caps">Optimization Check</p>
+</div>
+<p class="text-[11px] text-on-surface-variant">Refinancing Skyline_Loft_X now could save $14,200 in total lifecycle interest.</p>
+</div>
+</div>
+<button class="w-full mt-6 py-3 border border-slate-800 rounded-lg text-xs font-label-caps tracking-widest hover:bg-slate-800/50 transition-colors">RUN SIMULATION</button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 pb-safe md:hidden bg-[#050a0f]/90 backdrop-blur-2xl border-t border-slate-800/50 shadow-[0_-4px_24px_rgba(0,0,0,0.4)] rounded-t-[12px]">
+<a class="flex flex-col items-center justify-center text-slate-600 scale-90 active:scale-100 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-600 scale-90 active:scale-100 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">lock_open</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal">Vault</span>
+</a>
+<a class="flex flex-col items-center justify-center text-sky-400 drop-shadow-[0_0_8px_rgba(0,200,255,0.5)] scale-90 active:scale-100 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">swap_vert</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal">Trade</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-600 scale-90 active:scale-100 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-normal">Settings</span>
+</a>
+</nav>
+</body></html>

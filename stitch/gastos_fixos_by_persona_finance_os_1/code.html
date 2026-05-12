@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500;700&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed": "#d9e2ff",
+                      "on-tertiary-fixed": "#370e00",
+                      "on-surface": "#e0e2ed",
+                      "tertiary-fixed-dim": "#ffb599",
+                      "inverse-primary": "#0058ca",
+                      "secondary": "#afc6ff",
+                      "inverse-on-surface": "#2d3039",
+                      "tertiary": "#ffb599",
+                      "on-primary": "#002d6e",
+                      "error-container": "#93000a",
+                      "surface-bright": "#363942",
+                      "on-background": "#e0e2ed",
+                      "on-primary-fixed": "#001944",
+                      "background": "#050a0f",
+                      "tertiary-fixed": "#ffdbce",
+                      "on-secondary-container": "#98b4f8",
+                      "on-secondary-fixed-variant": "#274581",
+                      "surface": "#10131b",
+                      "outline-variant": "#414655",
+                      "surface-container-highest": "#31353d",
+                      "on-tertiary-container": "#4f1800",
+                      "primary-fixed": "#d9e2ff",
+                      "error": "#ffb4ab",
+                      "surface-container": "#1c2028",
+                      "primary-fixed-dim": "#b0c6ff",
+                      "on-error": "#690005",
+                      "on-primary-container": "#002761",
+                      "primary": "#b0c6ff",
+                      "inverse-surface": "#e0e2ed",
+                      "surface-container-low": "#181c24",
+                      "primary-container": "#558dff",
+                      "on-tertiary-fixed-variant": "#7f2b00",
+                      "surface-container-high": "#262a32",
+                      "on-secondary-fixed": "#001944",
+                      "tertiary-container": "#f26420",
+                      "surface-variant": "#31353d",
+                      "on-tertiary": "#5a1c00",
+                      "on-surface-variant": "#c2c6d8",
+                      "secondary-fixed-dim": "#afc6ff",
+                      "surface-tint": "#b0c6ff",
+                      "on-secondary": "#082e69",
+                      "on-primary-fixed-variant": "#00429b",
+                      "on-error-container": "#ffdad6",
+                      "secondary-container": "#274581",
+                      "surface-dim": "#10131b",
+                      "surface-container-lowest": "#0b0e16",
+                      "outline": "#8c90a1",
+                      "neon-green": "#00ff9d",
+                      "neon-blue": "#00c8ff",
+                      "gold": "#C9A84C"
+              },
+              "borderRadius": {
+                      "DEFAULT": "12px",
+                      "lg": "12px",
+                      "xl": "16px",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "grid-gutter": "20px",
+                      "container-margin": "32px",
+                      "xs": "4px",
+                      "lg": "24px",
+                      "xl": "40px",
+                      "unit": "4px",
+                      "sm": "8px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Inter"],
+                      "label-caps": ["Space Grotesk"],
+                      "headline-md": ["Inter"],
+                      "data-mono": ["JetBrains Mono"],
+                      "body-main": ["Inter"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                      "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #050a0f;
+            color: #e0e2ed;
+        }
+        .glass-card {
+            background: rgba(16, 19, 27, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 200, 255, 0.15);
+        }
+        .neon-border-green { border-bottom: 2px solid #00ff9d; }
+        .neon-border-blue { border-bottom: 2px solid #00c8ff; }
+        .neon-glow-blue { box-shadow: 0 0 15px rgba(0, 200, 255, 0.2); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.3); border-radius: 10px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-main text-body-main selection:bg-neon-blue/30 overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 z-50 w-full bg-slate-950/50 backdrop-blur-xl border-b border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+<div class="flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-neon-blue" data-icon="menu">menu</span>
+<h1 class="text-xl font-black tracking-tighter text-neon-blue font-inter">Fixed Expenses</h1>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-8">
+<a class="text-neon-blue font-bold text-sm tracking-wide" href="#">Fixed Costs</a>
+<a class="text-slate-400 hover:bg-blue-500/10 transition-colors px-2 py-1 rounded-lg text-sm" href="#">Portfolio</a>
+<a class="text-slate-400 hover:bg-blue-500/10 transition-colors px-2 py-1 rounded-lg text-sm" href="#">Forecasts</a>
+</nav>
+<div class="w-10 h-10 rounded-full border border-neon-blue/30 overflow-hidden">
+<img alt="User profile photo" data-alt="High-contrast studio portrait of a confident man with cinematic lighting and tech-focused aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGYsFFwuemfvdPt1SM7ZyR9xpU6_YYRuEb2jEWi66vQRBVjXw4deOOcCu6S4tKF94Ao8f7bjGG3ViUE1WVgG-N6zsh2_jgqBHuir1Y-vUE1eA6SJ5FaDNoAaQxdoHjyr16btO_WgjUOwKDBCc8RJPqiJTp2XYt7S2hfcox2ktgVovPyo1lut_snQuhL-wdX-FlAsMQ9abtBZ7fEKT04LCmVFD5wc3U4J9Ys07R1ksgSPYrWn3DUQN0qi0V2GNZ_XA5LO28-58q7gE"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex min-h-screen pt-20">
+<!-- NavigationDrawer -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-80px)] w-72 bg-slate-950 border-r border-white/10 p-6 sticky top-20">
+<div class="flex items-center gap-4 mb-10 pb-6 border-b border-slate-800">
+<div class="w-12 h-12 rounded-xl bg-gradient-to-br from-neon-blue to-blue-900 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="fingerprint">fingerprint</span>
+</div>
+<div>
+<p class="font-bold text-sm text-on-surface">BY Persona</p>
+<p class="text-[10px] uppercase tracking-widest text-neon-blue">Tier 1 Operator</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 p-3 rounded-lg text-slate-500 hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="text-sm font-inter">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-neon-blue/20 to-transparent text-neon-blue border-l-2 border-neon-blue" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="push_pin">push_pin</span>
+<span class="text-sm font-inter">Fixed Costs</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-slate-500 hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="receipt_long">receipt_long</span>
+<span class="text-sm font-inter">Variable</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-slate-500 hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="timeline">timeline</span>
+<span class="text-sm font-inter">Forecasts</span>
+</a>
+</nav>
+<div class="mt-auto p-4 rounded-xl glass-card">
+<p class="text-[10px] uppercase tracking-widest text-slate-500 mb-2">System Status</p>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-neon-green animate-pulse"></div>
+<span class="text-xs text-on-surface font-data-mono">Syncing Terminal...</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-6 md:p-8 lg:p-10 max-w-7xl mx-auto w-full">
+<!-- Summary Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+<!-- Salary Card -->
+<div class="glass-card p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 hover:scale-[1.02]">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Monthly Yield</span>
+<span class="material-symbols-outlined text-neon-green" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<p class="text-3xl font-data-mono font-bold text-on-surface tracking-tighter">R$ 18.500,00</p>
+<p class="text-xs text-neon-green mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="trending_up">trending_up</span>
+                            +4.2% vs last month
+                        </p>
+</div>
+</div>
+<!-- Total Fixed Card -->
+<div class="glass-card p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 hover:scale-[1.02] border-l-4 border-l-neon-blue">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Total Fixed</span>
+<span class="material-symbols-outlined text-neon-blue" data-icon="lock">lock</span>
+</div>
+<div>
+<p class="text-3xl font-data-mono font-bold text-on-surface tracking-tighter">R$ 7.420,00</p>
+<div class="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-neon-blue h-full w-[40%]"></div>
+</div>
+</div>
+</div>
+<!-- Surplus Card -->
+<div class="glass-card p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 hover:scale-[1.02]">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Capital Surplus</span>
+<span class="material-symbols-outlined text-gold" data-icon="savings">savings</span>
+</div>
+<div>
+<p class="text-3xl font-data-mono font-bold text-on-surface tracking-tighter">R$ 11.080,00</p>
+<p class="text-xs text-gold mt-1">Available for Reinvestment</p>
+</div>
+</div>
+<!-- Commitment Card -->
+<div class="glass-card p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 hover:scale-[1.02]">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Commitment %</span>
+<span class="material-symbols-outlined text-error" data-icon="pie_chart">pie_chart</span>
+</div>
+<div class="flex items-end justify-between">
+<p class="text-4xl font-black text-on-surface font-inter">40.1<span class="text-xl text-slate-500 font-normal">%</span></p>
+<div class="text-[10px] px-2 py-1 rounded bg-error-container text-on-error-container font-bold">OPTIMAL</div>
+</div>
+</div>
+</div>
+<!-- Main Table Section -->
+<div class="glass-card rounded-xl overflow-hidden mb-10 shadow-2xl">
+<div class="p-6 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+<div>
+<h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-neon-blue" data-icon="list_alt">list_alt</span>
+                            Detailed Obligations
+                        </h2>
+<p class="text-sm text-slate-500">Real-time ledger of recursive expenditures</p>
+</div>
+<div class="flex gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-4 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold rounded-lg transition-colors border border-white/5 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span> Filter
+                        </button>
+<button class="flex-1 md:flex-none px-4 py-2 bg-neon-blue text-slate-950 text-sm font-black rounded-lg transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,200,255,0.4)]">
+<span class="material-symbols-outlined text-sm font-bold" data-icon="add">add</span> NEW ENTRY
+                        </button>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/5 text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
+<th class="px-6 py-4">Description</th>
+<th class="px-6 py-4">Category</th>
+<th class="px-6 py-4">Priority</th>
+<th class="px-6 py-4">Monthly</th>
+<th class="px-6 py-4">Annualized</th>
+<th class="px-6 py-4">Document</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5 text-sm">
+<tr class="hover:bg-neon-blue/5 transition-colors group">
+<td class="px-6 py-4 font-semibold text-on-surface">Digital Infrastructure</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-blue-500/10 text-neon-blue text-xs font-bold border border-neon-blue/20">Utility</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1 text-neon-green">
+<span class="material-symbols-outlined text-xs" data-icon="priority_high" data-weight="fill">priority_high</span>
+<span class="text-[10px] font-bold">CRITICAL</span>
+</div>
+</td>
+<td class="px-6 py-4 font-data-mono">R$ 450,00</td>
+<td class="px-6 py-4 font-data-mono text-slate-500">R$ 5.400,00</td>
+<td class="px-6 py-4">
+<span class="material-symbols-outlined text-slate-400 hover:text-neon-blue cursor-pointer transition-colors" data-icon="description">description</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-slate-500 hover:text-white" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-neon-blue/5 transition-colors group">
+<td class="px-6 py-4 font-semibold text-on-surface">Strategic Workspace</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-bold border border-purple-500/20">Rent</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1 text-gold">
+<span class="material-symbols-outlined text-xs" data-icon="priority_high" data-weight="fill">priority_high</span>
+<span class="text-[10px] font-bold">HIGH</span>
+</div>
+</td>
+<td class="px-6 py-4 font-data-mono">R$ 3.200,00</td>
+<td class="px-6 py-4 font-data-mono text-slate-500">R$ 38.400,00</td>
+<td class="px-6 py-4">
+<span class="material-symbols-outlined text-slate-400 hover:text-neon-blue cursor-pointer transition-colors" data-icon="contract">contract</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-slate-500 hover:text-white" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-neon-blue/5 transition-colors group">
+<td class="px-6 py-4 font-semibold text-on-surface">Health Shield Premium</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-neon-green/10 text-neon-green text-xs font-bold border border-neon-green/20">Security</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1 text-neon-green">
+<span class="material-symbols-outlined text-xs" data-icon="priority_high" data-weight="fill">priority_high</span>
+<span class="text-[10px] font-bold">CRITICAL</span>
+</div>
+</td>
+<td class="px-6 py-4 font-data-mono">R$ 1.800,00</td>
+<td class="px-6 py-4 font-data-mono text-slate-500">R$ 21.600,00</td>
+<td class="px-6 py-4">
+<span class="material-symbols-outlined text-slate-400 hover:text-neon-blue cursor-pointer transition-colors" data-icon="verified_user">verified_user</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-slate-500 hover:text-white" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Annual Projection & Analysis -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Projection Chart Placeholder -->
+<div class="lg:col-span-2 glass-card p-8 rounded-xl relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-blue via-transparent to-transparent"></div>
+<div class="flex justify-between items-start mb-8">
+<div>
+<h3 class="text-lg font-bold text-on-surface">Annual Projection Flow</h3>
+<p class="text-xs text-slate-500 font-data-mono uppercase tracking-widest">Horizon: FY 2024</p>
+</div>
+<div class="flex items-center gap-4 text-xs font-bold">
+<div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-neon-blue"></div> FIXED</div>
+<div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-slate-700"></div> PROJECTED</div>
+</div>
+</div>
+<div class="h-64 w-full flex items-end gap-2 md:gap-4 px-2">
+<!-- Bars simulating a chart -->
+<div class="flex-1 bg-slate-800 rounded-t-md h-[40%] group relative">
+<div class="absolute inset-0 bg-neon-blue/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 font-data-mono">JAN</div>
+</div>
+<div class="flex-1 bg-slate-800 rounded-t-md h-[42%] group relative">
+<div class="absolute inset-0 bg-neon-blue/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="flex-1 bg-slate-800 rounded-t-md h-[38%] group relative">
+<div class="absolute inset-0 bg-neon-blue/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="flex-1 bg-neon-blue/40 rounded-t-md h-[55%] group relative border-t-2 border-neon-blue">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-neon-blue text-slate-950 px-2 py-0.5 rounded text-[10px] font-black">CUR</div>
+</div>
+<div class="flex-1 bg-slate-800/50 rounded-t-md h-[50%] border-t border-dashed border-slate-600"></div>
+<div class="flex-1 bg-slate-800/50 rounded-t-md h-[52%] border-t border-dashed border-slate-600"></div>
+<div class="flex-1 bg-slate-800/50 rounded-t-md h-[58%] border-t border-dashed border-slate-600"></div>
+<div class="flex-1 bg-slate-800/50 rounded-t-md h-[54%] border-t border-dashed border-slate-600"></div>
+<div class="flex-1 bg-slate-800/50 rounded-t-md h-[60%] border-t border-dashed border-slate-600"></div>
+<div class="flex-1 bg-slate-800/50 rounded-t-md h-[62%] border-t border-dashed border-slate-600"></div>
+<div class="flex-1 bg-slate-800/50 rounded-t-md h-[65%] border-t border-dashed border-slate-600"></div>
+<div class="flex-1 bg-slate-800/50 rounded-t-md h-[68%] border-t border-dashed border-slate-600"></div>
+</div>
+</div>
+<!-- Optimization Card -->
+<div class="glass-card p-8 rounded-xl bg-gradient-to-br from-slate-900 to-black">
+<span class="material-symbols-outlined text-gold text-4xl mb-4" data-icon="psychology">psychology</span>
+<h3 class="text-lg font-bold text-on-surface mb-2">AI Insights</h3>
+<p class="text-sm text-slate-400 mb-6 leading-relaxed">
+                        Detected 3 redundant SaaS subscriptions totaling <span class="text-neon-blue font-bold">R$ 128,90/mo</span>. 
+                        Annualized savings potential: <span class="text-neon-green font-bold">R$ 1.546,80</span>.
+                    </p>
+<button class="w-full py-3 bg-white/5 hover:bg-white/10 text-on-surface text-xs font-bold tracking-widest uppercase border border-white/10 rounded-lg transition-all flex items-center justify-center gap-2 group">
+                        Run Optimization <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<div class="mt-8 pt-6 border-t border-white/5">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs text-slate-500 uppercase font-bold">Efficiency Score</span>
+<span class="text-neon-green font-data-mono font-bold">94/100</span>
+</div>
+<div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+<div class="bg-neon-green h-full w-[94%]"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 h-20 bg-slate-950/80 backdrop-blur-2xl border-t border-white/5 rounded-t-2xl shadow-[0_-4px_20px_rgba(7,114,255,0.1)]">
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-60" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] uppercase tracking-widest font-bold mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-neon-blue bg-blue-500/5 rounded-xl py-1 px-4" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-[10px] uppercase tracking-widest font-bold mt-1">Expenses</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-60" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="text-[10px] uppercase tracking-widest font-bold mt-1">Analysis</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-60" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] uppercase tracking-widest font-bold mt-1">Settings</span>
+</a>
+</nav>
+<!-- FAB -->
+<button class="fixed right-6 bottom-24 md:bottom-8 w-14 h-14 bg-neon-blue text-slate-950 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,200,255,0.5)] z-40 transition-transform active:scale-90 hover:scale-110">
+<span class="material-symbols-outlined font-bold text-3xl" data-icon="add">add</span>
+</button>
+</body></html>

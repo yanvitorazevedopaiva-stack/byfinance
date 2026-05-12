@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PERSONA OS - Faturas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f0f2f5;
+            color: #10131b;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(176, 198, 255, 0.3);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#002d6e",
+                        "primary-fixed-dim": "#b0c6ff",
+                        "outline": "#8c90a1",
+                        "surface-container-highest": "#31353d",
+                        "surface-bright": "#363942",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "error-container": "#93000a",
+                        "on-surface": "#10131b",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#082e69",
+                        "surface-variant": "#31353d",
+                        "inverse-surface": "#e0e2ed",
+                        "on-secondary-fixed-variant": "#274581",
+                        "on-primary-fixed": "#001944",
+                        "surface-tint": "#b0c6ff",
+                        "secondary-fixed-dim": "#afc6ff",
+                        "on-tertiary-fixed": "#370e00",
+                        "on-tertiary": "#5a1c00",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "surface-container-low": "#f8f9fa",
+                        "on-secondary-fixed": "#001944",
+                        "on-surface-variant": "#414655",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#e0e2ed",
+                        "primary-container": "#558dff",
+                        "inverse-on-surface": "#2d3039",
+                        "tertiary": "#ffb599",
+                        "tertiary-fixed": "#ffdbce",
+                        "tertiary-container": "#f26420",
+                        "secondary-fixed": "#d9e2ff",
+                        "secondary": "#afc6ff",
+                        "on-primary-fixed-variant": "#00429b",
+                        "surface-dim": "#f0f2f5",
+                        "on-background": "#10131b",
+                        "surface": "#ffffff",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#274581",
+                        "on-primary-container": "#002761",
+                        "primary-fixed": "#d9e2ff",
+                        "inverse-primary": "#0058ca",
+                        "on-error-container": "#ffdad6",
+                        "background": "#f0f2f5",
+                        "secondary-container": "#d9e2ff",
+                        "surface-container-high": "#ebeef2",
+                        "primary": "#0058ca",
+                        "outline-variant": "#c2c6d8",
+                        "on-tertiary-container": "#4f1800"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "12px",
+                        "lg": "12px",
+                        "xl": "16px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "unit": "4px",
+                        "md": "16px",
+                        "container-margin": "32px",
+                        "lg": "24px",
+                        "grid-gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Space Grotesk"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-main": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-dim font-body-main text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-slate-950/80 backdrop-blur-xl docked full-width top-0 z-50 border-b border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+<div class="flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<img class="rounded-full w-10 h-10 border-2 border-primary" data-alt="A professional studio portrait of a modern fintech executive with a friendly yet authoritative expression. The background is a soft-focus architectural office with subtle blue lighting. The overall aesthetic is clean, high-contrast, and luxury-oriented, fitting a premium financial operating system interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzIrfNrUEpLqT1ZWkowTbarGfW5ASsudS1QxqcdyxPYAv5Exdxp4yJC_-OQ2EaPdBwI7DedxjPQtZChVHCXWPW8kjeIJssRXKr-NMRGdQ8uqK3aYr5p61q4fEi4hGjyM1URq7KKPD_amiV3w97tVwhdCr6tmy1NmWLLLBCTq0x9gmFT4KM3zpOC5sl10UHuU_yh-YVxFxm0gakogk0M2JZV0Qer_KmqkGG7MbfHOj8X7gYscM9EdapGQY2Yv4jkat6GW26FBiWP30"/>
+<h1 class="text-lg font-black tracking-widest text-blue-500 dark:text-blue-400 drop-shadow-[0_0_8px_rgba(7,114,255,0.6)] font-inter uppercase">PERSONA OS</h1>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-8">
+<a class="text-slate-500 hover:opacity-80 transition-opacity font-label-caps text-label-caps" href="#">Lançar</a>
+<a class="text-slate-500 hover:opacity-80 transition-opacity font-label-caps text-label-caps" href="#">Semanal</a>
+<a class="text-blue-400 hover:opacity-80 transition-opacity font-label-caps text-label-caps" href="#">Faturas</a>
+<a class="text-slate-500 hover:opacity-80 transition-opacity font-label-caps text-label-caps" href="#">Ajustes</a>
+</nav>
+<span class="material-symbols-outlined text-blue-500 dark:text-blue-400 cursor-pointer" data-icon="sensors">sensors</span>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-container-margin pt-32 pb-40">
+<div class="grid grid-cols-12 gap-grid-gutter">
+<!-- Quick Action Form Section -->
+<section class="col-span-12">
+<div class="glass-card p-lg rounded-xl shadow-sm border border-primary/10">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg">
+<div class="mb-4 md:mb-0">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-xs">Nova Fatura</h2>
+<p class="text-on-surface-variant text-sm">Registre seus comprovantes de pagamento e faturas mensais.</p>
+</div>
+<div class="flex gap-2">
+<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest font-label-caps">Auto-Sync Ativo</span>
+</div>
+</div>
+<form class="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Cartão / Conta</label>
+<div class="relative">
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary appearance-none">
+<option>Mastercard Platinum</option>
+<option>Visa Infinite</option>
+<option>American Express</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant">keyboard_arrow_down</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Mês Referência</label>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary" type="month"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Valor Total (R$)</label>
+<input class="w-full font-data-mono text-data-mono bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary" placeholder="0,00" type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-surface-container-high hover:bg-surface-container border border-outline-variant text-on-surface font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">upload_file</span>
+<span class="text-sm">Anexar</span>
+</button>
+<button class="flex-1 bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-lg shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95" type="submit">
+<span class="material-symbols-outlined text-[20px]">add_task</span>
+<span class="text-sm">Salvar</span>
+</button>
+</div>
+</form>
+</div>
+</section>
+<!-- Table Section -->
+<section class="col-span-12">
+<div class="glass-card overflow-hidden rounded-xl shadow-sm">
+<div class="p-lg border-b border-primary/10 flex justify-between items-center bg-white/40">
+<h3 class="font-headline-md text-headline-md">Histórico de Faturas</h3>
+<div class="flex gap-4">
+<button class="text-primary hover:text-on-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span class="text-sm font-bold uppercase tracking-wider font-label-caps">Filtrar</span>
+</button>
+<button class="text-primary hover:text-on-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span class="text-sm font-bold uppercase tracking-wider font-label-caps">Exportar</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50 border-b border-outline-variant">
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant">Cartão / Emissor</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant">Vencimento</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant">Valor</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant">Status</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant">Comprovante</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface-variant text-right">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-3">
+<div class="w-10 h-6 bg-slate-900 rounded flex items-center justify-center">
+<div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+</div>
+<div>
+<p class="font-bold text-on-surface">Mastercard Platinum</p>
+<p class="text-xs text-on-surface-variant">Final 4482</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md font-data-mono text-data-mono">15 Jul 2024</td>
+<td class="px-lg py-md font-data-mono text-data-mono text-on-surface">R$ 4.290,00</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                            PAGO
+                                        </span>
+</td>
+<td class="px-lg py-md">
+<button class="text-primary flex items-center gap-2 hover:underline">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+<span class="text-xs font-bold">Ver Anexo</span>
+</button>
+</td>
+<td class="px-lg py-md text-right">
+<button class="p-2 hover:bg-surface-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-3">
+<div class="w-10 h-6 bg-blue-900 rounded flex items-center justify-center">
+<div class="w-2 h-2 bg-white rounded-full"></div>
+</div>
+<div>
+<p class="font-bold text-on-surface">Visa Infinite</p>
+<p class="text-xs text-on-surface-variant">Final 0091</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md font-data-mono text-data-mono">20 Jul 2024</td>
+<td class="px-lg py-md font-data-mono text-data-mono text-on-surface">R$ 1.842,50</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-bold bg-tertiary-container/10 text-tertiary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+                                            PENDENTE
+                                        </span>
+</td>
+<td class="px-lg py-md">
+<button class="text-on-surface-variant/50 flex items-center gap-2 cursor-not-allowed">
+<span class="material-symbols-outlined text-[18px]">add_a_photo</span>
+<span class="text-xs font-bold">Enviar</span>
+</button>
+</td>
+<td class="px-lg py-md text-right">
+<button class="p-2 hover:bg-surface-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-3">
+<div class="w-10 h-6 bg-slate-900 rounded flex items-center justify-center">
+<div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+</div>
+<div>
+<p class="font-bold text-on-surface">Mastercard Platinum</p>
+<p class="text-xs text-on-surface-variant">Final 4482</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md font-data-mono text-data-mono">15 Jun 2024</td>
+<td class="px-lg py-md font-data-mono text-data-mono text-on-surface">R$ 3.110,20</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                            PAGO
+                                        </span>
+</td>
+<td class="px-lg py-md">
+<button class="text-primary flex items-center gap-2 hover:underline">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+<span class="text-xs font-bold">Ver Anexo</span>
+</button>
+</td>
+<td class="px-lg py-md text-right">
+<button class="p-2 hover:bg-surface-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-md bg-surface-container-low/50 flex justify-between items-center">
+<span class="text-xs font-bold text-on-surface-variant font-label-caps uppercase tracking-wider">Mostrando 3 de 12 faturas</span>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded bg-primary text-white">1</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-white transition-colors">2</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Analytics / Status Board -->
+<section class="col-span-12 lg:col-span-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-grid-gutter">
+<div class="glass-card p-lg rounded-xl border-l-4 border-l-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">account_balance_wallet</span>
+<span class="text-[10px] font-black bg-primary text-white px-2 py-0.5 rounded">AUTO-PAY</span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Próximo Vencimento</p>
+<h4 class="font-headline-md text-headline-md mb-2">R$ 1.842,50</h4>
+<p class="text-xs text-on-surface-variant">Vence em 4 dias (Visa Infinite)</p>
+</div>
+<div class="glass-card p-lg rounded-xl border-l-4 border-l-tertiary-container">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-tertiary-container bg-tertiary-container/10 p-2 rounded-lg">warning</span>
+<span class="text-[10px] font-black bg-tertiary-container text-white px-2 py-0.5 rounded">PENDENTE</span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Comprovantes Ausentes</p>
+<h4 class="font-headline-md text-headline-md mb-2">02 Itens</h4>
+<p class="text-xs text-on-surface-variant">Necessário anexar para conciliação fiscal.</p>
+</div>
+</div>
+</section>
+<section class="col-span-12 lg:col-span-4">
+<div class="glass-card p-lg rounded-xl h-full relative overflow-hidden group">
+<div class="relative z-10">
+<h4 class="font-bold text-on-surface mb-md">Escaneamento Inteligente</h4>
+<p class="text-sm text-on-surface-variant mb-lg">Arraste seu PDF ou imagem aqui para extrair dados da fatura automaticamente via IA.</p>
+<div class="border-2 border-dashed border-primary/30 rounded-lg p-xl flex flex-col items-center justify-center gap-4 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[48px] text-primary/60">cloud_upload</span>
+<span class="text-xs font-bold uppercase tracking-widest font-label-caps text-primary">Upload Inteligente</span>
+</div>
+</div>
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-slate-950/90 backdrop-blur-2xl border-t border-blue-500/20 shadow-[0_-10px_30px_rgba(7,114,255,0.1)] flex justify-around items-center px-4 pb-6 pt-3 md:hidden">
+<a class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-300 transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="add_chart">add_chart</span>
+<span class="text-[10px] font-bold uppercase tracking-widest font-label-caps mt-1">Lançar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-300 transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="insert_chart">insert_chart</span>
+<span class="text-[10px] font-bold uppercase tracking-widest font-label-caps mt-1">Semanal</span>
+</a>
+<a class="flex flex-col items-center justify-center text-blue-400 drop-shadow-[0_0_5px_rgba(7,114,255,0.8)] active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="text-[10px] font-bold uppercase tracking-widest font-label-caps mt-1">Faturas</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-300 transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="text-[10px] font-bold uppercase tracking-widest font-label-caps mt-1">Ajustes</span>
+</a>
+</nav>
+</body></html>

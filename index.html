@@ -2812,6 +2812,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -6455,6 +6456,16 @@ const DEFAULT = {
   receitas: {},
 };
 
+const SUPABASE_URL='https://wrgqwzfbiatsdhkxdtgk.supabase.co';
+const SUPABASE_KEY='sb_publishable_ANZFNtpvkjmvubNTuorZXw_PNfEMtF5';
+let _supabase=null;
+function _initSupabase(){
+  try{_supabase=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}
+  catch(e){console.warn('Supabase indisponível',e);}
+}
+_initSupabase();
+let _syncTimer=null;
+
 // ===================== AUTH =====================
 let _authUser='';
 function _userPrefix(){return _authUser?_authUser+'_':'';}
@@ -6707,6 +6718,12 @@ function doCadastro(){
   // gera e salva chave de recuperação
   const rk=Math.floor(100000+Math.random()*900000).toString();
   localStorage.setItem('financeOS_rk_'+u,rk);
+  if(_supabase){
+    _supabase.from('user_data').upsert(
+      {user_id:u,data:{},updated_at:new Date().toISOString()},
+      {onConflict:'user_id'}
+    ).catch(()=>{});
+  }
   _pendingRegisterUser=u;
   document.querySelectorAll('.login-panel').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
@@ -6844,13 +6861,13 @@ function doLoginAfterRegister(){
   if(_pendingRegisterUser) _startSession(_pendingRegisterUser);
 }
 
-function _startSession(u){
+async function _startSession(u){
   _authUser=u;
   sessionStorage.setItem('financeOS_user',u);
-  // Registra log de acesso (chamado após _authUser ser definido)
   setTimeout(()=>_registrarAcesso&&_registrarAcesso(),100);
   const scr=document.getElementById('login-screen');
   scr.classList.add('fading');
+  await _loadFromSupabase();
   setTimeout(()=>{scr.style.display='none';_initApp();},420);
 }
 
@@ -6895,9 +6912,54 @@ function initAuth(){
   return false;
 }
 
+async function _syncToSupabase(){
+  if(!_supabase||!_authUser) return;
+  const prefix=_userPrefix();
+  const data={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith(prefix)){
+      try{data[k]=JSON.parse(localStorage.getItem(k));}
+      catch(e){data[k]=localStorage.getItem(k);}
+    }
+  }
+  try{
+    await _supabase.from('user_data').upsert(
+      {user_id:_authUser,data,updated_at:new Date().toISOString()},
+      {onConflict:'user_id'}
+    );
+    const ind=document.getElementById('sync-indicator');
+    if(ind){ind.textContent='☁ Sincronizado';ind.style.color='var(--neon-green)';ind.style.opacity='1';
+      setTimeout(()=>{if(ind)ind.style.opacity='0';},3000);}
+  }catch(e){
+    const ind=document.getElementById('sync-indicator');
+    if(ind){ind.textContent='⚠ Offline';ind.style.color='var(--neon-red)';ind.style.opacity='1';}
+  }
+}
+
+async function _loadFromSupabase(){
+  if(!_supabase||!_authUser) return false;
+  try{
+    const {data,error}=await _supabase.from('user_data')
+      .select('data').eq('user_id',_authUser).single();
+    if(error||!data?.data) return false;
+    Object.entries(data.data).forEach(([k,v])=>{
+      try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
+      catch(e){}
+    });
+    return true;
+  }catch(e){return false;}
+}
+
 // ===================== STORAGE =====================
 function load(key){try{const v=localStorage.getItem(_userPrefix()+key);return v?JSON.parse(v):null;}catch(e){return null;}}
-function save(key,val){try{localStorage.setItem(_userPrefix()+key,JSON.stringify(val));}catch(e){}}
+function save(key,val){
+  try{localStorage.setItem(_userPrefix()+key,JSON.stringify(val));}catch(e){}
+  const ind=document.getElementById('sync-indicator');
+  if(ind){ind.textContent='↑ Salvando...';ind.style.color='var(--neon-yellow)';ind.style.opacity='1';}
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(_syncToSupabase,2000);
+}
 function getData(key){return load(key)||JSON.parse(JSON.stringify(DEFAULT[key]));}
 function setData(key,val){save(key,val);}
 function getSalario(){const v=load('salario');return(v!=null)?v:DEFAULT.salario;}
@@ -16461,7 +16523,7 @@ function verDocUsuario(id){
 // ===================== TAREFA 3 — SCORE DE SAÚDE FINANCEIRA =====================
 function calcSaudeFinanceira(){
   if(currentPage!=='dashboard') return;
-  const sal=getSalario()||1;
+  const sal=parseFloat(getSalario())||1;
   const gf=getData('gastosFixos');
   const parcelas=getData('parcelas');
   const fins=getFinanciamentos();
@@ -16469,7 +16531,7 @@ function calcSaudeFinanceira(){
 
   // Critério 1 — Gastos Fixos (30pts)
   const totalGF=gf.reduce((a,g)=>a+g.val,0);
-  const pctGF=totalGF/sal;
+  const pctGF=isFinite(totalGF/sal)?totalGF/sal:0;
   const pts1=Math.max(0,30*(1-pctGF/0.5));
 
   // Critério 2 — Déficits nos últimos 6 meses (30pts)
@@ -16480,14 +16542,14 @@ function calcSaudeFinanceira(){
 
   // Critério 3 — Parcelas vs renda (20pts)
   const custoParc=parcelas.filter(p=>p.paga<p.total).reduce((a,p)=>a+p.val,0);
-  const pctParc=custoParc/sal;
+  const pctParc=isFinite(custoParc/sal)?custoParc/sal:0;
   const pts3=Math.max(0,20*(1-pctParc/0.5));
 
   // Critério 4 — Progresso de quitação dos financiamentos (20pts)
   const pctFin=fins.length?fins.reduce((a,f)=>a+(f.pagas/Math.max(1,f.nParc)),0)/fins.length:1;
   const pts4=Math.round(20*pctFin);
 
-  const score=Math.round(pts1+pts2+pts3+pts4);
+  const score=isNaN(pts1+pts2+pts3+pts4)?0:Math.round(pts1+pts2+pts3+pts4);
   const cor=score>=70?'var(--neon-green)':score>=40?'var(--neon-yellow)':'var(--neon-red)';
   const msg=score>=80?'Finanças saudáveis ✓':score>=60?'Bom, mas há pontos de melhoria':score>=40?'Atenção necessária':'Situação crítica — revise seus gastos';
   const el=document.getElementById('saude-financeira-card');
@@ -18618,5 +18680,6 @@ function renderTarefas(){
   _trfRenderLista();
 }
 </script>
+<div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
 </body>
 </html>

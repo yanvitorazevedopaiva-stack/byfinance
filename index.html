@@ -6619,7 +6619,7 @@ async function doLogin(){
   if(!u&&_supabase){
     try{
       const {data}=await _supabase.from('user_data')
-        .select('data').eq('user_id','__users__').single();
+        .select('data').eq('user_id','__users__').maybeSingle();
       if(data?.data?.financeOS_users){
         localStorage.setItem('financeOS_users',
           JSON.stringify(data.data.financeOS_users));
@@ -6893,7 +6893,7 @@ async function initAuth(){
   if(_supabase){
     try{
       const {data}=await _supabase.from('user_data')
-        .select('data').eq('user_id','__users__').single();
+        .select('data').eq('user_id','__users__').maybeSingle();
       if(data?.data?.financeOS_users){
         localStorage.setItem('financeOS_users',
           JSON.stringify(data.data.financeOS_users));
@@ -6958,14 +6958,14 @@ async function _loadFromSupabase(){
   if(!_supabase||!_authUser) return false;
   try{
     const {data,error}=await _supabase.from('user_data')
-      .select('data').eq('user_id',_authUser).single();
+      .select('data').eq('user_id',_authUser).maybeSingle();
     if(error||!data?.data) return false;
     Object.entries(data.data).forEach(([k,v])=>{
       try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
       catch(e){}
     });
     const {data:ud}=await _supabase.from('user_data')
-      .select('data').eq('user_id','__users__').single();
+      .select('data').eq('user_id','__users__').maybeSingle();
     if(ud?.data?.financeOS_users){
       localStorage.setItem('financeOS_users',
         JSON.stringify(ud.data.financeOS_users));
@@ -6973,7 +6973,7 @@ async function _loadFromSupabase(){
     if(_supabase&&_authUser){
       try{
         const {data:meta}=await _supabase.from('user_data')
-          .select('data').eq('user_id','__meta__'+_authUser).single();
+          .select('data').eq('user_id','__meta__'+_authUser).maybeSingle();
         if(meta?.data){
           Object.entries(meta.data).forEach(([k,v])=>{
             try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}

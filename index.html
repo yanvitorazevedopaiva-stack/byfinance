@@ -714,6 +714,10 @@
   }
   tr:hover td { background:var(--td-hover); color:var(--text); }
 
+  /* ===== MERCADO SCROLL ===== */
+  #mkt-catalogo-wrap::-webkit-scrollbar{display:none;}
+  #mkt-catalogo-wrap.dragging{cursor:grabbing;}
+
   /* ===== BADGES ===== */
   .badge {
     display:inline-block; padding:2px 8px; border-radius:4px;
@@ -4723,16 +4727,22 @@
       <!-- QUADRO DE ITENS CADASTRADOS -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div class="sec-title" style="margin:0;cursor:pointer" onclick="mktToggleCatalogo()" title="Clique para expandir/recolher">ITENS CADASTRADOS</div>
+          <div class="sec-title" style="margin:0">ITENS CADASTRADOS</div>
           <div style="display:flex;align-items:center;gap:10px">
             <span id="mkt-cat-count" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace"></span>
-            <button id="mkt-cat-ver-btn" onclick="mktToggleCatalogo()" style="background:none;border:1px solid var(--border);color:var(--neon-blue);cursor:pointer;font-size:10px;padding:3px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700;transition:all .15s" onmouseover="this.style.borderColor='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)'">VER TUDO ›</button>
+            <span style="font-size:10px;color:var(--text3)">← arraste →</span>
           </div>
         </div>
-        <div id="mkt-catalogo-wrap" style="overflow:hidden;max-height:210px;transition:max-height .3s ease">
-          <div id="mkt-catalogo-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
-            <div style="text-align:center;color:var(--text3);padding:24px;font-size:12px;grid-column:1/-1">Nenhum item cadastrado.</div>
+        <div style="position:relative">
+          <button id="mkt-arr-left" onclick="mktScrollCat(-1)" style="position:absolute;left:-10px;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3)">‹</button>
+          <div id="mkt-catalogo-wrap"
+            style="overflow-x:auto;overflow-y:hidden;cursor:grab;user-select:none;padding-bottom:4px;scrollbar-width:none;-ms-overflow-style:none"
+            onmousedown="mktDragStart(event)" onmousemove="mktDragMove(event)" onmouseup="mktDragEnd()" onmouseleave="mktDragEnd()">
+            <div id="mkt-catalogo-lista" style="display:flex;gap:10px;width:max-content;min-height:200px;align-items:flex-start">
+              <div style="color:var(--text3);padding:24px 16px;font-size:12px;white-space:nowrap;align-self:center">Nenhum item cadastrado.</div>
+            </div>
           </div>
+          <button id="mkt-arr-right" onclick="mktScrollCat(1)" style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3)">›</button>
         </div>
       </div>
     </div>
@@ -18645,14 +18655,39 @@ function mktCadastrarItem(){
 }
 function mktRemoveCatalogo(id){showConfirm('Remover Item','Remover este item do catálogo?',()=>{_mktSetCatalogo(_mktGetCatalogo().filter(x=>x.id!==id));_mktRenderCatalogo();});}
 
-let _mktCatExpandido=false;
-function mktToggleCatalogo(){
-  _mktCatExpandido=!_mktCatExpandido;
-  const wrap=document.getElementById('mkt-catalogo-wrap');
-  const btn=document.getElementById('mkt-cat-ver-btn');
-  if(wrap) wrap.style.maxHeight=_mktCatExpandido?'9999px':'210px';
-  if(btn) btn.textContent=_mktCatExpandido?'RECOLHER ‹':'VER TUDO ›';
+// ── Drag to scroll no catálogo ──
+let _mktDragDown=false,_mktDragX=0,_mktDragScroll=0;
+function mktDragStart(e){
+  const w=document.getElementById('mkt-catalogo-wrap');if(!w)return;
+  _mktDragDown=true;_mktDragX=e.pageX;_mktDragScroll=w.scrollLeft;
+  w.classList.add('dragging');
 }
+function mktDragMove(e){
+  if(!_mktDragDown)return;
+  const w=document.getElementById('mkt-catalogo-wrap');if(!w)return;
+  e.preventDefault();
+  w.scrollLeft=_mktDragScroll-(e.pageX-_mktDragX);
+  _mktUpdateArrows();
+}
+function mktDragEnd(){
+  _mktDragDown=false;
+  const w=document.getElementById('mkt-catalogo-wrap');
+  if(w)w.classList.remove('dragging');
+}
+function mktScrollCat(dir){
+  const w=document.getElementById('mkt-catalogo-wrap');if(!w)return;
+  w.scrollBy({left:dir*180,behavior:'smooth'});
+  setTimeout(_mktUpdateArrows,320);
+}
+function _mktUpdateArrows(){
+  const w=document.getElementById('mkt-catalogo-wrap');if(!w)return;
+  const lBtn=document.getElementById('mkt-arr-left');
+  const rBtn=document.getElementById('mkt-arr-right');
+  const hasScroll=w.scrollWidth>w.clientWidth+4;
+  if(lBtn)lBtn.style.display=(hasScroll&&w.scrollLeft>4)?'flex':'none';
+  if(rBtn)rBtn.style.display=(hasScroll&&w.scrollLeft<w.scrollWidth-w.clientWidth-4)?'flex':'none';
+}
+function mktToggleCatalogo(){_mktUpdateArrows();}// compat
 
 
 function _mktRenderCatalogo(){
@@ -18661,13 +18696,14 @@ function _mktRenderCatalogo(){
   const cnt=document.getElementById('mkt-cat-count');
   if(cnt)cnt.textContent=cat.length?cat.length+' item'+(cat.length!==1?'s':''):'';
   if(!cat.length){
-    el.style.display='grid';
-    el.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:12px;grid-column:1/-1">Nenhum item cadastrado.<br>Use o formulário ao lado para adicionar.</div>';
-    return;
+    el.style.display='flex';
+    el.innerHTML='<div style="color:var(--text3);padding:24px 16px;font-size:12px;white-space:nowrap;align-self:center">Nenhum item cadastrado.</div>';
+    _mktUpdateArrows();return;
   }
-  el.style.display='grid';
+  el.style.display='flex';
   el.innerHTML=cat.map(it=>`
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s" onmouseover="this.style.borderColor='rgba(0,200,255,0.35)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s;flex-shrink:0;width:162px" onmouseover="this.style.borderColor='rgba(0,200,255,0.35)'" onmouseout="this.style.borderColor='var(--border)'"
+      ondragstart="return false">
       <div style="height:90px;background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative">
         ${it.foto?`<img src="${it.foto}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:36px">${_MKT_EMOJI[it.cat]||'📦'}</span>`}
       </div>
@@ -18682,6 +18718,7 @@ function _mktRenderCatalogo(){
         <button onclick="mktRemoveCatalogo(${it.id})" style="background:none;border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);cursor:pointer;font-size:11px;padding:4px 7px;border-radius:6px">✕</button>
       </div>
     </div>`).join('');
+  setTimeout(_mktUpdateArrows,50);
 }
 
 function mktEditCatalogo(id){

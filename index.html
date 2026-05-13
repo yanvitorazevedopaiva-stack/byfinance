@@ -7332,7 +7332,7 @@ function getVencProximos(dias=7){
 
 // ===================== SAÚDE FINANCEIRA =====================
 function renderHealthBar(){
-  const salario=parseFloat(getSalario())||1;
+  const salario=parseFloat(getSalario())||0;
   const gf=getData('gastosFixos');
   const totalGf=gf.reduce((a,i)=>a+i.val,0);
   const parcelas=getData('parcelas');
@@ -7340,6 +7340,25 @@ function renderHealthBar(){
   const parcsAtivas=parcelas.filter(p=>p.paga<p.total).length;
   const saldo=salario-totalGf;
   const dti=salario>0?isFinite(totalGf/salario)?(totalGf/salario*100):0:0;
+
+  // ── Sem salário cadastrado: score inválido ─────────────────
+  if(!salario){
+    const scoreEl=document.getElementById('health-score');
+    const labelEl=document.getElementById('health-label');
+    const fillEl=document.getElementById('health-fill');
+    const fraseTextoEl=document.getElementById('health-frase-txt');
+    const saldoEl=document.getElementById('hm-saldo');
+    if(scoreEl){scoreEl.textContent='—';scoreEl.style.color='var(--text3)';}
+    if(labelEl){labelEl.textContent='Sem dados';labelEl.style.color='var(--text3)';labelEl.style.background='var(--bg3)';labelEl.style.border='1px solid var(--border)';}
+    if(fillEl){fillEl.style.width='0%';}
+    if(fraseTextoEl) fraseTextoEl.textContent='Configure seu salário em Gastos Fixos para ver a análise completa.';
+    if(saldoEl){saldoEl.textContent='R$—';saldoEl.style.color='var(--text3)';}
+    const dtiEl=document.getElementById('hm-dti');
+    if(dtiEl){dtiEl.textContent='—%';dtiEl.style.color='var(--text3)';}
+    const divEl=document.getElementById('hm-div');
+    if(divEl) divEl.textContent=fmt(totalDividas);
+    return;
+  }
 
   // ── Pontuação: 0-100 ──────────────────────────────────────
   // 1. Comprometimento de renda (peso 40): 0% dti = 40pts, 100% dti = 0pts
@@ -7482,7 +7501,7 @@ function _scaleOpts(yFmt){
 
 function renderDashboard(){
   renderHealthBar();
-  const salario=parseFloat(getSalario())||1;
+  const salario=parseFloat(getSalario())||0;
   const gf=getData('gastosFixos');
   const totalGf=gf.reduce((a,i)=>a+i.val,0);
   const saldo=salario-totalGf;
@@ -7535,8 +7554,7 @@ function renderDashboard(){
   if(altosFat.length>0) alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">⚡</span><span>Faturas altas mês anterior: ${altosFat.slice(0,2).join(', ')}...</span></div>`;
 
   // Índice de comprometimento de renda (debt-to-income)
-  const salBase=salario||1;
-  const dti=(salario>0?isFinite(totalGf/salBase)?(totalGf/salBase*100):0:0).toFixed(1);
+  const dti=(salario>0&&isFinite(totalGf/salario)?(totalGf/salario*100):0).toFixed(1);
   const dtiClass=dti>85?'alert-red':dti>70?'alert-yellow':'alert-blue';
   alertsHtml+=`<div class="alert ${dtiClass}"><span class="alert-icon">📊</span><span>Comprometimento de renda: <b>${dti}%</b> em gastos fixos</span></div>`;
   alertsHtml+=`<div class="alert alert-green"><span class="alert-icon">✦</span><span>Liberdade financeira prevista para <b>Agosto/2026</b>!</span></div>`;
@@ -9761,7 +9779,7 @@ function getMetasAnuais(){return load('metas_anuais')||[];}
 function setMetasAnuais(d){save('metas_anuais',d);}
 
 function calcSaldoMensal(){
-  const sal=parseFloat(getSalario())||1;
+  const sal=parseFloat(getSalario())||0;
   const gf=getData('gastosFixos').reduce((a,g)=>a+g.val,0);
   const parc=getData('parcelas').filter(p=>p.paga<p.total).reduce((a,p)=>a+p.val,0);
   return sal-gf-parc;

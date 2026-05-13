@@ -6897,8 +6897,17 @@ async function initAuth(){
     _authUser=saved;
     const scr=document.getElementById('login-screen');
     if(scr) scr.style.display='none';
-    // Atualiza lista de usuários em background sem bloquear o app
     if(_supabase){
+      // Foto buscada com await — garante que esteja no localStorage antes do initPerfil()
+      try{
+        const {data:fotoRow}=await _supabase.from('user_data')
+          .select('data').eq('user_id','__foto__'+saved).maybeSingle();
+        if(fotoRow?.data?.perfilFoto){
+          localStorage.setItem(saved+'_perfilFoto',
+            JSON.stringify(fotoRow.data.perfilFoto));
+        }
+      }catch(e){}
+      // Lista de usuários em background (não bloqueia)
       _supabase.from('user_data').select('data')
         .eq('user_id','__users__').maybeSingle()
         .then(({data})=>{

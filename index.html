@@ -6859,16 +6859,17 @@ function _applyUserProfile(u){
   if(mobUser) mobUser.textContent='@'+u.toLowerCase();
 }
 
-function initAuth(){
+async function initAuth(){
+  // Busca usuários do Supabase ANTES de mostrar o login
   if(_supabase){
-    _supabase.from('user_data').select('data')
-      .eq('user_id','__users__').single()
-      .then(({data})=>{
-        if(data?.data?.financeOS_users){
-          localStorage.setItem('financeOS_users',
-            JSON.stringify(data.data.financeOS_users));
-        }
-      }).catch(()=>{});
+    try{
+      const {data}=await _supabase.from('user_data')
+        .select('data').eq('user_id','__users__').single();
+      if(data?.data?.financeOS_users){
+        localStorage.setItem('financeOS_users',
+          JSON.stringify(data.data.financeOS_users));
+      }
+    }catch(e){}
   }
   const saved=sessionStorage.getItem('financeOS_user');
   if(saved){
@@ -6879,8 +6880,8 @@ function initAuth(){
   }
   // Enter key support
   ['li-user','li-pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
-  ['ca-user','ca-pass','ca-pass2'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doCadastro();}));
-  // Enter key: recovery fields (rk-user foi removido; rk-key/pass ficam em painéis separados)
+  ['ca-user','ca-email','ca-pass','ca-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')iniciarVerificacaoCadastro();});});
+  // Enter key: recovery fields
   document.getElementById('rk-email-inp')?.addEventListener('keydown',e=>{if(e.key==='Enter')rkVerificarEmail();});
   document.getElementById('rk-key')?.addEventListener('keydown',e=>{if(e.key==='Enter')rkConfirmarCodigo();});
   ['rk-pass','rk-pass2'].forEach(id=>document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doRecuperar();}));
@@ -13018,7 +13019,7 @@ function applyMascaraBRL(){
   ids.forEach(id=>{const el=document.getElementById(id);if(el)mascaraBRL(el);});
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded',async()=>{
   // Restaura tema salvo; se não houver preferência, respeita o sistema
   const _savedTheme=localStorage.getItem('yanfin_tema');
   const _prefersLight=window.matchMedia('(prefers-color-scheme: light)').matches;
@@ -13032,7 +13033,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(ml) ml.textContent='MODO NOTURNO';
   }
   // Inicializa autenticação
-  const loggedIn=initAuth();
+  const loggedIn=await initAuth();
   if(!loggedIn) return; // aguarda login
   _initApp();
 });

@@ -6898,13 +6898,18 @@ async function initAuth(){
     const scr=document.getElementById('login-screen');
     if(scr) scr.style.display='none';
     if(_supabase){
-      // Foto buscada com await — garante que esteja no localStorage antes do initPerfil()
+      // Foto: await + aplica no DOM E no localStorage
       try{
         const {data:fotoRow}=await _supabase.from('user_data')
           .select('data').eq('user_id','__foto__'+saved).maybeSingle();
         if(fotoRow?.data?.perfilFoto){
-          localStorage.setItem(saved+'_perfilFoto',
-            JSON.stringify(fotoRow.data.perfilFoto));
+          const _fb64=fotoRow.data.perfilFoto;
+          try{localStorage.setItem(saved+'_perfilFoto',JSON.stringify(_fb64));}catch(e){}
+          // Aplica ao DOM imediatamente (não depende do localStorage)
+          const _fimg=document.getElementById('perfil-foto-img');
+          const _fph=document.getElementById('perfil-foto-placeholder');
+          if(_fimg){_fimg.src=_fb64;_fimg.style.display='block';}
+          if(_fph)_fph.style.display='none';
         }
       }catch(e){}
       // Lista de usuários em background (não bloqueia)
@@ -6985,6 +6990,7 @@ async function _loadFromSupabase(){
       .select('data').eq('user_id',_authUser).maybeSingle();
     if(error||!data?.data) return false;
     Object.entries(data.data).forEach(([k,v])=>{
+      if(k.endsWith('_perfilFoto')) return; // foto tem linha própria — nunca restaurar daqui
       try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
       catch(e){}
     });
@@ -14808,6 +14814,19 @@ function initPerfil(){
     if(img){img.src=foto;img.style.display='block';}
     const ph=document.getElementById('perfil-foto-placeholder');
     if(ph)ph.style.display='none';
+  } else if(_supabase&&_authUser){
+    // Fallback: localStorage vazio → busca diretamente do Supabase
+    _supabase.from('user_data').select('data')
+      .eq('user_id','__foto__'+_authUser).maybeSingle()
+      .then(({data:fr})=>{
+        if(!fr?.data?.perfilFoto) return;
+        const b=fr.data.perfilFoto;
+        try{localStorage.setItem(_userPrefix()+'perfilFoto',JSON.stringify(b));}catch(e){}
+        const img=document.getElementById('perfil-foto-img');
+        const ph=document.getElementById('perfil-foto-placeholder');
+        if(img){img.src=b;img.style.display='block';}
+        if(ph)ph.style.display='none';
+      }).catch(()=>{});
   }
   const nEl=document.getElementById('perfil-nome-txt');
   if(nEl)nEl.textContent=nome;

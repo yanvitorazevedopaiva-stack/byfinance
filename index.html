@@ -6938,6 +6938,7 @@ async function _syncToSupabase(){
   for(let i=0;i<localStorage.length;i++){
     const k=localStorage.key(i);
     if(k&&k.startsWith(prefix)){
+      if(k===prefix+'perfilFoto') continue; // foto tem linha própria no Supabase
       try{data[k]=JSON.parse(localStorage.getItem(k));}
       catch(e){data[k]=localStorage.getItem(k);}
     }
@@ -6978,6 +6979,14 @@ async function _loadFromSupabase(){
       try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
       catch(e){}
     });
+    // Restaura foto de perfil da linha dedicada
+    try{
+      const {data:fotoRow}=await _supabase.from('user_data')
+        .select('data').eq('user_id','__foto__'+_authUser).maybeSingle();
+      if(fotoRow?.data?.perfilFoto){
+        localStorage.setItem(_userPrefix()+'perfilFoto',JSON.stringify(fotoRow.data.perfilFoto));
+      }
+    }catch(e){}
     const {data:ud}=await _supabase.from('user_data')
       .select('data').eq('user_id','__users__').maybeSingle();
     if(ud?.data?.financeOS_users){
@@ -14798,23 +14807,45 @@ function initPerfil(){
 function onPerfilSelected(inp){
   const file=inp.files[0];
   if(!file)return;
-  if(file.size>4*1024*1024){alert('Imagem muito grande. Máximo 4 MB.');return;}
+  if(file.size>10*1024*1024){alert('Imagem muito grande. Máximo 10 MB.');return;}
   const reader=new FileReader();
   reader.onload=ev=>{
-    const data=ev.target.result;
-    try{save('perfilFoto',data);}catch(e){}
-    // Sidebar foto
-    const img=document.getElementById('perfil-foto-img');
-    if(img){img.src=data;img.style.display='block';}
-    const ph=document.getElementById('perfil-foto-placeholder');
-    if(ph)ph.style.display='none';
-    // Config avatar
-    const ci=document.getElementById('cfg-avatar-img');
-    if(ci){ci.src=data;ci.style.display='block';}
-    const cp=document.getElementById('cfg-avatar-ph');
-    if(cp)cp.style.display='none';
+    // Comprime para 300×300 JPEG 75% antes de salvar — evita estouro do localStorage
+    const tempImg=new Image();
+    tempImg.onload=()=>{
+      const MAX=300;
+      const canvas=document.createElement('canvas');
+      const ratio=Math.min(MAX/tempImg.width,MAX/tempImg.height,1);
+      canvas.width=Math.round(tempImg.width*ratio);
+      canvas.height=Math.round(tempImg.height*ratio);
+      canvas.getContext('2d').drawImage(tempImg,0,0,canvas.width,canvas.height);
+      const compressed=canvas.toDataURL('image/jpeg',0.75);
+      // Salva versão comprimida (~15-30KB em vez de MB)
+      save('perfilFoto',compressed);
+      _saveFotoSupabase(compressed);
+      // Atualiza UI imediatamente
+      const img=document.getElementById('perfil-foto-img');
+      if(img){img.src=compressed;img.style.display='block';}
+      const ph=document.getElementById('perfil-foto-placeholder');
+      if(ph)ph.style.display='none';
+      const ci=document.getElementById('cfg-avatar-img');
+      if(ci){ci.src=compressed;ci.style.display='block';}
+      const cp=document.getElementById('cfg-avatar-ph');
+      if(cp)cp.style.display='none';
+    };
+    tempImg.src=ev.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+async function _saveFotoSupabase(b64){
+  if(!_supabase||!_authUser) return;
+  try{
+    await _supabase.from('user_data').upsert(
+      {user_id:'__foto__'+_authUser,data:{perfilFoto:b64},updated_at:new Date().toISOString()},
+      {onConflict:'user_id'}
+    );
+  }catch(e){}
 }
 
 // ===================== CONFIGURAÇÕES =====================

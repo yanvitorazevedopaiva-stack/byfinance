@@ -5666,6 +5666,7 @@
       <span class="sobre-tech-badge">Chart.js</span>
       <span class="sobre-tech-badge">EmailJS</span>
       <span class="sobre-tech-badge">localStorage</span>
+      <span class="sobre-tech-badge">Supabase</span>
     </div>
   </div>
 
@@ -7238,26 +7239,27 @@ function getVencProximos(dias=7){
 
 // ===================== SAÚDE FINANCEIRA =====================
 function renderHealthBar(){
-  const salario=getSalario();
+  const salario=parseFloat(getSalario())||1;
   const gf=getData('gastosFixos');
   const totalGf=gf.reduce((a,i)=>a+i.val,0);
   const parcelas=getData('parcelas');
   const totalDividas=parcelas.reduce((a,p)=>a+(p.total-p.paga)*p.val,0);
   const parcsAtivas=parcelas.filter(p=>p.paga<p.total).length;
   const saldo=salario-totalGf;
-  const dti=salario>0?(totalGf/salario*100):100;
+  const dti=salario>0?isFinite(totalGf/salario)?(totalGf/salario*100):0:0;
 
   // ── Pontuação: 0-100 ──────────────────────────────────────
   // 1. Comprometimento de renda (peso 40): 0% dti = 40pts, 100% dti = 0pts
   const ptsDti=Math.max(0,40*(1-dti/100));
 
   // 2. Saldo positivo (peso 30): saldo>=0 → até 30pts proporcionais ao % do salário
-  const ptsSaldo=saldo>=0?Math.min(30,(saldo/salario)*60):0;
+  const ptsSaldo=(saldo>=0&&salario>0)?Math.min(30,isFinite(saldo/salario)?(saldo/salario)*60:0):0;
 
   // 3. Dívidas (peso 30): sem dívidas = 30pts; cada R$1k em dívidas retira ~1pt, mín 0
   const ptsDividas=Math.max(0,30-Math.floor(totalDividas/1000));
 
-  const score=Math.min(100,Math.round(ptsDti+ptsSaldo+ptsDividas));
+  const _rawScore=ptsDti+ptsSaldo+ptsDividas;
+  const score=Math.min(100,(isNaN(_rawScore)||!isFinite(_rawScore))?0:Math.round(_rawScore));
 
   // ── Classificação ─────────────────────────────────────────
   const cfg=
@@ -7334,7 +7336,7 @@ function renderHealthBar(){
   // Métricas laterais
   const dtiEl=document.getElementById('hm-dti');
   if(dtiEl){
-    dtiEl.textContent=dti.toFixed(1)+'%';
+    dtiEl.textContent=(isNaN(dti)||!isFinite(dti)?0:dti).toFixed(1)+'%';
     dtiEl.style.color=dti>85?'var(--neon-red)':dti>70?'var(--neon-yellow)':'var(--neon-green)';
   }
   const divEl=document.getElementById('hm-div');
@@ -7387,7 +7389,7 @@ function _scaleOpts(yFmt){
 
 function renderDashboard(){
   renderHealthBar();
-  const salario=getSalario();
+  const salario=parseFloat(getSalario())||1;
   const gf=getData('gastosFixos');
   const totalGf=gf.reduce((a,i)=>a+i.val,0);
   const saldo=salario-totalGf;
@@ -7440,7 +7442,8 @@ function renderDashboard(){
   if(altosFat.length>0) alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">⚡</span><span>Faturas altas mês anterior: ${altosFat.slice(0,2).join(', ')}...</span></div>`;
 
   // Índice de comprometimento de renda (debt-to-income)
-  const dti=(totalGf/salario*100).toFixed(1);
+  const salBase=salario||1;
+  const dti=(salario>0?isFinite(totalGf/salBase)?(totalGf/salBase*100):0:0).toFixed(1);
   const dtiClass=dti>85?'alert-red':dti>70?'alert-yellow':'alert-blue';
   alertsHtml+=`<div class="alert ${dtiClass}"><span class="alert-icon">📊</span><span>Comprometimento de renda: <b>${dti}%</b> em gastos fixos</span></div>`;
   alertsHtml+=`<div class="alert alert-green"><span class="alert-icon">✦</span><span>Liberdade financeira prevista para <b>Agosto/2026</b>!</span></div>`;
@@ -9665,7 +9668,7 @@ function getMetasAnuais(){return load('metas_anuais')||[];}
 function setMetasAnuais(d){save('metas_anuais',d);}
 
 function calcSaldoMensal(){
-  const sal=getSalario();
+  const sal=parseFloat(getSalario())||1;
   const gf=getData('gastosFixos').reduce((a,g)=>a+g.val,0);
   const parc=getData('parcelas').filter(p=>p.paga<p.total).reduce((a,p)=>a+p.val,0);
   return sal-gf-parc;
@@ -11474,11 +11477,11 @@ function addCompra(){
 function possoComprar(id){
   const it=getCompras().find(x=>x.id===id);
   if(!it) return;
-  const sal=getSalario();
+  const sal=parseFloat(getSalario())||1;
   const gf=getData('gastosFixos').reduce((a,g)=>a+g.val,0);
   const parc=getData('parcelas').filter(p=>p.paga<p.total).reduce((a,p)=>a+p.val,0);
   const saldoLivre=sal-gf-parc;
-  const comprometimento=saldoLivre>0?(it.val/saldoLivre*100):Infinity;
+  const comprometimento=saldoLivre>0&&isFinite(it.val/saldoLivre)?(it.val/saldoLivre*100):0;
   const seguro=saldoLivre>=it.val&&comprometimento<=40;
   const cuidado=saldoLivre>=it.val&&comprometimento>40&&comprometimento<=80;
   const arriscado=saldoLivre>=it.val&&comprometimento>80;
@@ -11805,7 +11808,7 @@ function getSecoesRelSel(){
 
 function gerarRelatorioCustom(secoesList,mesRef,anoRef){
   if(!secoesList||!secoesList.length){alert('Selecione ao menos uma seção.');return;}
-  const sal=getSalario();
+  const sal=parseFloat(getSalario())||1;
   const gf=getData('gastosFixos');
   const parc=getData('parcelas');
   const carts=getData('cartoes');
@@ -11829,7 +11832,7 @@ function gerarRelatorioCustom(secoesList,mesRef,anoRef){
   // Pre-compute
   const totalGF=gf.reduce((a,i)=>a+i.val,0);
   const sobra=sal-totalGF;
-  const dti=(totalGF/sal*100).toFixed(1);
+  const dti=(sal>0&&isFinite(totalGF/sal)?totalGF/sal*100:0).toFixed(1);
   const dtiV=parseFloat(dti);
   const totalMensal=parc.filter(p=>p.paga<p.total).reduce((a,p)=>a+p.val,0);
   const parcsAtivas=parc.filter(p=>p.paga<p.total).length;
@@ -12242,7 +12245,7 @@ ${capa}<div class="wrap">${corpos.join('')}</div></body></html>`;
 // ===================== RELATÓRIO PDF =====================
 function gerarRelatorio(){
   /* ── DADOS ── */
-  const sal=getSalario();
+  const sal=parseFloat(getSalario())||1;
   const gf=getData('gastosFixos');
   const parc=getData('parcelas');
   const carts=getData('cartoes');
@@ -12262,7 +12265,7 @@ function gerarRelatorio(){
   /* ── CÁLCULOS ── */
   const totalGF=gf.reduce((a,i)=>a+i.val,0);
   const sobra=sal-totalGF;
-  const dti=(totalGF/sal*100).toFixed(1);
+  const dti=(sal>0&&isFinite(totalGF/sal)?totalGF/sal*100:0).toFixed(1);
   const totalDiv=parc.reduce((a,p)=>a+(p.total-p.paga)*p.val,0);
   const totalMensal=parc.filter(p=>p.paga<p.total).reduce((a,p)=>a+p.val,0);
   const parcsAtivas=parc.filter(p=>p.paga<p.total).length;
@@ -12628,7 +12631,7 @@ ${capa}
 
 // ===================== RELATÓRIO PDF — PÁGINA INDIVIDUAL =====================
 function gerarRelatorioPagina(secao){
-  const sal=getSalario();
+  const sal=parseFloat(getSalario())||1;
   const gf=getData('gastosFixos');
   const parc=getData('parcelas');
   const carts=getData('cartoes');
@@ -12648,7 +12651,7 @@ function gerarRelatorioPagina(secao){
 
   const totalGF=gf.reduce((a,i)=>a+i.val,0);
   const sobra=sal-totalGF;
-  const dti=(totalGF/sal*100).toFixed(1);
+  const dti=(sal>0&&isFinite(totalGF/sal)?totalGF/sal*100:0).toFixed(1);
   const totalDiv=parc.reduce((a,p)=>a+(p.total-p.paga)*p.val,0);
   const totalMensal=parc.filter(p=>p.paga<p.total).reduce((a,p)=>a+p.val,0);
   const parcsAtivas=parc.filter(p=>p.paga<p.total).length;
@@ -16537,7 +16540,11 @@ function calcSaudeFinanceira(){
   // Critério 2 — Déficits nos últimos 6 meses (30pts)
   const mesAtual=new Date().getMonth();
   const ultimos6=plan.slice(Math.max(0,mesAtual-5),mesAtual+1);
-  const deficits=ultimos6.filter(p=>p.receita-p.dividas<0).length;
+  const deficits=ultimos6.filter(p=>{
+  const r=parseFloat(p.receita)||0;
+  const d=parseFloat(p.dividas)||0;
+  return r-d<0;
+}).length;
   const pts2=Math.max(0,30-deficits*5);
 
   // Critério 3 — Parcelas vs renda (20pts)
@@ -16549,7 +16556,8 @@ function calcSaudeFinanceira(){
   const pctFin=fins.length?fins.reduce((a,f)=>a+(f.pagas/Math.max(1,f.nParc)),0)/fins.length:1;
   const pts4=Math.round(20*pctFin);
 
-  const score=isNaN(pts1+pts2+pts3+pts4)?0:Math.round(pts1+pts2+pts3+pts4);
+  const _raw=pts1+pts2+pts3+pts4;
+  const score=(isNaN(_raw)||!isFinite(_raw))?0:Math.round(_raw);
   const cor=score>=70?'var(--neon-green)':score>=40?'var(--neon-yellow)':'var(--neon-red)';
   const msg=score>=80?'Finanças saudáveis ✓':score>=60?'Bom, mas há pontos de melhoria':score>=40?'Atenção necessária':'Situação crítica — revise seus gastos';
   const el=document.getElementById('saude-financeira-card');

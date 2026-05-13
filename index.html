@@ -4844,32 +4844,26 @@
       <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:5px">📅 VINCULAR AO MÊS</div>
       <div id="mkt-vincular-item-nome" style="font-size:12px;color:var(--text3);margin-bottom:14px"></div>
 
-      <!-- Step 1: escolher mês -->
-      <div id="mkt-vincular-step1">
-        <div id="mkt-vincular-lista" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto"></div>
-        <div style="margin-top:14px">
-          <button onclick="mktFecharVincular()" class="btn" style="width:100%;border-color:var(--border);color:var(--text3)">CANCELAR</button>
-        </div>
-      </div>
-
-      <!-- Step 2: definir qtd + unidade -->
-      <div id="mkt-vincular-step2" style="display:none">
-        <div id="mkt-vincular-mes-label" style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px"></div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px">QUANTIDADE PARA ESTA COMPRA</div>
-        <div style="display:flex;gap:8px;margin-bottom:16px">
+      <!-- Qtd + Unidade — sempre visível -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-weight:700">QUANTIDADE PARA ESTA COMPRA</div>
+        <div style="display:flex;gap:8px">
           <input id="mkt-vincular-qtd" type="number" min="0.001" step="0.001" value="1"
-            style="flex:1;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:15px;font-weight:700;text-align:center;box-sizing:border-box">
+            style="flex:1;padding:10px 12px;background:var(--bg2);border:1px solid rgba(0,200,255,0.35);color:var(--text);border-radius:8px;font-size:16px;font-weight:700;text-align:center;box-sizing:border-box">
           <select id="mkt-vincular-unidade"
-            style="padding:10px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:14px;font-weight:700;flex-shrink:0">
+            style="padding:10px 10px;background:var(--bg2);border:1px solid rgba(0,200,255,0.35);color:var(--neon-blue);border-radius:8px;font-size:14px;font-weight:700;flex-shrink:0">
             <option value="un">un</option><option value="kg">kg</option><option value="g">g</option>
             <option value="L">L</option><option value="mL">mL</option><option value="cx">cx</option>
             <option value="pct">pct</option><option value="dz">dz</option><option value="m">m</option>
           </select>
         </div>
-        <div style="display:flex;gap:8px">
-          <button onclick="mktVoltarStep1()" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">← VOLTAR</button>
-          <button onclick="mktConfirmarVincular()" class="btn btn-green" style="flex:2">✓ VINCULAR</button>
-        </div>
+      </div>
+
+      <!-- Lista de meses -->
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;letter-spacing:.5px;font-weight:700">SELECIONE O MÊS</div>
+      <div id="mkt-vincular-lista" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto"></div>
+      <div style="margin-top:14px">
+        <button onclick="mktFecharVincular()" class="btn" style="width:100%;border-color:var(--border);color:var(--text3)">CANCELAR</button>
       </div>
     </div>
   </div>
@@ -18867,9 +18861,10 @@ function mktAbrirVincular(itemId){
   _mktVincularItemId=itemId;_mktVincularListaId=null;
   const it=_mktGetCatalogo().find(x=>x.id===itemId);if(!it)return;
   document.getElementById('mkt-vincular-item-nome').textContent=`"${it.nome}" · ${it.cat}`;
-  // Mostra step 1
-  document.getElementById('mkt-vincular-step1').style.display='block';
-  document.getElementById('mkt-vincular-step2').style.display='none';
+  // Pré-preenche qtd/unidade com o padrão do item
+  document.getElementById('mkt-vincular-qtd').value=it.qtd||1;
+  const uSelV=document.getElementById('mkt-vincular-unidade');
+  if(uSelV) uSelV.value=it.unidade||'un';
   const listas=_mktGetListas().filter(l=>l.status==='pendente');
   const el=document.getElementById('mkt-vincular-lista');
   if(!listas.length){
@@ -18887,44 +18882,25 @@ function mktAbrirVincular(itemId){
   document.getElementById('mkt-vincular-modal').style.display='flex';
 }
 
+// Clicou no mês → confirma imediatamente com a qtd/unidade já preenchida
 function mktSelecionarMes(listaId){
-  const it=_mktGetCatalogo().find(x=>x.id===_mktVincularItemId);if(!it)return;
-  const lista=_mktGetListas().find(l=>l.id===listaId);if(!lista)return;
-  if(lista.itens.find(i=>i.refId===it.id)){alert(`"${it.nome}" já está nesta lista.`);return;}
-  _mktVincularListaId=listaId;
-  // Avança para step 2
-  document.getElementById('mkt-vincular-step1').style.display='none';
-  document.getElementById('mkt-vincular-step2').style.display='block';
-  document.getElementById('mkt-vincular-mes-label').textContent='📅 '+_mktMesLabel(lista.mes);
-  // Pré-preenche com qtd e unidade do catálogo
-  document.getElementById('mkt-vincular-qtd').value=it.qtd||1;
-  const uSel=document.getElementById('mkt-vincular-unidade');
-  if(uSel) uSel.value=it.unidade||'un';
-  setTimeout(()=>document.getElementById('mkt-vincular-qtd')?.select(),80);
-}
-
-function mktVoltarStep1(){
-  document.getElementById('mkt-vincular-step2').style.display='none';
-  document.getElementById('mkt-vincular-step1').style.display='block';
-  _mktVincularListaId=null;
-}
-
-function mktConfirmarVincular(){
   const it=_mktGetCatalogo().find(x=>x.id===_mktVincularItemId);if(!it)return;
   const qtd=parseFloat(document.getElementById('mkt-vincular-qtd')?.value)||1;
   const unidade=document.getElementById('mkt-vincular-unidade')?.value||'un';
   const listas=_mktGetListas();
-  const lista=listas.find(l=>l.id===_mktVincularListaId);if(!lista)return;
+  const lista=listas.find(l=>l.id===listaId);if(!lista)return;
+  if(lista.itens.find(i=>i.refId===it.id)){alert(`"${it.nome}" já está nesta lista.`);return;}
   lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd,unidade,precoPrev:it.preco,precoReal:0,comprado:false});
   _mktSetListas(listas);
   mktFecharVincular();
   const msg=document.getElementById('mkt-cad-msg');
-  if(msg){msg.style.color='var(--neon-green)';msg.textContent=`✓ "${it.nome}" → ${_mktMesLabel(lista.mes)}`;setTimeout(()=>{msg.textContent='';},2500);}
+  if(msg){msg.style.color='var(--neon-green)';msg.textContent=`✓ "${it.nome}" (${qtd}${unidade}) → ${_mktMesLabel(lista.mes)}`;setTimeout(()=>{msg.textContent='';},2500);}
   _mktRenderListas();
 }
 
-// Compat (ainda usada em outros lugares)
-function mktVincularAoMes(listaId){mktSelecionarMes(listaId);}
+function mktVoltarStep1(){}// compat
+function mktConfirmarVincular(){}// compat
+function mktVincularAoMes(listaId){mktSelecionarMes(listaId);}// compat
 
 function mktFecharVincular(){
   document.getElementById('mkt-vincular-modal').style.display='none';

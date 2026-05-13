@@ -2166,13 +2166,15 @@
   /* Minimizado: snap para canto inferior direito como chat minimizado */
   #calc-widget.minimized{
     position:fixed!important;
-    bottom:80px!important;top:auto!important;
-    right:24px!important;left:auto!important;
-    width:220px!important;min-width:unset!important;max-width:unset!important;
+    bottom:20px!important;top:auto!important;
+    right:20px!important;left:auto!important;
+    width:auto!important;min-width:unset!important;max-width:unset!important;
     border-radius:40px!important;
     cursor:pointer!important;
     resize:none!important;
-    transition:all .25s cubic-bezier(.34,1.56,.64,1);
+    transform:none!important;
+    transition:box-shadow .2s;
+    box-shadow:0 4px 20px rgba(0,0,0,0.35)!important;
   }
   #calc-widget.minimized .calc-display,
   #calc-widget.minimized .calc-hist,
@@ -2188,7 +2190,7 @@
   #calc-widget.minimized .calc-htitle{color:#050a0f!important;font-size:12px!important;}
   #calc-widget.minimized .calc-header-btns .calc-hbtn{color:#050a0f!important;opacity:.7;}
   @media(max-width:768px){
-    #calc-widget.minimized{bottom:74px!important;right:12px!important;}
+    #calc-widget.minimized{bottom:76px!important;right:12px!important;}
   }
   #calc-hist-panel{display:none;border-top:1px solid var(--border);padding:8px 14px;max-height:150px;overflow-y:auto;background:var(--bg2);}
   #calc-hist-panel.open{display:block;}
@@ -6889,7 +6891,26 @@ function _applyUserProfile(u){
 }
 
 async function initAuth(){
-  // Busca usuários do Supabase ANTES de mostrar o login
+  // Verifica sessão IMEDIATAMENTE (síncrono) — evita qualquer flash da tela de login
+  const saved=sessionStorage.getItem('financeOS_user');
+  if(saved){
+    _authUser=saved;
+    const scr=document.getElementById('login-screen');
+    if(scr) scr.style.display='none';
+    // Atualiza lista de usuários em background sem bloquear o app
+    if(_supabase){
+      _supabase.from('user_data').select('data')
+        .eq('user_id','__users__').maybeSingle()
+        .then(({data})=>{
+          if(data?.data?.financeOS_users){
+            localStorage.setItem('financeOS_users',
+              JSON.stringify(data.data.financeOS_users));
+          }
+        }).catch(()=>{});
+    }
+    return true;
+  }
+  // Sem sessão ativa: busca usuários do Supabase ANTES de exibir o login
   if(_supabase){
     try{
       const {data}=await _supabase.from('user_data')
@@ -6899,13 +6920,6 @@ async function initAuth(){
           JSON.stringify(data.data.financeOS_users));
       }
     }catch(e){}
-  }
-  const saved=sessionStorage.getItem('financeOS_user');
-  if(saved){
-    _authUser=saved;
-    const scr=document.getElementById('login-screen');
-    if(scr) scr.style.display='none';
-    return true;
   }
   // Enter key support
   ['li-user','li-pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
@@ -7236,18 +7250,17 @@ function showPage(id){
   if(byData) byData.classList.add('active');
   else if(id==='lancamentos'){const el=document.getElementById('nav-lancamentos');if(el)el.classList.add('active');}
   currentPage=id; _currentPage=id;
+  sessionStorage.setItem('_lastPage',id);
   const _btnCalcFixo=document.getElementById('btn-calc-fixo');
   if(_btnCalcFixo){
     _btnCalcFixo.style.display=(id==='lancamentos'||id==='documentos')?'none':'flex';
   }
-  if(id==='lancamentos'){
+  // Auto-abre a calculadora em Lançamentos APENAS no desktop
+  if(id==='lancamentos'&&window.innerWidth>768){
     setTimeout(()=>{
       const cw=document.getElementById('calc-widget');
-      if(cw&&!cw.classList.contains('open'))toggleCalc();
+      if(cw&&(cw.style.display==='none'||!cw.style.display)) toggleCalc();
     },300);
-  } else {
-    const cw=document.getElementById('calc-widget');
-    if(cw&&cw.classList.contains('open'))toggleCalc();
   }
   const tbl=document.getElementById('mob-topbar-title');
   if(tbl) tbl.textContent=PAGE_LABELS[id]||id.toUpperCase();
@@ -13077,6 +13090,11 @@ document.addEventListener('DOMContentLoaded',async()=>{
   const loggedIn=await initAuth();
   if(!loggedIn) return; // aguarda login
   _initApp();
+  // Restaura a última página visitada antes do F5
+  const _lp=sessionStorage.getItem('_lastPage');
+  if(_lp&&_lp!=='dashboard'&&document.getElementById('page-'+_lp)){
+    showPage(_lp);
+  }
 });
 
 // ===================== NAV DRAG & DROP =====================
@@ -16230,7 +16248,7 @@ function toggleCalc(){
     if(pos.left) w.style.left=pos.left;
     if(pos.right) w.style.right=pos.right;
     if(pos.width) w.style.width=pos.width;
-    if(pos.minimized){_calcMinimized=true;w.classList.add('minimized');document.getElementById('calc-min-btn').textContent='□';}
+    if(pos.minimized){_calcMinimized=true;w.classList.add('minimized');const mb=document.getElementById('calc-min-btn');if(mb)mb.textContent='□';}
     setTimeout(()=>{
       const h=document.getElementById('calc-drag-handle');
       if(h) _enableCalcDrag(h);
@@ -16245,33 +16263,19 @@ function toggleCalcMinimize(){
   const btn=document.getElementById('calc-min-btn');
   if(btn) btn.textContent=isMin?'□':'_';
   if(isMin){
-    cw.style.width='52px';
-    cw.style.height='52px';
-    cw.style.minWidth='unset';
-    cw.style.maxWidth='unset';
-    cw.style.borderRadius='50%';
-    cw.style.overflow='hidden';
-    cw.style.display='flex';
-    cw.style.alignItems='center';
-    cw.style.justifyContent='center';
-    cw.style.fontSize='26px';
-    cw.style.cursor='grab';
-    cw.style.padding='0';
-    cw.innerHTML='<span style="pointer-events:none;user-select:none">🖩</span>';
-    cw.onclick=toggleCalcMinimize;
-    _enableCalcDrag(cw);
+    // Limpa estilos inline para o CSS .minimized posicionar no canto fixo
+    ['top','left','right','bottom','width','height','minWidth','maxWidth',
+     'borderRadius','overflow','fontSize','cursor','padding',
+     'alignItems','justifyContent'].forEach(p=>{cw.style[p]='';});
+    cw.style.display='block'; // mantém visível
+    cw.onclick=null; // sem clique-para-restaurar no container — usa o header
   } else {
-    cw.style.width='';
-    cw.style.height='';
-    cw.style.minWidth='';
-    cw.style.maxWidth='';
-    cw.style.borderRadius='';
-    cw.style.overflow='';
-    cw.style.fontSize='';
-    cw.style.cursor='';
-    cw.style.padding='';
-    cw.onclick=null;
-    _rebuildCalcWidget();
+    // Restaurado: volta ao modo normal, re-habilita drag no header
+    cw.style.display='block';
+    setTimeout(()=>{
+      const h=document.getElementById('calc-drag-handle');
+      if(h) _enableCalcDrag(h);
+    },50);
   }
 }
 function _rebuildCalcWidget(){

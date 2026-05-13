@@ -82,42 +82,6 @@
   body.day select { color:var(--text2); }
   body.day select option { background:var(--bg3); color:var(--text); }
 
-  /* ===== FAB SPEED DIAL ===== */
-  /* Canto superior direito do conteúdo */
-  #fab-speed-dial{
-    position:fixed;
-    top:76px;
-    right:24px;
-    z-index:801;
-    display:flex;flex-direction:column;align-items:flex-end;gap:8px;
-    pointer-events:none;
-  }
-  #fab-speed-dial.open{pointer-events:all;}
-  .fab-dial-item{
-    display:flex;align-items:center;gap:10px;
-    background:var(--card);border:1px solid var(--border);
-    border-radius:40px;padding:9px 16px 9px 10px;cursor:pointer;
-    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
-    color:var(--text);letter-spacing:.4px;
-    box-shadow:0 4px 20px rgba(0,0,0,.4);
-    white-space:nowrap;opacity:0;
-    transform:translateY(-12px);
-    transition:opacity .18s, transform .18s, border-color .15s, color .15s;
-    pointer-events:none;
-  }
-  #fab-speed-dial.open .fab-dial-item{opacity:1;transform:translateY(0);pointer-events:all;}
-  /* stagger: primeiro item aparece primeiro (mais próximo do botão) */
-  .fab-dial-item:nth-child(1){transition-delay:0s;}
-  .fab-dial-item:nth-child(2){transition-delay:.04s;}
-  .fab-dial-item:nth-child(3){transition-delay:.08s;}
-  .fab-dial-item:nth-child(4){transition-delay:.12s;}
-  .fab-dial-item:nth-child(5){transition-delay:.16s;}
-  .fab-dial-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-  .fab-dial-item:hover{border-color:var(--neon-blue);color:var(--neon-blue);}
-  .fab-dial-item:hover .fab-dial-icon{background:rgba(0,200,255,0.15);}
-  body.day .fab-dial-item{box-shadow:0 2px 8px rgba(0,0,0,.14);}
-  #fab-lanc.dial-open{transform:rotate(45deg) scale(1.05)!important;}
-
   /* ===== BOTÕES DE ANEXO ===== */
   .btn-anx {
     display:inline-flex;align-items:center;gap:3px;
@@ -881,8 +845,8 @@
 
   /* ===== TABLET (769px – 1024px) ===== */
   @media(max-width:1024px){
-    #sidebar{width:210px;}
-    #main{margin-left:210px;}
+    #sidebar{width:240px;}
+    #main{margin-left:240px;}
     .grid4{grid-template-columns:1fr 1fr;}
     .grid3{grid-template-columns:1fr 1fr;}
     .page{padding:20px;}
@@ -2467,7 +2431,7 @@
   ══════════════════════════════════════════ */
   .mob-bottom-bar{
     display:none;
-    position:fixed;bottom:0;left:0;right:0;height:64px;z-index:1000;
+    position:fixed;bottom:0;left:0;right:0;height:68px;z-index:1000;
     background:var(--card);border-top:1px solid var(--border);
     backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     align-items:stretch;
@@ -2475,12 +2439,12 @@
   .mob-nav-item{
     flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:3px;cursor:pointer;background:none;border:none;
-    font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
     letter-spacing:.5px;color:var(--text3);transition:color .18s;padding:0;
   }
   .mob-nav-item:hover,.mob-nav-item.active{color:var(--neon-blue);}
   body.day .mob-nav-item:hover,body.day .mob-nav-item.active{color:#2563eb;}
-  .mob-nav-icon{font-size:20px;line-height:1;}
+  .mob-nav-icon{font-size:22px;line-height:1;}
   .mob-nav-center{
     flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:3px;cursor:pointer;background:none;border:none;
@@ -2488,10 +2452,10 @@
     letter-spacing:.5px;transition:all .18s;padding:0;
   }
   .mob-nav-center-btn{
-    width:46px;height:46px;border-radius:50%;margin-bottom:2px;
+    width:52px;height:52px;border-radius:50%;margin-bottom:2px;
     background:linear-gradient(135deg,var(--neon-green),var(--neon-blue));
     display:flex;align-items:center;justify-content:center;
-    font-size:22px;color:#050a0f;font-weight:900;
+    font-size:24px;color:#050a0f;font-weight:900;
     box-shadow:0 0 20px rgba(0,255,157,0.4);transition:transform .18s,box-shadow .18s;
   }
   .mob-nav-center:hover .mob-nav-center-btn{transform:scale(1.08);box-shadow:0 0 28px rgba(0,255,157,0.6);}
@@ -2521,18 +2485,18 @@
   .mob-drawer-logo{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:800;color:var(--neon-green);letter-spacing:2px;}
   .mob-drawer-close{background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:2px 6px;line-height:1;border-radius:6px;transition:color .15s;}
   .mob-drawer-close:hover{color:var(--text);}
-  .mob-drawer-section{padding:8px 8px;}
+  .mob-drawer-section{padding:8px 8px;border-bottom:1px solid var(--border);margin-bottom:4px;}
   .mob-drawer-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--text3);padding:6px 8px 4px;font-weight:700;}
   .mob-drawer-item{
-    display:flex;align-items:center;gap:12px;padding:11px 12px;
+    display:flex;align-items:center;gap:12px;padding:13px 14px;
     border-radius:10px;cursor:pointer;background:none;border:none;
-    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
     letter-spacing:.5px;color:var(--text2);width:100%;text-align:left;
     transition:all .15s;
   }
   .mob-drawer-item:hover,.mob-drawer-item.active{background:rgba(0,200,255,0.08);color:var(--neon-blue);}
   body.day .mob-drawer-item:hover,body.day .mob-drawer-item.active{background:rgba(37,99,235,0.07);color:#2563eb;}
-  .mob-drawer-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+  .mob-drawer-icon{font-size:18px;width:20px;text-align:center;flex-shrink:0;}
   .mob-drawer-footer{padding:12px 8px;border-top:1px solid var(--border);margin-top:auto;flex-shrink:0;}
 
   /* ══════════════════════════════════════════
@@ -2546,15 +2510,22 @@
     #sidebar{display:none;}
 
     /* main */
-    #main{margin-left:0!important;padding-top:0;padding-bottom:80px;}
-    .page{padding:12px 12px 16px;}
+    #main{margin-left:0!important;padding-top:0;padding-bottom:90px;}
+    .page{padding:12px 12px 90px;}
 
     /* Mobile: FAB volta para canto inferior esquerdo acima da bottom bar */
     #fab-speed-dial{top:auto;bottom:76px;left:16px;right:auto;align-items:flex-start;}
     #fab-speed-dial .fab-dial-item{transform:translateX(-20px);}
     #fab-speed-dial.open .fab-dial-item{transform:translateX(0);}
     #fab-lanc{top:auto;bottom:76px;left:16px;right:auto;}
-    #calc-widget{top:auto;bottom:148px;left:16px;right:auto;width:calc(100vw - 32px);max-width:320px;}
+    #calc-widget{
+      top:auto!important;bottom:80px!important;
+      left:50%!important;right:auto!important;
+      transform:translateX(-50%)!important;
+      width:calc(100vw - 32px)!important;max-width:340px!important;
+    }
+
+    #btn-calc-fixo{display:none!important;}
 
     /* mob-topbar oculta (substituída pela bottom bar) */
     #mob-topbar{display:none!important;}
@@ -2598,6 +2569,8 @@
 
     /* ── DASHBOARD ── */
     #page-dashboard .grid4{grid-template-columns:1fr 1fr!important;}
+    #page-dashboard .card-value{font-size:18px!important;}
+    #page-dashboard .sec-title{font-size:10px!important;}
     .health-bar-wrap{flex-direction:column!important;gap:12px;}
     .health-right{flex-direction:row!important;flex-wrap:wrap!important;width:100%!important;}
     .health-metric{flex:1;min-width:110px;}
@@ -3144,7 +3117,10 @@
 <div id="mob-topbar">
   <button id="mob-hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
   <span id="mob-topbar-title">B&amp;Y FINANCE</span>
-  <div id="mob-topbar-right"></div>
+  <div id="mob-topbar-right" style="display:flex;align-items:center;gap:8px">
+    <span id="mob-topbar-user" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px"></span>
+    <button onclick="toggleCalc()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--neon-green);font-size:14px;cursor:pointer">🖩</button>
+  </div>
 </div>
 
 <!-- SIDEBAR OVERLAY (mobile) -->
@@ -5754,27 +5730,6 @@
   </div>
 </div>
 
-<!-- FAB LANÇAMENTO -->
-<!-- FAB Speed Dial -->
-<div id="fab-speed-dial">
-  <div class="fab-dial-item" onclick="fabDialAcao('lancamento')">
-    <span class="fab-dial-icon" style="background:rgba(0,255,157,0.15)">⚡</span><span>Lançamento</span>
-  </div>
-  <div class="fab-dial-item" onclick="fabDialAcao('receita')">
-    <span class="fab-dial-icon" style="background:rgba(0,200,255,0.15)">💰</span><span>Receita</span>
-  </div>
-  <div class="fab-dial-item" onclick="fabDialAcao('gastos')">
-    <span class="fab-dial-icon" style="background:rgba(255,215,0,0.15)">📌</span><span>Gasto Fixo</span>
-  </div>
-  <div class="fab-dial-item" onclick="fabDialAcao('compras')">
-    <span class="fab-dial-icon" style="background:rgba(168,85,247,0.15)">🛒</span><span>Compra</span>
-  </div>
-  <div class="fab-dial-item" onclick="fabDialClose();toggleCalc()">
-    <span class="fab-dial-icon" style="background:rgba(0,200,255,0.15)">🖩</span><span>Calculadora</span>
-  </div>
-</div>
-<div id="fab-overlay" style="display:none;position:fixed;inset:0;z-index:799" onclick="fabDialClose()"></div>
-<button id="fab-lanc" onclick="fabDialToggle()" title="Menu rápido">+</button>
 <div id="calc-widget">
   <div class="calc-header" id="calc-drag-handle" onclick="if(document.getElementById('calc-widget').classList.contains('minimized'))toggleCalcMinimize()">
     <span class="calc-htitle">🖩 CALCULADORA</span>
@@ -6715,6 +6670,14 @@ function doCadastro(){
   if(users[u]){err.textContent='Usuário já existe.';return;}
   users[u]=_hashPass(p);
   _saveUsers(users);
+  if(_supabase){
+    _supabase.from('user_data').upsert(
+      {user_id:'__users__',
+       data:{financeOS_users:users},
+       updated_at:new Date().toISOString()},
+      {onConflict:'user_id'}
+    ).catch(()=>{});
+  }
   if(email) _setUserEmail(u,email);
   // gera e salva chave de recuperação
   const rk=Math.floor(100000+Math.random()*900000).toString();
@@ -6890,12 +6853,23 @@ function _applyUserProfile(u){
   const sub=document.getElementById('logo-sub');
   if(sub) sub.textContent='// '+u.toUpperCase()+' CONTROL v1.0';
   document.title='BY Persona Finance — '+u.charAt(0).toUpperCase()+u.slice(1);
-  // garante que o nome no sidebar reflita o usuário logado imediatamente
   const nEl=document.getElementById('perfil-nome-txt');
   if(nEl) nEl.textContent=u.toUpperCase();
+  const mobUser=document.getElementById('mob-topbar-user');
+  if(mobUser) mobUser.textContent='@'+u.toLowerCase();
 }
 
 function initAuth(){
+  if(_supabase){
+    _supabase.from('user_data').select('data')
+      .eq('user_id','__users__').single()
+      .then(({data})=>{
+        if(data?.data?.financeOS_users){
+          localStorage.setItem('financeOS_users',
+            JSON.stringify(data.data.financeOS_users));
+        }
+      }).catch(()=>{});
+  }
   const saved=sessionStorage.getItem('financeOS_user');
   if(saved){
     _authUser=saved;
@@ -6924,6 +6898,18 @@ async function _syncToSupabase(){
       catch(e){data[k]=localStorage.getItem(k);}
     }
   }
+  const globalKeys=['financeOS_users','fos_migrated_v2'];
+  globalKeys.forEach(k=>{
+    const v=localStorage.getItem(k);
+    if(v) try{data[k]=JSON.parse(v);}catch(e){data[k]=v;}
+  });
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&(k.startsWith('financeOS_email_')||k.startsWith('financeOS_rk_'))){
+      try{data[k]=JSON.parse(localStorage.getItem(k));}
+      catch(e){data[k]=localStorage.getItem(k);}
+    }
+  }
   try{
     await _supabase.from('user_data').upsert(
       {user_id:_authUser,data,updated_at:new Date().toISOString()},
@@ -6948,6 +6934,12 @@ async function _loadFromSupabase(){
       try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
       catch(e){}
     });
+    const {data:ud}=await _supabase.from('user_data')
+      .select('data').eq('user_id','__users__').single();
+    if(ud?.data?.financeOS_users){
+      localStorage.setItem('financeOS_users',
+        JSON.stringify(ud.data.financeOS_users));
+    }
     return true;
   }catch(e){return false;}
 }
@@ -7202,6 +7194,19 @@ function showPage(id){
   if(byData) byData.classList.add('active');
   else if(id==='lancamentos'){const el=document.getElementById('nav-lancamentos');if(el)el.classList.add('active');}
   currentPage=id; _currentPage=id;
+  const _btnCalcFixo=document.getElementById('btn-calc-fixo');
+  if(_btnCalcFixo){
+    _btnCalcFixo.style.display=(id==='lancamentos'||id==='documentos')?'none':'flex';
+  }
+  if(id==='lancamentos'){
+    setTimeout(()=>{
+      const cw=document.getElementById('calc-widget');
+      if(cw&&!cw.classList.contains('open'))toggleCalc();
+    },300);
+  } else {
+    const cw=document.getElementById('calc-widget');
+    if(cw&&cw.classList.contains('open'))toggleCalc();
+  }
   const tbl=document.getElementById('mob-topbar-title');
   if(tbl) tbl.textContent=PAGE_LABELS[id]||id.toUpperCase();
   if(window.innerWidth<=768&&typeof _mobUpdateBar==='function') _mobUpdateBar(id);
@@ -17869,12 +17874,24 @@ function _verAnexoBemDoc(id){
     <button class="mob-drawer-item" onclick="mobNavDrawer('receita')">
       <span class="mob-drawer-icon">◈</span>RECEITA
     </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('metas')">
+      <span class="mob-drawer-icon">🎯</span>METAS
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('mercado')">
+      <span class="mob-drawer-icon">🛒</span>MERCADO
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('tarefas')">
+      <span class="mob-drawer-icon">✓</span>TAREFAS
+    </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('relatorios')">
       <span class="mob-drawer-icon">▦</span>RELATÓRIOS
     </button>
   </div>
 
   <div class="mob-drawer-footer">
+    <button class="mob-drawer-item" onclick="closeMobDrawer();toggleCalc()">
+      <span class="mob-drawer-icon">🖩</span>CALCULADORA
+    </button>
     <button class="mob-drawer-item" onclick="toggleTheme()" id="mob-theme-btn">
       <span class="mob-drawer-icon" id="mob-theme-icon">☀</span>
       <span id="mob-theme-label">MODO DIURNO</span>
@@ -18689,5 +18706,14 @@ function renderTarefas(){
 }
 </script>
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
+<button id="btn-calc-fixo" onclick="toggleCalc()"
+  title="Calculadora"
+  style="position:fixed;top:14px;right:18px;z-index:1200;
+    width:42px;height:42px;border-radius:50%;
+    background:var(--card);border:1px solid var(--border);
+    color:var(--neon-green);font-size:20px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 12px rgba(0,0,0,0.18);
+    transition:all .18s">🖩</button>
 </body>
 </html>

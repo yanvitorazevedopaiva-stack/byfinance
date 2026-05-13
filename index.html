@@ -4727,6 +4727,17 @@
             </div>
           </div>
           <input id="mkt-preco" type="text" inputmode="numeric" placeholder="Preço (R$) conforme NF" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+          <!-- Vincular ao cadastrar -->
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);transition:border-color .2s"
+            onmouseover="this.style.borderColor='rgba(0,255,157,0.35)'" onmouseout="this.style.borderColor='var(--border)'">
+            <input type="checkbox" id="mkt-cad-vincular" onchange="mktToggleCadVincular()" style="accent-color:var(--neon-green);width:15px;height:15px;cursor:pointer">
+            <span style="font-size:11px;color:var(--text2);font-weight:600">Vincular à lista do mês ao cadastrar</span>
+          </label>
+          <div id="mkt-cad-vincular-sel" style="display:none">
+            <select id="mkt-cad-lista-sel" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:8px;font-size:12px;font-weight:700">
+              <option value="">— selecione o mês —</option>
+            </select>
+          </div>
           <button class="btn btn-green" onclick="mktCadastrarItem()" style="width:100%">+ CADASTRAR</button>
           <div id="mkt-cad-msg" style="font-size:11px;min-height:14px;text-align:center"></div>
         </div>
@@ -18689,6 +18700,21 @@ function mktClearEditFoto(){
   const inp=document.getElementById('mkt-edit-foto-input');if(inp)inp.value='';
 }
 
+// Preenche select de listas pendentes no formulário de cadastro
+function mktToggleCadVincular(){
+  const chk=document.getElementById('mkt-cad-vincular');
+  const wrap=document.getElementById('mkt-cad-vincular-sel');
+  if(!chk||!wrap)return;
+  wrap.style.display=chk.checked?'block':'none';
+  if(chk.checked) _mktAtualizarSelectListas();
+}
+function _mktAtualizarSelectListas(){
+  const sel=document.getElementById('mkt-cad-lista-sel');if(!sel)return;
+  const pendentes=_mktGetListas().filter(l=>l.status==='pendente').sort((a,b)=>b.mes.localeCompare(a.mes));
+  sel.innerHTML='<option value="">— selecione o mês —</option>'+
+    pendentes.map(l=>`<option value="${l.id}">📅 ${_mktMesLabel(l.mes)} (${l.itens.length} item${l.itens.length!==1?'s':''})</option>`).join('');
+}
+
 function mktCadastrarItem(){
   const nome=(document.getElementById('mkt-nome')?.value||'').trim();
   const cat=document.getElementById('mkt-cat')?.value||'Outros';
@@ -18697,18 +18723,41 @@ function mktCadastrarItem(){
   const preco=_mktParseBRL(document.getElementById('mkt-preco')?.value);
   const msg=document.getElementById('mkt-cad-msg');
   if(!nome){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o nome.';}return;}
+
+  // Salva SEMPRE no catálogo
+  const newId=Date.now();
   const c=_mktGetCatalogo();
-  c.push({id:Date.now(),nome,cat,qtd,unidade,preco,foto:_mktCadFotoB64||''});
+  c.push({id:newId,nome,cat,qtd,unidade,preco,foto:_mktCadFotoB64||''});
   _mktSetCatalogo(c);
+
+  // Vincula à lista do mês se checkbox marcado
+  const chk=document.getElementById('mkt-cad-vincular');
+  const listaIdStr=document.getElementById('mkt-cad-lista-sel')?.value;
+  let vinculouMsg='';
+  if(chk?.checked&&listaIdStr){
+    const listaId=parseInt(listaIdStr);
+    const listas=_mktGetListas();
+    const lista=listas.find(l=>l.id===listaId);
+    if(lista&&!lista.itens.find(i=>i.refId===newId)){
+      lista.itens.push({id:Date.now()+1,refId:newId,nome,cat,qtd,unidade,precoPrev:preco,precoReal:0,comprado:false});
+      _mktSetListas(listas);
+      vinculouMsg=' · vinculado a '+_mktMesLabel(lista.mes);
+      _mktRenderListas();
+    }
+  }
+
+  // Limpa formulário
   ['mkt-nome','mkt-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('mkt-qtd').value='1';
   document.getElementById('mkt-unidade').value='un';
-  // Limpa foto
   _mktCadFotoB64='';
   const wrap=document.getElementById('mkt-cad-foto-wrap');if(wrap){wrap.innerHTML='📷';wrap.style.border='2px dashed var(--border)';}
   const lbl=document.getElementById('mkt-foto-label');if(lbl)lbl.textContent='Sem foto';
   const fInp=document.getElementById('mkt-foto-input');if(fInp)fInp.value='';
-  if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Cadastrado!';setTimeout(()=>{msg.textContent='';},1800);}
+  // Mantém checkbox mas reseta select para próximo cadastro
+  if(chk?.checked) _mktAtualizarSelectListas();
+
+  if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Cadastrado'+vinculouMsg+'!';setTimeout(()=>{msg.textContent='';},2500);}
   _mktRenderCatalogo();
 }
 function mktRemoveCatalogo(id){showConfirm('Remover Item','Remover este item do catálogo?',()=>{_mktSetCatalogo(_mktGetCatalogo().filter(x=>x.id!==id));_mktRenderCatalogo();});}

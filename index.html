@@ -394,16 +394,16 @@
     position:relative; cursor:pointer;
   }
   .perfil-foto {
-    width:72px; height:72px; border-radius:50%; object-fit:cover;
+    width:88px; height:88px; border-radius:50%; object-fit:cover;
     border:2.5px solid var(--neon-blue);
     box-shadow:0 0 20px rgba(0,200,255,.4);
     display:block; background:var(--bg3);
   }
   .perfil-foto-placeholder {
-    width:72px; height:72px; border-radius:50%;
+    width:88px; height:88px; border-radius:50%;
     border:2.5px dashed var(--text3);
     display:flex; align-items:center; justify-content:center;
-    font-size:26px; color:var(--text3); cursor:pointer;
+    font-size:30px; color:var(--text3); cursor:pointer;
     background:var(--bg3);
     transition:border-color .2s,color .2s;
   }
@@ -6986,22 +6986,31 @@ async function _syncToSupabase(){
 async function _loadFromSupabase(){
   if(!_supabase||!_authUser) return false;
   try{
-    const {data,error}=await _supabase.from('user_data')
-      .select('data').eq('user_id',_authUser).maybeSingle();
-    if(error||!data?.data) return false;
-    Object.entries(data.data).forEach(([k,v])=>{
-      if(k.endsWith('_perfilFoto')) return; // foto tem linha própria — nunca restaurar daqui
-      try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
-      catch(e){}
-    });
-    // Restaura foto de perfil da linha dedicada
-    try{
-      const {data:fotoRow}=await _supabase.from('user_data')
-        .select('data').eq('user_id','__foto__'+_authUser).maybeSingle();
-      if(fotoRow?.data?.perfilFoto){
-        localStorage.setItem(_userPrefix()+'perfilFoto',JSON.stringify(fotoRow.data.perfilFoto));
-      }
-    }catch(e){}
+    // Dados principais e foto carregados em paralelo — foto NUNCA depende do main row
+    const [mainRes,fotoRes]=await Promise.all([
+      _supabase.from('user_data').select('data').eq('user_id',_authUser).maybeSingle(),
+      _supabase.from('user_data').select('data').eq('user_id','__foto__'+_authUser).maybeSingle()
+    ]);
+
+    // Restaura dados principais (se existirem)
+    if(!mainRes.error&&mainRes.data?.data){
+      Object.entries(mainRes.data.data).forEach(([k,v])=>{
+        if(k.endsWith('_perfilFoto')) return; // foto tem linha própria
+        try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
+        catch(e){}
+      });
+    }
+
+    // Restaura foto — independente dos dados principais
+    if(fotoRes.data?.data?.perfilFoto){
+      const _b64=fotoRes.data.data.perfilFoto;
+      try{localStorage.setItem(_userPrefix()+'perfilFoto',JSON.stringify(_b64));}catch(e){}
+      // Aplica no DOM imediatamente (não depende de localStorage)
+      const _fi=document.getElementById('perfil-foto-img');
+      const _fp=document.getElementById('perfil-foto-placeholder');
+      if(_fi){_fi.src=_b64;_fi.style.display='block';}
+      if(_fp)_fp.style.display='none';
+    }
     const {data:ud}=await _supabase.from('user_data')
       .select('data').eq('user_id','__users__').maybeSingle();
     if(ud?.data?.financeOS_users){

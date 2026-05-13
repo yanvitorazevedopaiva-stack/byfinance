@@ -6603,16 +6603,32 @@ function doRecuperar(){
   setTimeout(()=>switchLoginTab('login'),1800);
 }
 
-function doLogin(){
+async function doLogin(){
   const uInput=document.getElementById('li-user').value.trim();
   const p=document.getElementById('li-pass').value;
   const err=document.getElementById('li-error');
+  const btn=document.querySelector('.login-btn');
   if(!uInput||!p){err.textContent='Preencha todos os campos.';return;}
-  const users=_getUsers();
-  // 1) username case-insensitive
+  if(btn){btn.textContent='VERIFICANDO...';btn.disabled=true;}
+  err.textContent='';
+  // Tenta local primeiro
+  let users=_getUsers();
   let u=Object.keys(users).find(k=>k.toLowerCase()===uInput.toLowerCase());
-  // 2) e-mail
   if(!u) u=_findUserByEmail(uInput);
+  // Se não achou local, busca no Supabase
+  if(!u&&_supabase){
+    try{
+      const {data}=await _supabase.from('user_data')
+        .select('data').eq('user_id','__users__').single();
+      if(data?.data?.financeOS_users){
+        localStorage.setItem('financeOS_users',
+          JSON.stringify(data.data.financeOS_users));
+        users=data.data.financeOS_users;
+        u=Object.keys(users).find(k=>k.toLowerCase()===uInput.toLowerCase());
+      }
+    }catch(e){}
+  }
+  if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
   if(!u||users[u]!==_hashPass(p)){err.textContent='Usuário ou senha inválidos.';return;}
   _startSession(u);
 }
@@ -6678,9 +6694,22 @@ function doCadastro(){
       {onConflict:'user_id'}
     ).catch(()=>{});
   }
-  if(email) _setUserEmail(u,email);
   // gera e salva chave de recuperação
   const rk=Math.floor(100000+Math.random()*900000).toString();
+  if(email){
+    _setUserEmail(u,email);
+    if(_supabase){
+      const emailData={};
+      emailData['financeOS_email_'+u]=email;
+      emailData['financeOS_rk_'+u]=rk;
+      _supabase.from('user_data').upsert(
+        {user_id:'__meta__'+u,
+         data:emailData,
+         updated_at:new Date().toISOString()},
+        {onConflict:'user_id'}
+      ).catch(()=>{});
+    }
+  }
   localStorage.setItem('financeOS_rk_'+u,rk);
   if(_supabase){
     _supabase.from('user_data').upsert(
@@ -6940,6 +6969,18 @@ async function _loadFromSupabase(){
     if(ud?.data?.financeOS_users){
       localStorage.setItem('financeOS_users',
         JSON.stringify(ud.data.financeOS_users));
+    }
+    if(_supabase&&_authUser){
+      try{
+        const {data:meta}=await _supabase.from('user_data')
+          .select('data').eq('user_id','__meta__'+_authUser).single();
+        if(meta?.data){
+          Object.entries(meta.data).forEach(([k,v])=>{
+            try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
+            catch(e){}
+          });
+        }
+      }catch(e){}
     }
     return true;
   }catch(e){return false;}
@@ -14897,6 +14938,12 @@ function cfgLimparDados(){
     if(k&&k.startsWith(_authUser+'_')) toRemove.push(k);
   }
   toRemove.forEach(k=>localStorage.removeItem(k));
+  if(_supabase&&_authUser){
+    _supabase.from('user_data').delete()
+      .eq('user_id',_authUser).catch(()=>{});
+    _supabase.from('user_data').delete()
+      .eq('user_id','__meta__'+_authUser).catch(()=>{});
+  }
   const msg=document.getElementById('cfg-dados-msg');
   cfgMsgShow(msg,'ok','Dados apagados. O sistema será recarregado.');
   setTimeout(()=>location.reload(),1800);
@@ -14908,6 +14955,18 @@ function cfgExcluirConta(){
   const users=_getUsers();
   delete users[_authUser];
   _saveUsers(users);
+  if(_supabase&&_authUser){
+    _supabase.from('user_data').delete()
+      .eq('user_id',_authUser).catch(()=>{});
+    _supabase.from('user_data').delete()
+      .eq('user_id','__meta__'+_authUser).catch(()=>{});
+    _supabase.from('user_data').upsert(
+      {user_id:'__users__',
+       data:{financeOS_users:users},
+       updated_at:new Date().toISOString()},
+      {onConflict:'user_id'}
+    ).catch(()=>{});
+  }
   sessionStorage.removeItem('financeOS_user');
   location.reload();
 }
@@ -16172,33 +16231,140 @@ function toggleCalc(){
     if(pos.right) w.style.right=pos.right;
     if(pos.width) w.style.width=pos.width;
     if(pos.minimized){_calcMinimized=true;w.classList.add('minimized');document.getElementById('calc-min-btn').textContent='□';}
+    setTimeout(()=>{
+      const h=document.getElementById('calc-drag-handle');
+      if(h) _enableCalcDrag(h);
+    },100);
   }
 }
 
 function toggleCalcMinimize(){
-  const w=document.getElementById('calc-widget');
-  _calcMinimized=!_calcMinimized;
-  if(_calcMinimized){
-    // Salva posição/tamanho atual antes de minimizar
-    _calcPosAntes={top:w.style.top,left:w.style.left,right:w.style.right,
-      bottom:w.style.bottom,width:w.style.width};
-    w.classList.add('minimized');
-    // Remove posições inline para que o CSS .minimized tome conta
-    w.style.top='';w.style.left='';w.style.bottom='';w.style.right='';w.style.width='';
+  const cw=document.getElementById('calc-widget');
+  if(!cw) return;
+  const isMin=cw.classList.toggle('minimized');
+  const btn=document.getElementById('calc-min-btn');
+  if(btn) btn.textContent=isMin?'□':'_';
+  if(isMin){
+    cw.style.width='52px';
+    cw.style.height='52px';
+    cw.style.minWidth='unset';
+    cw.style.maxWidth='unset';
+    cw.style.borderRadius='50%';
+    cw.style.overflow='hidden';
+    cw.style.display='flex';
+    cw.style.alignItems='center';
+    cw.style.justifyContent='center';
+    cw.style.fontSize='26px';
+    cw.style.cursor='grab';
+    cw.style.padding='0';
+    cw.innerHTML='<span style="pointer-events:none;user-select:none">🖩</span>';
+    cw.onclick=toggleCalcMinimize;
+    _enableCalcDrag(cw);
   } else {
-    w.classList.remove('minimized');
-    // Restaura posição anterior
-    if(_calcPosAntes){
-      w.style.top=_calcPosAntes.top||'96px';
-      w.style.right=_calcPosAntes.right||'24px';
-      w.style.left=_calcPosAntes.left||'';
-      w.style.bottom=_calcPosAntes.bottom||'';
-      w.style.width=_calcPosAntes.width||'320px';
-    }
+    cw.style.width='';
+    cw.style.height='';
+    cw.style.minWidth='';
+    cw.style.maxWidth='';
+    cw.style.borderRadius='';
+    cw.style.overflow='';
+    cw.style.fontSize='';
+    cw.style.cursor='';
+    cw.style.padding='';
+    cw.onclick=null;
+    _rebuildCalcWidget();
   }
-  document.getElementById('calc-min-btn').textContent=_calcMinimized?'□':'_';
-  _calcSaveState();
 }
+function _rebuildCalcWidget(){
+  const cw=document.getElementById('calc-widget');
+  if(!cw) return;
+  cw.innerHTML=`
+    <div class="calc-header" id="calc-drag-handle"
+      onclick="if(document.getElementById('calc-widget').classList.contains('minimized'))toggleCalcMinimize()">
+      <span class="calc-htitle">🖩 CALCULADORA</span>
+      <div class="calc-header-btns">
+        <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalcHistPanel()" title="Histórico">📋</button>
+        <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalcMinimize()" title="Minimizar" id="calc-min-btn">_</button>
+        <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalc()" title="Fechar">✕</button>
+      </div>
+    </div>
+    <div id="calc-hist-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3)">ÚLTIMOS CÁLCULOS</span>
+        <button onclick="calcLimparHist()" style="background:none;border:none;color:var(--neon-red);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace">Limpar</button>
+      </div>
+      <div id="calc-hist-list"></div>
+    </div>
+    <div class="calc-display">
+      <div class="calc-expr" id="calc-expr"></div>
+      <div class="calc-val" id="calc-val">0</div>
+    </div>
+    <div class="calc-hist" id="calc-hist"></div>
+    <div class="calc-keys">
+      <button class="ck ck-c" onclick="calcKey('C')">C</button>
+      <button class="ck ck-op" onclick="calcKey('±')">±</button>
+      <button class="ck ck-op" onclick="calcKey('%')">%</button>
+      <button class="ck ck-op" onclick="calcKey('÷')">÷</button>
+      <button class="ck" onclick="calcKey('7')">7</button>
+      <button class="ck" onclick="calcKey('8')">8</button>
+      <button class="ck" onclick="calcKey('9')">9</button>
+      <button class="ck ck-op" onclick="calcKey('×')">×</button>
+      <button class="ck" onclick="calcKey('4')">4</button>
+      <button class="ck" onclick="calcKey('5')">5</button>
+      <button class="ck" onclick="calcKey('6')">6</button>
+      <button class="ck ck-op" onclick="calcKey('−')">−</button>
+      <button class="ck" onclick="calcKey('1')">1</button>
+      <button class="ck" onclick="calcKey('2')">2</button>
+      <button class="ck" onclick="calcKey('3')">3</button>
+      <button class="ck ck-op" onclick="calcKey('+')">+</button>
+      <button class="ck ck-s2" onclick="calcKey('0')">0</button>
+      <button class="ck" onclick="calcKey('.')">.</button>
+      <button class="ck ck-eq" onclick="calcKey('=')">=</button>
+    </div>`;
+  _enableCalcDrag(document.getElementById('calc-drag-handle'));
+}
+
+function _enableCalcDrag(handle){
+  const cw=document.getElementById('calc-widget');
+  if(!cw||!handle) return;
+  let startX,startY,startL,startT;
+  function onDown(e){
+    const isMin=cw.classList.contains('minimized');
+    if(!isMin&&!handle.contains(e.target)) return;
+    e.preventDefault();
+    const touch=e.touches?e.touches[0]:e;
+    startX=touch.clientX;startY=touch.clientY;
+    const r=cw.getBoundingClientRect();
+    startL=r.left;startT=r.top;
+    cw.style.cursor='grabbing';
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onUp);
+    document.addEventListener('touchend',onUp);
+  }
+  function onMove(e){
+    e.preventDefault();
+    const touch=e.touches?e.touches[0]:e;
+    const dx=touch.clientX-startX;
+    const dy=touch.clientY-startY;
+    const maxL=window.innerWidth-cw.offsetWidth;
+    const maxT=window.innerHeight-cw.offsetHeight;
+    cw.style.left=Math.max(0,Math.min(maxL,startL+dx))+'px';
+    cw.style.top=Math.max(0,Math.min(maxT,startT+dy))+'px';
+    cw.style.right='auto';
+    cw.style.bottom='auto';
+  }
+  function onUp(){
+    cw.style.cursor=cw.classList.contains('minimized')?'grab':'';
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('touchmove',onMove);
+    document.removeEventListener('mouseup',onUp);
+    document.removeEventListener('touchend',onUp);
+  }
+  const el=cw.classList.contains('minimized')?cw:handle;
+  el.addEventListener('mousedown',onDown);
+  el.addEventListener('touchstart',onDown,{passive:false});
+}
+
 let _calcPosAntes=null;
 
 function toggleCalcHistPanel(){
@@ -18709,12 +18875,13 @@ function renderTarefas(){
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
 <button id="btn-calc-fixo" onclick="toggleCalc()"
   title="Calculadora"
-  style="position:fixed;top:14px;right:18px;z-index:1200;
-    width:42px;height:42px;border-radius:50%;
-    background:var(--card);border:1px solid var(--border);
-    color:var(--neon-green);font-size:20px;cursor:pointer;
+  style="position:fixed;top:12px;right:18px;z-index:1200;
+    width:38px;height:38px;border-radius:50%;
+    background:transparent;border:none;
+    font-size:24px;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
-    box-shadow:0 2px 12px rgba(0,0,0,0.18);
-    transition:all .18s">🖩</button>
+    transition:transform .18s;line-height:1;padding:0"
+  onmouseover="this.style.transform='scale(1.18)'"
+  onmouseout="this.style.transform='scale(1)'">🖩</button>
 </body>
 </html>

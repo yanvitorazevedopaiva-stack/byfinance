@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -4684,145 +4684,185 @@
 
 <!-- ========== MERCADO ========== -->
 <div id="page-mercado" class="page">
-  <div class="page-title">MERCADO</div>
-  <div class="page-sub">// LISTA DE COMPRAS · HISTÓRICO · CONTROLE DE GASTOS</div>
-
-  <!-- KPIs -->
-  <div class="grid3" style="margin-bottom:20px">
-    <div class="card card-green"><div class="card-label">TOTAL PREVISTO</div><div class="card-value val-green" id="mkt-kpi-total">R$ 0,00</div></div>
-    <div class="card card-blue"><div class="card-label">JÁ COMPRADO</div><div class="card-value val-blue" id="mkt-kpi-comprado">R$ 0,00</div></div>
-    <div class="card"><div class="card-label">ITENS NA LISTA</div><div class="card-value" id="mkt-kpi-itens">0</div></div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start" id="mkt-grid">
-    <!-- Formulário -->
-    <div class="card">
-      <div class="sec-title" style="margin-bottom:16px">ADICIONAR ITEM</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">NOME DO ITEM *</div>
-          <input id="mkt-nome" type="text" placeholder="Ex: Arroz, Frango, Sabão..." style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
-          <select id="mkt-cat" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
-            <option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option><option value="Laticinios">🥛 Laticínios</option>
-            <option value="Padaria">🍞 Padaria</option><option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option>
-            <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
-          </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">QUANTIDADE</div>
-            <input id="mkt-qtd" type="number" min="1" value="1" placeholder="1" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PREÇO UNITÁRIO (R$)</div>
-            <input id="mkt-preco" type="number" min="0" step="0.01" placeholder="0,00" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
-          </div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">FOTO (opcional)</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label style="cursor:pointer;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text2)">
-              📷 Escolher foto
-              <input id="mkt-foto-input" type="file" accept="image/*" style="display:none" onchange="mktPreviewFoto(this)">
-            </label>
-            <span id="mkt-foto-nome" style="font-size:11px;color:var(--text3)">Sem foto</span>
-            <button id="mkt-foto-clear" onclick="mktClearFoto()" style="display:none;background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px">✕</button>
-          </div>
-          <div id="mkt-foto-preview" style="margin-top:8px;display:none"><img id="mkt-foto-img" style="max-width:100%;max-height:80px;border-radius:8px;object-fit:cover"></div>
-        </div>
-        <div id="mkt-add-msg" style="font-size:11px;min-height:16px"></div>
-        <button class="btn btn-green" onclick="mktAddItem()" style="width:100%">+ ADICIONAR À LISTA</button>
-      </div>
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" onclick="mktSalvarLista()" style="flex:1;border-color:rgba(0,200,255,0.3);color:var(--neon-blue)">💾 SALVAR LISTA</button>
-        <button class="btn" onclick="mktNovaLista()" style="flex:1;border-color:rgba(255,68,68,0.3);color:var(--neon-red)">🗑 NOVA LISTA</button>
-      </div>
-    </div>
-
-    <!-- Lista -->
-    <div>
-      <div class="card" style="margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <div class="sec-title" style="margin:0">LISTA DE COMPRAS</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <span style="font-size:11px;color:var(--text3)">Restante:</span>
-            <span id="mkt-total-restante" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--neon-green)">R$ 0,00</span>
-            <button onclick="mktGerarPDF()" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(168,85,247,0.4);background:rgba(168,85,247,0.1);color:var(--neon-purple);cursor:pointer;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;white-space:nowrap">📄 GERAR PDF</button>
-          </div>
-        </div>
-        <div id="mkt-lista-itens">
-          <div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Lista vazia. Adicione itens ao lado.</div>
-        </div>
-      </div>
-
-      <!-- Histórico -->
+  <!-- ── PAINEL PRINCIPAL ── -->
+  <div id="mkt-panel-main">
+    <div class="page-title">MERCADO</div>
+    <div class="page-sub">// ITENS CADASTRADOS · LISTAS MENSAIS · HISTÓRICO</div>
+    <div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start" id="mkt-grid">
+      <!-- CATÁLOGO -->
       <div class="card">
-        <div class="sec-title" style="margin-bottom:14px">HISTÓRICO DE LISTAS</div>
-        <div id="mkt-historico">
-          <div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhuma lista salva ainda.</div>
+        <div class="sec-title" style="margin-bottom:12px">ITENS CADASTRADOS</div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <input id="mkt-nome" type="text" placeholder="Nome do item *" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <select id="mkt-cat" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+              <option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option>
+              <option value="Laticinios">🥛 Laticínios</option><option value="Padaria">🍞 Padaria</option>
+              <option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option>
+              <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
+            </select>
+            <input id="mkt-qtd" type="number" min="1" value="1" placeholder="Qtd" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <input id="mkt-preco" type="text" inputmode="numeric" placeholder="Preço estimado R$" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+          <button class="btn btn-green" onclick="mktCadastrarItem()" style="width:100%">+ CADASTRAR ITEM</button>
+          <div id="mkt-cad-msg" style="font-size:11px;min-height:14px;text-align:center"></div>
+        </div>
+        <div id="mkt-catalogo-lista">
+          <div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhum item cadastrado.</div>
+        </div>
+      </div>
+      <!-- LISTAS + HISTÓRICO -->
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="sec-title" style="margin:0">LISTAS DE COMPRAS</div>
+            <button class="btn btn-green btn-sm" onclick="mktNovaLista()">+ NOVA LISTA</button>
+          </div>
+          <div id="mkt-listas-pendente">
+            <div style="text-align:center;color:var(--text3);padding:24px;font-size:12px">Nenhuma lista criada ainda.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec-title" style="margin-bottom:12px">HISTÓRICO</div>
+          <div id="mkt-listas-hist">
+            <div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista concluída.</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL EDITAR ITEM -->
-  <div id="mkt-edit-modal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;width:min(440px,94vw);box-shadow:0 0 60px rgba(0,0,0,0.5);animation:confirm-pop .22s cubic-bezier(.34,1.56,.64,1) both">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:18px">✎ EDITAR ITEM</div>
-
-      <!-- Foto do produto / placeholder carrinho -->
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
-        <div id="mkt-edit-foto-wrap" style="width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:36px">
-          🛒
+  <!-- ── PAINEL DETALHE DO MÊS ── -->
+  <div id="mkt-panel-mes" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+      <button onclick="mktVoltarMain()" style="padding:7px 14px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:8px;cursor:pointer;font-size:13px;flex-shrink:0">← VOLTAR</button>
+      <div style="flex:1">
+        <div class="page-title" id="mkt-mes-titulo" style="margin:0;font-size:20px"></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="mkt-mes-sub"></div>
+      </div>
+      <span id="mkt-mes-status-badge" style="padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.5px"></span>
+    </div>
+    <div class="grid3" style="margin-bottom:16px">
+      <div class="card card-blue"><div class="card-label">TOTAL PREVISTO</div><div class="card-value val-blue" id="mkt-mes-kpi-prev">R$ 0,00</div></div>
+      <div class="card card-green"><div class="card-label">TOTAL REAL</div><div class="card-value val-green" id="mkt-mes-kpi-real">R$ 0,00</div></div>
+      <div class="card"><div class="card-label">ITENS COMPRADOS</div><div class="card-value" id="mkt-mes-kpi-itens">0 / 0</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start" id="mkt-mes-grid">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="sec-title" style="margin:0">ITENS DA LISTA</div>
+          <button class="btn btn-sm" id="mkt-btn-add-item" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ ITEM</button>
         </div>
-        <div style="flex:1">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Foto do produto</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <label style="cursor:pointer;padding:7px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace">
-              📷 Trocar foto
-              <input id="mkt-edit-foto-input" type="file" accept="image/*" style="display:none" onchange="mktPreviewEditFoto(this)">
-            </label>
-            <button id="mkt-edit-foto-del" onclick="mktClearEditFoto()" style="display:none;background:none;border:1px solid rgba(255,68,68,0.3);color:var(--neon-red);cursor:pointer;font-size:11px;padding:6px 10px;border-radius:8px;font-family:'JetBrains Mono',monospace">✕ Remover</button>
+        <div id="mkt-mes-itens"></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="sec-title" style="margin-bottom:10px">📎 NOTA FISCAL</div>
+          <div id="mkt-mes-nf-preview" style="display:none;margin-bottom:10px"></div>
+          <div id="mkt-mes-nf-drop" style="border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s"
+            onclick="document.getElementById('mkt-mes-nf-file').click()"
+            onmouseover="this.style.borderColor='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:22px;margin-bottom:4px">📄</div>
+            <div style="font-size:11px;color:var(--text2)">Clique para anexar NF</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">PNG, JPG ou PDF</div>
+            <input type="file" id="mkt-mes-nf-file" accept="image/*,application/pdf" style="display:none" onchange="mktAnexarNF(this)">
+          </div>
+          <div id="mkt-mes-nf-info" style="display:none;margin-top:8px;display:flex;gap:6px"></div>
+        </div>
+        <div class="card">
+          <div class="sec-title" style="margin-bottom:10px">AÇÕES</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button id="mkt-btn-concluir" onclick="mktConcluirLista()" class="btn btn-green" style="width:100%">✓ CONCLUIR COMPRA</button>
+            <button id="mkt-btn-reabrir" onclick="mktReabrirLista()" class="btn" style="width:100%;display:none;border-color:rgba(0,200,255,0.35);color:var(--neon-blue)">↺ REABRIR LISTA</button>
+            <button onclick="mktExcluirLista()" class="btn" style="width:100%;border-color:rgba(255,68,68,0.3);color:var(--neon-red)">🗑 EXCLUIR LISTA</button>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Campos -->
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">NOME DO ITEM</div>
-          <input id="mkt-edit-nome" type="text" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
-          <select id="mkt-edit-cat" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
-            <option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option><option value="Laticinios">🥛 Laticínios</option>
-            <option value="Padaria">🍞 Padaria</option><option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option>
-            <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
+  <!-- MODAL: Vincular ao mês -->
+  <div id="mkt-vincular-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(380px,94vw);box-shadow:0 8px 48px rgba(0,0,0,0.5)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:5px">📅 VINCULAR AO MÊS</div>
+      <div id="mkt-vincular-item-nome" style="font-size:12px;color:var(--text3);margin-bottom:14px"></div>
+      <div id="mkt-vincular-lista" style="display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto"></div>
+      <div style="margin-top:14px">
+        <button onclick="mktFecharVincular()" class="btn" style="width:100%;border-color:var(--border);color:var(--text3)">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Adicionar item ao mês -->
+  <div id="mkt-add-mes-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(440px,94vw);box-shadow:0 8px 48px rgba(0,0,0,0.5)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);letter-spacing:1px;margin-bottom:12px">+ ADICIONAR ITEM</div>
+      <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid var(--border)">
+        <button id="mkt-add-tab-cat" onclick="mktAddMesTab('cat')" style="flex:1;padding:8px;background:none;border:none;border-bottom:2px solid var(--neon-blue);color:var(--neon-blue);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;cursor:pointer">DO CATÁLOGO</button>
+        <button id="mkt-add-tab-man" onclick="mktAddMesTab('man')" style="flex:1;padding:8px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;cursor:pointer">MANUAL</button>
+      </div>
+      <div id="mkt-add-panel-cat">
+        <input id="mkt-add-busca" type="text" placeholder="Buscar item..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px" oninput="mktFiltrarCatalogoPicker()">
+        <div id="mkt-add-cat-lista" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <div id="mkt-add-panel-man" style="display:none;flex-direction:column;gap:10px">
+        <input id="mkt-add-man-nome" type="text" placeholder="Nome do item *" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <select id="mkt-add-man-cat" style="width:100%;padding:8px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:11px">
+            <option value="Hortifruti">🥦</option><option value="Carnes">🥩</option><option value="Laticinios">🥛</option>
+            <option value="Padaria">🍞</option><option value="Higiene">🧴</option><option value="Limpeza">🧹</option>
+            <option value="Mercearia">🛒</option><option value="Frios">🧀</option><option value="Outros">📦</option>
           </select>
+          <input id="mkt-add-man-qtd" type="number" min="1" value="1" placeholder="Qtd" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+          <input id="mkt-add-man-preco" type="text" inputmode="numeric" placeholder="R$" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">QUANTIDADE</div>
-            <input id="mkt-edit-qtd" type="number" min="1" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PREÇO UNITÁRIO (R$)</div>
-            <input id="mkt-edit-preco" type="number" min="0" step="0.01" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
-          </div>
+        <button class="btn btn-green" onclick="mktAddItemManual()" style="width:100%">+ ADICIONAR</button>
+      </div>
+      <div style="margin-top:14px">
+        <button onclick="mktFecharAddMes()" class="btn" style="width:100%;border-color:var(--border);color:var(--text3)">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Editar item do catálogo -->
+  <div id="mkt-edit-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(380px,94vw);box-shadow:0 8px 48px rgba(0,0,0,0.5)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:14px">✎ EDITAR ITEM</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input id="mkt-edit-nome" type="text" placeholder="Nome" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        <select id="mkt-edit-cat" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          <option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option><option value="Laticinios">🥛 Laticínios</option>
+          <option value="Padaria">🍞 Padaria</option><option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option>
+          <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
+        </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <input id="mkt-edit-qtd" type="number" min="1" placeholder="Qtd" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+          <input id="mkt-edit-preco" type="text" inputmode="numeric" placeholder="Preço R$" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
         </div>
       </div>
-
       <input type="hidden" id="mkt-edit-id">
-      <div style="display:flex;gap:10px;margin-top:20px">
+      <div style="display:flex;gap:8px;margin-top:16px">
         <button class="btn btn-green" onclick="mktSalvarEdit()" style="flex:1">✓ SALVAR</button>
         <button class="btn" onclick="mktFecharEdit()" style="border-color:var(--border);color:var(--text3)">CANCELAR</button>
       </div>
     </div>
   </div>
+
+  <!-- MODAL: Nova Lista -->
+  <div id="mkt-nova-lista-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(340px,94vw);box-shadow:0 8px 48px rgba(0,0,0,0.5)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);letter-spacing:1px;margin-bottom:14px">📅 NOVA LISTA DE COMPRAS</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:5px">MÊS DE REFERÊNCIA</div>
+      <input id="mkt-nova-mes" type="month" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+      <div style="font-size:11px;color:var(--neon-red);margin-top:6px;min-height:16px" id="mkt-nova-err"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-green" onclick="mktCriarLista()" style="flex:1">✓ CRIAR</button>
+        <button class="btn" onclick="mktFecharNovaLista()" style="border-color:var(--border);color:var(--text3)">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+
 </div>
 
 <!-- ========== TAREFAS ========== -->
@@ -18498,358 +18538,150 @@ function delMetaSimples(id, periodo, sfx){
 }
 
 // ===================== MERCADO PAGE =====================
-function _mktGetLista(){return JSON.parse(localStorage.getItem(_authUser+'_mkt_lista')||'[]');}
-function _mktSetLista(d){localStorage.setItem(_authUser+'_mkt_lista',JSON.stringify(d));}
-function _mktGetHist(){return JSON.parse(localStorage.getItem(_authUser+'_mkt_historico')||'[]');}
-function _mktSetHist(d){localStorage.setItem(_authUser+'_mkt_historico',JSON.stringify(d));}
-
+function _mktGetCatalogo(){return load('mkt_catalogo')||[];}
+function _mktSetCatalogo(d){save('mkt_catalogo',d);}
+function _mktGetListas(){return load('mkt_listas')||[];}
+function _mktSetListas(d){save('mkt_listas',d);}
+function _mktGetLista(){return load('mkt_lista')||[];}
+function _mktSetLista(d){save('mkt_lista',d);}
+function _mktGetHist(){return load('mkt_historico')||[];}
+function _mktSetHist(d){save('mkt_historico',d);}
 const _MKT_EMOJI={Hortifruti:'🥦',Carnes:'🥩',Laticinios:'🥛',Padaria:'🍞',Higiene:'🧴',Limpeza:'🧹',Mercearia:'🛒',Frios:'🧀',Outros:'📦'};
-let _mktFotoB64='';
-
-function mktPreviewFoto(inp){
-  const f=inp.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    _mktFotoB64=e.target.result;
-    document.getElementById('mkt-foto-img').src=_mktFotoB64;
-    document.getElementById('mkt-foto-preview').style.display='block';
-    document.getElementById('mkt-foto-nome').textContent=f.name;
-    document.getElementById('mkt-foto-clear').style.display='inline';
-  };
-  r.readAsDataURL(f);
-}
-function mktClearFoto(){
-  _mktFotoB64='';
-  document.getElementById('mkt-foto-input').value='';
-  document.getElementById('mkt-foto-preview').style.display='none';
-  document.getElementById('mkt-foto-nome').textContent='Sem foto';
-  document.getElementById('mkt-foto-clear').style.display='none';
-}
-function mktAddItem(){
+const _MKT_MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let _mktMesId=null,_mktVincularItemId=null;
+function _mktFmt(v){return(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function _mktMesLabel(s){if(!s)return'';const[y,m]=s.split('-');return _MKT_MESES[parseInt(m)-1]+' '+y;}
+function _mktParseBRL(v){return parseFloat((v||'').replace(/R\$[\s]*/g,'').replace(/\./g,'').replace(',','.'))||0;}
+function mktCadastrarItem(){
   const nome=(document.getElementById('mkt-nome')?.value||'').trim();
   const cat=document.getElementById('mkt-cat')?.value||'Outros';
   const qtd=parseInt(document.getElementById('mkt-qtd')?.value)||1;
-  const preco=parseFloat(document.getElementById('mkt-preco')?.value)||0;
-  const msg=document.getElementById('mkt-add-msg');
-  if(!nome){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o nome do item.';}return;}
-  const lista=_mktGetLista();
-  lista.push({id:Date.now(),nome,cat,qtd,preco,foto:_mktFotoB64,comprado:false});
-  _mktSetLista(lista);
-  ['mkt-nome','mkt-qtd','mkt-preco'].forEach(id=>{const el=document.getElementById(id);if(el){el.value=id==='mkt-qtd'?'1':'';}});
-  mktClearFoto();
-  if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Item adicionado!';setTimeout(()=>{if(msg)msg.textContent='';},1800);}
-  _mktRenderLista();
+  const preco=_mktParseBRL(document.getElementById('mkt-preco')?.value);
+  const msg=document.getElementById('mkt-cad-msg');
+  if(!nome){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o nome.';}return;}
+  const c=_mktGetCatalogo();c.push({id:Date.now(),nome,cat,qtd,preco});_mktSetCatalogo(c);
+  ['mkt-nome','mkt-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('mkt-qtd').value='1';
+  if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Cadastrado!';setTimeout(()=>{msg.textContent='';},1800);}
+  _mktRenderCatalogo();
 }
-function mktToggleComprado(id){
-  const lista=_mktGetLista();
-  const it=lista.find(x=>x.id===id);
-  if(it) it.comprado=!it.comprado;
-  _mktSetLista(lista);
-  _mktRenderLista();
+function mktRemoveCatalogo(id){showConfirm('Remover Item','Remover este item do catálogo?',()=>{_mktSetCatalogo(_mktGetCatalogo().filter(x=>x.id!==id));_mktRenderCatalogo();});}
+function _mktRenderCatalogo(){
+  const el=document.getElementById('mkt-catalogo-lista');if(!el)return;
+  const cat=_mktGetCatalogo();
+  if(!cat.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhum item cadastrado.</div>';return;}
+  el.innerHTML=cat.map(it=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);margin-bottom:5px">
+    <span style="font-size:18px;flex-shrink:0">${_MKT_EMOJI[it.cat]||'📦'}</span>
+    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.nome)}</div>
+    <div style="font-size:10px;color:var(--text3)">${it.qtd}x · ${it.preco>0?_mktFmt(it.preco):'sem preço'}</div></div>
+    <button onclick="mktAbrirVincular(${it.id})" title="Vincular ao mês" style="background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);cursor:pointer;font-size:10px;padding:4px 7px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;flex-shrink:0">📅</button>
+    <button onclick="mktEditCatalogo(${it.id})" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);cursor:pointer;font-size:11px;padding:4px 6px;border-radius:6px;flex-shrink:0">✎</button>
+    <button onclick="mktRemoveCatalogo(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:2px;flex-shrink:0">✕</button>
+  </div>`).join('');
 }
-function mktRemoveItem(id){
-  _mktSetLista(_mktGetLista().filter(x=>x.id!==id));
-  _mktRenderLista();
+function mktEditCatalogo(id){const it=_mktGetCatalogo().find(x=>x.id===id);if(!it)return;document.getElementById('mkt-edit-id').value=id;document.getElementById('mkt-edit-nome').value=it.nome;document.getElementById('mkt-edit-cat').value=it.cat;document.getElementById('mkt-edit-qtd').value=it.qtd;document.getElementById('mkt-edit-preco').value=it.preco>0?it.preco.toFixed(2):'';const m=document.getElementById('mkt-edit-modal');if(m)m.style.display='flex';}
+function mktSalvarEdit(){const id=parseInt(document.getElementById('mkt-edit-id')?.value)||0;const nome=(document.getElementById('mkt-edit-nome')?.value||'').trim();if(!nome){alert('Informe o nome.');return;}const cat=document.getElementById('mkt-edit-cat').value;const qtd=parseInt(document.getElementById('mkt-edit-qtd').value)||1;const preco=_mktParseBRL(document.getElementById('mkt-edit-preco').value);const catalogo=_mktGetCatalogo();const it=catalogo.find(x=>x.id===id);if(it){it.nome=nome;it.cat=cat;it.qtd=qtd;it.preco=preco;_mktSetCatalogo(catalogo);}mktFecharEdit();_mktRenderCatalogo();}
+function mktFecharEdit(){const m=document.getElementById('mkt-edit-modal');if(m)m.style.display='none';}
+function mktAbrirVincular(itemId){
+  _mktVincularItemId=itemId;const it=_mktGetCatalogo().find(x=>x.id===itemId);if(!it)return;
+  document.getElementById('mkt-vincular-item-nome').textContent=`"${it.nome}" · ${it.cat}`;
+  const listas=_mktGetListas().filter(l=>l.status==='pendente');
+  const el=document.getElementById('mkt-vincular-lista');
+  if(!listas.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Nenhuma lista pendente.<br>Crie uma nova lista primeiro.</div>';}
+  else{el.innerHTML=listas.map(l=>`<button onclick="mktVincularAoMes(${l.id})" style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;font-family:'Inter',sans-serif;transition:all .15s" onmouseover="this.style.background='rgba(0,255,157,0.08)';this.style.borderColor='rgba(0,255,157,0.35)'" onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'"><span style="font-size:13px;font-weight:600">📅 ${_mktMesLabel(l.mes)}</span><span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--neon-yellow)">${l.itens.length} item${l.itens.length!==1?'s':''}</span></button>`).join('');}
+  document.getElementById('mkt-vincular-modal').style.display='flex';
 }
-function _mktRenderLista(){
-  const lista=_mktGetLista();
-  const el=document.getElementById('mkt-lista-itens');
-  const totalEl=document.getElementById('mkt-total-restante');
-  const kpiTotal=document.getElementById('mkt-kpi-total');
-  const kpiComp=document.getElementById('mkt-kpi-comprado');
-  const kpiItens=document.getElementById('mkt-kpi-itens');
-  if(!el) return;
-  if(!lista.length){
-    el.innerHTML='<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Lista vazia. Adicione itens ao lado.</div>';
-    if(totalEl) totalEl.textContent='R$ 0,00';
-    if(kpiTotal) kpiTotal.textContent='R$ 0,00';
-    if(kpiComp) kpiComp.textContent='R$ 0,00';
-    if(kpiItens) kpiItens.textContent='0';
-    return;
-  }
-  let totalGeral=0, totalComp=0;
-  lista.forEach(it=>{const t=it.qtd*it.preco;totalGeral+=t;if(it.comprado)totalComp+=t;});
-  const restante=totalGeral-totalComp;
-  if(totalEl) totalEl.textContent=fmt(restante);
-  if(kpiTotal) kpiTotal.textContent=fmt(totalGeral);
-  if(kpiComp) kpiComp.textContent=fmt(totalComp);
-  if(kpiItens) kpiItens.textContent=lista.length;
-  el.innerHTML=lista.map(it=>{
-    const total=it.qtd*it.preco;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);${it.comprado?'opacity:.5':''}">
-      <input type="checkbox" ${it.comprado?'checked':''} onchange="mktToggleComprado(${it.id})" style="accent-color:var(--neon-green);width:18px;height:18px;flex-shrink:0;cursor:pointer">
-      ${it.foto
-        ? `<img src="${it.foto}" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">`
-        : `<div style="width:44px;height:44px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🛒</div>`
-      }
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${it.comprado?'text-decoration:line-through':''}">${esc(it.nome)}</div>
-        <div style="font-size:11px;color:var(--text3)">${it.cat} · ${it.qtd}x ${it.preco>0?fmt(it.preco):'-'}</div>
-      </div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-yellow);flex-shrink:0">${total>0?fmt(total):'-'}</div>
-      <button onclick="mktEditItem(${it.id})" title="Editar" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);cursor:pointer;font-size:13px;flex-shrink:0;padding:5px 9px;border-radius:7px;line-height:1">✎</button>
-      <button onclick="mktRemoveItem(${it.id})" title="Remover" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:16px;flex-shrink:0;padding:0">✕</button>
-    </div>`;
-  }).join('');
+function mktVincularAoMes(listaId){
+  const it=_mktGetCatalogo().find(x=>x.id===_mktVincularItemId);if(!it)return;
+  const listas=_mktGetListas();const lista=listas.find(l=>l.id===listaId);if(!lista)return;
+  if(lista.itens.find(i=>i.refId===it.id)){alert(`"${it.nome}" já está nesta lista.`);return;}
+  lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,precoPrev:it.preco,precoReal:0,comprado:false});
+  _mktSetListas(listas);mktFecharVincular();
+  const msg=document.getElementById('mkt-cad-msg');if(msg){msg.style.color='var(--neon-green)';msg.textContent=`✓ "${it.nome}" → ${_mktMesLabel(lista.mes)}`;setTimeout(()=>{msg.textContent='';},2500);}
+  _mktRenderListas();
 }
-function mktSalvarLista(){
-  const lista=_mktGetLista();
-  if(!lista.length){alert('Lista vazia!');return;}
-  const total=lista.reduce((a,it)=>a+it.qtd*it.preco,0);
-  const hist=_mktGetHist();
-  hist.unshift({id:Date.now(),data:new Date().toLocaleDateString('pt-BR'),total,itens:lista.length,lista:[...lista]});
-  _mktSetHist(hist.slice(0,30));
-  _mktRenderHist();
-  alert('Lista salva no histórico!');
+function mktFecharVincular(){document.getElementById('mkt-vincular-modal').style.display='none';_mktVincularItemId=null;}
+function mktNovaLista(){const now=new Date();document.getElementById('mkt-nova-mes').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');document.getElementById('mkt-nova-err').textContent='';document.getElementById('mkt-nova-lista-modal').style.display='flex';}
+function mktFecharNovaLista(){document.getElementById('mkt-nova-lista-modal').style.display='none';}
+function mktCriarLista(){
+  const mes=document.getElementById('mkt-nova-mes').value;const err=document.getElementById('mkt-nova-err');
+  if(!mes){err.textContent='Selecione o mês.';return;}
+  const listas=_mktGetListas();if(listas.find(l=>l.mes===mes)){err.textContent='Já existe uma lista para este mês.';return;}
+  listas.push({id:Date.now(),mes,status:'pendente',itens:[],nf:null,criadoEm:new Date().toISOString()});
+  _mktSetListas(listas);mktFecharNovaLista();_mktRenderListas();
 }
-function mktNovaLista(){
-  if(!_mktGetLista().length){return;}
-  showConfirm('Nova Lista','Isso limpará todos os itens da lista atual. Deseja continuar?',()=>{
-    _mktSetLista([]);_mktRenderLista();
-  });
+function _mktRenderListas(){
+  const listas=_mktGetListas();
+  const pendentes=listas.filter(l=>l.status==='pendente').sort((a,b)=>b.mes.localeCompare(a.mes));
+  const concluidas=listas.filter(l=>l.status==='concluido').sort((a,b)=>b.mes.localeCompare(a.mes));
+  const elP=document.getElementById('mkt-listas-pendente');
+  if(elP){if(!pendentes.length){elP.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:12px">Nenhuma lista pendente.</div>';}
+  else{elP.innerHTML=pendentes.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);const comp=l.itens.filter(i=>i.comprado).length;return`<div onclick="mktAbrirMes(${l.id})" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;margin-bottom:8px;transition:all .15s" onmouseover="this.style.background='rgba(0,200,255,0.05)';this.style.borderColor='rgba(0,200,255,0.3)'" onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'"><span style="font-size:22px">🛒</span><div style="flex:1"><div style="font-size:13px;font-weight:700">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${comp}/${l.itens.length} comprados${total>0?' · '+_mktFmt(total):''}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(255,215,0,0.12);color:var(--neon-yellow);border:1px solid rgba(255,215,0,0.25)">PENDENTE</span><span style="color:var(--text3);font-size:16px">›</span></div>`;}).join('');}}
+  const elH=document.getElementById('mkt-listas-hist');
+  if(elH){if(!concluidas.length){elH.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista concluída.</div>';}
+  else{elH.innerHTML=concluidas.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);return`<div onclick="mktAbrirMes(${l.id})" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;margin-bottom:6px;opacity:.8;transition:all .15s" onmouseover="this.style.opacity='1';this.style.borderColor='rgba(0,255,157,0.3)'" onmouseout="this.style.opacity='.8';this.style.borderColor='var(--border)'"><span style="font-size:20px">✅</span><div style="flex:1"><div style="font-size:13px;font-weight:600">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${_mktFmt(total)}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(0,255,157,0.1);color:var(--neon-green);border:1px solid rgba(0,255,157,0.25)">CONCLUÍDO</span><span style="color:var(--text3);font-size:16px">›</span></div>`;}).join('');}}
 }
-function _mktRenderHist(){
-  const hist=_mktGetHist();
-  const el=document.getElementById('mkt-historico');
-  if(!el) return;
-  if(!hist.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhuma lista salva ainda.</div>';return;}
-  el.innerHTML=hist.map(h=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:8px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border)">
-      <div>
-        <div style="font-size:12px;font-weight:600">${h.data}</div>
-        <div style="font-size:11px;color:var(--text3)">${h.itens} item${h.itens!==1?'s':''}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--neon-green)">${fmt(h.total)}</span>
-        <button onclick="mktRestaurarLista(${h.id})" style="font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);background:rgba(0,200,255,0.07);cursor:pointer;font-family:'JetBrains Mono',monospace">↺ USAR</button>
-        <button onclick="mktDelHist(${h.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px">✕</button>
-      </div>
-    </div>`).join('');
+function mktAbrirMes(id){_mktMesId=id;document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}
+function mktVoltarMain(){document.getElementById('mkt-panel-mes').style.display='none';document.getElementById('mkt-panel-main').style.display='block';_mktMesId=null;_mktRenderListas();}
+function _mktRenderMes(){
+  if(!_mktMesId)return;const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!lista){mktVoltarMain();return;}
+  const isConcluido=lista.status==='concluido';
+  const titulo=document.getElementById('mkt-mes-titulo');const sub=document.getElementById('mkt-mes-sub');const badge=document.getElementById('mkt-mes-status-badge');
+  if(titulo)titulo.textContent='LISTA DE '+_mktMesLabel(lista.mes).toUpperCase();
+  if(sub)sub.textContent='Mercado · '+_mktMesLabel(lista.mes);
+  if(badge){badge.textContent=isConcluido?'CONCLUÍDO':'PENDENTE';badge.style.background=isConcluido?'rgba(0,255,157,0.12)':'rgba(255,215,0,0.12)';badge.style.color=isConcluido?'var(--neon-green)':'var(--neon-yellow)';badge.style.border=isConcluido?'1px solid rgba(0,255,157,0.25)':'1px solid rgba(255,215,0,0.25)';}
+  const btnC=document.getElementById('mkt-btn-concluir');const btnR=document.getElementById('mkt-btn-reabrir');const btnA=document.getElementById('mkt-btn-add-item');
+  if(btnC)btnC.style.display=isConcluido?'none':'block';if(btnR)btnR.style.display=isConcluido?'block':'none';if(btnA)btnA.style.display=isConcluido?'none':'flex';
+  const totalPrev=lista.itens.reduce((a,i)=>a+i.qtd*(i.precoPrev||0),0);
+  const totalReal=lista.itens.reduce((a,i)=>a+i.qtd*(i.precoReal||i.precoPrev||0),0);
+  const comp=lista.itens.filter(i=>i.comprado).length;
+  const kP=document.getElementById('mkt-mes-kpi-prev');const kR=document.getElementById('mkt-mes-kpi-real');const kI=document.getElementById('mkt-mes-kpi-itens');
+  if(kP)kP.textContent=_mktFmt(totalPrev);if(kR)kR.textContent=_mktFmt(totalReal);if(kI)kI.textContent=comp+' / '+lista.itens.length;
+  _mktRenderNF(lista);
+  const el=document.getElementById('mkt-mes-itens');if(!el)return;
+  if(!lista.itens.length){el.innerHTML=`<div style="text-align:center;color:var(--text3);padding:32px;font-size:12px">Nenhum item.${isConcluido?'':'<br><br><button class="btn btn-sm" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ Adicionar item</button>'}</div>`;return;}
+  const cats={};lista.itens.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
+  el.innerHTML=Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}x · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join('');
 }
-function mktRestaurarLista(id){
-  const h=_mktGetHist().find(x=>x.id===id);
-  if(!h) return;
-  showConfirm('Restaurar Lista',`Carregar a lista de ${h.data} (${h.itens} itens)? A lista atual será substituída.`,()=>{
-    _mktSetLista(h.lista||[]);_mktRenderLista();
-  });
+function mktToggleMesItem(itemId){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const it=lista.itens.find(i=>i.id===itemId);if(it)it.comprado=!it.comprado;_mktSetListas(listas);_mktRenderMes();}
+function mktUpdatePrecoReal(itemId,val){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const it=lista.itens.find(i=>i.id===itemId);if(it)it.precoReal=_mktParseBRL(val)||parseFloat(val)||0;_mktSetListas(listas);_mktRenderMes();}
+function mktRemoveMesItem(itemId){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens=lista.itens.filter(i=>i.id!==itemId);_mktSetListas(listas);_mktRenderMes();}
+function mktAbrirAddItemMes(){document.getElementById('mkt-add-mes-modal').style.display='flex';mktAddMesTab('cat');mktFiltrarCatalogoPicker();}
+function mktFecharAddMes(){document.getElementById('mkt-add-mes-modal').style.display='none';}
+function mktAddMesTab(tab){
+  document.getElementById('mkt-add-panel-cat').style.display=tab==='cat'?'block':'none';
+  document.getElementById('mkt-add-panel-man').style.display=tab==='man'?'flex':'none';
+  const tC=document.getElementById('mkt-add-tab-cat');const tM=document.getElementById('mkt-add-tab-man');
+  if(tC){tC.style.borderBottomColor=tab==='cat'?'var(--neon-blue)':'transparent';tC.style.color=tab==='cat'?'var(--neon-blue)':'var(--text3)';}
+  if(tM){tM.style.borderBottomColor=tab==='man'?'var(--neon-blue)':'transparent';tM.style.color=tab==='man'?'var(--neon-blue)':'var(--text3)';}
 }
-function mktDelHist(id){
-  _mktSetHist(_mktGetHist().filter(x=>x.id!==id));
-  _mktRenderHist();
+function mktFiltrarCatalogoPicker(){
+  const busca=(document.getElementById('mkt-add-busca')?.value||'').toLowerCase();
+  const cat=_mktGetCatalogo().filter(i=>!busca||i.nome.toLowerCase().includes(busca)||i.cat.toLowerCase().includes(busca));
+  const el=document.getElementById('mkt-add-cat-lista');if(!el)return;
+  if(!cat.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Nenhum item encontrado.</div>';return;}
+  el.innerHTML=cat.map(it=>`<button onclick="mktAddItemDosCatalogo(${it.id})" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:all .15s" onmouseover="this.style.background='rgba(0,200,255,0.07)';this.style.borderColor='rgba(0,200,255,0.3)'" onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'"><span style="font-size:18px">${_MKT_EMOJI[it.cat]||'📦'}</span><div style="flex:1"><div style="font-size:12px;font-weight:600">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}x · ${it.preco>0?_mktFmt(it.preco):'sem preço'}</div></div><span style="font-size:10px;color:var(--neon-green)">+ ADD</span></button>`).join('');
 }
-let _mktEditFotoB64=null; // null = sem alteração, '' = remover, 'data:...' = nova foto
-
-function mktEditItem(id){
-  const lista=_mktGetLista();
-  const it=lista.find(x=>x.id===id);
-  if(!it) return;
-  const m=document.getElementById('mkt-edit-modal');
-  if(!m) return;
-
-  // Preenche campos
-  document.getElementById('mkt-edit-id').value=id;
-  document.getElementById('mkt-edit-nome').value=it.nome||'';
-  document.getElementById('mkt-edit-qtd').value=it.qtd||1;
-  document.getElementById('mkt-edit-preco').value=it.preco||'';
-  const catSel=document.getElementById('mkt-edit-cat');
-  if(catSel) catSel.value=it.cat||'Outros';
-
-  // Foto
-  _mktEditFotoB64=null;
-  document.getElementById('mkt-edit-foto-input').value='';
-  _mktAtualizaEditFoto(it.foto||'');
-
-  m.style.display='flex';
-  setTimeout(()=>document.getElementById('mkt-edit-nome')?.focus(),80);
+function mktAddItemDosCatalogo(catItemId){const it=_mktGetCatalogo().find(x=>x.id===catItemId);if(!it||!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;if(lista.itens.find(i=>i.refId===catItemId)){alert(`"${it.nome}" já está nesta lista.`);return;}lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,precoPrev:it.preco,precoReal:0,comprado:false});_mktSetListas(listas);mktFecharAddMes();_mktRenderMes();}
+function mktAddItemManual(){const nome=(document.getElementById('mkt-add-man-nome')?.value||'').trim();if(!nome){alert('Informe o nome.');return;}const cat=document.getElementById('mkt-add-man-cat')?.value||'Outros';const qtd=parseInt(document.getElementById('mkt-add-man-qtd')?.value)||1;const preco=_mktParseBRL(document.getElementById('mkt-add-man-preco')?.value);if(!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens.push({id:Date.now(),refId:null,nome,cat,qtd,precoPrev:preco,precoReal:0,comprado:false});_mktSetListas(listas);['mkt-add-man-nome','mkt-add-man-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('mkt-add-man-qtd').value='1';mktFecharAddMes();_mktRenderMes();}
+function mktAnexarNF(inp){if(!inp.files[0]||!_mktMesId)return;const f=inp.files[0];const r=new FileReader();r.onload=e=>{const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.nf={nome:f.name,tipo:f.type,dados:e.target.result};_mktSetListas(listas);_mktRenderNF(lista);};r.readAsDataURL(f);}
+function _mktRenderNF(lista){
+  const prev=document.getElementById('mkt-mes-nf-preview');const drop=document.getElementById('mkt-mes-nf-drop');const info=document.getElementById('mkt-mes-nf-info');if(!prev||!drop)return;
+  if(lista.nf?.dados){prev.style.display='block';drop.style.display='none';
+    if(lista.nf.tipo?.startsWith('image/')){prev.innerHTML=`<img src="${lista.nf.dados}" style="max-width:100%;border-radius:8px;border:1px solid var(--border)">`;}
+    else{prev.innerHTML=`<div style="padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:8px"><span style="font-size:22px">📄</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--neon-blue)">${esc(lista.nf.nome)}</div></div></div>`;}
+    if(info){info.style.display='flex';info.innerHTML=`<button onclick="mktVerNF()" style="flex:1;padding:7px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:7px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">📄 VER NF</button><button onclick="mktRemoverNF()" style="margin-left:6px;flex:1;padding:7px;background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);border-radius:7px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">✕ REMOVER</button>`;}}
+  else{prev.style.display='none';prev.innerHTML='';drop.style.display='block';if(info)info.style.display='none';}
 }
-
-function _mktAtualizaEditFoto(src){
-  const wrap=document.getElementById('mkt-edit-foto-wrap');
-  const delBtn=document.getElementById('mkt-edit-foto-del');
-  if(!wrap) return;
-  if(src){
-    wrap.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover">`;
-    if(delBtn) delBtn.style.display='inline-block';
-  } else {
-    wrap.innerHTML='🛒';
-    wrap.style.fontSize='36px';
-    if(delBtn) delBtn.style.display='none';
-  }
-}
-
-function mktPreviewEditFoto(inp){
-  const f=inp.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    _mktEditFotoB64=e.target.result;
-    _mktAtualizaEditFoto(_mktEditFotoB64);
-  };
-  r.readAsDataURL(f);
-}
-
-function mktClearEditFoto(){
-  _mktEditFotoB64=''; // marca para remover
-  document.getElementById('mkt-edit-foto-input').value='';
-  _mktAtualizaEditFoto('');
-}
-
-function mktFecharEdit(){
-  const m=document.getElementById('mkt-edit-modal');
-  if(m) m.style.display='none';
-  _mktEditFotoB64=null;
-}
-
-function mktSalvarEdit(){
-  const id=parseInt(document.getElementById('mkt-edit-id')?.value)||0;
-  const nome=(document.getElementById('mkt-edit-nome')?.value||'').trim();
-  const cat=document.getElementById('mkt-edit-cat')?.value||'Outros';
-  const qtd=parseInt(document.getElementById('mkt-edit-qtd')?.value)||1;
-  const preco=parseFloat(document.getElementById('mkt-edit-preco')?.value)||0;
-  if(!nome){alert('Informe o nome do item.');return;}
-
-  const lista=_mktGetLista();
-  const it=lista.find(x=>x.id===id);
-  if(!it){mktFecharEdit();return;}
-
-  it.nome=nome; it.cat=cat; it.qtd=qtd; it.preco=preco;
-  if(_mktEditFotoB64===''){ it.foto=''; }           // removeu foto
-  else if(_mktEditFotoB64){ it.foto=_mktEditFotoB64; } // nova foto
-
-  _mktSetLista(lista);
-  mktFecharEdit();
-  _mktRenderLista();
-}
-
-// Fecha modal ao clicar fora
-document.addEventListener('click',e=>{
-  const modal=document.getElementById('mkt-edit-modal');
-  if(modal&&modal.style.display==='flex'&&e.target===modal) mktFecharEdit();
-});
-
-function mktGerarPDF(){
-  const lista=_mktGetLista().filter(it=>!it.comprado);
-  if(!lista.length){alert('Nenhum item pendente na lista.');return;}
-
-  const hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
-  const totalGeral=lista.reduce((a,it)=>a+it.qtd*(it.preco||0),0);
-  const fmtR=v=>v>0?v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'—';
-  const e=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  // Agrupa por categoria
-  const grupos={};
-  lista.forEach(it=>{
-    const cat=it.cat||'Outros';
-    if(!grupos[cat]) grupos[cat]=[];
-    grupos[cat].push(it);
-  });
-
-  const catEmoji={Hortifruti:'🥦',Carnes:'🥩',Laticinios:'🥛',Padaria:'🍞',Higiene:'🧴',Limpeza:'🧹',Mercearia:'🛒',Frios:'🧀',Outros:'📦'};
-
-  // Linhas da tabela agrupadas
-  let rowsHtml='';
-  Object.entries(grupos).forEach(([cat,itens])=>{
-    const subtotal=itens.reduce((a,it)=>a+it.qtd*(it.preco||0),0);
-    rowsHtml+=`<tr class="cat-row"><td colspan="5">${catEmoji[cat]||'📦'} ${e(cat)} <span class="cat-sub">${itens.length} item${itens.length!==1?'s':''} · ${fmtR(subtotal)}</span></td></tr>`;
-    itens.forEach((it,idx)=>{
-      const total=it.qtd*(it.preco||0);
-      const fotoCell=it.foto
-        ?`<img src="${it.foto}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;display:block">`
-        :`<div style="width:44px;height:44px;border-radius:8px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:22px;background:#f8fafc">🛒</div>`;
-      rowsHtml+=`<tr class="${idx%2===1?'alt':''}">
-        <td style="padding:8px 10px">${fotoCell}</td>
-        <td><div class="item-nome">${e(it.nome)}</div></td>
-        <td style="text-align:center">${it.qtd}</td>
-        <td style="text-align:right">${it.preco>0?fmtR(it.preco):'—'}</td>
-        <td style="text-align:right"><b>${total>0?fmtR(total):'—'}</b></td>
-        <td style="text-align:center"><div class="chk"></div></td>
-      </tr>`;
-    });
-  });
-
-  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-  <title>Lista de Compras — ${hoje}</title>
-  <style>
-    @page{size:A4 portrait;margin:18mm 16mm 22mm}
-    @media print{.nopr{display:none!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Inter',Segoe UI,sans-serif;font-size:13px;color:#1e293b;background:#fff;line-height:1.5}
-    /* CAPA */
-    .cover{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:28px 32px 24px;margin-bottom:24px;border-radius:0 0 16px 16px;position:relative;overflow:hidden}
-    .cover::after{content:'';position:absolute;top:-60px;right:-40px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.18) 0%,transparent 70%)}
-    .brand{font-size:9px;font-weight:700;letter-spacing:3px;color:#a78bfa;text-transform:uppercase;margin-bottom:6px}
-    .title{font-size:26px;font-weight:800;color:#fff;line-height:1.15}
-    .title em{color:#a78bfa;font-style:normal}
-    .subtitle{font-size:12px;color:#94a3b8;margin-top:5px}
-    .div{width:40px;height:3px;background:linear-gradient(90deg,#a78bfa,#818cf8);border-radius:2px;margin:12px 0 0}
-    /* RESUMO */
-    .resumo{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap}
-    .rk{flex:1;min-width:120px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px}
-    .rk.p{border-left:4px solid #7c3aed}.rk.g{border-left:4px solid #059669}.rk.b{border-left:4px solid #0284c7}
-    .rk-l{font-size:9px;letter-spacing:1px;color:#64748b;text-transform:uppercase;font-weight:600;margin-bottom:5px}
-    .rk-v{font-size:20px;font-weight:700;color:#1e293b}
-    .rk-v.p{color:#7c3aed}.rk-v.g{color:#059669}.rk-v.b{color:#0284c7}
-    /* TABELA */
-    table{width:100%;border-collapse:collapse;font-size:12px}
-    .cat-row td{background:linear-gradient(135deg,#1e3a5f,#1e40af);color:#e2e8f0;padding:9px 13px;font-weight:700;font-size:11px;letter-spacing:.4px;border-radius:6px 6px 0 0}
-    .cat-sub{font-weight:400;color:#94a3b8;font-size:10px;margin-left:8px}
-    tr.alt td{background:#f8fafc}
-    td{padding:6px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-    .item-nome{font-weight:600;font-size:12px;color:#1e293b}
-    /* Checkbox de marcação manual */
-    .chk{width:18px;height:18px;border:2px solid #cbd5e1;border-radius:4px;margin:0 auto}
-    /* TOTAL */
-    .total-row td{background:#0f172a;color:#fff;font-weight:700;font-size:14px;padding:12px 14px;border-radius:0 0 6px 6px}
-    /* RODAPÉ */
-    .footer{margin-top:28px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px}
-    .btn-print{display:block;margin:0 auto 20px;padding:10px 28px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px}
-  </style></head><body>
-
-  <button class="btn-print nopr" onclick="window.print()">🖨 IMPRIMIR / SALVAR PDF</button>
-
-  <div class="cover">
-    <div class="brand">BY Persona Finance</div>
-    <div class="title">Lista de <em>Compras</em></div>
-    <div class="subtitle">📅 Gerada em ${hoje} · ${lista.length} item${lista.length!==1?'s':''} pendente${lista.length!==1?'s':''}</div>
-    <div class="div"></div>
-  </div>
-
-  <div class="resumo">
-    <div class="rk p"><div class="rk-l">Itens a comprar</div><div class="rk-v p">${lista.length}</div></div>
-    <div class="rk b"><div class="rk-l">Categorias</div><div class="rk-v b">${Object.keys(grupos).length}</div></div>
-    <div class="rk g"><div class="rk-l">Total estimado</div><div class="rk-v g">${fmtR(totalGeral)}</div></div>
-  </div>
-
-  <table>
-    <thead><tr>
-      <th style="width:54px"></th>
-      <th style="text-align:left">Item</th>
-      <th style="width:60px;text-align:center">Qtd.</th>
-      <th style="width:100px;text-align:right">Unit.</th>
-      <th style="width:100px;text-align:right">Total</th>
-      <th style="width:40px;text-align:center">✓</th>
-    </tr></thead>
-    <tbody>${rowsHtml}</tbody>
-    <tfoot><tr class="total-row">
-      <td colspan="4" style="text-align:right;letter-spacing:.5px">TOTAL ESTIMADO</td>
-      <td style="text-align:right;font-size:16px;color:#a78bfa">${fmtR(totalGeral)}</td>
-      <td></td>
-    </tr></tfoot>
-  </table>
-
-  <div class="footer">BY Persona Finance · Lista gerada automaticamente com base nos itens pendentes do Mercado</div>
-
-  <script>window.onload=()=>{window.print();}<\/script>
-  </body></html>`;
-
-  const w=window.open('','_blank','width=900,height=700');
-  if(!w){alert('Permita pop-ups para gerar o PDF.');return;}
-  w.document.write(html);
-  w.document.close();
-}
-
+function mktRemoverNF(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.nf=null;_mktSetListas(listas);const nfFile=document.getElementById('mkt-mes-nf-file');if(nfFile)nfFile.value='';_mktRenderNF(lista);}
+function mktVerNF(){const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!lista?.nf?.dados)return;verAnexo(lista.nf.nome,lista.nf.tipo,lista.nf.dados,'NF · '+_mktMesLabel(lista.mes));}
+function mktConcluirLista(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const pend=lista.itens.filter(i=>!i.comprado).length;const msg=lista.itens.length===0?'Lista vazia. Concluir mesmo assim?':pend>0?`${pend} item(s) pendente(s). Concluir mesmo assim?`:'Marcar como concluída?';showConfirm('Concluir Compra',msg,()=>{lista.status='concluido';lista.concluidoEm=new Date().toISOString();_mktSetListas(listas);_mktRenderMes();});}
+function mktReabrirLista(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.status='pendente';delete lista.concluidoEm;_mktSetListas(listas);_mktRenderMes();}
+function mktExcluirLista(){showConfirm('Excluir Lista','Remover permanentemente esta lista?',()=>{_mktSetListas(_mktGetListas().filter(l=>l.id!==_mktMesId));mktVoltarMain();});}
 function renderMercado(){
-  _mktRenderLista();
-  _mktRenderHist();
+  _mktRenderCatalogo();_mktRenderListas();
+  if(_mktMesId){document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}
+  else{document.getElementById('mkt-panel-main').style.display='block';document.getElementById('mkt-panel-mes').style.display='none';}
 }
 
 // ===================== TAREFAS PAGE =====================

@@ -4717,7 +4717,14 @@
               <option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option>
               <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
             </select>
-            <input id="mkt-qtd" type="number" min="1" value="1" placeholder="Qtd" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+            <div style="display:flex;gap:4px">
+              <input id="mkt-qtd" type="number" min="0.001" step="0.001" value="1" placeholder="Qtd" style="width:60px;padding:8px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box;flex:1">
+              <select id="mkt-unidade" style="padding:8px 6px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;flex-shrink:0">
+                <option value="un">un</option><option value="kg">kg</option><option value="g">g</option>
+                <option value="L">L</option><option value="mL">mL</option><option value="cx">cx</option>
+                <option value="pct">pct</option><option value="dz">dz</option><option value="m">m</option>
+              </select>
+            </div>
           </div>
           <input id="mkt-preco" type="text" inputmode="numeric" placeholder="Preço (R$) conforme NF" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
           <button class="btn btn-green" onclick="mktCadastrarItem()" style="width:100%">+ CADASTRAR</button>
@@ -4852,7 +4859,14 @@
             <option value="Padaria">🍞</option><option value="Higiene">🧴</option><option value="Limpeza">🧹</option>
             <option value="Mercearia">🛒</option><option value="Frios">🧀</option><option value="Outros">📦</option>
           </select>
-          <input id="mkt-add-man-qtd" type="number" min="1" value="1" placeholder="Qtd" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+          <div style="display:flex;gap:3px">
+            <input id="mkt-add-man-qtd" type="number" min="0.001" step="0.001" value="1" placeholder="Qtd" style="width:50px;padding:8px 6px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box;flex:1">
+            <select id="mkt-add-man-unidade" style="padding:8px 4px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:11px;flex-shrink:0">
+              <option value="un">un</option><option value="kg">kg</option><option value="g">g</option>
+              <option value="L">L</option><option value="mL">mL</option><option value="cx">cx</option>
+              <option value="pct">pct</option><option value="dz">dz</option><option value="m">m</option>
+            </select>
+          </div>
           <input id="mkt-add-man-preco" type="text" inputmode="numeric" placeholder="R$" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
         </div>
         <button class="btn btn-green" onclick="mktAddItemManual()" style="width:100%">+ ADICIONAR</button>
@@ -4886,7 +4900,14 @@
           <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
         </select>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <input id="mkt-edit-qtd" type="number" min="1" placeholder="Qtd" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+          <div style="display:flex;gap:4px">
+            <input id="mkt-edit-qtd" type="number" min="0.001" step="0.001" placeholder="Qtd" style="flex:1;min-width:0;padding:8px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+            <select id="mkt-edit-unidade" style="padding:8px 5px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;flex-shrink:0">
+              <option value="un">un</option><option value="kg">kg</option><option value="g">g</option>
+              <option value="L">L</option><option value="mL">mL</option><option value="cx">cx</option>
+              <option value="pct">pct</option><option value="dz">dz</option><option value="m">m</option>
+            </select>
+          </div>
           <input id="mkt-edit-preco" type="text" inputmode="numeric" placeholder="Preço R$" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
         </div>
       </div>
@@ -18636,15 +18657,17 @@ function mktClearEditFoto(){
 function mktCadastrarItem(){
   const nome=(document.getElementById('mkt-nome')?.value||'').trim();
   const cat=document.getElementById('mkt-cat')?.value||'Outros';
-  const qtd=parseInt(document.getElementById('mkt-qtd')?.value)||1;
+  const qtd=parseFloat(document.getElementById('mkt-qtd')?.value)||1;
+  const unidade=document.getElementById('mkt-unidade')?.value||'un';
   const preco=_mktParseBRL(document.getElementById('mkt-preco')?.value);
   const msg=document.getElementById('mkt-cad-msg');
   if(!nome){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o nome.';}return;}
   const c=_mktGetCatalogo();
-  c.push({id:Date.now(),nome,cat,qtd,preco,foto:_mktCadFotoB64||''});
+  c.push({id:Date.now(),nome,cat,qtd,unidade,preco,foto:_mktCadFotoB64||''});
   _mktSetCatalogo(c);
   ['mkt-nome','mkt-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('mkt-qtd').value='1';
+  document.getElementById('mkt-unidade').value='un';
   // Limpa foto
   _mktCadFotoB64='';
   const wrap=document.getElementById('mkt-cad-foto-wrap');if(wrap){wrap.innerHTML='📷';wrap.style.border='2px dashed var(--border)';}
@@ -18709,7 +18732,7 @@ function _mktRenderCatalogo(){
       </div>
       <div style="padding:8px 10px;flex:1">
         <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px" title="${esc(it.nome)}">${esc(it.nome)}</div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${_MKT_EMOJI[it.cat]||'📦'} ${it.cat} · ${it.qtd}x</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${_MKT_EMOJI[it.cat]||'📦'} ${it.cat} · ${it.qtd}${it.unidade||'un'}</div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-yellow)">${it.preco>0?_mktFmt(it.preco):'—'}</div>
       </div>
       <div style="display:flex;gap:4px;padding:6px 8px;border-top:1px solid var(--border);background:var(--bg3)">
@@ -18727,6 +18750,7 @@ function mktEditCatalogo(id){
   document.getElementById('mkt-edit-nome').value=it.nome;
   document.getElementById('mkt-edit-cat').value=it.cat;
   document.getElementById('mkt-edit-qtd').value=it.qtd;
+  const uSel=document.getElementById('mkt-edit-unidade');if(uSel)uSel.value=it.unidade||'un';
   document.getElementById('mkt-edit-preco').value=it.preco>0?it.preco.toFixed(2):'';
   _mktEditFotoB64=null;
   const wrap=document.getElementById('mkt-edit-foto-wrap');
@@ -18740,11 +18764,12 @@ function mktSalvarEdit(){
   const nome=(document.getElementById('mkt-edit-nome')?.value||'').trim();
   if(!nome){alert('Informe o nome.');return;}
   const cat=document.getElementById('mkt-edit-cat').value;
-  const qtd=parseInt(document.getElementById('mkt-edit-qtd').value)||1;
+  const qtd=parseFloat(document.getElementById('mkt-edit-qtd').value)||1;
+  const unidade=document.getElementById('mkt-edit-unidade')?.value||'un';
   const preco=_mktParseBRL(document.getElementById('mkt-edit-preco').value);
   const catalogo=_mktGetCatalogo();const it=catalogo.find(x=>x.id===id);
   if(it){
-    it.nome=nome;it.cat=cat;it.qtd=qtd;it.preco=preco;
+    it.nome=nome;it.cat=cat;it.qtd=qtd;it.unidade=unidade;it.preco=preco;
     if(_mktEditFotoB64===''){ it.foto=''; }
     else if(_mktEditFotoB64){ it.foto=_mktEditFotoB64; }
     _mktSetCatalogo(catalogo);
@@ -18811,7 +18836,7 @@ function _mktRenderMes(){
   const el=document.getElementById('mkt-mes-itens');if(!el)return;
   if(!lista.itens.length){el.innerHTML=`<div style="text-align:center;color:var(--text3);padding:32px;font-size:12px">Nenhum item.${isConcluido?'':'<br><br><button class="btn btn-sm" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ Adicionar item</button>'}</div>`;return;}
   const cats={};lista.itens.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
-  el.innerHTML=Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}x · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join('');
+  el.innerHTML=Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join('');
 }
 function mktToggleMesItem(itemId){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const it=lista.itens.find(i=>i.id===itemId);if(it)it.comprado=!it.comprado;_mktSetListas(listas);_mktRenderMes();}
 function mktUpdatePrecoReal(itemId,val){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const it=lista.itens.find(i=>i.id===itemId);if(it)it.precoReal=_mktParseBRL(val)||parseFloat(val)||0;_mktSetListas(listas);_mktRenderMes();}
@@ -18832,8 +18857,8 @@ function mktFiltrarCatalogoPicker(){
   if(!cat.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Nenhum item encontrado.</div>';return;}
   el.innerHTML=cat.map(it=>`<button onclick="mktAddItemDosCatalogo(${it.id})" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:all .15s" onmouseover="this.style.background='rgba(0,200,255,0.07)';this.style.borderColor='rgba(0,200,255,0.3)'" onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'"><span style="font-size:18px">${_MKT_EMOJI[it.cat]||'📦'}</span><div style="flex:1"><div style="font-size:12px;font-weight:600">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}x · ${it.preco>0?_mktFmt(it.preco):'sem preço'}</div></div><span style="font-size:10px;color:var(--neon-green)">+ ADD</span></button>`).join('');
 }
-function mktAddItemDosCatalogo(catItemId){const it=_mktGetCatalogo().find(x=>x.id===catItemId);if(!it||!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;if(lista.itens.find(i=>i.refId===catItemId)){alert(`"${it.nome}" já está nesta lista.`);return;}lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,precoPrev:it.preco,precoReal:0,comprado:false});_mktSetListas(listas);mktFecharAddMes();_mktRenderMes();}
-function mktAddItemManual(){const nome=(document.getElementById('mkt-add-man-nome')?.value||'').trim();if(!nome){alert('Informe o nome.');return;}const cat=document.getElementById('mkt-add-man-cat')?.value||'Outros';const qtd=parseInt(document.getElementById('mkt-add-man-qtd')?.value)||1;const preco=_mktParseBRL(document.getElementById('mkt-add-man-preco')?.value);if(!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens.push({id:Date.now(),refId:null,nome,cat,qtd,precoPrev:preco,precoReal:0,comprado:false});_mktSetListas(listas);['mkt-add-man-nome','mkt-add-man-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('mkt-add-man-qtd').value='1';mktFecharAddMes();_mktRenderMes();}
+function mktAddItemDosCatalogo(catItemId){const it=_mktGetCatalogo().find(x=>x.id===catItemId);if(!it||!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;if(lista.itens.find(i=>i.refId===catItemId)){alert(`"${it.nome}" já está nesta lista.`);return;}lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:0,comprado:false});_mktSetListas(listas);mktFecharAddMes();_mktRenderMes();}
+function mktAddItemManual(){const nome=(document.getElementById('mkt-add-man-nome')?.value||'').trim();if(!nome){alert('Informe o nome.');return;}const cat=document.getElementById('mkt-add-man-cat')?.value||'Outros';const qtd=parseFloat(document.getElementById('mkt-add-man-qtd')?.value)||1;const unidade=document.getElementById('mkt-add-man-unidade')?.value||'un';const preco=_mktParseBRL(document.getElementById('mkt-add-man-preco')?.value);if(!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens.push({id:Date.now(),refId:null,nome,cat,qtd,unidade,precoPrev:preco,precoReal:0,comprado:false});_mktSetListas(listas);['mkt-add-man-nome','mkt-add-man-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('mkt-add-man-qtd').value='1';document.getElementById('mkt-add-man-unidade').value='un';mktFecharAddMes();_mktRenderMes();}
 function mktAnexarNF(inp){if(!inp.files[0]||!_mktMesId)return;const f=inp.files[0];const r=new FileReader();r.onload=e=>{const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.nf={nome:f.name,tipo:f.type,dados:e.target.result};_mktSetListas(listas);_mktRenderNF(lista);};r.readAsDataURL(f);}
 function _mktRenderNF(lista){
   const prev=document.getElementById('mkt-mes-nf-preview');const drop=document.getElementById('mkt-mes-nf-drop');const info=document.getElementById('mkt-mes-nf-info');if(!prev||!drop)return;

@@ -4688,12 +4688,24 @@
   <div id="mkt-panel-main">
     <div class="page-title">MERCADO</div>
     <div class="page-sub">// ITENS CADASTRADOS · LISTAS MENSAIS · HISTÓRICO</div>
-    <div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start" id="mkt-grid">
-      <!-- CATÁLOGO -->
+
+    <!-- Linha 1: Cadastro + Quadro de Itens -->
+    <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;margin-bottom:16px" id="mkt-grid">
+      <!-- FORMULÁRIO -->
       <div class="card">
-        <div class="sec-title" style="margin-bottom:12px">ITENS CADASTRADOS</div>
-        <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-          <input id="mkt-nome" type="text" placeholder="Nome do item *" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        <div class="sec-title" style="margin-bottom:12px">CADASTRAR ITEM</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <!-- Foto -->
+          <div style="display:flex;align-items:center;gap:10px">
+            <div id="mkt-cad-foto-wrap" onclick="document.getElementById('mkt-foto-input').click()"
+              style="width:56px;height:56px;border-radius:10px;background:var(--bg3);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s"
+              onmouseover="this.style.borderColor='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)'" title="Clique para adicionar foto">📷</div>
+            <input type="file" id="mkt-foto-input" accept="image/*" style="display:none" onchange="mktPreviewCadFoto(this)">
+            <div style="flex:1">
+              <input id="mkt-nome" type="text" placeholder="Nome do item *" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+              <div style="font-size:10px;color:var(--text3);margin-top:3px" id="mkt-foto-label">Sem foto</div>
+            </div>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <select id="mkt-cat" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
               <option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option>
@@ -4703,30 +4715,38 @@
             </select>
             <input id="mkt-qtd" type="number" min="1" value="1" placeholder="Qtd" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
           </div>
-          <input id="mkt-preco" type="text" inputmode="numeric" placeholder="Preço estimado R$" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
-          <button class="btn btn-green" onclick="mktCadastrarItem()" style="width:100%">+ CADASTRAR ITEM</button>
+          <input id="mkt-preco" type="text" inputmode="numeric" placeholder="Preço (R$) conforme NF" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+          <button class="btn btn-green" onclick="mktCadastrarItem()" style="width:100%">+ CADASTRAR</button>
           <div id="mkt-cad-msg" style="font-size:11px;min-height:14px;text-align:center"></div>
         </div>
-        <div id="mkt-catalogo-lista">
-          <div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhum item cadastrado.</div>
+      </div>
+      <!-- QUADRO DE ITENS CADASTRADOS -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="sec-title" style="margin:0">ITENS CADASTRADOS</div>
+          <span id="mkt-cat-count" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace"></span>
+        </div>
+        <div id="mkt-catalogo-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+          <div style="text-align:center;color:var(--text3);padding:24px;font-size:12px;grid-column:1/-1">Nenhum item cadastrado.</div>
         </div>
       </div>
-      <!-- LISTAS + HISTÓRICO -->
-      <div>
-        <div class="card" style="margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <div class="sec-title" style="margin:0">LISTAS DE COMPRAS</div>
-            <button class="btn btn-green btn-sm" onclick="mktNovaLista()">+ NOVA LISTA</button>
-          </div>
-          <div id="mkt-listas-pendente">
-            <div style="text-align:center;color:var(--text3);padding:24px;font-size:12px">Nenhuma lista criada ainda.</div>
-          </div>
+    </div>
+
+    <!-- Linha 2: Listas + Histórico -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="sec-title" style="margin:0">LISTAS DE COMPRAS</div>
+          <button class="btn btn-green btn-sm" onclick="mktNovaLista()">+ NOVA LISTA</button>
         </div>
-        <div class="card">
-          <div class="sec-title" style="margin-bottom:12px">HISTÓRICO</div>
-          <div id="mkt-listas-hist">
-            <div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista concluída.</div>
-          </div>
+        <div id="mkt-listas-pendente">
+          <div style="text-align:center;color:var(--text3);padding:24px;font-size:12px">Nenhuma lista criada ainda.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">HISTÓRICO</div>
+        <div id="mkt-listas-hist">
+          <div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista concluída.</div>
         </div>
       </div>
     </div>
@@ -4742,10 +4762,14 @@
       </div>
       <span id="mkt-mes-status-badge" style="padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.5px"></span>
     </div>
-    <div class="grid3" style="margin-bottom:16px">
-      <div class="card card-blue"><div class="card-label">TOTAL PREVISTO</div><div class="card-value val-blue" id="mkt-mes-kpi-prev">R$ 0,00</div></div>
-      <div class="card card-green"><div class="card-label">TOTAL REAL</div><div class="card-value val-green" id="mkt-mes-kpi-real">R$ 0,00</div></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+      <div class="card card-blue"><div class="card-label">TOTAL (CATÁLOGO)</div><div class="card-value val-blue" id="mkt-mes-kpi-prev">R$ 0,00</div><div style="font-size:10px;color:var(--text3);margin-top:4px">soma dos preços cadastrados</div></div>
+      <div class="card card-green"><div class="card-label">TOTAL REAL PAGO</div><div class="card-value val-green" id="mkt-mes-kpi-real">R$ 0,00</div><div style="font-size:10px;color:var(--text3);margin-top:4px">conforme preço atualizado</div></div>
       <div class="card"><div class="card-label">ITENS COMPRADOS</div><div class="card-value" id="mkt-mes-kpi-itens">0 / 0</div></div>
+      <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px">
+        <button onclick="mktGerarPDFLista()" style="width:100%;padding:10px;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.4);color:var(--neon-purple);border-radius:10px;cursor:pointer;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.5px">📄 GERAR PDF</button>
+        <div style="font-size:10px;color:var(--text3);text-align:center">lista com itens e preços</div>
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start" id="mkt-mes-grid">
       <div class="card">
@@ -4826,8 +4850,19 @@
 
   <!-- MODAL: Editar item do catálogo -->
   <div id="mkt-edit-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(380px,94vw);box-shadow:0 8px 48px rgba(0,0,0,0.5)">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(400px,94vw);box-shadow:0 8px 48px rgba(0,0,0,0.5)">
       <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:14px">✎ EDITAR ITEM</div>
+      <!-- Foto -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div id="mkt-edit-foto-wrap" onclick="document.getElementById('mkt-edit-foto-input').click()"
+          style="width:64px;height:64px;border-radius:12px;background:var(--bg3);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s"
+          onmouseover="this.style.borderColor='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)'" title="Trocar foto">📷</div>
+        <input type="file" id="mkt-edit-foto-input" accept="image/*" style="display:none" onchange="mktPreviewEditFoto(this)">
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:5px">Foto do produto</div>
+          <button id="mkt-edit-foto-del" onclick="mktClearEditFoto()" style="display:none;background:none;border:1px solid rgba(255,68,68,0.3);color:var(--neon-red);cursor:pointer;font-size:11px;padding:4px 9px;border-radius:6px;font-family:'JetBrains Mono',monospace">✕ Remover foto</button>
+        </div>
+      </div>
       <div style="display:flex;flex-direction:column;gap:10px">
         <input id="mkt-edit-nome" type="text" placeholder="Nome" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
         <select id="mkt-edit-cat" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
@@ -18548,10 +18583,41 @@ function _mktGetHist(){return load('mkt_historico')||[];}
 function _mktSetHist(d){save('mkt_historico',d);}
 const _MKT_EMOJI={Hortifruti:'🥦',Carnes:'🥩',Laticinios:'🥛',Padaria:'🍞',Higiene:'🧴',Limpeza:'🧹',Mercearia:'🛒',Frios:'🧀',Outros:'📦'};
 const _MKT_MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-let _mktMesId=null,_mktVincularItemId=null;
+let _mktMesId=null,_mktVincularItemId=null,_mktCadFotoB64='',_mktEditFotoB64=null;
 function _mktFmt(v){return(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
 function _mktMesLabel(s){if(!s)return'';const[y,m]=s.split('-');return _MKT_MESES[parseInt(m)-1]+' '+y;}
 function _mktParseBRL(v){return parseFloat((v||'').replace(/R\$[\s]*/g,'').replace(/\./g,'').replace(',','.'))||0;}
+
+// ── Foto no cadastro ──
+function mktPreviewCadFoto(inp){
+  if(!inp.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{
+    _mktCadFotoB64=e.target.result;
+    const wrap=document.getElementById('mkt-cad-foto-wrap');
+    if(wrap){wrap.innerHTML=`<img src="${_mktCadFotoB64}" style="width:100%;height:100%;object-fit:cover">`;wrap.style.border='2px solid var(--neon-blue)';}
+    const lbl=document.getElementById('mkt-foto-label');if(lbl)lbl.textContent='📷 '+inp.files[0].name.slice(0,18);
+  };r.readAsDataURL(inp.files[0]);
+}
+
+// ── Foto no edit ──
+function mktPreviewEditFoto(inp){
+  if(!inp.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{
+    _mktEditFotoB64=e.target.result;
+    const wrap=document.getElementById('mkt-edit-foto-wrap');
+    if(wrap)wrap.innerHTML=`<img src="${_mktEditFotoB64}" style="width:100%;height:100%;object-fit:cover">`;
+    const del=document.getElementById('mkt-edit-foto-del');if(del)del.style.display='inline-block';
+  };r.readAsDataURL(inp.files[0]);
+}
+function mktClearEditFoto(){
+  _mktEditFotoB64='';
+  const wrap=document.getElementById('mkt-edit-foto-wrap');if(wrap){wrap.innerHTML='📷';wrap.style.fontSize='28px';}
+  const del=document.getElementById('mkt-edit-foto-del');if(del)del.style.display='none';
+  const inp=document.getElementById('mkt-edit-foto-input');if(inp)inp.value='';
+}
+
 function mktCadastrarItem(){
   const nome=(document.getElementById('mkt-nome')?.value||'').trim();
   const cat=document.getElementById('mkt-cat')?.value||'Outros';
@@ -18559,29 +18625,81 @@ function mktCadastrarItem(){
   const preco=_mktParseBRL(document.getElementById('mkt-preco')?.value);
   const msg=document.getElementById('mkt-cad-msg');
   if(!nome){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o nome.';}return;}
-  const c=_mktGetCatalogo();c.push({id:Date.now(),nome,cat,qtd,preco});_mktSetCatalogo(c);
+  const c=_mktGetCatalogo();
+  c.push({id:Date.now(),nome,cat,qtd,preco,foto:_mktCadFotoB64||''});
+  _mktSetCatalogo(c);
   ['mkt-nome','mkt-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('mkt-qtd').value='1';
+  // Limpa foto
+  _mktCadFotoB64='';
+  const wrap=document.getElementById('mkt-cad-foto-wrap');if(wrap){wrap.innerHTML='📷';wrap.style.border='2px dashed var(--border)';}
+  const lbl=document.getElementById('mkt-foto-label');if(lbl)lbl.textContent='Sem foto';
+  const fInp=document.getElementById('mkt-foto-input');if(fInp)fInp.value='';
   if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Cadastrado!';setTimeout(()=>{msg.textContent='';},1800);}
   _mktRenderCatalogo();
 }
 function mktRemoveCatalogo(id){showConfirm('Remover Item','Remover este item do catálogo?',()=>{_mktSetCatalogo(_mktGetCatalogo().filter(x=>x.id!==id));_mktRenderCatalogo();});}
+
 function _mktRenderCatalogo(){
   const el=document.getElementById('mkt-catalogo-lista');if(!el)return;
   const cat=_mktGetCatalogo();
-  if(!cat.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhum item cadastrado.</div>';return;}
-  el.innerHTML=cat.map(it=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);margin-bottom:5px">
-    <span style="font-size:18px;flex-shrink:0">${_MKT_EMOJI[it.cat]||'📦'}</span>
-    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.nome)}</div>
-    <div style="font-size:10px;color:var(--text3)">${it.qtd}x · ${it.preco>0?_mktFmt(it.preco):'sem preço'}</div></div>
-    <button onclick="mktAbrirVincular(${it.id})" title="Vincular ao mês" style="background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);cursor:pointer;font-size:10px;padding:4px 7px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;flex-shrink:0">📅</button>
-    <button onclick="mktEditCatalogo(${it.id})" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);cursor:pointer;font-size:11px;padding:4px 6px;border-radius:6px;flex-shrink:0">✎</button>
-    <button onclick="mktRemoveCatalogo(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:2px;flex-shrink:0">✕</button>
-  </div>`).join('');
+  const cnt=document.getElementById('mkt-cat-count');
+  if(cnt)cnt.textContent=cat.length?cat.length+' item'+(cat.length!==1?'s':''):'';
+  if(!cat.length){
+    el.style.display='grid';
+    el.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:12px;grid-column:1/-1">Nenhum item cadastrado.<br>Use o formulário ao lado para adicionar.</div>';
+    return;
+  }
+  el.style.display='grid';
+  el.innerHTML=cat.map(it=>`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s" onmouseover="this.style.borderColor='rgba(0,200,255,0.35)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="height:90px;background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative">
+        ${it.foto?`<img src="${it.foto}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:36px">${_MKT_EMOJI[it.cat]||'📦'}</span>`}
+      </div>
+      <div style="padding:8px 10px;flex:1">
+        <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px" title="${esc(it.nome)}">${esc(it.nome)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${_MKT_EMOJI[it.cat]||'📦'} ${it.cat} · ${it.qtd}x</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-yellow)">${it.preco>0?_mktFmt(it.preco):'—'}</div>
+      </div>
+      <div style="display:flex;gap:4px;padding:6px 8px;border-top:1px solid var(--border);background:var(--bg3)">
+        <button onclick="mktAbrirVincular(${it.id})" title="Vincular ao mês" style="flex:1;background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);cursor:pointer;font-size:10px;padding:4px 0;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700">📅</button>
+        <button onclick="mktEditCatalogo(${it.id})" style="flex:1;background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);cursor:pointer;font-size:11px;padding:4px 0;border-radius:6px">✎</button>
+        <button onclick="mktRemoveCatalogo(${it.id})" style="background:none;border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);cursor:pointer;font-size:11px;padding:4px 7px;border-radius:6px">✕</button>
+      </div>
+    </div>`).join('');
 }
-function mktEditCatalogo(id){const it=_mktGetCatalogo().find(x=>x.id===id);if(!it)return;document.getElementById('mkt-edit-id').value=id;document.getElementById('mkt-edit-nome').value=it.nome;document.getElementById('mkt-edit-cat').value=it.cat;document.getElementById('mkt-edit-qtd').value=it.qtd;document.getElementById('mkt-edit-preco').value=it.preco>0?it.preco.toFixed(2):'';const m=document.getElementById('mkt-edit-modal');if(m)m.style.display='flex';}
-function mktSalvarEdit(){const id=parseInt(document.getElementById('mkt-edit-id')?.value)||0;const nome=(document.getElementById('mkt-edit-nome')?.value||'').trim();if(!nome){alert('Informe o nome.');return;}const cat=document.getElementById('mkt-edit-cat').value;const qtd=parseInt(document.getElementById('mkt-edit-qtd').value)||1;const preco=_mktParseBRL(document.getElementById('mkt-edit-preco').value);const catalogo=_mktGetCatalogo();const it=catalogo.find(x=>x.id===id);if(it){it.nome=nome;it.cat=cat;it.qtd=qtd;it.preco=preco;_mktSetCatalogo(catalogo);}mktFecharEdit();_mktRenderCatalogo();}
-function mktFecharEdit(){const m=document.getElementById('mkt-edit-modal');if(m)m.style.display='none';}
+
+function mktEditCatalogo(id){
+  const it=_mktGetCatalogo().find(x=>x.id===id);if(!it)return;
+  document.getElementById('mkt-edit-id').value=id;
+  document.getElementById('mkt-edit-nome').value=it.nome;
+  document.getElementById('mkt-edit-cat').value=it.cat;
+  document.getElementById('mkt-edit-qtd').value=it.qtd;
+  document.getElementById('mkt-edit-preco').value=it.preco>0?it.preco.toFixed(2):'';
+  _mktEditFotoB64=null;
+  const wrap=document.getElementById('mkt-edit-foto-wrap');
+  if(wrap){if(it.foto){wrap.innerHTML=`<img src="${it.foto}" style="width:100%;height:100%;object-fit:cover">`;}else{wrap.innerHTML='📷';}}
+  const del=document.getElementById('mkt-edit-foto-del');if(del)del.style.display=it.foto?'inline-block':'none';
+  const fInp=document.getElementById('mkt-edit-foto-input');if(fInp)fInp.value='';
+  const m=document.getElementById('mkt-edit-modal');if(m)m.style.display='flex';
+}
+function mktSalvarEdit(){
+  const id=parseInt(document.getElementById('mkt-edit-id')?.value)||0;
+  const nome=(document.getElementById('mkt-edit-nome')?.value||'').trim();
+  if(!nome){alert('Informe o nome.');return;}
+  const cat=document.getElementById('mkt-edit-cat').value;
+  const qtd=parseInt(document.getElementById('mkt-edit-qtd').value)||1;
+  const preco=_mktParseBRL(document.getElementById('mkt-edit-preco').value);
+  const catalogo=_mktGetCatalogo();const it=catalogo.find(x=>x.id===id);
+  if(it){
+    it.nome=nome;it.cat=cat;it.qtd=qtd;it.preco=preco;
+    if(_mktEditFotoB64===''){ it.foto=''; }
+    else if(_mktEditFotoB64){ it.foto=_mktEditFotoB64; }
+    _mktSetCatalogo(catalogo);
+  }
+  mktFecharEdit();_mktRenderCatalogo();
+}
+function mktFecharEdit(){const m=document.getElementById('mkt-edit-modal');if(m)m.style.display='none';_mktEditFotoB64=null;}
 function mktAbrirVincular(itemId){
   _mktVincularItemId=itemId;const it=_mktGetCatalogo().find(x=>x.id===itemId);if(!it)return;
   document.getElementById('mkt-vincular-item-nome').textContent=`"${it.nome}" · ${it.cat}`;
@@ -18678,6 +18796,81 @@ function mktVerNF(){const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!li
 function mktConcluirLista(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const pend=lista.itens.filter(i=>!i.comprado).length;const msg=lista.itens.length===0?'Lista vazia. Concluir mesmo assim?':pend>0?`${pend} item(s) pendente(s). Concluir mesmo assim?`:'Marcar como concluída?';showConfirm('Concluir Compra',msg,()=>{lista.status='concluido';lista.concluidoEm=new Date().toISOString();_mktSetListas(listas);_mktRenderMes();});}
 function mktReabrirLista(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.status='pendente';delete lista.concluidoEm;_mktSetListas(listas);_mktRenderMes();}
 function mktExcluirLista(){showConfirm('Excluir Lista','Remover permanentemente esta lista?',()=>{_mktSetListas(_mktGetListas().filter(l=>l.id!==_mktMesId));mktVoltarMain();});}
+
+function mktGerarPDFLista(){
+  if(!_mktMesId)return;
+  const lista=_mktGetListas().find(l=>l.id===_mktMesId);
+  if(!lista)return;
+  const mesLabel=_mktMesLabel(lista.mes);
+  const isConcluido=lista.status==='concluido';
+  const totalPrev=lista.itens.reduce((a,i)=>a+i.qtd*(i.precoPrev||0),0);
+  const totalReal=lista.itens.reduce((a,i)=>a+i.qtd*(i.precoReal||i.precoPrev||0),0);
+  // Agrupa por categoria
+  const cats={};lista.itens.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
+  const f=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const linhas=Object.entries(cats).map(([cat,itens])=>`
+    <tr><td colspan="5" style="background:#f1f5f9;padding:7px 12px;font-size:11px;font-weight:700;color:#374151;letter-spacing:1px;border-top:2px solid #e2e8f0">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</td></tr>
+    ${itens.map(it=>{
+      const precoUnit=it.precoReal||it.precoPrev||0;
+      const total=it.qtd*precoUnit;
+      return`<tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:8px 12px;font-size:12px;font-weight:600;color:#111827">${it.nome}</td>
+        <td style="padding:8px 12px;font-size:12px;color:#6b7280;text-align:center">${it.qtd}</td>
+        <td style="padding:8px 12px;font-size:12px;color:#374151;text-align:right;font-family:monospace">${precoUnit>0?f(precoUnit):'—'}</td>
+        <td style="padding:8px 12px;font-size:12px;font-weight:700;color:#111827;text-align:right;font-family:monospace">${total>0?f(total):'—'}</td>
+        <td style="padding:8px 12px;text-align:center">${it.comprado?'<span style="color:#059669;font-weight:700;font-size:12px">✓</span>':'<span style="color:#9ca3af;font-size:12px">○</span>'}</td>
+      </tr>`;
+    }).join('')}`).join('');
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Lista de Mercado · ${mesLabel}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;background:#f9fafb;color:#111827;padding:32px}
+    .header{background:linear-gradient(135deg,#1e3a5f,#0f766e);color:#fff;padding:24px 32px;border-radius:14px;margin-bottom:24px}
+    .header h1{font-size:22px;font-weight:800;letter-spacing:1px;margin-bottom:4px}
+    .header p{font-size:12px;opacity:.8;letter-spacing:.5px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+    .kpi{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;text-align:center}
+    .kpi-label{font-size:10px;font-weight:700;color:#6b7280;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+    .kpi-val{font-size:18px;font-weight:800;font-family:monospace}
+    table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.06)}
+    thead{background:#1e3a5f;color:#fff}
+    thead th{padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.5px}
+    .footer{margin-top:20px;padding:14px 16px;background:#fff;border-radius:10px;border:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+    .total-label{font-size:12px;font-weight:700;color:#374151}
+    .total-val{font-size:20px;font-weight:800;font-family:monospace;color:#0f766e}
+    .status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;${isConcluido?'background:#d1fae5;color:#065f46':'background:#fef3c7;color:#92400e'}}
+    @media print{body{padding:16px}button{display:none!important}}
+  </style></head><body>
+  <div class="header">
+    <h1>🛒 LISTA DE MERCADO · ${mesLabel.toUpperCase()}</h1>
+    <p>Gerada em ${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})} · ${lista.itens.length} item${lista.itens.length!==1?'s':''} · <span class="status">${isConcluido?'CONCLUÍDA':'PENDENTE'}</span></p>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Total (Catálogo)</div><div class="kpi-val" style="color:#1d4ed8">${f(totalPrev)}</div></div>
+    <div class="kpi"><div class="kpi-label">Total Real Pago</div><div class="kpi-val" style="color:#059669">${f(totalReal)}</div></div>
+    <div class="kpi"><div class="kpi-label">Itens Comprados</div><div class="kpi-val">${lista.itens.filter(i=>i.comprado).length} / ${lista.itens.length}</div></div>
+  </div>
+  <table>
+    <thead><tr>
+      <th style="text-align:left">ITEM</th>
+      <th style="text-align:center">QTD</th>
+      <th style="text-align:right">PREÇO UNIT.</th>
+      <th style="text-align:right">TOTAL</th>
+      <th style="text-align:center">OK</th>
+    </tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>
+  <div class="footer">
+    <div><div class="total-label">TOTAL GERAL DA LISTA</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">Soma de todos os itens</div></div>
+    <div class="total-val">${f(totalReal>0?totalReal:totalPrev)}</div>
+  </div>
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`;
+  const w=window.open('','_blank','width=900,height=700');
+  if(!w){alert('Pop-up bloqueado. Permita pop-ups para este site.');return;}
+  w.document.write(html);w.document.close();
+}
+
 function renderMercado(){
   _mktRenderCatalogo();_mktRenderListas();
   if(_mktMesId){document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}

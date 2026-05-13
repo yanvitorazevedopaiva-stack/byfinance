@@ -4723,11 +4723,16 @@
       <!-- QUADRO DE ITENS CADASTRADOS -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div class="sec-title" style="margin:0">ITENS CADASTRADOS</div>
-          <span id="mkt-cat-count" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace"></span>
+          <div class="sec-title" style="margin:0;cursor:pointer" onclick="mktToggleCatalogo()" title="Clique para expandir/recolher">ITENS CADASTRADOS</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span id="mkt-cat-count" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace"></span>
+            <button id="mkt-cat-ver-btn" onclick="mktToggleCatalogo()" style="background:none;border:1px solid var(--border);color:var(--neon-blue);cursor:pointer;font-size:10px;padding:3px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700;transition:all .15s" onmouseover="this.style.borderColor='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)'">VER TUDO ›</button>
+          </div>
         </div>
-        <div id="mkt-catalogo-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
-          <div style="text-align:center;color:var(--text3);padding:24px;font-size:12px;grid-column:1/-1">Nenhum item cadastrado.</div>
+        <div id="mkt-catalogo-wrap" style="overflow:hidden;max-height:210px;transition:max-height .3s ease">
+          <div id="mkt-catalogo-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+            <div style="text-align:center;color:var(--text3);padding:24px;font-size:12px;grid-column:1/-1">Nenhum item cadastrado.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -18639,6 +18644,16 @@ function mktCadastrarItem(){
   _mktRenderCatalogo();
 }
 function mktRemoveCatalogo(id){showConfirm('Remover Item','Remover este item do catálogo?',()=>{_mktSetCatalogo(_mktGetCatalogo().filter(x=>x.id!==id));_mktRenderCatalogo();});}
+
+let _mktCatExpandido=false;
+function mktToggleCatalogo(){
+  _mktCatExpandido=!_mktCatExpandido;
+  const wrap=document.getElementById('mkt-catalogo-wrap');
+  const btn=document.getElementById('mkt-cat-ver-btn');
+  if(wrap) wrap.style.maxHeight=_mktCatExpandido?'9999px':'210px';
+  if(btn) btn.textContent=_mktCatExpandido?'RECOLHER ‹':'VER TUDO ›';
+}
+
 
 function _mktRenderCatalogo(){
   const el=document.getElementById('mkt-catalogo-lista');if(!el)return;

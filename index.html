@@ -4783,6 +4783,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Linha 3: Análise de gastos por mês -->
+    <div class="card" style="margin-top:16px" id="mkt-analise-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="sec-title" style="margin:0">📊 ANÁLISE DE GASTOS POR MÊS</div>
+        <span style="font-size:10px;color:var(--text3)">↑ maior · ↓ menor</span>
+      </div>
+      <div id="mkt-analise-body">
+        <div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista registrada ainda.</div>
+      </div>
+    </div>
   </div>
 
   <!-- ── PAINEL DETALHE DO MÊS ── -->
@@ -4841,28 +4852,33 @@
   <!-- MODAL: Vincular ao mês -->
   <div id="mkt-vincular-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center">
     <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(400px,94vw);box-shadow:0 8px 48px rgba(0,0,0,0.5)">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:5px">📅 VINCULAR AO MÊS</div>
-      <div id="mkt-vincular-item-nome" style="font-size:12px;color:var(--text3);margin-bottom:14px"></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:4px">📅 VINCULAR AO MÊS</div>
+      <div id="mkt-vincular-item-nome" style="font-size:12px;color:var(--text3);margin-bottom:12px"></div>
 
-      <!-- Qtd + Unidade — sempre visível -->
-      <div style="margin-bottom:14px">
+      <!-- Histórico de preços -->
+      <div id="mkt-vincular-hist" style="margin-bottom:14px;display:none">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:7px;letter-spacing:.5px;font-weight:700">ÚLTIMAS COMPRAS DESTE ITEM</div>
+        <div id="mkt-vincular-hist-body"></div>
+      </div>
+
+      <!-- Qtd + Unidade travada -->
+      <div style="margin-bottom:8px">
         <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-weight:700">QUANTIDADE PARA ESTA COMPRA</div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center">
           <input id="mkt-vincular-qtd" type="number" min="0.001" step="0.001" value="1"
+            oninput="mktQtdHint()"
             style="flex:1;padding:10px 12px;background:var(--bg2);border:1px solid rgba(0,200,255,0.35);color:var(--text);border-radius:8px;font-size:16px;font-weight:700;text-align:center;box-sizing:border-box">
-          <select id="mkt-vincular-unidade"
-            style="padding:10px 10px;background:var(--bg2);border:1px solid rgba(0,200,255,0.35);color:var(--neon-blue);border-radius:8px;font-size:14px;font-weight:700;flex-shrink:0">
-            <option value="un">un</option><option value="kg">kg</option><option value="g">g</option>
-            <option value="L">L</option><option value="mL">mL</option><option value="cx">cx</option>
-            <option value="pct">pct</option><option value="dz">dz</option><option value="m">m</option>
-          </select>
+          <!-- Unidade travada: exibe badge, não select -->
+          <div id="mkt-vincular-unidade-badge" style="padding:10px 14px;background:rgba(0,200,255,0.12);border:1px solid rgba(0,200,255,0.35);color:var(--neon-blue);border-radius:8px;font-size:14px;font-weight:700;flex-shrink:0;min-width:52px;text-align:center" title="Unidade definida no cadastro do item">un</div>
+          <input type="hidden" id="mkt-vincular-unidade" value="un">
         </div>
+        <div id="mkt-vincular-hint" style="font-size:11px;color:var(--neon-yellow);margin-top:5px;min-height:16px;font-family:'JetBrains Mono',monospace;text-align:right"></div>
       </div>
 
       <!-- Lista de meses -->
       <div style="font-size:10px;color:var(--text3);margin-bottom:8px;letter-spacing:.5px;font-weight:700">SELECIONE O MÊS</div>
-      <div id="mkt-vincular-lista" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto"></div>
-      <div style="margin-top:14px">
+      <div id="mkt-vincular-lista" style="display:flex;flex-direction:column;gap:8px;max-height:170px;overflow-y:auto"></div>
+      <div style="margin-top:12px">
         <button onclick="mktFecharVincular()" class="btn" style="width:100%;border-color:var(--border);color:var(--text3)">CANCELAR</button>
       </div>
     </div>
@@ -6746,11 +6762,11 @@ function doRecuperar(){
 }
 
 async function doLogin(){
-  const uInput=document.getElementById('li-user').value.trim();
-  const p=document.getElementById('li-pass').value;
+  const uInput=(document.getElementById('li-user')?.value||'').trim();
+  const p=document.getElementById('li-pass')?.value||'';
   const err=document.getElementById('li-error');
-  const btn=document.querySelector('.login-btn');
-  if(!uInput||!p){err.textContent='Preencha todos os campos.';return;}
+  const btn=document.querySelector('#login-panel-login .login-btn');
+  if(!uInput||!p){if(err)err.textContent='Preencha todos os campos.';return;}
   if(btn){btn.textContent='VERIFICANDO...';btn.disabled=true;}
   err.textContent='';
   // Tenta local primeiro
@@ -7001,9 +7017,9 @@ async function _startSession(u){
   sessionStorage.setItem('financeOS_user',u);
   setTimeout(()=>_registrarAcesso&&_registrarAcesso(),100);
   const scr=document.getElementById('login-screen');
-  scr.classList.add('fading');
+  if(scr) scr.classList.add('fading');
   await _loadFromSupabase();
-  setTimeout(()=>{scr.style.display='none';_initApp();},420);
+  setTimeout(()=>{if(scr)scr.style.display='none';_initApp();},420);
 }
 
 function doLogout(){
@@ -7415,6 +7431,11 @@ const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,financiamentos:3,parcelas:4,lanca
 const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',financiamentos:'FINANCIAMENTOS',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',compras:'COMPRAS',relatorios:'RELATÓRIOS',documentos:'DOCUMENTOS PESSOAIS',config:'CONFIGURAÇÕES',sobre:'SOBRE',metas:'METAS',mercado:'MERCADO',tarefas:'TAREFAS'};
 
 function showPage(id){
+  // Mesma página clicada → reseta para tela principal da seção
+  if(id===currentPage){
+    _resetPageMain(id);
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
@@ -7440,6 +7461,35 @@ function showPage(id){
   if(window.innerWidth<=768&&typeof _mobUpdateBar==='function') _mobUpdateBar(id);
   closeSidebar();
   renderPage(id);
+}
+
+// Reseta a página para sua tela principal (chamado ao clicar no nav da página já ativa)
+function _resetPageMain(id){
+  switch(id){
+    case 'mercado':
+      // Se em sub-painel do mês, volta para a tela principal do Mercado
+      if(typeof _mktMesId!=='undefined'&&_mktMesId!==null){
+        mktVoltarMain();
+      }
+      // Se já está no principal, só re-renderiza (atualiza dados)
+      else{ renderPage('mercado'); }
+      break;
+    case 'planejamento':
+      // Volta para a aba visão anual se estiver em outra
+      if(typeof switchPlanTab==='function') switchPlanTab('visao');
+      renderPage('planejamento');
+      break;
+    case 'bens':
+      // Volta para a lista de bens se estiver em detalhe
+      if(typeof _bemAtual!=='undefined'&&_bemAtual!==null){
+        const btn=document.querySelector('.bem-back-btn');if(btn)btn.click();
+      } else renderPage('bens');
+      break;
+    default:
+      // Todas as outras páginas: re-renderiza a tela principal
+      renderPage(id);
+      break;
+  }
 }
 
 function renderPage(id){
@@ -7561,7 +7611,7 @@ function renderHealthBar(){
   const fillEl=document.getElementById('health-fill');
   const fraseEl=document.getElementById('health-frase');
   const fraseTextoEl=document.getElementById('health-frase-txt');
-  if(!scoreEl) return;
+  if(!scoreEl||!labelEl||!fillEl) return;
 
   scoreEl.textContent=score+'%';
   scoreEl.style.color=cfg.color;
@@ -9149,11 +9199,12 @@ function fecharEditLanc(){
   _editLancId=null; _editLancSem=null;
 }
 function salvarEditLanc(){
-  const desc=document.getElementById('edit-lanc-desc').value.trim();
-  const data=document.getElementById('edit-lanc-data').value;
-  const val=parseFloat(document.getElementById('edit-lanc-val').value);
-  const cat=document.getElementById('edit-lanc-cat').value;
+  const desc=(document.getElementById('edit-lanc-desc')?.value||'').trim();
+  const data=document.getElementById('edit-lanc-data')?.value||'';
+  const val=getMoneyVal('edit-lanc-val');
+  const cat=document.getElementById('edit-lanc-cat')?.value||'';
   if(!desc){alert('Informe a descrição.');return;}
+  if(isNaN(val)||val<=0){alert('Informe um valor válido.');return;}
   const all=getData('lancamentos');
   const s=_editLancSem;
   const idx=(all[s]||[]).findIndex(x=>x.id===_editLancId);
@@ -15821,10 +15872,10 @@ function cfgImportarDados(){
 // ===================== TAREFA 12 — PAINEL DE MERCADO =====================
 let _invMercadoTimer=null;
 
-function getInvTickers(){return JSON.parse(localStorage.getItem('inv_tickers')||'[]');}
-function setInvTickers(v){localStorage.setItem('inv_tickers',JSON.stringify(v));}
-function getInvFiis(){return JSON.parse(localStorage.getItem('inv_fiis')||'[]');}
-function setInvFiis(v){localStorage.setItem('inv_fiis',JSON.stringify(v));}
+function getInvTickers(){return load('inv_tickers')||[];}
+function setInvTickers(v){save('inv_tickers',v);}
+function getInvFiis(){return load('inv_fiis')||[];}
+function setInvFiis(v){save('inv_fiis',v);}
 
 function addInvTicker(){
   const el=document.getElementById('inv-ticker-inp');
@@ -17122,8 +17173,8 @@ function exportExtratoPDF(){
 }
 
 // ===================== TAREFA 8 — CONGELAMENTO DE MÊS =====================
-function getMesesCongelados(){try{return JSON.parse(localStorage.getItem('meses_congelados'))||[];}catch{return[];}}
-function setMesesCongelados(v){localStorage.setItem('meses_congelados',JSON.stringify(v));}
+function getMesesCongelados(){return load('meses_congelados')||[];}
+function setMesesCongelados(v){save('meses_congelados',v);}
 function isMesCongelado(mesAno){return getMesesCongelados().includes(mesAno);}
 function toggleCongelarMes(mesAno){
   if(!mesAno) return;
@@ -18662,6 +18713,88 @@ const _MKT_MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
 let _mktMesId=null,_mktVincularItemId=null,_mktCadFotoB64='',_mktEditFotoB64=null;
 function _mktFmt(v){return(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
 function _mktMesLabel(s){if(!s)return'';const[y,m]=s.split('-');return _MKT_MESES[parseInt(m)-1]+' '+y;}
+
+// ── Histórico de preços de um item (últimas 5 compras) ──
+function _mktGetHistoricoItem(refId){
+  const all=_mktGetListas();
+  const hist=[];
+  all.sort((a,b)=>a.mes.localeCompare(b.mes)).forEach(lista=>{
+    const it=lista.itens.find(i=>i.refId===refId);
+    if(it){
+      const preco=it.precoReal||it.precoPrev||0;
+      if(preco>0) hist.push({mes:lista.mes,mesLabel:_mktMesLabel(lista.mes),qtd:it.qtd,unidade:it.unidade||'un',preco,status:lista.status});
+    }
+  });
+  return hist.slice(-5);
+}
+
+// ── Hint de conversão (kg→g, L→mL) ──
+function mktQtdHint(){
+  const qtd=parseFloat(document.getElementById('mkt-vincular-qtd')?.value)||0;
+  const un=document.getElementById('mkt-vincular-unidade')?.value||'un';
+  const hint=document.getElementById('mkt-vincular-hint');if(!hint)return;
+  if(un==='kg'&&qtd>0){
+    const g=Math.round(qtd*1000);
+    hint.textContent=g>=1000?`= ${qtd}kg`:`= ${g}g`;
+  } else if(un==='L'&&qtd>0){
+    const ml=Math.round(qtd*1000);
+    hint.textContent=ml>=1000?`= ${qtd}L`:`= ${ml}mL`;
+  } else {
+    hint.textContent='';
+  }
+}
+
+// ── Análise de gastos mensais ──
+function _mktRenderAnalise(){
+  const el=document.getElementById('mkt-analise-body');if(!el)return;
+  const listas=_mktGetListas().sort((a,b)=>a.mes.localeCompare(b.mes));
+  if(!listas.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista registrada ainda.</div>';return;}
+  const totais=listas.map(l=>({
+    mesLabel:_mktMesLabel(l.mes),
+    mes:l.mes,
+    status:l.status,
+    total:l.itens.reduce((a,i)=>a+i.qtd*(i.precoReal||i.precoPrev||0),0),
+    nItens:l.itens.length
+  }));
+  const vals=totais.map(t=>t.total).filter(v=>v>0);
+  const maxVal=vals.length?Math.max(...vals):1;
+  const minVal=vals.length?Math.min(...vals):0;
+  el.innerHTML=`<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="border-bottom:2px solid var(--border)">
+        <th style="text-align:left;padding:7px 10px;font-size:10px;color:var(--text3);letter-spacing:1px">MÊS</th>
+        <th style="text-align:right;padding:7px 10px;font-size:10px;color:var(--text3);letter-spacing:1px">ITENS</th>
+        <th style="text-align:right;padding:7px 10px;font-size:10px;color:var(--text3);letter-spacing:1px">TOTAL</th>
+        <th style="padding:7px 10px;font-size:10px;color:var(--text3);letter-spacing:1px">COMPARATIVO</th>
+        <th style="text-align:center;padding:7px 10px;font-size:10px;color:var(--text3);letter-spacing:1px">STATUS</th>
+      </tr></thead>
+      <tbody>${totais.map((t,i)=>{
+        const pct=maxVal>0?Math.round(t.total/maxVal*100):0;
+        const isMax=t.total===maxVal&&t.total>0;
+        const isMin=t.total===minVal&&t.total>0&&vals.length>1;
+        const barColor=isMax?'var(--neon-red)':isMin?'var(--neon-green)':'var(--neon-blue)';
+        const arrow=isMax?' ↑':isMin?' ↓':'';
+        const diff=i>0&&totais[i-1].total>0?t.total-totais[i-1].total:null;
+        const diffStr=diff!==null?(diff>=0?'+':'')+_mktFmt(diff):'—';
+        const diffColor=diff===null?'var(--text3)':diff>0?'var(--neon-red)':'var(--neon-green)';
+        return`<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 10px;font-weight:600;color:var(--text)">${t.mesLabel}${arrow?`<span style="color:${barColor};font-size:10px">${arrow}</span>`:''}</td>
+          <td style="padding:8px 10px;text-align:right;color:var(--text3)">${t.nItens}</td>
+          <td style="padding:8px 10px;text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;color:${isMax?'var(--neon-red)':isMin?'var(--neon-green)':'var(--text)'}">${t.total>0?_mktFmt(t.total):'—'}</td>
+          <td style="padding:8px 14px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .3s"></div>
+              </div>
+              <span style="font-size:10px;color:${diffColor};font-family:'JetBrains Mono',monospace;white-space:nowrap;min-width:60px;text-align:right">${diffStr}</span>
+            </div>
+          </td>
+          <td style="padding:8px 10px;text-align:center"><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:${t.status==='concluido'?'rgba(0,255,157,0.1)':'rgba(255,215,0,0.1)'};color:${t.status==='concluido'?'var(--neon-green)':'var(--neon-yellow)'}">${t.status==='concluido'?'CONCLUÍDO':'PENDENTE'}</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
 function _mktParseBRL(v){return parseFloat((v||'').replace(/R\$[\s]*/g,'').replace(/\./g,'').replace(',','.'))||0;}
 
 // ── Foto no cadastro ──
@@ -18860,11 +18993,46 @@ let _mktVincularListaId=null;
 function mktAbrirVincular(itemId){
   _mktVincularItemId=itemId;_mktVincularListaId=null;
   const it=_mktGetCatalogo().find(x=>x.id===itemId);if(!it)return;
+  const un=it.unidade||'un';
+
+  // Nome + categoria
   document.getElementById('mkt-vincular-item-nome').textContent=`"${it.nome}" · ${it.cat}`;
-  // Pré-preenche qtd/unidade com o padrão do item
+
+  // Qtd pré-preenchida
   document.getElementById('mkt-vincular-qtd').value=it.qtd||1;
-  const uSelV=document.getElementById('mkt-vincular-unidade');
-  if(uSelV) uSelV.value=it.unidade||'un';
+
+  // Unidade TRAVADA vinda do catálogo (badge + hidden input)
+  const badge=document.getElementById('mkt-vincular-unidade-badge');
+  const hidden=document.getElementById('mkt-vincular-unidade');
+  if(badge) badge.textContent=un;
+  if(hidden) hidden.value=un;
+
+  // Hint de conversão inicial
+  mktQtdHint();
+
+  // Histórico de preços
+  const hist=_mktGetHistoricoItem(itemId);
+  const histEl=document.getElementById('mkt-vincular-hist');
+  const histBody=document.getElementById('mkt-vincular-hist-body');
+  if(hist.length&&histEl&&histBody){
+    const maxP=Math.max(...hist.map(h=>h.preco));
+    histBody.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px">
+      ${hist.map(h=>{
+        const pct=maxP>0?Math.round(h.preco/maxP*100):0;
+        return`<div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--text3);min-width:78px;white-space:nowrap">${h.mesLabel}</span>
+          <div style="flex:1;height:14px;background:var(--bg3);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${h.preco===maxP?'var(--neon-red)':'var(--neon-blue)'};border-radius:4px"></div>
+          </div>
+          <span style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-yellow);min-width:56px;text-align:right">${_mktFmt(h.preco)}</span>
+          <span style="font-size:10px;color:var(--text3);min-width:44px">${h.qtd}${h.unidade}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+    histEl.style.display='block';
+  } else if(histEl){
+    histEl.style.display='none';
+  }
   const listas=_mktGetListas().filter(l=>l.status==='pendente');
   const el=document.getElementById('mkt-vincular-lista');
   if(!listas.length){
@@ -18925,6 +19093,7 @@ function _mktRenderListas(){
   const elH=document.getElementById('mkt-listas-hist');
   if(elH){if(!concluidas.length){elH.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista concluída.</div>';}
   else{elH.innerHTML=concluidas.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);return`<div onclick="mktAbrirMes(${l.id})" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;margin-bottom:6px;opacity:.8;transition:all .15s" onmouseover="this.style.opacity='1';this.style.borderColor='rgba(0,255,157,0.3)'" onmouseout="this.style.opacity='.8';this.style.borderColor='var(--border)'"><span style="font-size:20px">✅</span><div style="flex:1"><div style="font-size:13px;font-weight:600">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${_mktFmt(total)}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(0,255,157,0.1);color:var(--neon-green);border:1px solid rgba(0,255,157,0.25)">CONCLUÍDO</span><span style="color:var(--text3);font-size:16px">›</span></div>`;}).join('');}}
+  _mktRenderAnalise();
 }
 function mktAbrirMes(id){_mktMesId=id;document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}
 function mktVoltarMain(){document.getElementById('mkt-panel-mes').style.display='none';document.getElementById('mkt-panel-main').style.display='block';_mktMesId=null;_mktRenderListas();}
@@ -19059,14 +19228,14 @@ function mktGerarPDFLista(){
 }
 
 function renderMercado(){
-  _mktRenderCatalogo();_mktRenderListas();
+  _mktRenderCatalogo();_mktRenderListas();_mktRenderAnalise();
   if(_mktMesId){document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}
   else{document.getElementById('mkt-panel-main').style.display='block';document.getElementById('mkt-panel-mes').style.display='none';}
 }
 
 // ===================== TAREFAS PAGE =====================
-function _trfGet(){return JSON.parse(localStorage.getItem(_authUser+'_tarefas')||'[]');}
-function _trfSet(d){localStorage.setItem(_authUser+'_tarefas',JSON.stringify(d));}
+function _trfGet(){return load('tarefas')||[];}
+function _trfSet(d){save('tarefas',d);}
 let _trfFiltro='todas';
 
 function trfSetFiltro(f,btn){

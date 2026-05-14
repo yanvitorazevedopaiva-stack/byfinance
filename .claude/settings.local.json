@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\" -Recurse -File)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(powershell -Command \"\\(Get-Item index.html\\).Length / 1MB\")"
+      "Bash(powershell -Command \"\\(Get-Item index.html\\).Length / 1MB\")",
+      "Bash(grep -n \"getElementById.*\\\\\\\\.value\" \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\")"
     ]
   }
 }

@@ -7397,10 +7397,22 @@ function parcAnxCell(id,mes,label){
 
 // ===================== CONFIRM MODAL =====================
 let _confirmCb=null;
-function showConfirm(title,msg,onConfirm){
+// opts: { icon, btnLabel, btnColor, btnBg, warn }
+function showConfirm(title,msg,onConfirm,opts){
   document.getElementById('confirm-title').textContent=title;
   document.getElementById('confirm-msg').textContent=msg;
   _confirmCb=onConfirm;
+  const iconEl=document.querySelector('#confirm-modal .confirm-icon-ring span');
+  const warnEl=document.querySelector('#confirm-modal .confirm-warn');
+  const btnOk=document.getElementById('confirm-btn-ok');
+  if(iconEl) iconEl.textContent=opts?.icon||'🗑';
+  if(warnEl) warnEl.style.display=opts?.warn===false?'none':'';
+  if(btnOk){
+    btnOk.textContent=opts?.btnLabel||'✕ REMOVER';
+    btnOk.style.background=opts?.btnBg||'';
+    btnOk.style.borderColor=opts?.btnColor||'';
+    btnOk.style.color=opts?.btnColor||'';
+  }
   document.getElementById('confirm-modal').style.display='flex';
 }
 function closeConfirm(){
@@ -19149,7 +19161,17 @@ function _mktRenderNF(lista){
 }
 function mktRemoverNF(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.nf=null;_mktSetListas(listas);const nfFile=document.getElementById('mkt-mes-nf-file');if(nfFile)nfFile.value='';_mktRenderNF(lista);}
 function mktVerNF(){const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!lista?.nf?.dados)return;verAnexo(lista.nf.nome,lista.nf.tipo,lista.nf.dados,'NF · '+_mktMesLabel(lista.mes));}
-function mktConcluirLista(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const pend=lista.itens.filter(i=>!i.comprado).length;const msg=lista.itens.length===0?'Lista vazia. Concluir mesmo assim?':pend>0?`${pend} item(s) pendente(s). Concluir mesmo assim?`:'Marcar como concluída?';showConfirm('Concluir Compra',msg,()=>{lista.status='concluido';lista.concluidoEm=new Date().toISOString();_mktSetListas(listas);_mktRenderMes();});}
+function mktConcluirLista(){
+  const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;
+  const pend=lista.itens.filter(i=>!i.comprado).length;
+  const msg=lista.itens.length===0?'Lista vazia. Concluir mesmo assim?'
+    :pend>0?`${pend} item(s) ainda pendente(s). Confirma a conclusão?`
+    :'Todos os itens conferidos. Concluir a lista de compras?';
+  showConfirm('Concluir Compra',msg,()=>{
+    lista.status='concluido';lista.concluidoEm=new Date().toISOString();
+    _mktSetListas(listas);_mktRenderMes();
+  },{icon:'✓',btnLabel:'✓ CONCLUIR',btnBg:'rgba(0,255,157,0.18)',btnColor:'var(--neon-green)',warn:false});
+}
 function mktReabrirLista(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.status='pendente';delete lista.concluidoEm;_mktSetListas(listas);_mktRenderMes();}
 function mktExcluirLista(){showConfirm('Excluir Lista','Remover permanentemente esta lista?',()=>{_mktSetListas(_mktGetListas().filter(l=>l.id!==_mktMesId));mktVoltarMain();});}
 

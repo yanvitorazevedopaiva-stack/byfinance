@@ -3174,17 +3174,17 @@
   <div class="nav-bottom-wrap">
     <div class="nav-bottom-actions">
       <button class="nav-bottom-item" onclick="toggleTheme()">
-        <span class="nav-bottom-item-icon" id="theme-icon">☀</span>
-        <span id="theme-label">MODO DIURNO</span>
+        <span class="nav-bottom-item-icon" id="theme-icon">🌙</span>
+        <span id="theme-label">MODO NOTURNO</span>
       </button>
       <button class="nav-bottom-item" onclick="showPage('config')">
-        <span class="nav-bottom-item-icon">⚙</span><span>CONFIGURAÇÕES</span>
+        <span class="nav-bottom-item-icon">⚙️</span><span>CONFIGURAÇÕES</span>
       </button>
       <button class="nav-bottom-item" onclick="showPage('sobre')">
-        <span class="nav-bottom-item-icon">ℹ</span><span>SOBRE</span>
+        <span class="nav-bottom-item-icon">ℹ️</span><span>SOBRE</span>
       </button>
       <button class="nav-bottom-item nav-bottom-exit" onclick="doLogout()">
-        <span class="nav-bottom-item-icon">⏻</span><span>SAIR</span>
+        <span class="nav-bottom-item-icon">🚪</span><span>SAIR</span>
       </button>
     </div>
   </div>
@@ -4701,6 +4701,64 @@
     </div>
     <!-- resumo legado (compatibilidade com _planAtualizaResumoMetaG) -->
     <div id="plan-metag-resumo" style="display:none"></div>
+  </div>
+</div>
+
+<!-- MODAL GLOBAL: Lançamento Rápido de Compra -->
+<div id="cp-lancar-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid rgba(0,255,157,0.25);border-radius:18px;padding:26px;width:min(460px,94vw);box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--neon-green);letter-spacing:1.5px;margin-bottom:3px">✔ CONFIRMAR COMPRA</div>
+        <div id="cp-lancar-titulo" style="font-size:14px;font-weight:700;color:var(--text)"></div>
+        <div id="cp-lancar-valor" style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--neon-yellow);margin-top:2px"></div>
+      </div>
+      <button onclick="cpLancarFechar()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;font-weight:700;letter-spacing:.5px">FORMA DE PAGAMENTO</div>
+        <select id="cp-lancar-forma" onchange="cpLancarFormaChange()" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px">
+          <option value="debito">💳 Débito</option>
+          <option value="credito">💳 Crédito à Vista</option>
+          <option value="credito_parc">💳 Crédito Parcelado</option>
+          <option value="pix">⚡ PIX</option>
+          <option value="dinheiro">💵 Dinheiro</option>
+        </select>
+      </div>
+      <div id="cp-lancar-cartao-wrap">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;font-weight:700;letter-spacing:.5px">CARTÃO</div>
+        <select id="cp-lancar-cartao" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"></select>
+      </div>
+      <div id="cp-lancar-parc-wrap" style="display:none">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;font-weight:700;letter-spacing:.5px">NÚMERO DE PARCELAS</div>
+        <select id="cp-lancar-parc" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px">
+          <option value="2">2x</option><option value="3">3x</option><option value="4">4x</option>
+          <option value="5">5x</option><option value="6">6x</option><option value="7">7x</option>
+          <option value="8">8x</option><option value="9">9x</option><option value="10">10x</option>
+          <option value="12">12x</option><option value="18">18x</option><option value="24">24x</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;font-weight:700;letter-spacing:.5px">CATEGORIA</div>
+        <select id="cp-lancar-cat" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px">
+          <option value="Vestuário">👗 Vestuário</option>
+          <option value="Lazer e Entretenimento">🎮 Lazer e Entretenimento</option>
+          <option value="Alimentação">🍽 Alimentação</option>
+          <option value="Saúde">🏥 Saúde</option>
+          <option value="Educação">📚 Educação</option>
+          <option value="Transporte">🚗 Transporte</option>
+          <option value="Despesas Pessoais">⭐ Despesas Pessoais</option>
+          <option value="Imprevistos">⚡ Imprevistos</option>
+        </select>
+      </div>
+      <input type="hidden" id="cp-lancar-id">
+    </div>
+    <div id="cp-lancar-err" style="font-size:11px;color:var(--neon-red);min-height:14px;margin-top:8px"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="cpLancarFechar()" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">CANCELAR</button>
+      <button onclick="cpLancarConfirmar()" class="btn btn-green" style="flex:2">✔ CONFIRMAR E LANÇAR</button>
+    </div>
   </div>
 </div>
 
@@ -6230,14 +6288,51 @@
     </div>
 
     <!-- ◈ BLOCO 6: VINCULAR AO LANÇAMENTO -->
-    <div style="background:rgba(0,200,255,0.05);border:1px solid rgba(0,200,255,0.15);border-radius:10px;padding:12px 16px;margin-bottom:16px">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-        <input id="bev-f-vincular" type="checkbox" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--neon-blue)">
+    <div style="background:rgba(0,200,255,0.05);border:1px solid rgba(0,200,255,0.15);border-radius:10px;padding:12px 16px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px">
+        <input id="bev-f-vincular" type="checkbox" onchange="bevVincularChange()" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--neon-blue)">
         <div>
-          <div style="font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);letter-spacing:.5px">REGISTRAR TAMBÉM NOS LANÇAMENTOS</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">O valor desta despesa será adicionado automaticamente à semana correspondente</div>
+          <div style="font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);letter-spacing:.5px">REGISTRAR NOS LANÇAMENTOS</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">Segue o fluxo completo: Semanal → Parcelas → Fatura do Cartão</div>
         </div>
       </label>
+      <!-- Campos adicionais — visíveis só quando vincular está marcado -->
+      <div id="bev-lancar-campos" style="display:none;flex-direction:column;gap:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">FORMA DE PAGAMENTO</div>
+            <select id="bev-f-forma" onchange="bevFormaChange()" style="width:100%;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px">
+              <option value="debito">💳 Débito</option>
+              <option value="credito">💳 Crédito à Vista</option>
+              <option value="credito_parc">💳 Crédito Parcelado</option>
+              <option value="pix">⚡ PIX</option>
+              <option value="dinheiro">💵 Dinheiro</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">CATEGORIA</div>
+            <select id="bev-f-cat" style="width:100%;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px">
+              <option value="Despesas Pessoais">⭐ Despesas Pessoais</option>
+              <option value="Transporte">🚗 Transporte</option>
+              <option value="Moradia">🏠 Moradia</option>
+              <option value="Saúde">🏥 Saúde</option>
+              <option value="Educação">📚 Educação</option>
+              <option value="Imprevistos">⚡ Imprevistos</option>
+            </select>
+          </div>
+        </div>
+        <div id="bev-cartao-wrap" style="display:none">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">CARTÃO</div>
+          <select id="bev-f-cartao" style="width:100%;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px"></select>
+        </div>
+        <div id="bev-parc-wrap" style="display:none">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">PARCELAS</div>
+          <select id="bev-f-nparc" style="width:100%;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px">
+            <option value="2">2x</option><option value="3">3x</option><option value="4">4x</option>
+            <option value="5">5x</option><option value="6">6x</option><option value="12">12x</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <div class="bem-modal-btns">
@@ -7500,13 +7595,7 @@ function showPage(id){
   if(_btnCalcFixo){
     _btnCalcFixo.style.display=(id==='lancamentos'||id==='documentos')?'none':'flex';
   }
-  // Auto-abre a calculadora em Lançamentos APENAS no desktop
-  if(id==='lancamentos'&&window.innerWidth>768){
-    setTimeout(()=>{
-      const cw=document.getElementById('calc-widget');
-      if(cw&&(cw.style.display==='none'||!cw.style.display)) toggleCalc();
-    },300);
-  }
+  // Calculadora: não abre automaticamente em nenhuma página — só ao clicar
   const tbl=document.getElementById('mob-topbar-title');
   if(tbl) tbl.textContent=PAGE_LABELS[id]||id.toUpperCase();
   if(window.innerWidth<=768&&typeof _mobUpdateBar==='function') _mobUpdateBar(id);
@@ -12172,10 +12261,82 @@ function comprasDecisao(acao){
 }
 
 function confirmarCompra(id){
+  const it=getCompras().find(x=>x.id===id);
+  if(!it) return;
+  // Preenche modal de lançamento rápido
+  document.getElementById('cp-lancar-id').value=id;
+  document.getElementById('cp-lancar-titulo').textContent=it.desc||'Item';
+  document.getElementById('cp-lancar-valor').textContent=it.val>0?fmt(it.val):'—';
+  // Preenche cartões
+  const cSel=document.getElementById('cp-lancar-cartao');
+  const cartoes=getData('cartoes');
+  cSel.innerHTML=cartoes.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('')||'<option value="">— Nenhum cartão —</option>';
+  // Reset
+  document.getElementById('cp-lancar-forma').value='credito';
+  document.getElementById('cp-lancar-parc').value='2';
+  document.getElementById('cp-lancar-err').textContent='';
+  cpLancarFormaChange();
+  document.getElementById('cp-lancar-modal').style.display='flex';
+}
+function cpLancarFechar(){
+  document.getElementById('cp-lancar-modal').style.display='none';
+}
+function cpLancarFormaChange(){
+  const forma=document.getElementById('cp-lancar-forma').value;
+  const isCredit=forma==='credito'||forma==='credito_parc';
+  const cartaoWrap=document.getElementById('cp-lancar-cartao-wrap');
+  const parcWrap=document.getElementById('cp-lancar-parc-wrap');
+  if(cartaoWrap) cartaoWrap.style.display=isCredit?'block':'none';
+  if(parcWrap) parcWrap.style.display=forma==='credito_parc'?'block':'none';
+}
+function cpLancarConfirmar(){
+  const id=document.getElementById('cp-lancar-id').value;
+  const forma=document.getElementById('cp-lancar-forma').value;
+  const cartao=document.getElementById('cp-lancar-cartao').value;
+  const nParc=parseInt(document.getElementById('cp-lancar-parc').value)||1;
+  const cat=document.getElementById('cp-lancar-cat').value;
+  const err=document.getElementById('cp-lancar-err');
   const lista=getCompras();
+  const it=lista.find(x=>x.id===id);
+  if(!it){err.textContent='Item não encontrado.';return;}
+  if((forma==='credito'||forma==='credito_parc')&&!cartao){err.textContent='Selecione o cartão.';return;}
+  const val=it.val||0;
+  const data=new Date().toISOString().split('T')[0];
+  const sem=getSemanaFromData(data);
+  const all=getData('lancamentos');
+  if(!all[sem]) all[sem]=[];
+  const baseId=Date.now();
+  if(forma==='credito_parc'){
+    // Crédito parcelado: adiciona às parcelas e distribui nas faturas
+    const valParc=parseFloat((val/nParc).toFixed(2));
+    const parcelas=getData('parcelas');
+    const parcId=baseId+1;
+    parcelas.push({id:parcId,cartao,desc:it.desc,inicio:data.substring(0,7),paga:0,total:nParc,val:valParc});
+    setData('parcelas',parcelas);
+    const fat=getData('faturas');if(!fat[cartao])fat[cartao]=Array(12).fill(0);
+    const mesIdx=parseInt(data.split('-')[1])-1;
+    for(let i=0;i<nParc;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}
+    setData('faturas',fat);
+    all[sem].push({id:baseId,desc:it.desc,data,forma:`${cartao} (${nParc}x)`,cat,val:valParc,valTotal:val,cartao,nParc,parcId,fatMes:mesIdx,fatVal:valParc});
+  } else if(forma==='credito'){
+    // Crédito à vista: 1x
+    const fat=getData('faturas');if(!fat[cartao])fat[cartao]=Array(12).fill(0);
+    const mesIdx=parseInt(data.split('-')[1])-1;
+    fat[cartao][mesIdx]=parseFloat(((fat[cartao][mesIdx]||0)+val).toFixed(2));
+    setData('faturas',fat);
+    all[sem].push({id:baseId,desc:it.desc,data,forma:`${cartao} (à vista)`,cat,val,cartao});
+  } else {
+    all[sem].push({id:baseId,desc:it.desc,data,forma,cat,val});
+  }
+  setData('lancamentos',all);
+  // Marca como confirmada
   const idx=lista.findIndex(x=>x.id===id);
   if(idx>-1){lista[idx].status='confirmada';setCompras(lista);}
+  cpLancarFechar();
   renderCompras();
+  // Feedback
+  const msg=`✔ "${it.desc}" lançado${forma==='credito_parc'?` em ${nParc}x`:''} → Semanal, Parcelas e Fatura atualizados.`;
+  if(currentPage==='compras') setTimeout(()=>alert(msg),100);
 }
 function reativarCompra(id){
   showConfirm('Reativar compra','Deseja reativar esta compra para a lista de decisão?',()=>{
@@ -13469,7 +13630,7 @@ ${miniCapa}
 // ===================== TEMA =====================
 function toggleTheme(){
   const isDay=document.body.classList.toggle('day');
-  const icon=isDay?'🌙':'☀';
+  const icon=isDay?'🌙':'☀️';
   const label=isDay?'MODO NOTURNO':'MODO DIURNO';
   document.getElementById('theme-icon').textContent=icon;
   document.getElementById('theme-label').textContent=label;
@@ -18297,9 +18458,31 @@ function salvarEventoBem(){
         anexo:anexo||null,obs};
       evs.push(obj);setBensEventos(evs);
       if(vincular&&valor>0){
+        const forma=document.getElementById('bev-f-forma')?.value||'outro';
+        const cat=document.getElementById('bev-f-cat')?.value||'Despesas Pessoais';
+        const cartao=document.getElementById('bev-f-cartao')?.value||'';
+        const nParc=parseInt(document.getElementById('bev-f-nparc')?.value)||1;
         const all=getData('lancamentos');const sem=getSemanaFromData(data);
         if(!all[sem])all[sem]=[];
-        all[sem].push({id:Date.now()+1,desc:`[BEM] ${desc}`,data,val:valor,cat:'Despesas Pessoais',forma:'outro'});
+        const baseId=Date.now()+1;
+        const mesIdx=parseInt(data.split('-')[1])-1;
+        if(forma==='credito_parc'&&cartao){
+          const valParc=parseFloat((valor/nParc).toFixed(2));
+          const parcelas=getData('parcelas');
+          parcelas.push({id:baseId+100,cartao,desc:`[BEM] ${desc}`,inicio:data.substring(0,7),paga:0,total:nParc,val:valParc});
+          setData('parcelas',parcelas);
+          const fat=getData('faturas');if(!fat[cartao])fat[cartao]=Array(12).fill(0);
+          for(let i=0;i<nParc;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}
+          setData('faturas',fat);
+          all[sem].push({id:baseId,desc:`[BEM] ${desc}`,data,forma:`${cartao} (${nParc}x)`,cat,val:valParc,valTotal:valor,cartao,nParc});
+        } else if(forma==='credito'&&cartao){
+          const fat=getData('faturas');if(!fat[cartao])fat[cartao]=Array(12).fill(0);
+          fat[cartao][mesIdx]=parseFloat(((fat[cartao][mesIdx]||0)+valor).toFixed(2));
+          setData('faturas',fat);
+          all[sem].push({id:baseId,desc:`[BEM] ${desc}`,data,forma:`${cartao} (à vista)`,cat,val:valor,cartao});
+        } else {
+          all[sem].push({id:baseId,desc:`[BEM] ${desc}`,data,val:valor,cat,forma});
+        }
         setData('lancamentos',all);
       }
     }
@@ -18308,6 +18491,26 @@ function salvarEventoBem(){
   };
   if(anexoFile){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(anexoFile);}
   else _save(null);
+}
+function bevVincularChange(){
+  const chk=document.getElementById('bev-f-vincular');
+  const campos=document.getElementById('bev-lancar-campos');
+  if(!campos) return;
+  campos.style.display=chk?.checked?'flex':'none';
+  if(chk?.checked){
+    // Preenche cartões
+    const sel=document.getElementById('bev-f-cartao');
+    if(sel){const c=getData('cartoes');sel.innerHTML=c.map(x=>`<option value="${esc(x.nome)}">${esc(x.nome)}</option>`).join('')||'<option value="">—</option>';}
+    bevFormaChange();
+  }
+}
+function bevFormaChange(){
+  const forma=document.getElementById('bev-f-forma')?.value||'';
+  const isCredit=forma==='credito'||forma==='credito_parc';
+  const cWrap=document.getElementById('bev-cartao-wrap');
+  const pWrap=document.getElementById('bev-parc-wrap');
+  if(cWrap) cWrap.style.display=isCredit?'block':'none';
+  if(pWrap) pWrap.style.display=forma==='credito_parc'?'block':'none';
 }
 function excluirEventoBem(id){
   showConfirm('Excluir Evento','Remover este evento?',()=>{
@@ -19865,13 +20068,16 @@ function trfBadgeProgresso(meta){
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
 <button id="btn-calc-fixo" onclick="toggleCalc()"
   title="Calculadora"
-  style="position:fixed;top:12px;right:18px;z-index:1200;
-    width:38px;height:38px;border-radius:50%;
-    background:transparent;border:none;
-    font-size:24px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    transition:transform .18s;line-height:1;padding:0"
-  onmouseover="this.style.transform='scale(1.18)'"
-  onmouseout="this.style.transform='scale(1)'">🖩</button>
+  style="position:fixed;top:10px;right:14px;z-index:1200;
+    height:36px;border-radius:20px;
+    background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.25);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    gap:6px;padding:0 12px;
+    transition:all .18s;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)"
+  onmouseover="this.style.background='rgba(0,200,255,0.18)';this.style.borderColor='rgba(0,200,255,0.5)'"
+  onmouseout="this.style.background='rgba(0,200,255,0.08)';this.style.borderColor='rgba(0,200,255,0.25)'">
+  <span style="font-size:18px;line-height:1">🖩</span>
+  <span style="font-size:10px;font-weight:700;letter-spacing:.5px;white-space:nowrap">CALCULADORA</span>
+</button>
 </body>
 </html>

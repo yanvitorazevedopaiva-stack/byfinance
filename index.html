@@ -5061,6 +5061,18 @@
           <span style="font-size:11px;color:var(--text2);font-weight:600">Meta diária (repete todos os dias)</span>
         </label>
         <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">RECORRÊNCIA (repete após concluir)</div>
+          <select id="trf-recorrencia" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option value="0">🚫 Não repete</option>
+            <option value="7">📅 Toda semana (7 dias)</option>
+            <option value="15">📅 A cada 15 dias</option>
+            <option value="30">📅 Todo mês (30 dias)</option>
+            <option value="45">📅 A cada 45 dias</option>
+            <option value="60">📅 A cada 2 meses (60 dias)</option>
+            <option value="90">📅 A cada 3 meses (90 dias)</option>
+          </select>
+        </div>
+        <div>
           <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VINCULAR A META (opcional)</div>
           <select id="trf-meta" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
             <option value="">— Sem vínculo —</option>
@@ -5088,46 +5100,6 @@
     </div>
   </div>
 
-  <!-- MODAL: Motivo ao desmarcar tarefa (Feature 1) -->
-  <div id="trf-motivo-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
-    <div style="background:var(--card);border:1px solid rgba(255,215,0,0.3);border-radius:18px;padding:26px;width:min(460px,94vw);box-shadow:0 8px 56px rgba(0,0,0,0.6)">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--neon-yellow);letter-spacing:1.5px;margin-bottom:4px">⚠ POR QUE NÃO FOI FEITO?</div>
-      <div id="trf-motivo-titulo" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:18px"></div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
-        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Não deu tempo no dia marcado" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Não deu tempo no dia marcado</span></label>
-        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Esqueci" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Esqueci</span></label>
-        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Mudei de prioridade" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Mudei de prioridade</span></label>
-        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Adiado por outro compromisso" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Adiado por outro compromisso</span></label>
-        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Outro motivo" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Outro motivo</span></label>
-      </div>
-      <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:700;letter-spacing:.5px">REMARCAR PARA O DIA *</div>
-        <input id="trf-motivo-data" type="date" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
-      </div>
-      <div id="trf-motivo-err" style="font-size:11px;color:var(--neon-red);min-height:16px;margin-bottom:10px"></div>
-      <div style="display:flex;gap:8px">
-        <button onclick="trfMotivoCancelar()" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">CANCELAR</button>
-        <button onclick="trfMotivoConfirmar()" class="btn btn-green" style="flex:2">✓ REMARCAR TAREFA</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Tarefas do dia (auto ao login — Feature 2) -->
-  <div id="trf-daily-modal" style="display:none;position:fixed;inset:0;z-index:5100;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
-    <div style="background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:18px;padding:26px;width:min(560px,94vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:0 8px 56px rgba(0,0,0,0.6)">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-shrink:0">
-        <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px">📋 SUAS TAREFAS</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:3px" id="trf-daily-sub"></div>
-        </div>
-        <button onclick="trfFecharDailyModal()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>
-      </div>
-      <div id="trf-daily-lista" style="flex:1;overflow-y:auto;min-height:0"></div>
-      <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:10px;flex-shrink:0">
-        <button onclick="trfFecharDailyModal();showPage('tarefas')" class="btn" style="width:100%;border-color:rgba(0,200,255,0.4);color:var(--neon-blue)">→ VER TODAS AS TAREFAS</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- ========== RECEITA ========== -->
@@ -19395,6 +19367,7 @@ function trfAddTarefa(){
   const prio=document.getElementById('trf-prio')?.value||'Media';
   const prazo=document.getElementById('trf-prazo')?.value||'';
   const diaria=document.getElementById('trf-diaria')?.checked||false;
+  const recorrencia=parseInt(document.getElementById('trf-recorrencia')?.value)||0;
   const metaId=parseInt(document.getElementById('trf-meta')?.value)||0;
   const msg=document.getElementById('trf-add-msg');
   if(!titulo){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o título da tarefa.';}return;}
@@ -19405,10 +19378,11 @@ function trfAddTarefa(){
     metaNome=m?(m.titulo||m.nome||''):'';
   }
   const lista=_trfGet();
-  lista.push({id:Date.now(),titulo,desc,cat,prio,prazo,diaria,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString(),remarcacoes:0});
+  lista.push({id:Date.now(),titulo,desc,cat,prio,prazo,diaria,recorrencia,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString(),remarcacoes:0});
   _trfSet(lista);
   ['trf-titulo','trf-desc','trf-prazo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const diEl=document.getElementById('trf-diaria');if(diEl)diEl.checked=false;
+  const recEl=document.getElementById('trf-recorrencia');if(recEl)recEl.value='0';
   const metaSel=document.getElementById('trf-meta');if(metaSel)metaSel.value='';
   if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Tarefa adicionada!';setTimeout(()=>{if(msg)msg.textContent='';},1800);}
   _trfRenderLista();_trfRenderKpis();
@@ -19431,8 +19405,16 @@ function trfToggle(id){
   } else {
     // Marcando como concluída
     t.concluida=true;t.concluidaEm=new Date().toISOString();
-    // Se diária, cria nova ocorrência para amanhã
-    if(t.diaria){
+    // Recorrência: cria próxima ocorrência automaticamente
+    const diasRec=parseInt(t.recorrencia)||0;
+    if(diasRec>0){
+      const base=t.prazo?new Date(t.prazo+'T00:00:00'):new Date();
+      base.setDate(base.getDate()+diasRec);
+      const proximaData=base.toISOString().split('T')[0];
+      lista.push({...t,id:Date.now(),concluida:false,concluidaEm:null,prazo:proximaData,criadaEm:new Date().toISOString(),remarcacoes:0});
+    }
+    // Se diária e sem recorrência, cria nova para amanhã
+    else if(t.diaria){
       const amanha=new Date();amanha.setDate(amanha.getDate()+1);
       lista.push({...t,id:Date.now(),concluida:false,concluidaEm:null,prazo:amanha.toISOString().split('T')[0],criadaEm:new Date().toISOString(),remarcacoes:0});
     }
@@ -19524,7 +19506,10 @@ function _trfRenderLista(){
     const diasLabel=_trfDiasLabel(t.prazo);
     const prazoFmt=t.prazo?new Date(t.prazo+'T00:00:00').toLocaleDateString('pt-BR'):'-';
     const remBadge=t.remarcacoes>0?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(255,215,0,0.15);color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">↺ ${t.remarcacoes}x remarcada</span>`:'';
-    const diariaBadge=t.diaria?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(0,200,255,0.12);color:var(--neon-blue)">🔁 diária</span>`:'';
+    const diasRec=parseInt(t.recorrencia)||0;
+    const recLabel={7:'7d',15:'15d',30:'30d',45:'45d',60:'60d',90:'90d'}[diasRec]||(diasRec?diasRec+'d':'');
+    const diariaBadge=t.diaria&&!diasRec?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(0,200,255,0.12);color:var(--neon-blue)">🔁 diária</span>`:'';
+    const recBadge=diasRec>0?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(0,255,157,0.1);color:var(--neon-green)">🔄 repete/${recLabel}</span>`:'';
     const metaBadge=t.metaSemanal?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(168,85,247,0.12);color:var(--neon-purple)">📅 Meta Semanal</span>`:'';
     const motivoInfo=t.ultimoMotivo?`<div style="font-size:10px;color:var(--neon-yellow);margin-top:2px">💬 ${esc(t.ultimoMotivo)}</div>`:'';
     return`<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:10px;background:var(--card);border:1px solid ${atrasada?'rgba(255,68,68,0.3)':'var(--border)'};${t.concluida?'opacity:.5':''}">
@@ -19535,7 +19520,7 @@ function _trfRenderLista(){
           <span style="font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,0.15);color:var(--text2)">${catIco[t.cat]||'📌'} ${t.cat}</span>
           <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;color:${prioClr[t.prio]||'var(--text3)'};background:${(prioClr[t.prio]||'var(--text3)').replace(')',',0.12)')}">${t.prio}</span>
           ${atrasada?`<span style="font-size:10px;font-weight:700;color:var(--neon-red)">⚠ ATRASADA</span>`:''}
-          ${diariaBadge}${metaBadge}${remBadge}
+          ${diariaBadge}${recBadge}${metaBadge}${remBadge}
         </div>
         ${t.desc?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px">${esc(t.desc)}</div>`:''}
         ${motivoInfo}
@@ -19587,11 +19572,13 @@ function _trfHookMetaSemanal(){
   if(dias.length>0) trfGerarTarefasMeta(ultima,dias,horario);
 }
 
+// Variável de sessão — reseta a cada login (reload da página)
+let _trfDailyModalShown=false;
+
 // ── Modal diário automático (Feature 2) ──
 function trfAbrirDailyModal(){
-  const hoje=new Date().toISOString().split('T')[0];
-  const sessKey='trf_modal_'+hoje;
-  if(sessionStorage.getItem(sessKey)) return; // já mostrou hoje nesta sessão
+  if(_trfDailyModalShown) return; // já abriu nesta sessão de login
+  _trfDailyModalShown=true;
   const lista=_trfGet();
   const pendentes=lista.filter(t=>!t.concluida).sort((a,b)=>{
     if(a.prazo&&b.prazo) return a.prazo.localeCompare(b.prazo);
@@ -19599,7 +19586,6 @@ function trfAbrirDailyModal(){
     return 0;
   });
   if(!pendentes.length) return; // sem pendentes, não abre
-  sessionStorage.setItem(sessKey,'1');
   trfRenderDailyLista();
   const sub=document.getElementById('trf-daily-sub');
   if(sub) sub.textContent=`${pendentes.length} tarefa${pendentes.length>1?'s':''} pendente${pendentes.length>1?'s':''}`;
@@ -19695,6 +19681,47 @@ function trfBadgeProgresso(meta){
   return `<span style="font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:6px;background:${superou?'rgba(0,255,157,0.15)':'rgba(0,200,255,0.1)'};color:${superou?'var(--neon-green)':'var(--text3)'};margin-left:6px">${superou?'✅ Meta superada!':concSem+'/'+metaSem+'x esta semana'}</span>`;
 }
 </script>
+<!-- MODAL GLOBAL: Motivo ao desmarcar tarefa -->
+<div id="trf-motivo-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid rgba(255,215,0,0.3);border-radius:18px;padding:26px;width:min(460px,94vw);box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--neon-yellow);letter-spacing:1.5px;margin-bottom:4px">⚠ POR QUE NÃO FOI FEITO?</div>
+    <div id="trf-motivo-titulo" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:18px"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+      <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Não deu tempo no dia marcado" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Não deu tempo no dia marcado</span></label>
+      <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Esqueci" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Esqueci</span></label>
+      <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Mudei de prioridade" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Mudei de prioridade</span></label>
+      <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Adiado por outro compromisso" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Adiado por outro compromisso</span></label>
+      <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Outro motivo" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Outro motivo</span></label>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:700;letter-spacing:.5px">REMARCAR PARA O DIA *</div>
+      <input id="trf-motivo-data" type="date" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+    </div>
+    <div id="trf-motivo-err" style="font-size:11px;color:var(--neon-red);min-height:16px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="trfMotivoCancelar()" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">CANCELAR</button>
+      <button onclick="trfMotivoConfirmar()" class="btn btn-green" style="flex:2">✓ REMARCAR TAREFA</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GLOBAL: Tarefas do dia (auto ao login) -->
+<div id="trf-daily-modal" style="display:none;position:fixed;inset:0;z-index:5100;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:18px;padding:26px;width:min(560px,94vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-shrink:0">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px">📋 SUAS TAREFAS</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px" id="trf-daily-sub"></div>
+      </div>
+      <button onclick="trfFecharDailyModal()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>
+    </div>
+    <div id="trf-daily-lista" style="flex:1;overflow-y:auto;min-height:0"></div>
+    <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:10px;flex-shrink:0">
+      <button onclick="trfFecharDailyModal();showPage('tarefas')" class="btn" style="width:100%;border-color:rgba(0,200,255,0.4);color:var(--neon-blue)">→ VER TODAS AS TAREFAS</button>
+    </div>
+  </div>
+</div>
+
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
 <button id="btn-calc-fixo" onclick="toggleCalc()"
   title="Calculadora"

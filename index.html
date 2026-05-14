@@ -3196,9 +3196,9 @@
 <!-- ========== DASHBOARD ========== -->
 <div id="page-dashboard" class="page active">
   <div class="page-title">DASHBOARD</div>
-  <div class="page-sub">// VISÃO GERAL DO MÊS · ABRIL 2026</div>
+  <div class="page-sub" id="d-page-sub">// VISÃO GERAL DO MÊS</div>
 
-  <!-- BARRA DE SAÚDE FINANCEIRA -->
+  <!-- 1. BARRA DE SAÚDE FINANCEIRA -->
   <div class="health-bar-wrap" id="health-bar-wrap">
     <div class="health-bar-left">
       <div class="health-bar-top">
@@ -3208,68 +3208,52 @@
           <span class="health-bar-label" id="health-label">—</span>
         </div>
       </div>
-      <div class="health-track">
-        <div class="health-fill" id="health-fill" style="width:0%"></div>
-      </div>
+      <div class="health-track"><div class="health-fill" id="health-fill" style="width:0%"></div></div>
       <div class="health-ticks">
         <span>0 · Crítico</span><span>25 · Ruim</span><span>50 · Moderado</span><span>75 · Bom</span><span>100 · Ótimo</span>
       </div>
       <div class="health-frase" id="health-frase">
-        <span class="health-frase-icon">💡</span>
-        <span id="health-frase-txt">Calculando...</span>
+        <span class="health-frase-icon">💡</span><span id="health-frase-txt">Calculando...</span>
       </div>
     </div>
     <div class="health-right">
-      <div class="health-metric">
-        <div class="health-metric-label">Comprometimento</div>
-        <div class="health-metric-val" id="hm-dti" style="color:var(--neon-yellow)">—%</div>
-      </div>
-      <div class="health-metric">
-        <div class="health-metric-label">Dívidas totais</div>
-        <div class="health-metric-val" id="hm-div" style="color:var(--neon-red)">R$—</div>
-      </div>
-      <div class="health-metric">
-        <div class="health-metric-label">Saldo livre</div>
-        <div class="health-metric-val" id="hm-saldo">R$—</div>
-      </div>
+      <div class="health-metric"><div class="health-metric-label">Comprometimento</div><div class="health-metric-val" id="hm-dti" style="color:var(--neon-yellow)">—%</div></div>
+      <div class="health-metric"><div class="health-metric-label">Dívidas totais</div><div class="health-metric-val" id="hm-div" style="color:var(--neon-red)">R$—</div></div>
+      <div class="health-metric"><div class="health-metric-label">Saldo livre</div><div class="health-metric-val" id="hm-saldo">R$—</div></div>
     </div>
   </div>
 
-  <div class="grid4" style="margin-bottom:20px">
+  <!-- 2. KPIs PRINCIPAIS (5 cards) -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px" id="d-kpis-grid">
     <div class="card card-green">
       <div class="card-label">SALDO DO MÊS</div>
       <div class="card-value val-green" id="d-saldo">R$—</div>
       <div style="font-size:11px;color:var(--text3);margin-top:6px">após gastos fixos</div>
     </div>
-    <div class="card card-red" style="cursor:pointer" title="Clique para ver todas as parcelas" onclick="verParcelasCartao('')">
-      <div class="card-label">TOTAL DÍVIDAS (CARTÕES) <span style="opacity:.5;font-size:9px">↗ VER</span></div>
-      <div class="card-value val-red" id="d-dividas">R$—</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:6px">valor restante total</div>
+    <div class="card card-blue">
+      <div class="card-label">RECEITA DO MÊS</div>
+      <div class="card-value val-blue" id="d-receita-mes">R$—</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">entradas do mês</div>
     </div>
     <div class="card card-yellow">
       <div class="card-label">FATURAS ESTE MÊS</div>
       <div class="card-value val-yellow" id="d-fat-mes">R$—</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:6px">total abril 2026</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px" id="d-fat-mes-label-sub">total do mês</div>
     </div>
     <div class="card card-blue">
       <div class="card-label">GASTOS FIXOS</div>
       <div class="card-value val-blue" id="d-gastos-fixos">R$—</div>
       <div style="font-size:11px;color:var(--text3);margin-top:6px">mensais recorrentes</div>
     </div>
-    <div class="card" style="cursor:pointer;min-height:180px" onclick="showPage('parcelas')">
-      <div class="card-label">FINANCIAMENTOS</div>
-      <div class="card-value" id="d-financiamentos" style="color:#ff8c00">R$—</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:6px" id="d-financiamentos-sub">ativos</div>
+    <div class="card card-red" style="cursor:pointer" title="Ver parcelas" onclick="verParcelasCartao('')">
+      <div class="card-label">TOTAL DÍVIDAS <span style="opacity:.5;font-size:9px">↗</span></div>
+      <div class="card-value val-red" id="d-dividas">R$—</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px" id="d-financiamentos-sub">valor restante total</div>
     </div>
   </div>
 
-  <!-- Comparativo mês anterior -->
-  <div class="card" id="d-mes-anterior-card" style="margin-bottom:20px;display:none">
-    <div class="sec-title" style="margin-bottom:10px">📅 COMPARATIVO COM MÊS ANTERIOR</div>
-    <div id="d-mes-anterior"></div>
-  </div>
-
-  <div class="grid2" style="margin-bottom:20px">
+  <!-- 3. VENCIMENTOS + ALERTAS -->
+  <div class="grid2" style="margin-bottom:18px">
     <div class="card">
       <div class="sec-title">PRÓXIMOS VENCIMENTOS (7 DIAS)</div>
       <div id="proximos-venc"></div>
@@ -3280,22 +3264,50 @@
     </div>
   </div>
 
-  <div class="grid2" style="margin-bottom:20px">
+  <!-- 4. METAS + TAREFAS -->
+  <div class="grid2" style="margin-bottom:18px">
     <div class="card">
-      <div class="sec-title">GASTOS POR CATEGORIA</div>
-      <div style="position:relative;height:260px">
-        <canvas id="chartCat" role="img" aria-label="Gráfico de gastos por categoria">Gastos mensais por categoria.</canvas>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="sec-title" style="margin:0">🎯 METAS ATIVAS</div>
+        <button onclick="showPage('metas')" style="font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:'JetBrains Mono',monospace">VER TODAS</button>
       </div>
+      <div id="d-metas-widget"><div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">Carregando...</div></div>
     </div>
     <div class="card">
-      <div class="sec-title">EVOLUÇÃO MENSAL DAS DÍVIDAS</div>
-      <div style="position:relative;height:260px">
-        <canvas id="chartEvolucao" role="img" aria-label="Evolução das dívidas mensais">Evolução mensal das dívidas.</canvas>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="sec-title" style="margin:0">✓ TAREFAS DA SEMANA</div>
+        <button onclick="showPage('tarefas')" style="font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:'JetBrains Mono',monospace">VER TODAS</button>
+      </div>
+      <div id="d-tarefas-widget"><div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- 5. SEMANAL + INVESTIMENTOS + GASTOS POR CATEGORIA -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:14px;margin-bottom:18px">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="sec-title" style="margin:0">📊 SEMANA ATUAL</div>
+        <button onclick="showPage('semanal')" style="font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:'JetBrains Mono',monospace">VER</button>
+      </div>
+      <div id="d-semanal-widget"><div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">Carregando...</div></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="sec-title" style="margin:0">💹 INVESTIMENTOS</div>
+        <button onclick="showPage('investimentos')" style="font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:'JetBrains Mono',monospace">VER</button>
+      </div>
+      <div id="d-inv-widget"><div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">Carregando...</div></div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:10px">GASTOS POR CATEGORIA</div>
+      <div style="position:relative;height:220px">
+        <canvas id="chartCat" role="img" aria-label="Gráfico de gastos por categoria">Gastos mensais por categoria.</canvas>
       </div>
     </div>
   </div>
 
-  <div class="card">
+  <!-- 6. CONTROLE DE FATURAS -->
+  <div class="card" style="margin-bottom:18px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div class="sec-title" style="margin:0">CONTROLE DE FATURAS — <span id="d-fat-mes-label" style="color:var(--neon-blue)"></span></div>
       <div style="display:flex;align-items:center;gap:10px">
@@ -3307,36 +3319,15 @@
     <div id="d-fat-empty" style="display:none;color:var(--text3);font-size:13px;padding:8px 0">Nenhuma fatura lançada para este mês.</div>
   </div>
 
-  <!-- SCORE DE SAÚDE FINANCEIRA -->
-  <div id="saude-financeira-card" class="card" style="margin-bottom:20px"></div>
-
-  <!-- QUADRO DE AVISOS — embutido no dashboard -->
-  <div style="margin-top:20px">
-    <div class="sec-title" style="margin-bottom:14px">◬ QUADRO DE AVISOS</div>
-    <div class="grid2" style="margin-bottom:20px">
-      <div>
-        <div class="sec-title">TOTAL DE DÉBITOS POR CARTÃO</div>
-        <div id="av-faturas"></div>
-      </div>
-      <div>
-        <div class="sec-title">VENCIMENTOS PRÓXIMOS</div>
-        <div id="av-venc"></div>
-      </div>
-    </div>
-    <div class="grid2" style="margin-bottom:20px">
-      <div>
-        <div class="sec-title">MESES COM DÉFICIT</div>
-        <div id="av-deficit"></div>
-      </div>
-      <div>
-        <div class="sec-title">CARTÕES COM MAIOR DÍVIDA</div>
-        <div id="av-maiores"></div>
-      </div>
-    </div>
-    <div id="av-concentracao" style="display:none">
-      <div class="sec-title" style="margin-bottom:10px">⚠ CONCENTRAÇÃO DE DÍVIDA POR CARTÃO</div>
-      <div id="av-concentracao-body"></div>
-    </div>
+  <!-- IDs preservados (usados por renderDashboard/renderAvisos) — ocultos -->
+  <div style="display:none">
+    <div id="saude-financeira-card"></div>
+    <div id="d-mes-anterior-card"><div id="d-mes-anterior"></div></div>
+    <div id="d-financiamentos"></div>
+    <div id="av-faturas"></div><div id="av-venc"></div>
+    <div id="av-deficit"></div><div id="av-maiores"></div>
+    <div id="av-concentracao"><div id="av-concentracao-body"></div></div>
+    <canvas id="chartEvolucao"></canvas>
   </div>
 </div>
 
@@ -7977,6 +7968,112 @@ function renderDashboard(){
   calcSaudeFinanceira();
   _dashMesAnterior();
   _dashVencimentosVisuais();
+
+  // ── Subtítulo dinâmico ──
+  const _mes=new Date();
+  const _mLabel=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const dSub=document.getElementById('d-page-sub');
+  if(dSub) dSub.textContent=`// VISÃO GERAL DO MÊS · ${_mLabel[_mes.getMonth()].toUpperCase()} ${_mes.getFullYear()}`;
+
+  // ── Receita do mês ──
+  const recMesKey=_mes.getFullYear()+'-'+String(_mes.getMonth()+1).padStart(2,'0');
+  const recEntries=(getReceitas()[recMesKey]||[]);
+  const totalReceita=recEntries.reduce((a,e)=>a+(e.val||0),0);
+  const elRec=document.getElementById('d-receita-mes');
+  if(elRec) elRec.textContent=fmt(totalReceita);
+
+  // ── Financiamentos sub-info em dívidas ──
+  const fins=getFinanciamentos?getFinanciamentos():[];
+  const totalFin=fins.reduce((a,f)=>a+(f.saldo||0),0);
+  const dFinSub=document.getElementById('d-financiamentos-sub');
+  if(dFinSub&&totalFin>0) dFinSub.textContent=`+ ${fmt(totalFin)} em financiamentos`;
+
+  // ── Widget Metas ──
+  const elMetas=document.getElementById('d-metas-widget');
+  if(elMetas){
+    const todas=[...getMetas(),...getMetasAnuais(),..._getMetas5Anos(),..._getMetas10Anos()]
+      .filter(m=>m.status!=='concluida'&&(m.titulo||m.nome));
+    if(!todas.length){
+      elMetas.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">Nenhuma meta ativa.</div>';
+    } else {
+      const top3=todas.slice(0,3);
+      elMetas.innerHTML=top3.map(m=>{
+        const nome=(m.titulo||m.nome||'').substring(0,28);
+        const pago=parseFloat(m.pago||m.acumulado||0);
+        const total=parseFloat(m.total||m.alvo||m.valor||1);
+        const pct=Math.min(100,total>0?Math.round(pago/total*100):parseInt(m.progresso)||0);
+        const cor=pct>=80?'var(--neon-green)':pct>=40?'var(--neon-yellow)':'var(--neon-blue)';
+        const tipoBadge={financeira:'💰',saude:'🏃',educacao:'📚',carreira:'💼',habito:'🔁',pessoal:'⭐'}[m.tipo]||'🎯';
+        return`<div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px">
+            <span style="color:var(--text)">${tipoBadge} ${esc(nome)}</span>
+            <span style="color:${cor};font-weight:700;font-family:'JetBrains Mono',monospace">${pct}%</span>
+          </div>
+          <div style="height:5px;background:var(--bg2);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${cor};border-radius:4px;transition:width .4s"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── Widget Tarefas ──
+  const elTrf=document.getElementById('d-tarefas-widget');
+  if(elTrf){
+    const hoje3=new Date().toISOString().split('T')[0];
+    const pendentes=_trfGet().filter(t=>!t.concluida)
+      .sort((a,b)=>(a.prazo||'9')>(b.prazo||'9')?1:-1).slice(0,5);
+    if(!pendentes.length){
+      elTrf.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">Nenhuma tarefa pendente 🎉</div>';
+    } else {
+      elTrf.innerHTML=pendentes.map(t=>{
+        const diff=t.prazo?Math.round((new Date(t.prazo+'T00:00:00')-new Date())/(1000*60*60*24)):null;
+        const badge=diff===null?''
+          :diff<0?`<span style="font-size:10px;font-weight:700;color:var(--neon-red);background:rgba(255,68,68,0.1);padding:1px 6px;border-radius:5px;white-space:nowrap">ATRASADA</span>`
+          :diff===0?`<span style="font-size:10px;font-weight:700;color:var(--neon-green);background:rgba(0,255,157,0.1);padding:1px 6px;border-radius:5px;white-space:nowrap">HOJE</span>`
+          :`<span style="font-size:10px;color:var(--text3);white-space:nowrap">em ${diff}d</span>`;
+        return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <input type="checkbox" onchange="trfToggle(${t.id});renderDashboard()" style="accent-color:var(--neon-green);cursor:pointer;flex-shrink:0">
+          <span style="flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((t.titulo||'').substring(0,32))}</span>
+          ${badge}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── Widget Semanal ──
+  const elSem=document.getElementById('d-semanal-widget');
+  if(elSem){
+    const limSem=getLimiteSemanal();
+    const lancs=getData('lancamentos');
+    const semAtualNum=Math.ceil(new Date().getDate()/7);
+    const gastSem=(lancs[semAtualNum]||[]).reduce((a,l)=>a+(l.val||0),0);
+    const pctSem=limSem>0?Math.min(100,Math.round(gastSem/limSem*100)):0;
+    const corSem=pctSem>=90?'var(--neon-red)':pctSem>=70?'var(--neon-yellow)':'var(--neon-green)';
+    const qtLancs=(lancs[semAtualNum]||[]).length;
+    elSem.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+        <span style="font-size:22px;font-weight:700;color:${corSem};font-family:'JetBrains Mono',monospace">${fmt(gastSem)}</span>
+        <span style="font-size:11px;color:var(--text3)">${limSem>0?'de '+fmt(limSem):'sem limite'}</span>
+      </div>
+      ${limSem>0?`<div style="height:6px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:8px">
+        <div style="height:100%;width:${pctSem}%;background:${corSem};border-radius:4px;transition:width .4s"></div>
+      </div><div style="font-size:10px;color:${corSem};font-family:'JetBrains Mono',monospace;margin-bottom:8px">${pctSem}% do limite usado</div>`:''}
+      <div style="font-size:11px;color:var(--text3)">${qtLancs} lançamento${qtLancs!==1?'s':''} esta semana</div>`;
+  }
+
+  // ── Widget Investimentos ──
+  const elInv=document.getElementById('d-inv-widget');
+  if(elInv){
+    const invs=typeof getInvestimentos==='function'?getInvestimentos():[];
+    const totalInv=invs.reduce((a,i)=>a+(parseFloat(i.valorAtual||i.val||0)),0);
+    const top3inv=[...invs].sort((a,b)=>(b.valorAtual||b.val||0)-(a.valorAtual||a.val||0)).slice(0,3);
+    elInv.innerHTML=`<div style="font-size:22px;font-weight:700;color:var(--neon-green);font-family:'JetBrains Mono',monospace;margin-bottom:12px">${fmt(totalInv)}</div>
+      ${top3inv.length?top3inv.map(i=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${esc((i.nome||'').substring(0,22))}</span>
+        <span style="color:var(--neon-green);font-family:'JetBrains Mono',monospace">${fmt(i.valorAtual||i.val||0)}</span>
+      </div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0;text-align:center">Nenhum investimento.</div>'}`;
+  }
 }
 
 // ===================== GASTOS FIXOS =====================
@@ -8250,12 +8347,28 @@ function addGastoFixo(){
 
 function editSalario(){
   const atual=getSalario();
-  const raw=prompt('Salário atual: '+fmt(atual)+'\nNovo salário (R$):');
-  if(!raw) return;
-  const v=parseFloat(raw.replace(',','.'));
-  if(isNaN(v)||v<=0){alert('Valor inválido.');return;}
+  const inp=document.getElementById('gf-salario-input');
+  if(inp) inp.value=atual>0?atual.toFixed(2):'';
+  const info=document.getElementById('gf-salario-atual');
+  if(info) info.textContent=atual>0?'Atual: '+fmt(atual):'Nenhum salário cadastrado';
+  const m=document.getElementById('gf-salario-modal');
+  if(m){m.style.display='flex';setTimeout(()=>inp&&inp.focus(),80);}
+}
+function editSalarioConfirmar(){
+  const raw=(document.getElementById('gf-salario-input')?.value||'').trim();
+  const v=_mktParseBRL?_mktParseBRL(raw):(parseFloat(raw.replace(/\./g,'').replace(',','.'))||0);
+  if(!v||v<=0){
+    const err=document.getElementById('gf-salario-err');
+    if(err)err.textContent='Informe um valor válido.';return;
+  }
   setSalario(v);
+  const m=document.getElementById('gf-salario-modal');
+  if(m)m.style.display='none';
   renderGastos();
+}
+function editSalarioFechar(){
+  const m=document.getElementById('gf-salario-modal');
+  if(m)m.style.display='none';
 }
 
 // ===================== PARCELAS =====================
@@ -14632,7 +14745,7 @@ function _initApp(){
     'inv-investido','inv-atual','inv-h-val',
     'meta-valor-sem','meta-valor-tri','meta-valor-5a','meta-valor-10a',
     'simA-divida','simA-parcela','simB-objetivo','simB-mensal','simC-gasto',
-    'ep-val','fat-val','sem-limit-input','meta-gasto-val',
+    'ep-val','fat-val','sem-limit-input','meta-gasto-val','gf-salario-input',
     'fin-total','ld-liq','ld-total','bem-f-valorPago','bem-f-valorAtual',
     'bev-f-valor','bfq-valor','bev-f-valor','edit-lanc-val','ct-desp-val'
   ].forEach(id=>{const el=document.getElementById(id);if(el)installMoneyMask(el);});
@@ -19717,6 +19830,30 @@ function trfBadgeProgresso(meta){
     <div id="trf-daily-lista" style="flex:1;overflow-y:auto;min-height:0"></div>
     <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:10px;flex-shrink:0">
       <button onclick="trfFecharDailyModal();showPage('tarefas')" class="btn" style="width:100%;border-color:rgba(0,200,255,0.4);color:var(--neon-blue)">→ VER TODAS AS TAREFAS</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Editar Salário Base -->
+<div id="gf-salario-modal" style="display:none;position:fixed;inset:0;z-index:4500;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid rgba(0,200,255,0.25);border-radius:18px;padding:28px;width:min(400px,92vw);box-shadow:0 8px 48px rgba(0,0,0,0.55)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1.5px">✎ SALÁRIO BASE</div>
+        <div id="gf-salario-atual" style="font-size:11px;color:var(--text3);margin-top:3px"></div>
+      </div>
+      <button onclick="editSalarioFechar()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px">✕</button>
+    </div>
+    <div style="margin-bottom:6px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-weight:700">NOVO SALÁRIO MENSAL (R$)</div>
+      <input id="gf-salario-input" type="text" inputmode="numeric" placeholder="Ex: 3.500,00"
+        style="width:100%;padding:12px 14px;background:var(--bg2);border:1px solid rgba(0,200,255,0.35);color:var(--neon-blue);border-radius:10px;font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace;text-align:center;box-sizing:border-box;outline:none"
+        onkeydown="if(event.key==='Enter')editSalarioConfirmar()">
+    </div>
+    <div id="gf-salario-err" style="font-size:11px;color:var(--neon-red);min-height:16px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="editSalarioFechar()" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">CANCELAR</button>
+      <button onclick="editSalarioConfirmar()" class="btn btn-blue" style="flex:2">✓ SALVAR</button>
     </div>
   </div>
 </div>

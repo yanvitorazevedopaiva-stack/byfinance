@@ -3343,7 +3343,7 @@
 <!-- ========== GASTOS FIXOS ========== -->
 <div id="page-gastos" class="page">
   <div class="page-title">GASTOS FIXOS MENSAIS</div>
-  <div class="page-sub">// SALÁRIO BASE: R$2.100 · EDITÁVEL</div>
+  <div class="page-sub" id="gf-page-sub">// SALÁRIO BASE: — · EDITÁVEL</div>
 
   <div class="grid4" style="margin-bottom:24px">
     <div class="card card-blue">
@@ -8016,6 +8016,8 @@ function renderGastos(){
   const pct=salBase>0?isFinite(total/salBase)?(total/salBase*100).toFixed(1):'0.0':'0.0';
 
   document.getElementById('gf-salario').textContent=fmt(salBase);
+  const gfSub=document.getElementById('gf-page-sub');
+  if(gfSub) gfSub.textContent=salBase>0?`// SALÁRIO BASE: ${fmt(salBase)} · EDITÁVEL`:'// SALÁRIO BASE: não cadastrado · CLIQUE EM EDITAR';
   document.getElementById('gf-total').textContent=fmt(total);
   document.getElementById('gf-sobra').textContent=salBase>0?fmt(sobra):'—';
   document.getElementById('gf-sobra').className='card-value '+(sobra>=0?'val-green':'val-red');
@@ -19575,20 +19577,17 @@ function _trfHookMetaSemanal(){
 // Variável de sessão — reseta a cada login (reload da página)
 let _trfDailyModalShown=false;
 
-// ── Modal diário automático (Feature 2) ──
+// ── Modal diário automático ──
 function trfAbrirDailyModal(){
-  if(_trfDailyModalShown) return; // já abriu nesta sessão de login
+  if(_trfDailyModalShown) return; // 1x por sessão de login
   _trfDailyModalShown=true;
-  const lista=_trfGet();
-  const pendentes=lista.filter(t=>!t.concluida).sort((a,b)=>{
-    if(a.prazo&&b.prazo) return a.prazo.localeCompare(b.prazo);
-    if(a.prazo) return -1;if(b.prazo) return 1;
-    return 0;
-  });
-  if(!pendentes.length) return; // sem pendentes, não abre
+  const pendentes=_trfGet().filter(t=>!t.concluida);
   trfRenderDailyLista();
   const sub=document.getElementById('trf-daily-sub');
-  if(sub) sub.textContent=`${pendentes.length} tarefa${pendentes.length>1?'s':''} pendente${pendentes.length>1?'s':''}`;
+  if(sub){
+    if(pendentes.length) sub.textContent=`${pendentes.length} tarefa${pendentes.length>1?'s':''} pendente${pendentes.length>1?'s':''}`;
+    else sub.textContent='Tudo em dia! Nenhuma tarefa pendente ✓';
+  }
   document.getElementById('trf-daily-modal').style.display='flex';
 }
 function trfFecharDailyModal(){
@@ -19713,7 +19712,7 @@ function trfBadgeProgresso(meta){
         <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px">📋 SUAS TAREFAS</div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px" id="trf-daily-sub"></div>
       </div>
-      <button onclick="trfFecharDailyModal()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>
+      <button onclick="trfFecharDailyModal();showPage('dashboard')" title="Ir para o Dashboard" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>
     </div>
     <div id="trf-daily-lista" style="flex:1;overflow-y:auto;min-height:0"></div>
     <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:10px;flex-shrink:0">

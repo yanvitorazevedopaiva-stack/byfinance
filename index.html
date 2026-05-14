@@ -7741,6 +7741,9 @@ function _scaleOpts(yFmt){
 }
 
 function renderDashboard(){
+  // Modal de tarefas — abre 1x por sessão, 600ms após o dashboard renderizar
+  setTimeout(trfAbrirDailyModal, 600);
+
   renderHealthBar();
   const salario=parseFloat(getSalario())||0;
   const gf=getData('gastosFixos');
@@ -7983,10 +7986,10 @@ function renderDashboard(){
   if(elRec) elRec.textContent=fmt(totalReceita);
 
   // ── Financiamentos sub-info em dívidas ──
-  const fins=getFinanciamentos?getFinanciamentos():[];
-  const totalFin=fins.reduce((a,f)=>a+(f.saldo||0),0);
+  const fins=typeof getFinanciamentos==='function'?getFinanciamentos():[];
+  const totalFin=fins.filter(f=>f.pagas<f.nParc).reduce((a,f)=>a+((f.nParc-f.pagas)*(f.parcela||0)),0);
   const dFinSub=document.getElementById('d-financiamentos-sub');
-  if(dFinSub&&totalFin>0) dFinSub.textContent=`+ ${fmt(totalFin)} em financiamentos`;
+  if(dFinSub) dFinSub.textContent=totalFin>0?`+ ${fmt(totalFin)} em financiamentos`:'valor restante total';
 
   // ── Widget Metas ──
   const elMetas=document.getElementById('d-metas-widget');
@@ -7999,9 +8002,7 @@ function renderDashboard(){
       const top3=todas.slice(0,3);
       elMetas.innerHTML=top3.map(m=>{
         const nome=(m.titulo||m.nome||'').substring(0,28);
-        const pago=parseFloat(m.pago||m.acumulado||0);
-        const total=parseFloat(m.total||m.alvo||m.valor||1);
-        const pct=Math.min(100,total>0?Math.round(pago/total*100):parseInt(m.progresso)||0);
+        const pct=Math.min(100,Math.max(0,parseInt(m.progresso)||0));
         const cor=pct>=80?'var(--neon-green)':pct>=40?'var(--neon-yellow)':'var(--neon-blue)';
         const tipoBadge={financeira:'💰',saude:'🏃',educacao:'📚',carreira:'💼',habito:'🔁',pessoal:'⭐'}[m.tipo]||'🎯';
         return`<div style="margin-bottom:12px">
@@ -11657,12 +11658,12 @@ function delCartao(id){
 }
 
 function addDespesaCartao(){
-  const cartao=document.getElementById('ct-desp-cartao').value;
-  const desc=document.getElementById('ct-desp-desc').value.trim();
-  const inicio=document.getElementById('ct-desp-inicio').value;
-  const paga=parseInt(document.getElementById('ct-desp-pagas').value)||0;
-  const total=parseInt(document.getElementById('ct-desp-total').value)||1;
-  const val=parseFloat(document.getElementById('ct-desp-val').value);
+  const cartao=document.getElementById('ct-desp-cartao')?.value||'';
+  const desc=(document.getElementById('ct-desp-desc')?.value||'').trim();
+  const inicio=document.getElementById('ct-desp-inicio')?.value||'';
+  const paga=parseInt(document.getElementById('ct-desp-pagas')?.value)||0;
+  const total=parseInt(document.getElementById('ct-desp-total')?.value)||1;
+  const val=getMoneyVal('ct-desp-val');
   if(!cartao){alert('Selecione o cartão.');return;}
   if(!desc){alert('Informe a descrição.');return;}
   if(!inicio){alert('Informe o mês de início.');return;}
@@ -11672,10 +11673,10 @@ function addDespesaCartao(){
   const newId=parcelas.length?Math.max(...parcelas.map(p=>p.id))+1:1;
   parcelas.push({id:newId,cartao,desc,inicio,paga,total,val});
   setData('parcelas',parcelas);
-  document.getElementById('ct-desp-desc').value='';
-  document.getElementById('ct-desp-pagas').value='0';
-  document.getElementById('ct-desp-total').value='1';
-  document.getElementById('ct-desp-val').value='';
+  const _d=document.getElementById('ct-desp-desc');if(_d)_d.value='';
+  const _pa=document.getElementById('ct-desp-pagas');if(_pa)_pa.value='0';
+  const _to=document.getElementById('ct-desp-total');if(_to)_to.value='1';
+  const _v=document.getElementById('ct-desp-val');if(_v)_v.value='';
   renderCartoes();
 }
 
@@ -14734,7 +14735,8 @@ function _initApp(){
   renderNav('dashboard');
   document.getElementById('lanc-data').value=new Date().toISOString().split('T')[0];
   const hoje=new Date();
-  document.getElementById('ct-desp-inicio').value=hoje.getFullYear()+'-'+(String(hoje.getMonth()+1).padStart(2,'0'));
+  const _ctDesp=document.getElementById('ct-desp-inicio');
+  if(_ctDesp) _ctDesp.value=hoje.getFullYear()+'-'+(String(hoje.getMonth()+1).padStart(2,'0'));
   initPerfil();
   renderDashboard();
   _initFabDrag();
@@ -14749,8 +14751,6 @@ function _initApp(){
     'fin-total','ld-liq','ld-total','bem-f-valorPago','bem-f-valorAtual',
     'bev-f-valor','bfq-valor','bev-f-valor','edit-lanc-val','ct-desp-val'
   ].forEach(id=>{const el=document.getElementById(id);if(el)installMoneyMask(el);});
-  // Modal automático de tarefas (Feature 2) — abre 1s após login, 1x por sessão
-  setTimeout(()=>{if(typeof trfAbrirDailyModal==='function')trfAbrirDailyModal();},1200);
 }
 
 
@@ -19687,24 +19687,28 @@ function _trfHookMetaSemanal(){
   if(dias.length>0) trfGerarTarefasMeta(ultima,dias,horario);
 }
 
-// Variável de sessão — reseta a cada login (reload da página)
+// Variável de sessão — reseta a cada reload (novo login)
 let _trfDailyModalShown=false;
 
-// ── Modal diário automático ──
+// ── Modal diário — chamado pelo renderDashboard após tudo renderizado ──
 function trfAbrirDailyModal(){
-  if(_trfDailyModalShown) return; // 1x por sessão de login
-  _trfDailyModalShown=true;
-  const pendentes=_trfGet().filter(t=>!t.concluida);
-  trfRenderDailyLista();
-  const sub=document.getElementById('trf-daily-sub');
-  if(sub){
-    if(pendentes.length) sub.textContent=`${pendentes.length} tarefa${pendentes.length>1?'s':''} pendente${pendentes.length>1?'s':''}`;
-    else sub.textContent='Tudo em dia! Nenhuma tarefa pendente ✓';
-  }
-  document.getElementById('trf-daily-modal').style.display='flex';
+  try{
+    if(_trfDailyModalShown) return;
+    const modal=document.getElementById('trf-daily-modal');
+    if(!modal) return; // elemento não existe no DOM
+    _trfDailyModalShown=true;
+    const pendentes=(_trfGet()||[]).filter(t=>!t.concluida);
+    trfRenderDailyLista();
+    const sub=document.getElementById('trf-daily-sub');
+    if(sub) sub.textContent=pendentes.length
+      ?`${pendentes.length} tarefa${pendentes.length>1?'s':''} pendente${pendentes.length>1?'s':''}`
+      :'Tudo em dia! Nenhuma tarefa pendente ✓';
+    modal.style.display='flex';
+  }catch(e){console.warn('trfAbrirDailyModal erro:',e);}
 }
 function trfFecharDailyModal(){
-  document.getElementById('trf-daily-modal').style.display='none';
+  const m=document.getElementById('trf-daily-modal');
+  if(m) m.style.display='none';
 }
 function trfRenderDailyLista(){
   const el=document.getElementById('trf-daily-lista');if(!el) return;

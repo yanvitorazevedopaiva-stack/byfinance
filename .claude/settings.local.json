@@ -7,7 +7,13 @@
       "Bash(grep -n \"getElementById.*\\\\\\\\.value\" \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\")",
       "Bash(Select-String -Path \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\" -Pattern '\\(function _trfGet|function _trfSet|function _trfFiltro|function trfAddTarefa|function trfRenderLista|function renderTarefas|function getMetas|function setMetas|function renderMetasPage\\)')",
       "Bash(Select-Object -Property LineNumber, Line)",
-      "Bash(Format-Table -AutoSize)"
+      "Bash(Format-Table -AutoSize)",
+      "Bash(cat \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\" | grep -o \"onclick=\\\\\"\\\\\\([^\\\\\"]*\\\\\\)\\\\\"\" | sed 's/onclick=\"//' | sed 's/\".*//' | sort -u > /tmp/onclick_calls.txt && wc -l /tmp/onclick_calls.txt)",
+      "Read(//tmp/**)",
+      "Bash(cat \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\" | grep -o \"onclick=\\\\\"\\\\\\([^\\\\\"]*\\\\\\)\\\\\"\" | sed 's/onclick=\"//' | sed 's/\".*//' | sed 's/\\(.*//' | sed 's/[^a-zA-Z0-9_].*//' | sort -u > /tmp/onclick_funcs.txt && wc -l /tmp/onclick_funcs.txt)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

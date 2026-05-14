@@ -4568,9 +4568,36 @@
           <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="meta-tipo-sw" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"><option value="financeira">💰 Financeira</option><option value="saude">🏃 Saúde</option><option value="educacao">📚 Educação</option><option value="carreira">💼 Carreira</option><option value="habito">🔁 Hábito</option><option value="pessoal">⭐ Pessoal</option><option value="outro">📌 Outro</option></select></div>
           <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ALVO</div><input id="meta-valor-sw" type="text" inputmode="numeric" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
           <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO</div><input id="meta-prazo-sw" type="date" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">FREQUÊNCIA</div>
+            <div style="display:flex;gap:4px;align-items:center">
+              <input id="meta-freq-sw" type="number" min="1" max="7" value="3" style="width:46px;padding:8px 6px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-green);border-radius:8px;font-size:13px;font-weight:700;text-align:center;box-sizing:border-box" oninput="trfCalcFreq()">
+              <span style="font-size:11px;color:var(--text3)">x/sem</span>
+            </div>
+          </div>
           <button class="btn btn-green" onclick="addMetaSimples('semanal_p','sw')">+ META</button>
         </div>
+        <div id="meta-freq-preview-sw" style="margin-top:6px;padding:8px 12px;background:var(--bg3);border-radius:8px;font-size:11px;color:var(--text3);display:none"></div>
         <div style="margin-top:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div><input id="meta-desc-sw" type="text" placeholder="Detalhes..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></div>
+        <!-- Feature 4: dias da semana + horário -->
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:700">DIAS DA SEMANA (gera tarefas automáticas)</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">
+              <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" name="meta-sw-dias" value="0" style="accent-color:var(--neon-green)"><span style="font-size:9px;color:var(--text3)">Dom</span></label>
+              <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" name="meta-sw-dias" value="1" style="accent-color:var(--neon-green)" checked><span style="font-size:9px;color:var(--text3)">Seg</span></label>
+              <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" name="meta-sw-dias" value="2" style="accent-color:var(--neon-green)" checked><span style="font-size:9px;color:var(--text3)">Ter</span></label>
+              <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" name="meta-sw-dias" value="3" style="accent-color:var(--neon-green)" checked><span style="font-size:9px;color:var(--text3)">Qua</span></label>
+              <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" name="meta-sw-dias" value="4" style="accent-color:var(--neon-green)" checked><span style="font-size:9px;color:var(--text3)">Qui</span></label>
+              <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" name="meta-sw-dias" value="5" style="accent-color:var(--neon-green)" checked><span style="font-size:9px;color:var(--text3)">Sex</span></label>
+              <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" name="meta-sw-dias" value="6" style="accent-color:var(--neon-green)"><span style="font-size:9px;color:var(--text3)">Sáb</span></label>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">HORÁRIO (opcional)</div>
+            <input id="meta-horario-sw" type="time" style="padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          </div>
+        </div>
       </div>
       <div class="tbl-wrap"><table id="meta-board-sw"><thead><tr><th>CATEGORIA</th><th>TÍTULO / DESCRIÇÃO</th><th style="text-align:right">ALVO</th><th>PRAZO</th><th style="min-width:120px">PROGRESSO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody id="meta-tbody-sw"></tbody></table></div>
     </div>
@@ -5024,10 +5051,15 @@
             </select>
           </div>
         </div>
+        <!-- Feature 3: "Dia certo" + Meta diária -->
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRAZO (opcional)</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DIA CERTO (dia exato para fazer)</div>
           <input id="trf-prazo" type="date" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
         </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border)">
+          <input type="checkbox" id="trf-diaria" style="accent-color:var(--neon-blue);width:15px;height:15px;cursor:pointer">
+          <span style="font-size:11px;color:var(--text2);font-weight:600">Meta diária (repete todos os dias)</span>
+        </label>
         <div>
           <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VINCULAR A META (opcional)</div>
           <select id="trf-meta" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
@@ -5041,17 +5073,58 @@
 
     <!-- Lista de tarefas -->
     <div>
-      <!-- Filtros -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
         <button class="plan-tab active" onclick="trfSetFiltro('todas',this)" style="padding:7px 14px;font-size:11px">TODAS</button>
         <button class="plan-tab" onclick="trfSetFiltro('hoje',this)" style="padding:7px 14px;font-size:11px">HOJE</button>
         <button class="plan-tab" onclick="trfSetFiltro('semana',this)" style="padding:7px 14px;font-size:11px">ESTA SEMANA</button>
         <button class="plan-tab" onclick="trfSetFiltro('atrasadas',this)" style="padding:7px 14px;font-size:11px">ATRASADAS</button>
         <button class="plan-tab" onclick="trfSetFiltro('metas',this)" style="padding:7px 14px;font-size:11px">COM META</button>
+        <button class="plan-tab" onclick="trfSetFiltro('diarias',this)" style="padding:7px 14px;font-size:11px">DIÁRIAS</button>
         <button class="plan-tab" onclick="trfSetFiltro('concluidas',this)" style="padding:7px 14px;font-size:11px">CONCLUÍDAS</button>
       </div>
       <div id="trf-lista">
         <div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">Nenhuma tarefa encontrada.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Motivo ao desmarcar tarefa (Feature 1) -->
+  <div id="trf-motivo-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid rgba(255,215,0,0.3);border-radius:18px;padding:26px;width:min(460px,94vw);box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--neon-yellow);letter-spacing:1.5px;margin-bottom:4px">⚠ POR QUE NÃO FOI FEITO?</div>
+      <div id="trf-motivo-titulo" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:18px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Não deu tempo no dia marcado" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Não deu tempo no dia marcado</span></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Esqueci" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Esqueci</span></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Mudei de prioridade" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Mudei de prioridade</span></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Adiado por outro compromisso" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Adiado por outro compromisso</span></label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer"><input type="radio" name="trf-motivo-radio" value="Outro motivo" style="accent-color:var(--neon-yellow)"><span style="font-size:12px">Outro motivo</span></label>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:700;letter-spacing:.5px">REMARCAR PARA O DIA *</div>
+        <input id="trf-motivo-data" type="date" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+      </div>
+      <div id="trf-motivo-err" style="font-size:11px;color:var(--neon-red);min-height:16px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="trfMotivoCancelar()" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">CANCELAR</button>
+        <button onclick="trfMotivoConfirmar()" class="btn btn-green" style="flex:2">✓ REMARCAR TAREFA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Tarefas do dia (auto ao login — Feature 2) -->
+  <div id="trf-daily-modal" style="display:none;position:fixed;inset:0;z-index:5100;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:18px;padding:26px;width:min(560px,94vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-shrink:0">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px">📋 SUAS TAREFAS</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px" id="trf-daily-sub"></div>
+        </div>
+        <button onclick="trfFecharDailyModal()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>
+      </div>
+      <div id="trf-daily-lista" style="flex:1;overflow-y:auto;min-height:0"></div>
+      <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:10px;flex-shrink:0">
+        <button onclick="trfFecharDailyModal();showPage('tarefas')" class="btn" style="width:100%;border-color:rgba(0,200,255,0.4);color:var(--neon-blue)">→ VER TODAS AS TAREFAS</button>
       </div>
     </div>
   </div>
@@ -14589,6 +14662,8 @@ function _initApp(){
     'fin-total','ld-liq','ld-total','bem-f-valorPago','bem-f-valorAtual',
     'bev-f-valor','bfq-valor','bev-f-valor','edit-lanc-val','ct-desp-val'
   ].forEach(id=>{const el=document.getElementById(id);if(el)installMoneyMask(el);});
+  // Modal automático de tarefas (Feature 2) — abre 1s após login, 1x por sessão
+  setTimeout(()=>{if(typeof trfAbrirDailyModal==='function')trfAbrirDailyModal();},1200);
 }
 
 
@@ -18632,12 +18707,24 @@ function addMetaSimples(periodo, sfx){
   const prazo=document.getElementById('meta-prazo-'+sfx)?.value||'';
   const desc=(document.getElementById('meta-desc-'+sfx)?.value||'').trim();
   if(!titulo){alert('Informe o título da meta.');return;}
+  // Feature 4: captura dias da semana e horário para metas semanais
+  let diasSemana=[];let horario='';
+  if(sfx==='sw'){
+    diasSemana=Array.from(document.querySelectorAll('input[name="meta-sw-dias"]:checked')).map(el=>parseInt(el.value));
+    horario=document.getElementById('meta-horario-sw')?.value||'';
+  }
   const lista=getMetas();
-  lista.push({id:Date.now(),titulo,tipo,valor,prazo,desc,status:'pendente',progresso:0,periodo,criadaEm:new Date().toISOString()});
+  const novaId=Date.now();
+  lista.push({id:novaId,titulo,tipo,valor,prazo,desc,status:'pendente',progresso:0,periodo,diasSemana,horario,criadaEm:new Date().toISOString()});
   setMetas(lista);
   ['meta-titulo-'+sfx,'meta-valor-'+sfx,'meta-prazo-'+sfx,'meta-desc-'+sfx].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
+  // Feature 4: gera tarefas automáticas para a semana
+  if(sfx==='sw'&&diasSemana.length){
+    const novaMeta=lista.find(m=>m.id===novaId);
+    if(novaMeta&&typeof trfGerarTarefasMeta==='function') trfGerarTarefasMeta(novaMeta,diasSemana,horario);
+  }
   renderMetasSimples(periodo,sfx);
   renderMetasPage();
 }
@@ -19286,10 +19373,13 @@ function renderMercado(){
 }
 
 // ===================== TAREFAS PAGE =====================
+// ── Tarefas: storage ──
 function _trfGet(){return load('tarefas')||[];}
 function _trfSet(d){save('tarefas',d);}
 let _trfFiltro='todas';
+let _trfMotivoId=null; // id da tarefa sendo desmarcada
 
+// ── Filtro ──
 function trfSetFiltro(f,btn){
   _trfFiltro=f;
   document.querySelectorAll('#page-tarefas .plan-tab').forEach(t=>t.classList.remove('active'));
@@ -19297,12 +19387,14 @@ function trfSetFiltro(f,btn){
   _trfRenderLista();
 }
 
+// ── Adicionar tarefa (Feature 3: diaria + dia certo) ──
 function trfAddTarefa(){
   const titulo=(document.getElementById('trf-titulo')?.value||'').trim();
   const desc=(document.getElementById('trf-desc')?.value||'').trim();
   const cat=document.getElementById('trf-cat')?.value||'Pessoal';
   const prio=document.getElementById('trf-prio')?.value||'Media';
   const prazo=document.getElementById('trf-prazo')?.value||'';
+  const diaria=document.getElementById('trf-diaria')?.checked||false;
   const metaId=parseInt(document.getElementById('trf-meta')?.value)||0;
   const msg=document.getElementById('trf-add-msg');
   if(!titulo){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o título da tarefa.';}return;}
@@ -19313,25 +19405,78 @@ function trfAddTarefa(){
     metaNome=m?(m.titulo||m.nome||''):'';
   }
   const lista=_trfGet();
-  lista.push({id:Date.now(),titulo,desc,cat,prio,prazo,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString()});
+  lista.push({id:Date.now(),titulo,desc,cat,prio,prazo,diaria,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString(),remarcacoes:0});
   _trfSet(lista);
   ['trf-titulo','trf-desc','trf-prazo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const diEl=document.getElementById('trf-diaria');if(diEl)diEl.checked=false;
   const metaSel=document.getElementById('trf-meta');if(metaSel)metaSel.value='';
   if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Tarefa adicionada!';setTimeout(()=>{if(msg)msg.textContent='';},1800);}
   _trfRenderLista();_trfRenderKpis();
 }
 
+// ── Toggle: se desmarcando, pede motivo (Feature 1) ──
 function trfToggle(id){
   const lista=_trfGet();
   const t=lista.find(x=>x.id===id);
-  if(t){t.concluida=!t.concluida;t.concluidaEm=t.concluida?new Date().toISOString():null;}
+  if(!t) return;
+  if(t.concluida){
+    // Estava concluída → desmarcar: pede motivo
+    _trfMotivoId=id;
+    document.getElementById('trf-motivo-titulo').textContent=t.titulo;
+    const hoje=new Date();hoje.setDate(hoje.getDate()+1);
+    document.getElementById('trf-motivo-data').value=hoje.toISOString().split('T')[0];
+    document.getElementById('trf-motivo-err').textContent='';
+    document.querySelectorAll('input[name="trf-motivo-radio"]').forEach(r=>r.checked=false);
+    document.getElementById('trf-motivo-modal').style.display='flex';
+  } else {
+    // Marcando como concluída
+    t.concluida=true;t.concluidaEm=new Date().toISOString();
+    // Se diária, cria nova ocorrência para amanhã
+    if(t.diaria){
+      const amanha=new Date();amanha.setDate(amanha.getDate()+1);
+      lista.push({...t,id:Date.now(),concluida:false,concluidaEm:null,prazo:amanha.toISOString().split('T')[0],criadaEm:new Date().toISOString(),remarcacoes:0});
+    }
+    _trfSet(lista);
+    _trfRenderLista();_trfRenderKpis();
+    trfRenderDailyLista();
+  }
+}
+
+// ── Modal motivo: confirmar ──
+function trfMotivoConfirmar(){
+  const motivo=document.querySelector('input[name="trf-motivo-radio"]:checked')?.value||'';
+  const novaData=document.getElementById('trf-motivo-data')?.value||'';
+  const err=document.getElementById('trf-motivo-err');
+  if(!motivo){err.textContent='Selecione o motivo.';return;}
+  if(!novaData){err.textContent='Informe o novo dia certo.';return;}
+  const lista=_trfGet();
+  const t=lista.find(x=>x.id===_trfMotivoId);
+  if(t){
+    t.concluida=false;t.concluidaEm=null;
+    t.prazo=novaData;
+    t.ultimoMotivo=motivo;
+    t.remarcacoes=(t.remarcacoes||0)+1;
+    if(!t.historicoRemarcacoes) t.historicoRemarcacoes=[];
+    t.historicoRemarcacoes.push({motivo,novaData,em:new Date().toISOString()});
+  }
   _trfSet(lista);
+  document.getElementById('trf-motivo-modal').style.display='none';
+  _trfMotivoId=null;
   _trfRenderLista();_trfRenderKpis();
 }
+function trfMotivoCancelar(){
+  document.getElementById('trf-motivo-modal').style.display='none';
+  _trfMotivoId=null;
+  _trfRenderLista();
+}
+
+// ── Deletar ──
 function trfDel(id){
   _trfSet(_trfGet().filter(x=>x.id!==id));
   _trfRenderLista();_trfRenderKpis();
 }
+
+// ── KPIs ──
 function _trfRenderKpis(){
   const hoje=new Date().toISOString().split('T')[0];
   const lista=_trfGet();
@@ -19343,38 +19488,59 @@ function _trfRenderKpis(){
   if(g('trf-kpi-hoje')) g('trf-kpi-hoje').textContent=concHoje;
   if(g('trf-kpi-atrasadas')) g('trf-kpi-atrasadas').textContent=atras;
 }
+
+// ── Helper: dias faltando para a tarefa ──
+function _trfDiasLabel(prazo){
+  if(!prazo) return '';
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const d=new Date(prazo+'T00:00:00');d.setHours(0,0,0,0);
+  const diff=Math.round((d-hoje)/(1000*60*60*24));
+  if(diff<0) return `atrasada ${Math.abs(diff)} dia${Math.abs(diff)>1?'s':''}`;
+  if(diff===0) return 'hoje!';
+  if(diff===1) return 'amanhã';
+  return `em ${diff} dias`;
+}
+
+// ── Render lista principal ──
 function _trfRenderLista(){
   const hoje=new Date().toISOString().split('T')[0];
   const semFim=new Date();semFim.setDate(semFim.getDate()+(6-semFim.getDay()||7));
   const semFimStr=semFim.toISOString().split('T')[0];
-  const el=document.getElementById('trf-lista');
-  if(!el) return;
+  const el=document.getElementById('trf-lista');if(!el) return;
   let lista=_trfGet();
   if(_trfFiltro==='hoje') lista=lista.filter(t=>!t.concluida&&t.prazo===hoje);
   else if(_trfFiltro==='semana') lista=lista.filter(t=>!t.concluida&&t.prazo&&t.prazo<=semFimStr);
   else if(_trfFiltro==='atrasadas') lista=lista.filter(t=>!t.concluida&&t.prazo&&t.prazo<hoje);
   else if(_trfFiltro==='metas') lista=lista.filter(t=>t.metaId>0);
+  else if(_trfFiltro==='diarias') lista=lista.filter(t=>t.diaria);
   else if(_trfFiltro==='concluidas') lista=lista.filter(t=>t.concluida);
   else lista=lista.filter(t=>!t.concluida);
   if(!lista.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">Nenhuma tarefa encontrada.</div>';return;}
   const prioClr={Alta:'var(--neon-red)',Media:'var(--neon-yellow)',Baixa:'var(--neon-blue)'};
   const catIco={Estudo:'📚',Casa:'🏠',Trabalho:'💼',Compromisso:'📅',Pessoal:'⭐'};
-  lista.sort((a,b)=>{if(a.concluida!==b.concluida)return a.concluida?1:-1;const po={Alta:0,Media:1,Baixa:2};return (po[a.prio]||1)-(po[b.prio]||1);});
+  lista.sort((a,b)=>{if(a.concluida!==b.concluida)return a.concluida?1:-1;const po={Alta:0,Media:1,Baixa:2};return(po[a.prio]||1)-(po[b.prio]||1);});
   el.innerHTML=lista.map(t=>{
     const atrasada=!t.concluida&&t.prazo&&t.prazo<hoje;
+    const diasLabel=_trfDiasLabel(t.prazo);
     const prazoFmt=t.prazo?new Date(t.prazo+'T00:00:00').toLocaleDateString('pt-BR'):'-';
-    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:10px;background:var(--card);border:1px solid var(--border);${t.concluida?'opacity:.5':''}">
+    const remBadge=t.remarcacoes>0?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(255,215,0,0.15);color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">↺ ${t.remarcacoes}x remarcada</span>`:'';
+    const diariaBadge=t.diaria?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(0,200,255,0.12);color:var(--neon-blue)">🔁 diária</span>`:'';
+    const metaBadge=t.metaSemanal?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(168,85,247,0.12);color:var(--neon-purple)">📅 Meta Semanal</span>`:'';
+    const motivoInfo=t.ultimoMotivo?`<div style="font-size:10px;color:var(--neon-yellow);margin-top:2px">💬 ${esc(t.ultimoMotivo)}</div>`:'';
+    return`<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:10px;background:var(--card);border:1px solid ${atrasada?'rgba(255,68,68,0.3)':'var(--border)'};${t.concluida?'opacity:.5':''}">
       <input type="checkbox" ${t.concluida?'checked':''} onchange="trfToggle(${t.id})" style="accent-color:var(--neon-green);width:18px;height:18px;flex-shrink:0;margin-top:2px;cursor:pointer">
       <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
           <span style="font-weight:600;font-size:13px;${t.concluida?'text-decoration:line-through':''}">${esc(t.titulo)}</span>
-          <span style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(0,0,0,0.15);color:var(--text2)">${catIco[t.cat]||'📌'} ${t.cat}</span>
-          <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;color:${prioClr[t.prio]||'var(--text3)'};background:${(prioClr[t.prio]||'var(--text3)').replace(')',',0.12)')}">${t.prio}</span>
+          <span style="font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,0.15);color:var(--text2)">${catIco[t.cat]||'📌'} ${t.cat}</span>
+          <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;color:${prioClr[t.prio]||'var(--text3)'};background:${(prioClr[t.prio]||'var(--text3)').replace(')',',0.12)')}">${t.prio}</span>
           ${atrasada?`<span style="font-size:10px;font-weight:700;color:var(--neon-red)">⚠ ATRASADA</span>`:''}
+          ${diariaBadge}${metaBadge}${remBadge}
         </div>
-        ${t.desc?`<div style="font-size:11px;color:var(--text3);margin-bottom:4px">${esc(t.desc)}</div>`:''}
-        <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);flex-wrap:wrap">
-          ${t.prazo?`<span style="${atrasada?'color:var(--neon-red);font-weight:700':''}">📅 ${prazoFmt}</span>`:''}
+        ${t.desc?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px">${esc(t.desc)}</div>`:''}
+        ${motivoInfo}
+        <div style="display:flex;gap:10px;font-size:11px;color:var(--text3);flex-wrap:wrap;margin-top:2px">
+          ${t.prazo?`<span style="${atrasada?'color:var(--neon-red);font-weight:700':''}">📅 ${prazoFmt} <span style="font-style:italic">(${diasLabel})</span></span>`:''}
           ${t.metaNome?`<span style="color:var(--neon-purple)">🎯 ${esc(t.metaNome)}</span>`:''}
         </div>
       </div>
@@ -19382,17 +19548,151 @@ function _trfRenderLista(){
     </div>`;
   }).join('');
 }
+
+// ── Metas → Tarefas (Feature 4) ──
+function trfGerarTarefasMeta(meta,diasSemana,horario){
+  if(!diasSemana||!diasSemana.length) return;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  // Início da semana (segunda-feira)
+  const diaSem=hoje.getDay();
+  const iniSem=new Date(hoje);iniSem.setDate(hoje.getDate()-(diaSem===0?6:diaSem-1));
+  const lista=_trfGet();
+  let adicionadas=0;
+  for(let i=0;i<7;i++){
+    const d=new Date(iniSem);d.setDate(iniSem.getDate()+i);
+    const dNum=d.getDay(); // 0=dom, 6=sab
+    if(!diasSemana.includes(dNum)) continue;
+    const prazo=d.toISOString().split('T')[0];
+    // Evita duplicar
+    if(lista.find(t=>t.metaId===meta.id&&t.prazo===prazo&&!t.concluida&&t.metaSemanal)) continue;
+    const tituloMeta=meta.titulo||meta.nome||'Meta';
+    const desc=horario?`Horário sugerido: ${horario}`:'';
+    lista.push({id:Date.now()+i,titulo:tituloMeta,desc,cat:'Pessoal',prio:'Media',prazo,metaId:meta.id,metaNome:tituloMeta,metaSemanal:true,concluida:false,criadaEm:new Date().toISOString(),remarcacoes:0,diaria:false});
+    adicionadas++;
+  }
+  if(adicionadas>0) _trfSet(lista);
+  return adicionadas;
+}
+
+// Intercepta addMetaSimples para metas semanais (gera tarefas)
+const _trfOrigAddMetaSimples=typeof addMetaSimples==='function'?addMetaSimples:null;
+function _trfHookMetaSemanal(){
+  // Chamado após addMetaSimples para metas semanais
+  const metas=getMetas();
+  const ultima=metas[metas.length-1];
+  if(!ultima||ultima.periodo!=='semanal_p') return;
+  const diasInputs=document.querySelectorAll('input[name="meta-sw-dias"]:checked');
+  const dias=Array.from(diasInputs).map(el=>parseInt(el.value));
+  const horario=document.getElementById('meta-horario-sw')?.value||'';
+  if(dias.length>0) trfGerarTarefasMeta(ultima,dias,horario);
+}
+
+// ── Modal diário automático (Feature 2) ──
+function trfAbrirDailyModal(){
+  const hoje=new Date().toISOString().split('T')[0];
+  const sessKey='trf_modal_'+hoje;
+  if(sessionStorage.getItem(sessKey)) return; // já mostrou hoje nesta sessão
+  const lista=_trfGet();
+  const pendentes=lista.filter(t=>!t.concluida).sort((a,b)=>{
+    if(a.prazo&&b.prazo) return a.prazo.localeCompare(b.prazo);
+    if(a.prazo) return -1;if(b.prazo) return 1;
+    return 0;
+  });
+  if(!pendentes.length) return; // sem pendentes, não abre
+  sessionStorage.setItem(sessKey,'1');
+  trfRenderDailyLista();
+  const sub=document.getElementById('trf-daily-sub');
+  if(sub) sub.textContent=`${pendentes.length} tarefa${pendentes.length>1?'s':''} pendente${pendentes.length>1?'s':''}`;
+  document.getElementById('trf-daily-modal').style.display='flex';
+}
+function trfFecharDailyModal(){
+  document.getElementById('trf-daily-modal').style.display='none';
+}
+function trfRenderDailyLista(){
+  const el=document.getElementById('trf-daily-lista');if(!el) return;
+  const hoje=new Date().toISOString().split('T')[0];
+  const lista=_trfGet().filter(t=>!t.concluida).sort((a,b)=>{
+    if(a.prazo&&b.prazo) return a.prazo.localeCompare(b.prazo);
+    if(a.prazo) return -1;if(b.prazo) return 1;return 0;
+  });
+  if(!lista.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:13px">✓ Nenhuma tarefa pendente!</div>';return;}
+  const prioClr={Alta:'var(--neon-red)',Media:'var(--neon-yellow)',Baixa:'var(--neon-blue)'};
+  el.innerHTML=lista.map(t=>{
+    const atrasada=t.prazo&&t.prazo<hoje;
+    const diasLabel=_trfDiasLabel(t.prazo);
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid ${atrasada?'rgba(255,68,68,0.3)':'var(--border)'}">
+      <input type="checkbox" onchange="trfToggle(${t.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.titulo)}</div>
+        ${t.prazo?`<div style="font-size:10px;${atrasada?'color:var(--neon-red);font-weight:700':'color:var(--text3)'};margin-top:2px">📅 ${diasLabel}</div>`:''}
+      </div>
+      <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;color:${prioClr[t.prio]||'var(--text3)'};background:${(prioClr[t.prio]||'var(--text3)').replace(')',',0.12)')}; flex-shrink:0">${t.prio}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Popula select de metas no form de tarefas ──
 function _trfPopulaMetasSel(){
-  const sel=document.getElementById('trf-meta');
-  if(!sel) return;
+  const sel=document.getElementById('trf-meta');if(!sel) return;
   const todas=[...getMetas(),..._getMetas5Anos(),..._getMetas10Anos(),...getMetasAnuais()].filter(m=>m.status!=='concluida'&&(m.titulo||m.nome));
   sel.innerHTML='<option value="">— Sem vínculo —</option>'+
     todas.map(m=>`<option value="${m.id}">${esc(m.titulo||m.nome||'')}</option>`).join('');
 }
+
+// ── Render principal da página ──
 function renderTarefas(){
   _trfPopulaMetasSel();
   _trfRenderKpis();
   _trfRenderLista();
+  // Regenera tarefas de metas semanais para a semana vigente
+  _trfAtualizarTarefasSemanais();
+}
+
+function _trfAtualizarTarefasSemanais(){
+  try{
+    const metasSemanais=getMetas().filter(m=>m.periodo==='semanal_p'&&m.diasSemana&&m.diasSemana.length&&m.status!=='concluida');
+    metasSemanais.forEach(m=>trfGerarTarefasMeta(m,m.diasSemana,m.horario||''));
+    if(metasSemanais.length) _trfRenderLista();
+  }catch(e){}
+}
+
+// ── Feature 5: Contador inteligente de metas ──
+function trfCalcFreq(){
+  const freq=parseInt(document.getElementById('meta-freq-sw')?.value)||3;
+  const prev=document.getElementById('meta-freq-preview-sw');
+  if(!prev) return;
+  const semana=freq;
+  const mes=Math.round(freq*4.33);
+  const tri=Math.round(freq*13);
+  const sem=Math.round(freq*26);
+  const ano=Math.round(freq*52);
+  prev.style.display='block';
+  prev.innerHTML=`<span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--neon-green);font-weight:700">Projeção:</span>
+    <span style="margin-left:8px">Semana: <b>${semana}x</b></span> ·
+    <span>Mês: <b>~${mes}x</b></span> ·
+    <span>Trim: <b>~${tri}x</b></span> ·
+    <span>Sem: <b>~${sem}x</b></span> ·
+    <span>Ano: <b style="color:var(--neon-green)">~${ano}x</b></span>`;
+}
+
+function trfGetProgressoMeta(metaId){
+  // Conta tarefas concluídas vinculadas à meta
+  return _trfGet().filter(t=>t.metaId===metaId&&t.concluida).length;
+}
+
+function trfBadgeProgresso(meta){
+  if(!meta.diasSemana||!meta.diasSemana.length) return '';
+  const freq=meta.freq||meta.diasSemana.length||3;
+  const concluidas=trfGetProgressoMeta(meta.id);
+  const metaSem=freq;
+  const metaMes=Math.round(freq*4.33);
+  const metaAno=Math.round(freq*52);
+  const hoje=new Date();
+  // Conta concluídas nesta semana
+  const iniSem=new Date(hoje);const ds=hoje.getDay();iniSem.setDate(hoje.getDate()-(ds===0?6:ds-1));iniSem.setHours(0,0,0,0);
+  const concSem=_trfGet().filter(t=>t.metaId===meta.id&&t.concluida&&t.concluidaEm&&new Date(t.concluidaEm)>=iniSem).length;
+  const superou=concSem>=metaSem;
+  return `<span style="font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:6px;background:${superou?'rgba(0,255,157,0.15)':'rgba(0,200,255,0.1)'};color:${superou?'var(--neon-green)':'var(--text3)'};margin-left:6px">${superou?'✅ Meta superada!':concSem+'/'+metaSem+'x esta semana'}</span>`;
 }
 </script>
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>

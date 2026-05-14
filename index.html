@@ -7966,19 +7966,20 @@ function renderGastos(){
     const inativo=(i.inativosMeses||[]).includes(mesVig);
     return a+(inativo?0:i.val);
   },0);
-  const sobra=salario-total;
-  const pct=(total/salario*100).toFixed(1);
+  const salBase=parseFloat(salario)||0;
+  const sobra=salBase-total;
+  const pct=salBase>0?isFinite(total/salBase)?(total/salBase*100).toFixed(1):'0.0':'0.0';
 
-  document.getElementById('gf-salario').textContent=fmt(salario);
+  document.getElementById('gf-salario').textContent=fmt(salBase);
   document.getElementById('gf-total').textContent=fmt(total);
-  document.getElementById('gf-sobra').textContent=fmt(sobra);
+  document.getElementById('gf-sobra').textContent=salBase>0?fmt(sobra):'—';
   document.getElementById('gf-sobra').className='card-value '+(sobra>=0?'val-green':'val-red');
-  document.getElementById('gf-pct').textContent=pct+'%';
+  document.getElementById('gf-pct').textContent=salBase>0?pct+'%':'—%';
 
   const alerta=document.getElementById('gf-alerta');
-  if(total>salario){
+  if(salBase>0&&total>salBase){
     alerta.innerHTML=`<div class="alert alert-red"><span class="alert-icon">⚠</span><span>ATENÇÃO: Gastos fixos (${fmt(total)}) ultrapassam o salário em ${fmt(Math.abs(sobra))}!</span></div>`;
-  } else if(total/salario>0.85){
+  } else if(salBase>0&&total/salBase>0.85){
     alerta.innerHTML=`<div class="alert alert-yellow"><span class="alert-icon">⚡</span><span>Atenção: ${pct}% do salário comprometido com gastos fixos.</span></div>`;
   } else {
     alerta.innerHTML='';

@@ -159,6 +159,7 @@
     animation:confirm-pop 0.28s cubic-bezier(0.34,1.56,0.64,1) both;
   }
   @media(max-width:600px){.confirm-box{width:95%;padding:24px 20px 20px;}}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   @keyframes confirm-pop {
     from{transform:scale(0.75) translateY(24px);opacity:0}
     to  {transform:scale(1)    translateY(0);   opacity:1}
@@ -443,6 +444,7 @@
   .nav-drag-handle{margin-left:auto;font-size:13px;color:var(--text3);cursor:grab;
     opacity:0;transition:opacity .15s;padding:0 2px;flex-shrink:0;line-height:1;}
   .nav-item[draggable="true"]:hover .nav-drag-handle{opacity:.6;}
+  .nav-item:hover .nav-archive-btn{opacity:1!important;}
   .nav-drop-line{height:2px;border-radius:2px;margin:1px 8px;
     background:linear-gradient(90deg,var(--neon-blue),var(--neon-green));
     pointer-events:none;box-shadow:0 0 8px rgba(0,200,255,0.5);}
@@ -2168,7 +2170,7 @@
     bottom:auto !important;
     left:auto !important;
     transform:none !important;
-    z-index:9999 !important;
+    z-index:9990 !important;
     width:320px;min-width:240px;max-width:500px;
     background:var(--card);border:1px solid var(--border);
     border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.4);
@@ -4774,8 +4776,15 @@
 <div id="page-mercado" class="page">
   <!-- ── PAINEL PRINCIPAL ── -->
   <div id="mkt-panel-main">
-    <div class="page-title">MERCADO</div>
-    <div class="page-sub">// ITENS CADASTRADOS · LISTAS MENSAIS · HISTÓRICO</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+      <div class="page-title" style="margin:0">MERCADO</div>
+      <button class="btn btn-blue" onclick="document.getElementById('mkt-nf-file-input').click()" style="display:flex;align-items:center;gap:7px">
+        📄 IMPORTAR NOTA FISCAL
+      </button>
+      <input type="file" id="mkt-nf-file-input" accept="image/png,image/jpeg,application/pdf" style="display:none"
+        onchange="mktNFFileSelected(this)">
+    </div>
+    <div class="page-sub" style="margin-top:0">// ITENS CADASTRADOS · LISTAS MENSAIS · HISTÓRICO</div>
 
     <!-- Linha 1: Cadastro + Quadro de Itens -->
     <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;margin-bottom:16px" id="mkt-grid">
@@ -4929,6 +4938,71 @@
             <button onclick="mktExcluirLista()" class="btn" style="width:100%;border-color:rgba(255,68,68,0.3);color:var(--neon-red)">🗑 EXCLUIR LISTA</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Loading NF scan -->
+  <div id="mkt-scan-loading" style="display:none;position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid rgba(0,200,255,0.3);border-radius:16px;padding:32px 40px;text-align:center;box-shadow:0 8px 48px rgba(0,0,0,0.6)">
+      <div style="font-size:36px;margin-bottom:14px;animation:spin 1.2s linear infinite">⏳</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px" id="mkt-scan-loading-msg">Lendo nota fiscal...</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Aguarde, analisando com IA...</div>
+    </div>
+  </div>
+
+  <!-- MODAL: Scanner de itens da NF -->
+  <div id="mkt-scanner-modal" style="display:none;position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid rgba(0,255,157,0.25);border-radius:18px;padding:26px;width:min(540px,94vw);box-shadow:0 8px 56px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);letter-spacing:1px">📄 NOTA FISCAL</div>
+        <button onclick="mktFecharScanner()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px">✕</button>
+      </div>
+      <div id="mkt-scanner-subtitulo" style="font-size:13px;color:var(--text);margin-bottom:4px"></div>
+      <div id="mkt-scanner-contador" style="font-size:11px;color:var(--text3);margin-bottom:16px;font-family:'JetBrains Mono',monospace"></div>
+
+      <!-- Card do item atual -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px">
+        <div id="mkt-scanner-badge" style="margin-bottom:12px"></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">NOME DO PRODUTO</div>
+            <input id="mkt-sc-nome" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;font-weight:600;box-sizing:border-box">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">QUANTIDADE</div>
+              <input id="mkt-sc-qtd" type="number" min="0.001" step="0.001" style="width:100%;padding:9px 10px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">UNIDADE</div>
+              <select id="mkt-sc-unidade" style="width:100%;padding:9px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+                <option value="un">un</option><option value="kg">kg</option><option value="g">g</option>
+                <option value="L">L</option><option value="mL">mL</option><option value="cx">cx</option>
+                <option value="pct">pct</option><option value="dz">dz</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">PREÇO UNIT. (R$)</div>
+              <input id="mkt-sc-preco" type="text" inputmode="numeric" placeholder="0,00"
+                style="width:100%;padding:9px 10px;background:var(--bg3);border:1px solid rgba(255,215,0,0.3);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:700;box-sizing:border-box">
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:700;letter-spacing:.5px">CATEGORIA</div>
+            <select id="mkt-sc-cat" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+              <option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option>
+              <option value="Laticinios">🥛 Laticínios</option><option value="Padaria">🍞 Padaria</option>
+              <option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option>
+              <option value="Mercearia">🛒 Mercearia</option><option value="Frios">🧀 Frios</option><option value="Outros">📦 Outros</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="mktScannerPular()" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">✗ PULAR</button>
+        <button onclick="mktScannerConfirmar()" class="btn btn-green" style="flex:2">✓ OK — SALVAR ITEM</button>
       </div>
     </div>
   </div>
@@ -5806,6 +5880,20 @@
     </div>
   </div>
 
+  <!-- AÇÕES ARQUIVADAS -->
+  <div class="cfg-panel cfg-panel-blue" id="cfg-panel-arquivadas">
+    <div class="cfg-panel-head">
+      <div class="cfg-panel-icon">📁</div>
+      <div>
+        <div class="cfg-panel-label">AÇÕES ARQUIVADAS</div>
+        <div class="cfg-panel-desc">Ações ocultas da barra lateral — clique para restaurar</div>
+      </div>
+    </div>
+    <div class="cfg-panel-body">
+      <div id="cfg-arquivadas-body"></div>
+    </div>
+  </div>
+
   <!-- DADOS -->
   <div class="cfg-panel cfg-panel-red">
     <div class="cfg-panel-head">
@@ -6669,6 +6757,7 @@ const DEFAULT = {
   receitas: {},
 };
 
+const ANTHROPIC_KEY='';  // Adicione sua chave: sk-ant-...
 const SUPABASE_URL='https://wrgqwzfbiatsdhkxdtgk.supabase.co';
 const SUPABASE_KEY='sb_publishable_ANZFNtpvkjmvubNTuorZXw_PNfEMtF5';
 let _supabase=null;
@@ -13656,24 +13745,24 @@ document.addEventListener('DOMContentLoaded',async()=>{
 
 // ===================== NAV DRAG & DROP =====================
 const _NAV_META={
-  dashboard:{icon:'◈',label:'DASHBOARD'},
-  gastos:{icon:'◉',label:'GASTOS FIXOS'},
-  cartoes:{icon:'▧',label:'CARTÕES'},
-  parcelas:{icon:'◐',label:'PARCELAS'},
-  semanal:{icon:'◇',label:'SEMANAL'},
-  faturas:{icon:'▣',label:'FATURAS'},
-  planejamento:{icon:'◎',label:'PLANEJAMENTO'},
+  dashboard:{icon:'🏠',label:'DASHBOARD'},
+  gastos:{icon:'📋',label:'GASTOS FIXOS'},
+  cartoes:{icon:'💳',label:'CARTÕES'},
+  parcelas:{icon:'📆',label:'PARCELAS'},
+  semanal:{icon:'📅',label:'SEMANAL'},
+  faturas:{icon:'🧾',label:'FATURAS'},
+  planejamento:{icon:'🗓️',label:'PLANEJAMENTO'},
   metas:{icon:'🎯',label:'METAS'},
-  receita:{icon:'◈',label:'RECEITA'},
-  financiamentos:{icon:'◫',label:'FINANCIAMENTOS'},
-  investimentos:{icon:'◈',label:'INVESTIMENTOS'},
-  bens:{icon:'◆',label:'MEUS BENS'},
-  compras:{icon:'◑',label:'COMPRAS'},
+  receita:{icon:'💰',label:'RECEITA'},
+  financiamentos:{icon:'🏦',label:'FINANCIAMENTOS'},
+  investimentos:{icon:'📈',label:'INVESTIMENTOS'},
+  bens:{icon:'🏷️',label:'MEUS BENS'},
+  compras:{icon:'🛍️',label:'COMPRAS'},
   mercado:{icon:'🛒',label:'MERCADO'},
-  tarefas:{icon:'✓',label:'TAREFAS'},
-  relatorios:{icon:'▦',label:'RELATÓRIOS'},
-  documentos:{icon:'🗂',label:'DOCUMENTOS'},
-  config:{icon:'⚙',label:'CONFIGURAÇÕES'},
+  tarefas:{icon:'✅',label:'TAREFAS'},
+  relatorios:{icon:'📊',label:'RELATÓRIOS'},
+  documentos:{icon:'🗂️',label:'DOCUMENTOS'},
+  config:{icon:'⚙️',label:'CONFIGURAÇÕES'},
 };
 const _NAV_DEFAULT={
   b1:['dashboard','gastos','cartoes','parcelas','semanal','faturas'],
@@ -13681,20 +13770,62 @@ const _NAV_DEFAULT={
 };
 // páginas que saem dos blocos (ficam em ícones próprios)
 const _NAV_EXCLUDED=new Set(['config','lancamentos']);
+// páginas protegidas — nunca arquiváveis
+const _NAV_UNARCHIVABLE=new Set(['lancamentos','dashboard']);
+
+// Persistência do arquivo
+function _navGetArchived(){return load('navArchived')||[];}
+function _navSetArchived(arr){save('navArchived',arr);}
+
 function _navGetOrder(){
   const saved=load('navOrder');
   if(!saved) return JSON.parse(JSON.stringify(_NAV_DEFAULT));
-  // garante que novos itens adicionados ao _NAV_DEFAULT apareçam na ordem salva
   const merged={b1:[...saved.b1],b2:[...saved.b2]};
+  const archived=_navGetArchived();
   ['b1','b2'].forEach(bk=>{
     _NAV_DEFAULT[bk].forEach(k=>{
-      if(!merged.b1.includes(k)&&!merged.b2.includes(k)&&!_NAV_EXCLUDED.has(k))
+      if(!merged.b1.includes(k)&&!merged.b2.includes(k)
+         &&!_NAV_EXCLUDED.has(k)&&!archived.includes(k))
         merged[bk].push(k);
     });
   });
   return merged;
 }
 function _navSaveOrder(o){save('navOrder',o);}
+
+// ── Arquivar / Desarquivar ──
+function navArquivar(key){
+  if(_NAV_UNARCHIVABLE.has(key)) return;
+  const o=_navGetOrder();
+  o.b1=o.b1.filter(k=>k!==key);
+  o.b2=o.b2.filter(k=>k!==key);
+  _navSaveOrder(o);
+  const arch=_navGetArchived();
+  if(!arch.includes(key)) arch.push(key);
+  _navSetArchived(arch);
+  renderNav();
+  _showNavToast('Ação arquivada. Restaure em Configurações → Ações Arquivadas.');
+}
+function navDesarquivar(key){
+  const arch=_navGetArchived().filter(k=>k!==key);
+  _navSetArchived(arch);
+  const o=_navGetOrder();
+  const eraB1=_NAV_DEFAULT.b1.includes(key);
+  if(eraB1){if(!o.b1.includes(key))o.b1.push(key);}
+  else{if(!o.b2.includes(key))o.b2.push(key);}
+  _navSaveOrder(o);
+  renderNav();
+  renderNavArquivadas();
+}
+// Toast simples para mensagens do nav
+function _showNavToast(msg){
+  let el=document.getElementById('_nav-toast');
+  if(!el){el=document.createElement('div');el.id='_nav-toast';
+    el.style.cssText='position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:20000;background:var(--card);border:1px solid rgba(0,200,255,0.3);color:var(--text);padding:10px 20px;border-radius:10px;font-size:12px;font-family:\'JetBrains Mono\',monospace;box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:opacity .3s;opacity:0;pointer-events:none';
+    document.body.appendChild(el);}
+  el.textContent=msg;el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>{el.style.opacity='0';},3000);
+}
 
 let _navDragKey=null,_navDragBlock=null;
 
@@ -13704,10 +13835,12 @@ function renderNav(activePage){
   ['b1','b2'].forEach(bk=>{
     const el=document.getElementById('nav-block-'+bk);
     if(!el) return;
-    // filtra itens que saíram dos blocos (config, lancamentos)
-    const keys=order[bk].filter(k=>!_NAV_EXCLUDED.has(k));
+    const archived=_navGetArchived();
+    // filtra itens que saíram dos blocos e os arquivados
+    const keys=order[bk].filter(k=>!_NAV_EXCLUDED.has(k)&&!archived.includes(k));
     el.innerHTML=keys.map(key=>{
       const m=_NAV_META[key]; if(!m) return '';
+      const canArchive=!_NAV_UNARCHIVABLE.has(key);
       return `<div class="nav-item${key===page?' active':''}" data-page="${key}" draggable="true"
         onclick="showPage('${key}')"
         ondragstart="navDS(event,'${key}','${bk}')"
@@ -13717,6 +13850,11 @@ function renderNav(activePage){
         ondrop="navDP(event,'${key}','${bk}')">
         <span class="nav-icon">${m.icon}</span>${m.label}
         <span class="nav-drag-handle">⠿</span>
+        ${canArchive?`<span class="nav-archive-btn" title="Arquivar ação"
+          onclick="event.stopPropagation();navArquivar('${key}')"
+          style="opacity:0;font-size:11px;margin-left:auto;padding:2px 6px;border-radius:4px;cursor:pointer;color:var(--text3);transition:opacity .15s;flex-shrink:0"
+          onmouseover="this.style.color='var(--neon-yellow)'"
+          onmouseout="this.style.color='var(--text3)'">⊖</span>`:''}
       </div>`;
     }).join('');
     // Block-level drop (append to end)
@@ -15411,7 +15549,28 @@ async function _saveFotoSupabase(b64){
 }
 
 // ===================== CONFIGURAÇÕES =====================
+function renderNavArquivadas(){
+  const el=document.getElementById('cfg-arquivadas-body');if(!el)return;
+  const arch=_navGetArchived();
+  if(!arch.length){
+    el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:12px 0">Nenhuma ação arquivada.</div>';
+    return;
+  }
+  el.innerHTML=arch.map(key=>{
+    const m=_NAV_META[key];if(!m)return'';
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:16px">${m.icon}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.5px">${m.label}</span>
+      </div>
+      <button onclick="navDesarquivar('${key}')"
+        style="padding:5px 14px;background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">↩ RESTAURAR</button>
+    </div>`;
+  }).join('');
+}
+
 function renderConfig(){
+  renderNavArquivadas();
   // Avatar
   const foto=load('perfilFoto');
   const cfgImg=document.getElementById('cfg-avatar-img');
@@ -19250,7 +19409,7 @@ function mktCadastrarItem(){
   // Salva SEMPRE no catálogo
   const newId=Date.now();
   const c=_mktGetCatalogo();
-  c.push({id:newId,nome,cat,qtd,unidade,preco,foto:_mktCadFotoB64||''});
+  c.push({id:newId,nome,cat,qtd,unidade,preco,foto:_mktCadFotoB64||'',dataCadastro:new Date().toISOString(),ultimaAtualizacao:new Date().toISOString()});
   _mktSetCatalogo(c);
 
   // Vincula à lista do mês se checkbox marcado
@@ -19341,6 +19500,7 @@ function _mktRenderCatalogo(){
         <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px" title="${esc(it.nome)}">${esc(it.nome)}</div>
         <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${_MKT_EMOJI[it.cat]||'📦'} ${it.cat} · ${it.qtd}${it.unidade||'un'}</div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-yellow)">${it.preco>0?_mktFmt(it.preco):'—'}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">${it.dataCadastro?'cadastrado em '+new Date(it.dataCadastro).toLocaleDateString('pt-BR'):'cadastrado anteriormente'}</div>
       </div>
       <div style="display:flex;gap:4px;padding:6px 8px;border-top:1px solid var(--border);background:var(--bg3)">
         <button onclick="mktAbrirVincular(${it.id})" title="Vincular ao mês" style="flex:1;background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);cursor:pointer;font-size:10px;padding:4px 0;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700">📅</button>
@@ -19657,6 +19817,165 @@ function mktGerarPDFLista(){
   const w=window.open('','_blank','width=900,height=700');
   if(!w){alert('Pop-up bloqueado. Permita pop-ups para este site.');return;}
   w.document.write(html);w.document.close();
+}
+
+// ══════════════════════════════════════════
+// SCANNER DE NOTA FISCAL
+// ══════════════════════════════════════════
+let _mktScanItens=[],_mktScanIdx=0,_mktScanCadastrados=0,_mktScanAtualizados=0;
+
+function mktNFFileSelected(inp){
+  const file=inp.files[0];if(!file)return;
+  inp.value=''; // reset para permitir reimportar mesmo arquivo
+  const r=new FileReader();
+  r.onload=e=>{
+    const b64=e.target.result.split(',')[1];
+    mktScanNF(b64,file.type);
+  };
+  r.readAsDataURL(file);
+}
+
+async function mktScanNF(base64,mimeType){
+  if(!ANTHROPIC_KEY){
+    alert('Configure a chave da API Claude em ANTHROPIC_KEY no código.');
+    return;
+  }
+  // Loading
+  const loading=document.getElementById('mkt-scan-loading');
+  if(loading)loading.style.display='flex';
+  try{
+    const isDoc=mimeType==='application/pdf';
+    const body={
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{
+        role:'user',
+        content:[
+          {
+            type:isDoc?'document':'image',
+            source:{type:'base64',media_type:mimeType,data:base64}
+          },
+          {
+            type:'text',
+            text:`Leia esta nota fiscal e extraia todos os itens comprados.\nRetorne APENAS um JSON válido, sem markdown, sem explicação, neste formato exato:\n[{"nome":"Nome do produto","quantidade":1,"unidade":"un","precoUnit":9.90,"categoria":"Mercearia"}]\nCategorias possíveis: Hortifruti, Carnes, Laticinios, Padaria, Higiene, Limpeza, Mercearia, Frios, Outros.\nUnidades possíveis: un, kg, g, L, mL, cx, pct, dz.\nSe não conseguir ler algum campo, use valores padrão: quantidade=1, unidade="un", categoria="Outros".`
+          }
+        ]
+      }]
+    };
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':ANTHROPIC_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify(body)
+    });
+    if(!resp.ok) throw new Error('API error '+resp.status);
+    const json=await resp.json();
+    const text=(json.content&&json.content[0]&&json.content[0].text)||'';
+    // Extrai JSON da resposta (pode vir com ou sem markdown)
+    const match=text.match(/\[[\s\S]*\]/);
+    if(!match) throw new Error('JSON não encontrado na resposta');
+    const itens=JSON.parse(match[0]);
+    if(!Array.isArray(itens)||!itens.length) throw new Error('Lista vazia');
+    if(loading)loading.style.display='none';
+    mktAbrirScanner(itens);
+  }catch(e){
+    if(loading)loading.style.display='none';
+    console.error('mktScanNF erro:',e);
+    alert('Não foi possível ler a nota. Tente uma foto mais nítida.');
+  }
+}
+
+function mktAbrirScanner(itens){
+  _mktScanItens=itens;
+  _mktScanIdx=0;
+  _mktScanCadastrados=0;
+  _mktScanAtualizados=0;
+  document.getElementById('mkt-scanner-subtitulo').textContent=
+    `📄 NOTA FISCAL — ${itens.length} item${itens.length>1?'s':''} encontrado${itens.length>1?'s':''}`;
+  document.getElementById('mkt-scanner-modal').style.display='flex';
+  _mktScannerMostrarItem(0);
+}
+
+function _mktScannerMostrarItem(idx){
+  const itens=_mktScanItens;
+  if(idx>=itens.length){mktScannerFinalizar();return;}
+  const it=itens[idx];
+  document.getElementById('mkt-scanner-contador').textContent=
+    `Item ${idx+1} de ${itens.length}`;
+  // Preenche campos
+  document.getElementById('mkt-sc-nome').value=it.nome||'';
+  document.getElementById('mkt-sc-qtd').value=it.quantidade||1;
+  document.getElementById('mkt-sc-unidade').value=it.unidade||'un';
+  document.getElementById('mkt-sc-preco').value=it.precoUnit>0?it.precoUnit.toFixed(2):'';
+  document.getElementById('mkt-sc-cat').value=it.categoria||'Outros';
+  // Badge: existe ou novo?
+  const catalogo=_mktGetCatalogo();
+  const existe=catalogo.find(c=>c.nome.toLowerCase().trim()===(it.nome||'').toLowerCase().trim());
+  const badge=document.getElementById('mkt-scanner-badge');
+  if(existe){
+    badge.innerHTML=`<span style="background:rgba(255,215,0,0.15);color:var(--neon-yellow);border:1px solid rgba(255,215,0,0.35);padding:4px 10px;border-radius:8px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">⚡ PREÇO ATUALIZADO</span>`;
+  } else {
+    badge.innerHTML=`<span style="background:rgba(0,255,157,0.12);color:var(--neon-green);border:1px solid rgba(0,255,157,0.35);padding:4px 10px;border-radius:8px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">✦ NOVO ITEM</span>`;
+  }
+}
+
+function mktScannerConfirmar(){
+  const idx=_mktScanIdx;
+  const nome=(document.getElementById('mkt-sc-nome').value||'').trim();
+  const qtd=parseFloat(document.getElementById('mkt-sc-qtd').value)||1;
+  const unidade=document.getElementById('mkt-sc-unidade').value||'un';
+  const precoRaw=document.getElementById('mkt-sc-preco').value||'0';
+  const preco=_mktParseBRL(precoRaw)||parseFloat(precoRaw)||0;
+  const cat=document.getElementById('mkt-sc-cat').value||'Outros';
+  if(!nome){_mktScanIdx++;_mktScannerMostrarItem(_mktScanIdx);return;}
+  const catalogo=_mktGetCatalogo();
+  const idxExist=catalogo.findIndex(c=>c.nome.toLowerCase().trim()===nome.toLowerCase());
+  if(idxExist>-1){
+    // Atualiza preço do existente
+    catalogo[idxExist].preco=preco;
+    catalogo[idxExist].ultimaAtualizacao=new Date().toISOString();
+    _mktSetCatalogo(catalogo);
+    _mktScanAtualizados++;
+  } else {
+    // Cria novo
+    catalogo.push({
+      id:Date.now(),nome,cat,qtd,unidade,preco,foto:'',
+      dataCadastro:new Date().toISOString(),
+      ultimaAtualizacao:new Date().toISOString()
+    });
+    _mktSetCatalogo(catalogo);
+    _mktScanCadastrados++;
+  }
+  _mktScanIdx++;
+  _mktScannerMostrarItem(_mktScanIdx);
+}
+
+function mktScannerPular(){
+  _mktScanIdx++;
+  _mktScannerMostrarItem(_mktScanIdx);
+}
+
+function mktScannerFinalizar(){
+  document.getElementById('mkt-scanner-modal').style.display='none';
+  renderMercado();
+  // Toast de resultado
+  const total=_mktScanCadastrados+_mktScanAtualizados;
+  if(total>0){
+    const msg=document.getElementById('mkt-cad-msg');
+    if(msg){
+      msg.style.color='var(--neon-green)';
+      msg.textContent=`✓ Nota processada! ${_mktScanCadastrados} cadastrado${_mktScanCadastrados!==1?'s':''}, ${_mktScanAtualizados} atualizado${_mktScanAtualizados!==1?'s':''}.`;
+      setTimeout(()=>{msg.textContent='';},4000);
+    }
+  }
+}
+
+function mktFecharScanner(){
+  document.getElementById('mkt-scanner-modal').style.display='none';
 }
 
 function renderMercado(){

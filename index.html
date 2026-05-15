@@ -2161,7 +2161,7 @@
   .lanc-hist-title{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);letter-spacing:1px;}
   /* ── Calculadora flutuante ── */
   /* #calc-btn removido — calculadora agora está no menu do + */
-  #calc-widget{position:fixed;top:96px;right:24px;z-index:8001;
+  #calc-widget{position:fixed;top:54px;right:10px;z-index:8001;
     width:320px;min-width:240px;max-width:500px;
     background:var(--card);border:1px solid var(--border);
     border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.4);
@@ -2202,8 +2202,7 @@
   .calc-hist-item-row:hover{color:var(--neon-blue);}
   .calc-header{display:flex;justify-content:space-between;align-items:center;
     padding:8px 12px;border-bottom:1px solid var(--border);border-radius:16px 16px 0 0;}
-  .calc-drag-zone{display:flex;align-items:center;gap:6px;flex:1;cursor:grab;padding:2px 4px;border-radius:6px;user-select:none;}
-  .calc-drag-zone:active{cursor:grabbing;}
+  .calc-drag-zone{display:flex;align-items:center;gap:6px;flex:1;cursor:default;padding:2px 4px;border-radius:6px;}
   .calc-header-btns{display:flex;gap:4px;align-items:center;cursor:default;}
   .calc-header-btns{display:flex;gap:4px;align-items:center;}
   .calc-hbtn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:5px;line-height:1;transition:color .15s;}
@@ -6007,7 +6006,15 @@
   </div>
   <div class="calc-display">
     <div class="calc-expr" id="calc-expr"></div>
-    <div class="calc-val" id="calc-val">0</div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+      <div class="calc-val" id="calc-val" style="flex:1">0</div>
+      <button id="calc-copy-btn" onclick="calcCopiar()" title="Copiar resultado"
+        style="background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);
+        border-radius:8px;padding:4px 8px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;
+        font-weight:700;white-space:nowrap;flex-shrink:0;transition:all .15s;letter-spacing:.3px"
+        onmouseover="this.style.background='rgba(0,200,255,0.25)'"
+        onmouseout="this.style.background='rgba(0,200,255,0.1)'">📋 COPIAR</button>
+    </div>
   </div>
   <div class="calc-hist" id="calc-hist"></div>
   <div class="calc-keys">
@@ -16874,18 +16881,13 @@ function toggleCalc(){
   const show=w.style.display==='none'||!w.style.display;
   w.style.display=show?'block':'none';
   if(show){
-    // Restaura posição salva
-    const pos=JSON.parse(localStorage.getItem('calc_pos')||'{}');
-    if(pos.top) w.style.top=pos.top;
-    if(pos.left) w.style.left=pos.left;
-    if(pos.right) w.style.right=pos.right;
-    if(pos.width) w.style.width=pos.width;
-    if(pos.minimized){_calcMinimized=true;w.classList.add('minimized');const mb=document.getElementById('calc-min-btn');if(mb)mb.textContent='□';}
-    // Ativa drag somente na zona do título
-    setTimeout(()=>{
-      const zone=document.getElementById('calc-drag-handle');
-      if(zone) _enableCalcDrag(zone);
-    },100);
+    // Sempre abre maximizada — fixa no topo abaixo do botão
+    w.classList.remove('minimized');
+    _calcMinimized=false;
+    const mb=document.getElementById('calc-min-btn');if(mb)mb.textContent='_';
+    // Posição sempre fixa (sem arrastar)
+    w.style.top='54px';w.style.right='10px';
+    w.style.left='auto';w.style.bottom='auto';w.style.transform='none';
   }
 }
 
@@ -16904,11 +16906,6 @@ function toggleCalcMinimize(){
     cw.onclick=null; // sem clique-para-restaurar no container — usa o header
   } else {
     cw.style.display='block';
-    // Re-habilita drag só na zona do título
-    setTimeout(()=>{
-      const zone=document.getElementById('calc-drag-handle');
-      if(zone) _enableCalcDrag(zone);
-    },50);
   }
 }
 function _rebuildCalcWidget(){
@@ -16934,7 +16931,13 @@ function _rebuildCalcWidget(){
     </div>
     <div class="calc-display">
       <div class="calc-expr" id="calc-expr"></div>
-      <div class="calc-val" id="calc-val">0</div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+        <div class="calc-val" id="calc-val" style="flex:1">0</div>
+        <button id="calc-copy-btn" onclick="calcCopiar()" title="Copiar resultado"
+          style="background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);
+          border-radius:8px;padding:4px 8px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;
+          font-weight:700;white-space:nowrap;flex-shrink:0;transition:all .15s;letter-spacing:.3px">📋 COPIAR</button>
+      </div>
     </div>
     <div class="calc-hist" id="calc-hist"></div>
     <div class="calc-keys">
@@ -16996,6 +16999,8 @@ function _enableCalcDrag(handle){
     document.removeEventListener('touchmove',onMove);
     document.removeEventListener('mouseup',onUp);
     document.removeEventListener('touchend',onUp);
+    // Salva posição para restaurar na próxima abertura
+    localStorage.setItem('calc_pos',JSON.stringify({top:cw.style.top,left:cw.style.left,width:cw.style.width}));
   }
   const el=cw.classList.contains('minimized')?cw:handle;
   el.addEventListener('mousedown',onDown);
@@ -17031,6 +17036,23 @@ function calcLimparHist(){
   _calcRenderHist();
   const h=document.getElementById('calc-hist');
   if(h)h.innerHTML='';
+}
+
+function calcCopiar(){
+  const val=document.getElementById('calc-val')?.textContent||'0';
+  const numStr=val.replace(/[^0-9,.\-]/g,'').replace(',','.');
+  navigator.clipboard?.writeText(numStr).then(()=>{
+    const btn=document.getElementById('calc-copy-btn');
+    if(btn){
+      btn.textContent='✓ COPIADO';btn.style.color='var(--neon-green)';btn.style.borderColor='rgba(0,255,157,0.4)';
+      setTimeout(()=>{btn.textContent='📋 COPIAR';btn.style.color='var(--neon-blue)';btn.style.borderColor='rgba(0,200,255,0.25)';},1500);
+    }
+  }).catch(()=>{
+    // Fallback para browsers sem clipboard API
+    const ta=document.createElement('textarea');ta.value=numStr;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const btn=document.getElementById('calc-copy-btn');
+    if(btn){btn.textContent='✓ COPIADO';setTimeout(()=>{btn.textContent='📋 COPIAR';},1500);}
+  });
 }
 
 function _calcSaveState(){

@@ -5986,59 +5986,6 @@
   </div>
 </div>
 
-<div id="calc-widget">
-  <div class="calc-header">
-    <div class="calc-drag-zone" id="calc-drag-handle">
-      <span class="calc-htitle">🖩 CALCULADORA</span>
-    </div>
-    <div class="calc-header-btns">
-      <button class="calc-hbtn" onclick="toggleCalcHistPanel()" title="Histórico">📋</button>
-      <button class="calc-hbtn" onclick="toggleCalcMinimize()" title="Minimizar" id="calc-min-btn">_</button>
-      <button class="calc-hbtn" onclick="toggleCalc()" title="Fechar">✕</button>
-    </div>
-  </div>
-  <div id="calc-hist-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3)">ÚLTIMOS CÁLCULOS</span>
-      <button onclick="calcLimparHist()" style="background:none;border:none;color:var(--neon-red);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace">Limpar</button>
-    </div>
-    <div id="calc-hist-list"></div>
-  </div>
-  <div class="calc-display">
-    <div class="calc-expr" id="calc-expr"></div>
-    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
-      <div class="calc-val" id="calc-val" style="flex:1">0</div>
-      <button id="calc-copy-btn" onclick="calcCopiar()" title="Copiar resultado"
-        style="background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);
-        border-radius:8px;padding:4px 8px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;
-        font-weight:700;white-space:nowrap;flex-shrink:0;transition:all .15s;letter-spacing:.3px"
-        onmouseover="this.style.background='rgba(0,200,255,0.25)'"
-        onmouseout="this.style.background='rgba(0,200,255,0.1)'">📋 COPIAR</button>
-    </div>
-  </div>
-  <div class="calc-hist" id="calc-hist"></div>
-  <div class="calc-keys">
-    <button class="ck ck-c" onclick="calcKey('C')">C</button>
-    <button class="ck ck-op" onclick="calcKey('±')">±</button>
-    <button class="ck ck-op" onclick="calcKey('%')">%</button>
-    <button class="ck ck-op" onclick="calcKey('÷')">÷</button>
-    <button class="ck" onclick="calcKey('7')">7</button>
-    <button class="ck" onclick="calcKey('8')">8</button>
-    <button class="ck" onclick="calcKey('9')">9</button>
-    <button class="ck ck-op" onclick="calcKey('×')">×</button>
-    <button class="ck" onclick="calcKey('4')">4</button>
-    <button class="ck" onclick="calcKey('5')">5</button>
-    <button class="ck" onclick="calcKey('6')">6</button>
-    <button class="ck ck-op" onclick="calcKey('−')">−</button>
-    <button class="ck" onclick="calcKey('1')">1</button>
-    <button class="ck" onclick="calcKey('2')">2</button>
-    <button class="ck" onclick="calcKey('3')">3</button>
-    <button class="ck ck-op" onclick="calcKey('+')">+</button>
-    <button class="ck ck-s2" onclick="calcKey('0')">0</button>
-    <button class="ck" onclick="calcKey('.')">.</button>
-    <button class="ck ck-eq" onclick="calcKey('=')">=</button>
-  </div>
-</div>
 <div id="fab-modal">
   <div id="fab-modal-box">
     <!-- Header -->
@@ -7605,7 +7552,7 @@ function showPage(id){
   sessionStorage.setItem('_lastPage',id);
   const _btnCalcFixo=document.getElementById('btn-calc-fixo');
   if(_btnCalcFixo){
-    _btnCalcFixo.style.display=(id==='lancamentos'||id==='documentos')?'none':'flex';
+    _btnCalcFixo.style.display=(id==='documentos')?'none':'flex';
   }
   // Calculadora: não abre automaticamente em nenhuma página — só ao clicar
   const tbl=document.getElementById('mob-topbar-title');
@@ -20109,5 +20056,58 @@ function trfBadgeProgresso(meta){
   <span style="font-size:18px;line-height:1">🖩</span>
   <span style="font-size:10px;font-weight:700;letter-spacing:.5px;white-space:nowrap">CALCULADORA</span>
 </button>
+<div id="calc-widget">
+  <div class="calc-header">
+    <div class="calc-drag-zone" id="calc-drag-handle">
+      <span class="calc-htitle">🖩 CALCULADORA</span>
+    </div>
+    <div class="calc-header-btns">
+      <button class="calc-hbtn" onclick="toggleCalcHistPanel()" title="Histórico">📋</button>
+      <button class="calc-hbtn" onclick="toggleCalcMinimize()" title="Minimizar" id="calc-min-btn">_</button>
+      <button class="calc-hbtn" onclick="toggleCalc()" title="Fechar">✕</button>
+    </div>
+  </div>
+  <div id="calc-hist-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3)">ÚLTIMOS CÁLCULOS</span>
+      <button onclick="calcLimparHist()" style="background:none;border:none;color:var(--neon-red);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace">Limpar</button>
+    </div>
+    <div id="calc-hist-list"></div>
+  </div>
+  <div class="calc-display">
+    <div class="calc-expr" id="calc-expr"></div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+      <div class="calc-val" id="calc-val" style="flex:1">0</div>
+      <button id="calc-copy-btn" onclick="calcCopiar()" title="Copiar resultado"
+        style="background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);
+        border-radius:8px;padding:4px 8px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;
+        font-weight:700;white-space:nowrap;flex-shrink:0;transition:all .15s;letter-spacing:.3px"
+        onmouseover="this.style.background='rgba(0,200,255,0.25)'"
+        onmouseout="this.style.background='rgba(0,200,255,0.1)'">📋 COPIAR</button>
+    </div>
+  </div>
+  <div class="calc-hist" id="calc-hist"></div>
+  <div class="calc-keys">
+    <button class="ck ck-c" onclick="calcKey('C')">C</button>
+    <button class="ck ck-op" onclick="calcKey('±')">±</button>
+    <button class="ck ck-op" onclick="calcKey('%')">%</button>
+    <button class="ck ck-op" onclick="calcKey('÷')">÷</button>
+    <button class="ck" onclick="calcKey('7')">7</button>
+    <button class="ck" onclick="calcKey('8')">8</button>
+    <button class="ck" onclick="calcKey('9')">9</button>
+    <button class="ck ck-op" onclick="calcKey('×')">×</button>
+    <button class="ck" onclick="calcKey('4')">4</button>
+    <button class="ck" onclick="calcKey('5')">5</button>
+    <button class="ck" onclick="calcKey('6')">6</button>
+    <button class="ck ck-op" onclick="calcKey('−')">−</button>
+    <button class="ck" onclick="calcKey('1')">1</button>
+    <button class="ck" onclick="calcKey('2')">2</button>
+    <button class="ck" onclick="calcKey('3')">3</button>
+    <button class="ck ck-op" onclick="calcKey('+')">+</button>
+    <button class="ck ck-s2" onclick="calcKey('0')">0</button>
+    <button class="ck" onclick="calcKey('.')">.</button>
+    <button class="ck ck-eq" onclick="calcKey('=')">=</button>
+  </div>
+</div>
 </body>
 </html>

@@ -2201,8 +2201,10 @@
   .calc-hist-item-row{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);padding:4px 0;border-bottom:1px solid var(--border);cursor:pointer;text-align:right;}
   .calc-hist-item-row:hover{color:var(--neon-blue);}
   .calc-header{display:flex;justify-content:space-between;align-items:center;
-    padding:8px 12px;border-bottom:1px solid var(--border);cursor:grab;border-radius:16px 16px 0 0;}
-  .calc-header:active{cursor:grabbing;}
+    padding:8px 12px;border-bottom:1px solid var(--border);border-radius:16px 16px 0 0;}
+  .calc-drag-zone{display:flex;align-items:center;gap:6px;flex:1;cursor:grab;padding:2px 4px;border-radius:6px;user-select:none;}
+  .calc-drag-zone:active{cursor:grabbing;}
+  .calc-header-btns{display:flex;gap:4px;align-items:center;cursor:default;}
   .calc-header-btns{display:flex;gap:4px;align-items:center;}
   .calc-hbtn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:5px;line-height:1;transition:color .15s;}
   .calc-hbtn:hover{color:var(--text);}
@@ -5986,12 +5988,14 @@
 </div>
 
 <div id="calc-widget">
-  <div class="calc-header" id="calc-drag-handle" onclick="if(document.getElementById('calc-widget').classList.contains('minimized'))toggleCalcMinimize()">
-    <span class="calc-htitle">🖩 CALCULADORA</span>
+  <div class="calc-header">
+    <div class="calc-drag-zone" id="calc-drag-handle">
+      <span class="calc-htitle">🖩 CALCULADORA</span>
+    </div>
     <div class="calc-header-btns">
-      <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalcHistPanel()" title="Histórico">📋</button>
-      <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalcMinimize()" title="Minimizar" id="calc-min-btn">_</button>
-      <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalc()" title="Fechar">✕</button>
+      <button class="calc-hbtn" onclick="toggleCalcHistPanel()" title="Histórico">📋</button>
+      <button class="calc-hbtn" onclick="toggleCalcMinimize()" title="Minimizar" id="calc-min-btn">_</button>
+      <button class="calc-hbtn" onclick="toggleCalc()" title="Fechar">✕</button>
     </div>
   </div>
   <div id="calc-hist-panel">
@@ -7149,6 +7153,7 @@ function doLoginAfterRegister(){
 async function _startSession(u){
   _authUser=u;
   sessionStorage.setItem('financeOS_user',u);
+  sessionStorage.setItem('trf_show_on_login','1'); // sinaliza que é um login real
   setTimeout(()=>_registrarAcesso&&_registrarAcesso(),100);
   const scr=document.getElementById('login-screen');
   if(scr) scr.classList.add('fading');
@@ -16876,9 +16881,10 @@ function toggleCalc(){
     if(pos.right) w.style.right=pos.right;
     if(pos.width) w.style.width=pos.width;
     if(pos.minimized){_calcMinimized=true;w.classList.add('minimized');const mb=document.getElementById('calc-min-btn');if(mb)mb.textContent='□';}
+    // Ativa drag somente na zona do título
     setTimeout(()=>{
-      const h=document.getElementById('calc-drag-handle');
-      if(h) _enableCalcDrag(h);
+      const zone=document.getElementById('calc-drag-handle');
+      if(zone) _enableCalcDrag(zone);
     },100);
   }
 }
@@ -16897,11 +16903,11 @@ function toggleCalcMinimize(){
     cw.style.display='block'; // mantém visível
     cw.onclick=null; // sem clique-para-restaurar no container — usa o header
   } else {
-    // Restaurado: volta ao modo normal, re-habilita drag no header
     cw.style.display='block';
+    // Re-habilita drag só na zona do título
     setTimeout(()=>{
-      const h=document.getElementById('calc-drag-handle');
-      if(h) _enableCalcDrag(h);
+      const zone=document.getElementById('calc-drag-handle');
+      if(zone) _enableCalcDrag(zone);
     },50);
   }
 }
@@ -16909,13 +16915,14 @@ function _rebuildCalcWidget(){
   const cw=document.getElementById('calc-widget');
   if(!cw) return;
   cw.innerHTML=`
-    <div class="calc-header" id="calc-drag-handle"
-      onclick="if(document.getElementById('calc-widget').classList.contains('minimized'))toggleCalcMinimize()">
-      <span class="calc-htitle">🖩 CALCULADORA</span>
+    <div class="calc-header">
+      <div class="calc-drag-zone" id="calc-drag-handle">
+        <span class="calc-htitle">🖩 CALCULADORA</span>
+      </div>
       <div class="calc-header-btns">
-        <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalcHistPanel()" title="Histórico">📋</button>
-        <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalcMinimize()" title="Minimizar" id="calc-min-btn">_</button>
-        <button class="calc-hbtn" onclick="event.stopPropagation();toggleCalc()" title="Fechar">✕</button>
+        <button class="calc-hbtn" onclick="toggleCalcHistPanel()" title="Histórico">📋</button>
+        <button class="calc-hbtn" onclick="toggleCalcMinimize()" title="Minimizar" id="calc-min-btn">_</button>
+        <button class="calc-hbtn" onclick="toggleCalc()" title="Fechar">✕</button>
       </div>
     </div>
     <div id="calc-hist-panel">
@@ -16951,7 +16958,6 @@ function _rebuildCalcWidget(){
       <button class="ck" onclick="calcKey('.')">.</button>
       <button class="ck ck-eq" onclick="calcKey('=')">=</button>
     </div>`;
-  _enableCalcDrag(document.getElementById('calc-drag-handle'));
 }
 
 function _enableCalcDrag(handle){
@@ -19890,16 +19896,18 @@ function _trfHookMetaSemanal(){
   if(dias.length>0) trfGerarTarefasMeta(ultima,dias,horario);
 }
 
-// Variável de sessão — reseta a cada reload (novo login)
 let _trfDailyModalShown=false;
 
-// ── Modal diário — chamado pelo renderDashboard após tudo renderizado ──
+// ── Modal diário — só aparece no login real, nunca no F5 ──
 function trfAbrirDailyModal(){
   try{
     if(_trfDailyModalShown) return;
+    // Só abre quando vier de um login real (_startSession define essa flag)
+    if(!sessionStorage.getItem('trf_show_on_login')) return;
     const modal=document.getElementById('trf-daily-modal');
-    if(!modal) return; // elemento não existe no DOM
+    if(!modal) return;
     _trfDailyModalShown=true;
+    sessionStorage.removeItem('trf_show_on_login'); // consome a flag (1x)
     const pendentes=(_trfGet()||[]).filter(t=>!t.concluida);
     trfRenderDailyLista();
     const sub=document.getElementById('trf-daily-sub');

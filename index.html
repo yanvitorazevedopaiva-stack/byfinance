@@ -2161,8 +2161,9 @@
   .lanc-hist-title{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);letter-spacing:1px;}
   /* ── Calculadora flutuante ── */
   /* #calc-btn removido — calculadora agora está no menu do + */
-  #calc-widget{position:fixed;top:54px;right:10px;z-index:8001;
-    width:320px;min-width:240px;max-width:500px;
+  #calc-widget{position:fixed!important;bottom:90px!important;right:14px!important;
+    top:auto!important;left:auto!important;transform:none!important;
+    z-index:9990;width:320px;min-width:240px;max-width:500px;
     background:var(--card);border:1px solid var(--border);
     border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.4);
     display:none;user-select:none;touch-action:none;overflow:hidden;resize:both;}
@@ -3682,7 +3683,7 @@
 
     <!-- Barra superior: badge + status -->
     <div class="lanc-hero-topbar">
-      <div class="lanc-hero-badge"><span class="lanc-hero-badge-dot"></span>◈ CENTRAL DE OPERAÇÕES</div>
+      <div class="lanc-hero-badge"><span class="lanc-hero-badge-dot"></span>◈ REGISTRO DE GASTOS</div>
       <div class="lanc-hero-sync">
         <span class="lanc-hero-sync-dot"></span>
         <span style="color:var(--neon-green)">Sincronizado</span>
@@ -3694,34 +3695,34 @@
     <!-- Título e subtítulo -->
     <div class="lanc-hero-title" style="text-align:left">LANÇAMENTOS</div>
     <div class="lanc-hero-sub" style="text-align:left;max-width:520px">
-      O ponto de convergência de todo o seu ecossistema financeiro.<br>
-      Gerencie gastos, parcelamentos e fluxos de caixa em tempo real.
+      Registre suas despesas e receitas. Tudo sincroniza automaticamente<br>
+      com o semanal, parcelas e fatura do cartão.
     </div>
 
     <!-- 4 cards de ação rápida -->
     <div class="lanc-qcards">
       <div class="lanc-qcard" style="--lanc-qcard-accent:var(--neon-blue)" onclick="setLancForma('cred-parc');document.querySelector('.card.lanc-form-card').scrollIntoView({behavior:'smooth'})">
-        <div class="lanc-qcard-label">Limite corporativo</div>
+        <div class="lanc-qcard-label">Cartão de crédito</div>
         <div class="lanc-qcard-title">CRÉDITO</div>
-        <div class="lanc-qcard-action">NOVO LANÇAMENTO <span>›</span></div>
+        <div class="lanc-qcard-action">LANÇAR CRÉDITO <span>›</span></div>
         <span class="lanc-qcard-icon">💳</span>
       </div>
       <div class="lanc-qcard" style="--lanc-qcard-accent:var(--neon-green)" onclick="setLancForma('pix');document.querySelector('.card.lanc-form-card').scrollIntoView({behavior:'smooth'})">
-        <div class="lanc-qcard-label">Transferência</div>
+        <div class="lanc-qcard-label">Transferência digital</div>
         <div class="lanc-qcard-title">PIX</div>
-        <div class="lanc-qcard-action">REGISTRAR AGORA <span>›</span></div>
+        <div class="lanc-qcard-action">LANÇAR PIX <span>›</span></div>
         <span class="lanc-qcard-icon">⚡</span>
       </div>
       <div class="lanc-qcard" style="--lanc-qcard-accent:var(--neon-yellow)" onclick="setLancForma('debito');document.querySelector('.card.lanc-form-card').scrollIntoView({behavior:'smooth'})">
-        <div class="lanc-qcard-label">Conta corrente</div>
+        <div class="lanc-qcard-label">Débito em conta</div>
         <div class="lanc-qcard-title">DÉBITO</div>
-        <div class="lanc-qcard-action">REGISTRAR COMPRA <span>›</span></div>
+        <div class="lanc-qcard-action">LANÇAR DÉBITO <span>›</span></div>
         <span class="lanc-qcard-icon">🏧</span>
       </div>
       <div class="lanc-qcard" style="--lanc-qcard-accent:var(--neon-red)" onclick="setLancForma('dinheiro');document.querySelector('.card.lanc-form-card').scrollIntoView({behavior:'smooth'})">
-        <div class="lanc-qcard-label">Espécie</div>
+        <div class="lanc-qcard-label">Pagamento em dinheiro</div>
         <div class="lanc-qcard-title">DINHEIRO</div>
-        <div class="lanc-qcard-action">ANOTAR GASTO <span>›</span></div>
+        <div class="lanc-qcard-action">LANÇAR GASTO <span>›</span></div>
         <span class="lanc-qcard-icon">💵</span>
       </div>
     </div>
@@ -16832,9 +16833,8 @@ function toggleCalc(){
     w.classList.remove('minimized');
     _calcMinimized=false;
     const mb=document.getElementById('calc-min-btn');if(mb)mb.textContent='_';
-    // Posição sempre fixa (sem arrastar)
-    w.style.top='54px';w.style.right='10px';
-    w.style.left='auto';w.style.bottom='auto';w.style.transform='none';
+    // Posição fixa — acima do botão no canto inferior direito
+    w.style.cssText+='bottom:90px!important;right:14px!important;top:auto!important;left:auto!important;transform:none!important;';
   }
 }
 
@@ -20045,14 +20045,16 @@ function trfBadgeProgresso(meta){
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
 <button id="btn-calc-fixo" onclick="toggleCalc()"
   title="Calculadora"
-  style="position:fixed;top:10px;right:14px;z-index:1200;
+  style="position:fixed!important;bottom:54px!important;right:14px!important;
+    top:auto!important;z-index:9991;
     height:36px;border-radius:20px;
-    background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.25);
+    background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);
     cursor:pointer;display:flex;align-items:center;justify-content:center;
-    gap:6px;padding:0 12px;
-    transition:all .18s;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)"
-  onmouseover="this.style.background='rgba(0,200,255,0.18)';this.style.borderColor='rgba(0,200,255,0.5)'"
-  onmouseout="this.style.background='rgba(0,200,255,0.08)';this.style.borderColor='rgba(0,200,255,0.25)'">
+    gap:6px;padding:0 14px;
+    transition:all .18s;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);
+    box-shadow:0 2px 12px rgba(0,0,0,0.2)"
+  onmouseover="this.style.background='rgba(0,200,255,0.22)';this.style.borderColor='rgba(0,200,255,0.6)'"
+  onmouseout="this.style.background='rgba(0,200,255,0.1)';this.style.borderColor='rgba(0,200,255,0.3)'">
   <span style="font-size:18px;line-height:1">🖩</span>
   <span style="font-size:10px;font-weight:700;letter-spacing:.5px;white-space:nowrap">CALCULADORA</span>
 </button>

@@ -15030,6 +15030,9 @@ function _initApp(){
   _migrateFaturasSpread(); // corrige faturas que foram lançadas sem spread de parcelas
   _migrateEmailStorage();  // converte e-mails antigos de base64 para texto puro
   _applyUserProfile(_authUser);
+  // Exibe botão da calculadora apenas após login
+  const _calcBtn=document.getElementById('btn-calc-fixo');
+  if(_calcBtn) _calcBtn.style.display='flex';
   renderNav('dashboard');
   document.getElementById('lanc-data').value=new Date().toISOString().split('T')[0];
   const hoje=new Date();
@@ -20407,7 +20410,7 @@ function trfBadgeProgresso(meta){
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
 <button id="btn-calc-fixo" onclick="toggleCalc()"
   title="Calculadora"
-  style="position:fixed!important;top:12px!important;right:14px!important;
+  style="display:none;position:fixed!important;top:12px!important;right:14px!important;
     bottom:auto!important;z-index:10000;
     height:36px;border-radius:20px;
     background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);

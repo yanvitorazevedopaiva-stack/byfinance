@@ -7858,10 +7858,8 @@ function renderHealthBar(){
   fillEl.style.width=score+'%';
   fillEl.style.background=grad;
 
-  fraseEl.style.background=cfg.bg;
-  fraseEl.style.borderColor=cfg.border;
-  fraseEl.style.color=cfg.color;
-  fraseTextoEl.textContent=frase;
+  if(fraseEl){fraseEl.style.background=cfg.bg;fraseEl.style.borderColor=cfg.border;fraseEl.style.color=cfg.color;}
+  if(fraseTextoEl) fraseTextoEl.textContent=frase;
 
   // Métricas laterais
   const dtiEl=document.getElementById('hm-dti');
@@ -7952,7 +7950,7 @@ function renderDashboard(){
   // Próximos vencimentos (detecta cross-month)
   const proximos=getVencProximos(7);
   const pVenc=document.getElementById('proximos-venc');
-  pVenc.innerHTML=proximos.length===0
+  if(pVenc) pVenc.innerHTML=proximos.length===0
     ?'<div style="color:var(--text3);font-size:13px;padding:8px 0">Nenhum vencimento nos próximos 7 dias</div>'
     :proximos.map(v=>{
       const hoje2=new Date(); hoje2.setHours(0,0,0,0);
@@ -8035,7 +8033,7 @@ function renderDashboard(){
     }
   });
 
-  daAlertas.innerHTML=alertsHtml;
+  if(daAlertas) daAlertas.innerHTML=alertsHtml;
 
   // Gráfico categorias — atualiza dados sem destruir
   const cats={};
@@ -8299,12 +8297,14 @@ function renderGastos(){
   document.getElementById('gf-pct').textContent=salBase>0?pct+'%':'—%';
 
   const alerta=document.getElementById('gf-alerta');
-  if(salBase>0&&total>salBase){
-    alerta.innerHTML=`<div class="alert alert-red"><span class="alert-icon">⚠</span><span>ATENÇÃO: Gastos fixos (${fmt(total)}) ultrapassam o salário em ${fmt(Math.abs(sobra))}!</span></div>`;
-  } else if(salBase>0&&total/salBase>0.85){
-    alerta.innerHTML=`<div class="alert alert-yellow"><span class="alert-icon">⚡</span><span>Atenção: ${pct}% do salário comprometido com gastos fixos.</span></div>`;
-  } else {
-    alerta.innerHTML='';
+  if(alerta){
+    if(salBase>0&&total>salBase){
+      alerta.innerHTML=`<div class="alert alert-red"><span class="alert-icon">⚠</span><span>ATENÇÃO: Gastos fixos (${fmt(total)}) ultrapassam o salário em ${fmt(Math.abs(sobra))}!</span></div>`;
+    } else if(salBase>0&&total/salBase>0.85){
+      alerta.innerHTML=`<div class="alert alert-yellow"><span class="alert-icon">⚡</span><span>Atenção: ${pct}% do salário comprometido com gastos fixos.</span></div>`;
+    } else {
+      alerta.innerHTML='';
+    }
   }
 
   // Prioridade
@@ -8330,6 +8330,7 @@ function renderGastos(){
 
   const curGfMes=gfMesKey();
   const tbody=document.getElementById('gf-tbody');
+  if(!tbody) return;
   tbody.innerHTML=data.map(g=>{
     const gPrio=g.prio||'essencial';
     if(g.id===gfEditingId){
@@ -16426,20 +16427,6 @@ function setInvTickers(v){save('inv_tickers',v);}
 function getInvFiis(){return load('inv_fiis')||[];}
 function setInvFiis(v){save('inv_fiis',v);}
 
-function addInvTicker(){
-  const el=document.getElementById('inv-ticker-inp');
-  const t=(el.value||'').toUpperCase().trim();
-  if(!t){return;}
-  const lista=getInvTickers();
-  if(!lista.includes(t)) lista.push(t);
-  setInvTickers(lista);
-  el.value='';
-  renderInvTickers();
-}
-function removerInvTicker(t){
-  setInvTickers(getInvTickers().filter(x=>x!==t));
-  renderInvTickers();
-}
 // Cache de cotações { PETR4: {price, change, pct, updated} }
 let _invCotacoes={};
 

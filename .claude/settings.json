@@ -5,7 +5,8 @@
       "PowerShell(node --version)",
       "PowerShell(npm --version)",
       "PowerShell(Get-Command npx -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-Command supabase -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-Command supabase -ErrorAction SilentlyContinue)",
+      "Bash(powershell -Command ' *)"
     ]
   }
 }

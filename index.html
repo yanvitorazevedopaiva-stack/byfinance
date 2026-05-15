@@ -2873,7 +2873,7 @@
         <label>SENHA</label>
         <div class="login-field-wrap">
           <svg class="login-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-          <input id="ca-pass" type="password" placeholder="mínimo 4 caracteres" autocomplete="new-password" oninput="loginPassStrength(this)">
+          <input id="ca-pass" type="password" placeholder="mín. 8 chars + caractere especial" autocomplete="new-password" oninput="loginPassStrength(this)">
           <button class="login-eye" type="button" onclick="loginToggleEye(this,'ca-pass')">👁</button>
         </div>
         <div class="login-pass-strength">
@@ -2987,7 +2987,7 @@
           <label>NOVA SENHA</label>
           <div class="login-field-wrap">
             <svg class="login-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-            <input id="rk-pass" type="password" placeholder="mínimo 4 caracteres" autocomplete="new-password">
+            <input id="rk-pass" type="password" placeholder="mín. 8 chars + caractere especial" autocomplete="new-password">
             <button class="login-eye" type="button" onclick="loginToggleEye(this,'rk-pass')">👁</button>
           </div>
         </div>
@@ -4779,7 +4779,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px">
       <div class="page-title" style="margin:0">MERCADO</div>
       <button onclick="mktIniciarScan()"
-        style="padding:6px 14px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:.5px">
+        style="padding:6px 14px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;margin-right:170px">
         📄 IMPORTAR NOTA FISCAL
       </button>
       <input type="file" id="mkt-nf-input" accept=".pdf,image/*" style="display:none"
@@ -5833,7 +5833,7 @@
         <div class="cfg-field">
           <label>NOVA SENHA</label>
           <div class="cfg-field-wrap">
-            <input id="cfg-pass-nova" type="password" placeholder="mínimo 4 caracteres" oninput="cfgPassStrength(this)">
+            <input id="cfg-pass-nova" type="password" placeholder="mín. 8 chars + caractere especial" oninput="cfgPassStrength(this)">
             <button class="cfg-eye" type="button" onclick="loginToggleEye(this,'cfg-pass-nova')">👁</button>
           </div>
           <div class="cfg-pass-strength">
@@ -6961,7 +6961,8 @@ function doRecuperar(){
   err.style.color='';
   if(!_rkUser){err.textContent='Sessão expirada. Recomece.';return;}
   if(!p||!p2){err.textContent='Preencha todos os campos.';return;}
-  if(p.length<4){err.textContent='Senha deve ter ao menos 4 caracteres.';return;}
+  const _errRk=_validarSenha(p);
+  if(_errRk){err.textContent=_errRk;return;}
   if(p!==p2){err.textContent='As senhas não coincidem.';return;}
   const users=_getUsers();
   users[_rkUser]=_hashPass(p);
@@ -7042,6 +7043,12 @@ function _findUserByEmail(emailInput){
   })||null;
 }
 
+function _validarSenha(p){
+  if(p.length<8) return 'A senha deve ter ao menos 8 caracteres.';
+  if(!/[^a-zA-Z0-9]/.test(p)) return 'A senha deve conter ao menos um caractere especial (@, #, $, !, etc.).';
+  return null; // válida
+}
+
 function doCadastro(){
   const u=document.getElementById('ca-user').value.trim();
   const email=(document.getElementById('ca-email')?.value||'').trim();
@@ -7050,7 +7057,8 @@ function doCadastro(){
   const err=document.getElementById('ca-error');
   if(!u||!p||!p2){err.textContent='Preencha todos os campos.';return;}
   if(u.length<3){err.textContent='Usuário deve ter ao menos 3 caracteres.';return;}
-  if(p.length<4){err.textContent='Senha deve ter ao menos 4 caracteres.';return;}
+  const _errSenha=_validarSenha(p);
+  if(_errSenha){err.textContent=_errSenha;return;}
   if(p!==p2){err.textContent='As senhas não coincidem.';return;}
   const users=_getUsers();
   if(users[u]){err.textContent='Usuário já existe.';return;}
@@ -7109,7 +7117,8 @@ function iniciarVerificacaoCadastro(){
   if(!u||!email||!p||!p2){err.textContent='Preencha todos os campos.';return;}
   if(u.length<3){err.textContent='Usuário deve ter ao menos 3 caracteres.';return;}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='E-mail inválido.';return;}
-  if(p.length<4){err.textContent='Senha deve ter ao menos 4 caracteres.';return;}
+  const _errSenha2=_validarSenha(p);
+  if(_errSenha2){err.textContent=_errSenha2;return;}
   if(p!==p2){err.textContent='As senhas não coincidem.';return;}
   const users=_getUsers();
   if(users[u]){err.textContent='Usuário já cadastrado.';return;}
@@ -9424,9 +9433,9 @@ function loginPassStrength(el){
   const bars=[document.getElementById('pbar-1'),document.getElementById('pbar-2'),document.getElementById('pbar-3')];
   const label=document.getElementById('pass-strength-label');
   if(!bars[0]) return;
-  const s1=v.length>=4;
-  const s2=v.length>=8&&/\d/.test(v);
-  const s3=v.length>=8&&/\d/.test(v)&&/[^a-zA-Z0-9]/.test(v);
+  const s1=v.length>=8; // mínimo 8 chars
+  const s2=s1&&/\d/.test(v); // + número
+  const s3=s2&&/[^a-zA-Z0-9]/.test(v); // + caractere especial (obrigatório)
   const score=[s1,s2,s3].filter(Boolean).length;
   const colors=['#ff4444','#ffd700','#00ff9d'];
   const labels=['FRACA','MÉDIA','FORTE'];
@@ -15749,7 +15758,8 @@ function cfgAlterarSenha(){
   if(!atual||!nova||!conf){cfgMsgShow(msg,'err','Preencha todos os campos.');return;}
   const users=_getUsers();
   if(users[_authUser]!==_hashPass(atual)){cfgMsgShow(msg,'err','Senha atual incorreta.');return;}
-  if(nova.length<4){cfgMsgShow(msg,'err','Nova senha deve ter ao menos 4 caracteres.');return;}
+  const _errCfg=_validarSenha(nova);
+  if(_errCfg){cfgMsgShow(msg,'err',_errCfg);return;}
   if(nova!==conf){cfgMsgShow(msg,'err','As senhas não coincidem.');return;}
   users[_authUser]=_hashPass(nova);
   _saveUsers(users);

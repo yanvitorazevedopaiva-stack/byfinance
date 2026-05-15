@@ -4778,11 +4778,12 @@
   <div id="mkt-panel-main">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px">
       <div class="page-title" style="margin:0">MERCADO</div>
-      <button class="btn btn-blue" onclick="document.getElementById('mkt-nf-file-input').click()" style="display:flex;align-items:center;gap:7px">
+      <button onclick="mktIniciarScan()"
+        style="padding:6px 14px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:.5px">
         📄 IMPORTAR NOTA FISCAL
       </button>
-      <input type="file" id="mkt-nf-file-input" accept="image/png,image/jpeg,application/pdf" style="display:none"
-        onchange="mktNFFileSelected(this)">
+      <input type="file" id="mkt-nf-input" accept=".pdf,image/*" style="display:none"
+        onchange="mktScanNF(this)">
     </div>
     <div class="page-sub" style="margin-top:0">// ITENS CADASTRADOS · LISTAS MENSAIS · HISTÓRICO</div>
 
@@ -5880,6 +5881,29 @@
     </div>
   </div>
 
+  <!-- GEMINI API -->
+  <div class="cfg-panel cfg-panel-blue">
+    <div class="cfg-panel-head">
+      <div class="cfg-panel-icon">🤖</div>
+      <div>
+        <div class="cfg-panel-label">GEMINI API — SCANNER DE NOTAS</div>
+        <div class="cfg-panel-desc">Chave gratuita em aistudio.google.com → Get API Key</div>
+      </div>
+    </div>
+    <div class="cfg-panel-body">
+      <div class="cfg-field" style="margin-bottom:12px">
+        <label>CHAVE DA API GEMINI</label>
+        <input id="cfg-gemini-key" type="password" placeholder="AIza..."
+          style="width:100%;font-family:'JetBrains Mono',monospace;font-size:12px">
+      </div>
+      <div class="cfg-btn-row">
+        <button class="cfg-btn cfg-btn-green" onclick="cfgSalvarGemini()">✓ SALVAR CHAVE</button>
+        <button class="cfg-btn" onclick="cfgTestarGemini()" style="margin-left:8px">⚡ TESTAR</button>
+      </div>
+      <div class="cfg-msg" id="cfg-gemini-msg"></div>
+    </div>
+  </div>
+
   <!-- AÇÕES ARQUIVADAS -->
   <div class="cfg-panel cfg-panel-blue" id="cfg-panel-arquivadas">
     <div class="cfg-panel-head">
@@ -6757,7 +6781,7 @@ const DEFAULT = {
   receitas: {},
 };
 
-const ANTHROPIC_KEY='';  // Adicione sua chave: sk-ant-...
+let _geminiKey=localStorage.getItem('gemini_api_key')||'';
 const SUPABASE_URL='https://wrgqwzfbiatsdhkxdtgk.supabase.co';
 const SUPABASE_KEY='sb_publishable_ANZFNtpvkjmvubNTuorZXw_PNfEMtF5';
 let _supabase=null;
@@ -15569,8 +15593,37 @@ function renderNavArquivadas(){
   }).join('');
 }
 
+function cfgSalvarGemini(){
+  const k=(document.getElementById('cfg-gemini-key')?.value||'').trim();
+  if(!k){cfgMsgShow(document.getElementById('cfg-gemini-msg'),'err','Digite a chave.');return;}
+  localStorage.setItem('gemini_api_key',k);
+  _geminiKey=k;
+  cfgMsgShow(document.getElementById('cfg-gemini-msg'),'ok','Chave salva com sucesso!');
+}
+async function cfgTestarGemini(){
+  const k=localStorage.getItem('gemini_api_key')||'';
+  if(!k){cfgMsgShow(document.getElementById('cfg-gemini-msg'),'err','Salve a chave primeiro.');return;}
+  cfgMsgShow(document.getElementById('cfg-gemini-msg'),'','Testando...');
+  try{
+    const r=await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({contents:[{parts:[{text:'Responda apenas: OK'}]}]})}
+    );
+    const d=await r.json();
+    if(d.candidates?.[0]?.content?.parts?.[0]?.text){
+      cfgMsgShow(document.getElementById('cfg-gemini-msg'),'ok','✓ API funcionando!');
+    } else {
+      cfgMsgShow(document.getElementById('cfg-gemini-msg'),'err','Chave inválida ou sem acesso.');
+    }
+  }catch(e){cfgMsgShow(document.getElementById('cfg-gemini-msg'),'err','Erro de conexão.');}
+}
+
 function renderConfig(){
   renderNavArquivadas();
+  // Preenche chave Gemini
+  const gk=document.getElementById('cfg-gemini-key');
+  if(gk) gk.value=localStorage.getItem('gemini_api_key')||'';
   // Avatar
   const foto=load('perfilFoto');
   const cfgImg=document.getElementById('cfg-avatar-img');
@@ -17010,9 +17063,10 @@ function toggleCalc(){
     w.classList.remove('minimized');
     _calcMinimized=false;
     const mb=document.getElementById('calc-min-btn');if(mb)mb.textContent='_';
-    // Força position:fixed via setProperty (API que suporta !important)
+    // Limpa qualquer style inline residual para o CSS position:fixed tomar controle
+    w.style.top='';w.style.left='';w.style.right='';w.style.bottom='';w.style.width='';w.style.transform='';
+    // Re-aplica fixed via setProperty (sobrescreve qualquer inline restante)
     _calcForceFixed();
-    // Segurança: re-aplica no próximo frame (garante que nenhuma animação CSS interfira)
     requestAnimationFrame(_calcForceFixed);
   }
 }
@@ -17133,8 +17187,7 @@ function _enableCalcDrag(handle){
     document.removeEventListener('touchmove',onMove);
     document.removeEventListener('mouseup',onUp);
     document.removeEventListener('touchend',onUp);
-    // Salva posição para restaurar na próxima abertura
-    localStorage.setItem('calc_pos',JSON.stringify({top:cw.style.top,left:cw.style.left,width:cw.style.width}));
+    // posição controlada pelo CSS (position:fixed) — não salva inline
   }
   const el=cw.classList.contains('minimized')?cw:handle;
   el.addEventListener('mousedown',onDown);
@@ -17190,12 +17243,7 @@ function calcCopiar(){
 }
 
 function _calcSaveState(){
-  const w=document.getElementById('calc-widget');
-  if(!w)return;
-  localStorage.setItem('calc_pos',JSON.stringify({
-    top:w.style.top,left:w.style.left,right:w.style.right,
-    width:w.style.width,minimized:_calcMinimized
-  }));
+  // posição controlada pelo CSS (position:fixed) — sem salvar inline
 }
 function calcKey(k){
   const dv=document.getElementById('calc-val');
@@ -19821,163 +19869,108 @@ function mktGerarPDFLista(){
 
 // ══════════════════════════════════════════
 // SCANNER DE NOTA FISCAL
-// ══════════════════════════════════════════
-let _mktScanItens=[],_mktScanIdx=0,_mktScanCadastrados=0,_mktScanAtualizados=0;
 
-function mktNFFileSelected(inp){
-  const file=inp.files[0];if(!file)return;
-  inp.value=''; // reset para permitir reimportar mesmo arquivo
-  const r=new FileReader();
-  r.onload=e=>{
-    const b64=e.target.result.split(',')[1];
-    mktScanNF(b64,file.type);
-  };
-  r.readAsDataURL(file);
+// ══════════════════════════════════════════
+// SCANNER DE NOTA FISCAL (Gemini)
+// ══════════════════════════════════════════
+let _mktScanItens=[],_mktScanIdx=0,_mktScanOk=0;
+
+function mktIniciarScan(){
+  const k=localStorage.getItem('gemini_api_key')||'';
+  if(!k){alert('Configure a chave Gemini em Configurações → Gemini API antes de usar o scanner.');return;}
+  const inp=document.getElementById('mkt-nf-input');
+  inp.value='';inp.click();
 }
 
-async function mktScanNF(base64,mimeType){
-  if(!ANTHROPIC_KEY){
-    alert('Configure a chave da API Claude em ANTHROPIC_KEY no código.');
-    return;
-  }
-  // Loading
-  const loading=document.getElementById('mkt-scan-loading');
-  if(loading)loading.style.display='flex';
+async function mktScanNF(input){
+  const file=input.files[0];if(!file)return;
+  const key=localStorage.getItem('gemini_api_key')||'';
+  const overlay=document.createElement('div');
+  overlay.id='mkt-scan-overlay';
+  overlay.innerHTML='<div style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><div style="font-size:28px">📄</div><div style="font-family:\'JetBrains Mono\',monospace;color:var(--neon-blue);font-size:13px;font-weight:700">LENDO NOTA FISCAL...</div><div style="font-size:11px;color:var(--text3)">Aguarde, o Gemini está analisando a imagem</div></div>';
+  document.body.appendChild(overlay);
   try{
-    const isDoc=mimeType==='application/pdf';
-    const body={
-      model:'claude-sonnet-4-20250514',
-      max_tokens:1000,
-      messages:[{
-        role:'user',
-        content:[
-          {
-            type:isDoc?'document':'image',
-            source:{type:'base64',media_type:mimeType,data:base64}
-          },
-          {
-            type:'text',
-            text:`Leia esta nota fiscal e extraia todos os itens comprados.\nRetorne APENAS um JSON válido, sem markdown, sem explicação, neste formato exato:\n[{"nome":"Nome do produto","quantidade":1,"unidade":"un","precoUnit":9.90,"categoria":"Mercearia"}]\nCategorias possíveis: Hortifruti, Carnes, Laticinios, Padaria, Higiene, Limpeza, Mercearia, Frios, Outros.\nUnidades possíveis: un, kg, g, L, mL, cx, pct, dz.\nSe não conseguir ler algum campo, use valores padrão: quantidade=1, unidade="un", categoria="Outros".`
-          }
-        ]
-      }]
-    };
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':ANTHROPIC_KEY,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify(body)
-    });
-    if(!resp.ok) throw new Error('API error '+resp.status);
-    const json=await resp.json();
-    const text=(json.content&&json.content[0]&&json.content[0].text)||'';
-    // Extrai JSON da resposta (pode vir com ou sem markdown)
-    const match=text.match(/\[[\s\S]*\]/);
-    if(!match) throw new Error('JSON não encontrado na resposta');
-    const itens=JSON.parse(match[0]);
-    if(!Array.isArray(itens)||!itens.length) throw new Error('Lista vazia');
-    if(loading)loading.style.display='none';
+    const base64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+    const mimeType=file.type||'image/jpeg';
+    const prompt='Você é um assistente de leitura de notas fiscais brasileiras.\nAnalise esta nota fiscal e extraia TODOS os itens comprados.\nRetorne APENAS um array JSON válido, sem markdown, sem explicação, sem bloco de código.\nFormato exato de cada objeto:\n{"nome":"Nome do produto","quantidade":1,"unidade":"un","precoUnit":9.90,"categoria":"Mercearia"}\nCategorias possíveis: Hortifruti, Carnes, Laticinios, Padaria, Higiene, Limpeza, Mercearia, Frios, Outros.\nUnidades possíveis: un, kg, g, L, mL, cx, pct, dz.\nSe não identificar algum campo use: quantidade=1, unidade="un", categoria="Outros".\nRetorne apenas o array JSON, começando com [ e terminando com ].';
+    const body={contents:[{parts:[{inline_data:{mime_type:mimeType,data:base64}},{text:prompt}]}]};
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await resp.json();
+    const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||'[]';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const itens=JSON.parse(clean);
+    document.body.removeChild(overlay);
+    if(!itens.length){alert('Nenhum item encontrado na nota. Tente uma foto mais nítida.');return;}
     mktAbrirScanner(itens);
   }catch(e){
-    if(loading)loading.style.display='none';
-    console.error('mktScanNF erro:',e);
-    alert('Não foi possível ler a nota. Tente uma foto mais nítida.');
+    const ov=document.getElementById('mkt-scan-overlay');if(ov)document.body.removeChild(ov);
+    alert('Erro ao ler a nota fiscal. Verifique a imagem e tente novamente.');
+    console.error(e);
   }
 }
 
 function mktAbrirScanner(itens){
-  _mktScanItens=itens;
-  _mktScanIdx=0;
-  _mktScanCadastrados=0;
-  _mktScanAtualizados=0;
-  document.getElementById('mkt-scanner-subtitulo').textContent=
-    `📄 NOTA FISCAL — ${itens.length} item${itens.length>1?'s':''} encontrado${itens.length>1?'s':''}`;
-  document.getElementById('mkt-scanner-modal').style.display='flex';
-  _mktScannerMostrarItem(0);
+  _mktScanItens=itens;_mktScanIdx=0;_mktScanOk=0;
+  mktScannerRenderItem();
 }
 
-function _mktScannerMostrarItem(idx){
-  const itens=_mktScanItens;
-  if(idx>=itens.length){mktScannerFinalizar();return;}
-  const it=itens[idx];
-  document.getElementById('mkt-scanner-contador').textContent=
-    `Item ${idx+1} de ${itens.length}`;
-  // Preenche campos
-  document.getElementById('mkt-sc-nome').value=it.nome||'';
-  document.getElementById('mkt-sc-qtd').value=it.quantidade||1;
-  document.getElementById('mkt-sc-unidade').value=it.unidade||'un';
-  document.getElementById('mkt-sc-preco').value=it.precoUnit>0?it.precoUnit.toFixed(2):'';
-  document.getElementById('mkt-sc-cat').value=it.categoria||'Outros';
-  // Badge: existe ou novo?
-  const catalogo=_mktGetCatalogo();
-  const existe=catalogo.find(c=>c.nome.toLowerCase().trim()===(it.nome||'').toLowerCase().trim());
-  const badge=document.getElementById('mkt-scanner-badge');
-  if(existe){
-    badge.innerHTML=`<span style="background:rgba(255,215,0,0.15);color:var(--neon-yellow);border:1px solid rgba(255,215,0,0.35);padding:4px 10px;border-radius:8px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">⚡ PREÇO ATUALIZADO</span>`;
-  } else {
-    badge.innerHTML=`<span style="background:rgba(0,255,157,0.12);color:var(--neon-green);border:1px solid rgba(0,255,157,0.35);padding:4px 10px;border-radius:8px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">✦ NOVO ITEM</span>`;
+function mktScannerRenderItem(){
+  const total=_mktScanItens.length;
+  if(_mktScanIdx>=total){
+    const el=document.getElementById('mkt-scanner-modal');if(el)el.remove();
+    renderMercado();
+    _showNavToast('✓ Nota processada! '+_mktScanOk+' item(ns) cadastrado(s) ou atualizado(s).');
+    return;
   }
+  const item=_mktScanItens[_mktScanIdx];
+  const todos=_mktGetCatalogo();
+  const existe=todos.find(i=>i.nome.toLowerCase().trim()===item.nome.toLowerCase().trim());
+  const statusBadge=existe
+    ?'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--neon-yellow)">⚡ PREÇO SERÁ ATUALIZADO</span>'
+    :'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green)">❆ NOVO ITEM</span>';
+  const unOpts=['un','kg','g','L','mL','cx','pct','dz'].map(u=>'<option'+(u===item.unidade?' selected':'')+'>'+u+'</option>').join('');
+  const catOpts=['Hortifruti','Carnes','Laticinios','Padaria','Higiene','Limpeza','Mercearia','Frios','Outros'].map(c=>'<option'+(c===item.categoria?' selected':'')+'>'+c+'</option>').join('');
+  const dots=Array.from({length:total},(_,i)=>'<div style="width:'+(i===_mktScanIdx?18:6)+'px;height:6px;border-radius:3px;background:'+(i<_mktScanIdx?'var(--neon-green)':i===_mktScanIdx?'var(--neon-blue)':'var(--border)')+'"></div>').join('');
+  const html='<div id="mkt-scanner-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;display:flex;align-items:center;justify-content:center">'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.5)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">'
+    +'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">ITEM '+(_mktScanIdx+1)+' DE '+total+'</div>'+statusBadge+'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:10px">'
+    +'<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">NOME</div>'
+    +'<input id="scan-nome" type="text" value="'+esc(item.nome)+'" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+    +'<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">QUANTIDADE</div><input id="scan-qtd" type="number" value="'+item.quantidade+'" min="0.001" step="0.001" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-blue);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:\'JetBrains Mono\',monospace"></div>'
+    +'<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">UNIDADE</div><select id="scan-unidade" style="width:100%;padding:9px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">'+unOpts+'</select></div>'
+    +'<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PREÇO (R$)</div><input id="scan-preco" type="number" value="'+item.precoUnit+'" min="0" step="0.01" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:\'JetBrains Mono\',monospace"></div></div>'
+    +'<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="scan-cat" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">'+catOpts+'</select></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">'
+    +'<button onclick="mktScannerPular()" style="padding:11px;background:var(--bg2);border:1px solid var(--border);color:var(--text3);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:\'JetBrains Mono\',monospace">✗ PULAR</button>'
+    +'<button onclick="mktScannerConfirmar()" style="padding:11px;background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:\'JetBrains Mono\',monospace">✓ OK — PRÓXIMO</button>'
+    +'</div>'
+    +'<div style="text-align:center;margin-top:14px"><div style="display:flex;gap:4px;justify-content:center">'+dots+'</div></div>'
+    +'</div></div>';
+  const old=document.getElementById('mkt-scanner-modal');if(old)old.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
 }
 
 function mktScannerConfirmar(){
-  const idx=_mktScanIdx;
-  const nome=(document.getElementById('mkt-sc-nome').value||'').trim();
-  const qtd=parseFloat(document.getElementById('mkt-sc-qtd').value)||1;
-  const unidade=document.getElementById('mkt-sc-unidade').value||'un';
-  const precoRaw=document.getElementById('mkt-sc-preco').value||'0';
-  const preco=_mktParseBRL(precoRaw)||parseFloat(precoRaw)||0;
-  const cat=document.getElementById('mkt-sc-cat').value||'Outros';
-  if(!nome){_mktScanIdx++;_mktScannerMostrarItem(_mktScanIdx);return;}
-  const catalogo=_mktGetCatalogo();
-  const idxExist=catalogo.findIndex(c=>c.nome.toLowerCase().trim()===nome.toLowerCase());
-  if(idxExist>-1){
-    // Atualiza preço do existente
-    catalogo[idxExist].preco=preco;
-    catalogo[idxExist].ultimaAtualizacao=new Date().toISOString();
-    _mktSetCatalogo(catalogo);
-    _mktScanAtualizados++;
-  } else {
-    // Cria novo
-    catalogo.push({
-      id:Date.now(),nome,cat,qtd,unidade,preco,foto:'',
-      dataCadastro:new Date().toISOString(),
-      ultimaAtualizacao:new Date().toISOString()
-    });
-    _mktSetCatalogo(catalogo);
-    _mktScanCadastrados++;
-  }
-  _mktScanIdx++;
-  _mktScannerMostrarItem(_mktScanIdx);
+  const nome=(document.getElementById('scan-nome')?.value||'').trim();
+  const qtd=parseFloat(document.getElementById('scan-qtd')?.value)||1;
+  const unidade=document.getElementById('scan-unidade')?.value||'un';
+  const preco=parseFloat(document.getElementById('scan-preco')?.value)||0;
+  const cat=document.getElementById('scan-cat')?.value||'Outros';
+  const agora=new Date().toISOString();
+  const todos=_mktGetCatalogo();
+  const idx=todos.findIndex(i=>i.nome.toLowerCase().trim()===nome.toLowerCase());
+  if(idx>=0){todos[idx].preco=preco;todos[idx].ultimaAtualizacao=agora;}
+  else{todos.push({id:Date.now(),nome,cat,qtd,unidade,preco,foto:null,dataCadastro:agora,ultimaAtualizacao:agora});}
+  _mktSetCatalogo(todos);
+  _mktScanOk++;_mktScanIdx++;
+  mktScannerRenderItem();
 }
 
-function mktScannerPular(){
-  _mktScanIdx++;
-  _mktScannerMostrarItem(_mktScanIdx);
-}
-
-function mktScannerFinalizar(){
-  document.getElementById('mkt-scanner-modal').style.display='none';
-  renderMercado();
-  // Toast de resultado
-  const total=_mktScanCadastrados+_mktScanAtualizados;
-  if(total>0){
-    const msg=document.getElementById('mkt-cad-msg');
-    if(msg){
-      msg.style.color='var(--neon-green)';
-      msg.textContent=`✓ Nota processada! ${_mktScanCadastrados} cadastrado${_mktScanCadastrados!==1?'s':''}, ${_mktScanAtualizados} atualizado${_mktScanAtualizados!==1?'s':''}.`;
-      setTimeout(()=>{msg.textContent='';},4000);
-    }
-  }
-}
-
-function mktFecharScanner(){
-  document.getElementById('mkt-scanner-modal').style.display='none';
-}
-
+function mktScannerPular(){_mktScanIdx++;mktScannerRenderItem();}
 function renderMercado(){
   _mktRenderCatalogo();_mktRenderListas();_mktRenderAnalise();
   if(_mktMesId){document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}

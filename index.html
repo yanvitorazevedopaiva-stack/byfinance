@@ -16830,17 +16830,41 @@ function bevTipoChange(){
 let _cVal='0',_cOp=null,_cPrev=null,_cNew=false,_cHist=[];
 let _calcMinimized=false;
 
+function _calcForceFixed(){
+  // Garante position:fixed via API correta (suporta !important no inline style)
+  const w=document.getElementById('calc-widget');
+  if(!w||w.style.display==='none') return;
+  if(w.classList.contains('minimized')) return;
+  w.style.setProperty('position','fixed','important');
+  w.style.setProperty('top','56px','important');
+  w.style.setProperty('right','14px','important');
+  w.style.setProperty('bottom','auto','important');
+  w.style.setProperty('left','auto','important');
+  w.style.setProperty('transform','none','important');
+}
+
 function toggleCalc(){
   const w=document.getElementById('calc-widget');
   const show=w.style.display==='none'||!w.style.display;
-  // Só controla display — CSS com !important cuida da posição fixa
   w.style.display=show?'block':'none';
   if(show){
     w.classList.remove('minimized');
     _calcMinimized=false;
     const mb=document.getElementById('calc-min-btn');if(mb)mb.textContent='_';
+    // Força position:fixed via setProperty (API que suporta !important)
+    _calcForceFixed();
+    // Segurança: re-aplica no próximo frame (garante que nenhuma animação CSS interfira)
+    requestAnimationFrame(_calcForceFixed);
   }
 }
+
+// Garante posição em scroll (fallback para browsers problemáticos)
+window.addEventListener('scroll',()=>{
+  const w=document.getElementById('calc-widget');
+  if(w&&w.style.display!=='none'&&!w.classList.contains('minimized')){
+    _calcForceFixed();
+  }
+},{passive:true});
 
 function toggleCalcMinimize(){
   const cw=document.getElementById('calc-widget');

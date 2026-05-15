@@ -2541,8 +2541,6 @@
       width:calc(100vw - 32px)!important;max-width:340px!important;
     }
 
-    #btn-calc-fixo{display:none!important;}
-
     /* mob-topbar oculta (substituída pela bottom bar) */
     #mob-topbar{display:none!important;}
 
@@ -3135,7 +3133,6 @@
   <span id="mob-topbar-title">B&amp;Y FINANCE</span>
   <div id="mob-topbar-right" style="display:flex;align-items:center;gap:8px">
     <span id="mob-topbar-user" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px"></span>
-    <button onclick="toggleCalc()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--neon-green);font-size:14px;cursor:pointer">🖩</button>
   </div>
 </div>
 
@@ -3183,6 +3180,9 @@
   <!-- RODAPÉ DO SIDEBAR -->
   <div class="nav-bottom-wrap">
     <div class="nav-bottom-actions">
+      <button class="nav-bottom-item" onclick="toggleCalc()">
+        <span class="nav-bottom-item-icon">🖩</span><span>CALCULADORA</span>
+      </button>
       <button class="nav-bottom-item" onclick="toggleTheme()">
         <span class="nav-bottom-item-icon" id="theme-icon">🌙</span>
         <span id="theme-label">MODO NOTURNO</span>
@@ -7679,10 +7679,6 @@ function showPage(id){
   else if(id==='lancamentos'){const el=document.getElementById('nav-lancamentos');if(el)el.classList.add('active');}
   currentPage=id; _currentPage=id;
   sessionStorage.setItem('_lastPage',id);
-  const _btnCalcFixo=document.getElementById('btn-calc-fixo');
-  if(_btnCalcFixo){
-    _btnCalcFixo.style.display=(id==='documentos')?'none':'flex';
-  }
   // Calculadora: não abre automaticamente em nenhuma página — só ao clicar
   const tbl=document.getElementById('mob-topbar-title');
   if(tbl) tbl.textContent=PAGE_LABELS[id]||id.toUpperCase();
@@ -15040,9 +15036,6 @@ function _initApp(){
   _migrateFaturasSpread(); // corrige faturas que foram lançadas sem spread de parcelas
   _migrateEmailStorage();  // converte e-mails antigos de base64 para texto puro
   _applyUserProfile(_authUser);
-  // Exibe botão da calculadora apenas após login
-  const _calcBtn=document.getElementById('btn-calc-fixo');
-  if(_calcBtn) _calcBtn.style.display='flex';
   renderNav('dashboard');
   document.getElementById('lanc-data').value=new Date().toISOString().split('T')[0];
   const hoje=new Date();
@@ -18958,9 +18951,6 @@ function _verAnexoBemDoc(id){
   </div>
 
   <div class="mob-drawer-footer">
-    <button class="mob-drawer-item" onclick="closeMobDrawer();toggleCalc()">
-      <span class="mob-drawer-icon">🖩</span>CALCULADORA
-    </button>
     <button class="mob-drawer-item" onclick="toggleTheme()" id="mob-theme-btn">
       <span class="mob-drawer-icon" id="mob-theme-icon">☀</span>
       <span id="mob-theme-label">MODO DIURNO</span>
@@ -20405,21 +20395,6 @@ function trfBadgeProgresso(meta){
 </div>
 
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
-<button id="btn-calc-fixo" onclick="toggleCalc()"
-  title="Calculadora"
-  style="display:none;position:fixed!important;top:12px!important;right:14px!important;
-    bottom:auto!important;z-index:10000;
-    height:36px;border-radius:20px;
-    background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);
-    cursor:pointer;display:flex;align-items:center;justify-content:center;
-    gap:6px;padding:0 14px;
-    transition:all .18s;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);
-    box-shadow:0 2px 12px rgba(0,0,0,0.2)"
-  onmouseover="this.style.background='rgba(0,200,255,0.22)';this.style.borderColor='rgba(0,200,255,0.6)'"
-  onmouseout="this.style.background='rgba(0,200,255,0.1)';this.style.borderColor='rgba(0,200,255,0.3)'">
-  <span style="font-size:18px;line-height:1">🖩</span>
-  <span style="font-size:10px;font-weight:700;letter-spacing:.5px;white-space:nowrap">CALCULADORA</span>
-</button>
 <div id="calc-widget">
   <div class="calc-header">
     <div class="calc-drag-zone" id="calc-drag-handle">

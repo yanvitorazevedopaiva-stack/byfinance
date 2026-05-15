@@ -13820,15 +13820,24 @@ function _navSaveOrder(o){save('navOrder',o);}
 // ── Arquivar / Desarquivar ──
 function navArquivar(key){
   if(_NAV_UNARCHIVABLE.has(key)) return;
-  const o=_navGetOrder();
-  o.b1=o.b1.filter(k=>k!==key);
-  o.b2=o.b2.filter(k=>k!==key);
-  _navSaveOrder(o);
-  const arch=_navGetArchived();
-  if(!arch.includes(key)) arch.push(key);
-  _navSetArchived(arch);
-  renderNav();
-  _showNavToast('Ação arquivada. Restaure em Configurações → Ações Arquivadas.');
+  const m=_NAV_META[key];
+  const label=m?m.label:key;
+  showConfirm(
+    'Arquivar Ação',
+    `Deseja ocultar "${label}" da barra lateral?\nVocê poderá restaurá-la em Configurações → Ações Arquivadas.`,
+    ()=>{
+      const o=_navGetOrder();
+      o.b1=o.b1.filter(k=>k!==key);
+      o.b2=o.b2.filter(k=>k!==key);
+      _navSaveOrder(o);
+      const arch=_navGetArchived();
+      if(!arch.includes(key)) arch.push(key);
+      _navSetArchived(arch);
+      renderNav();
+      _showNavToast('Ação arquivada. Restaure em Configurações → Ações Arquivadas.');
+    },
+    {icon:'📁',btnLabel:'📁 ARQUIVAR',btnBg:'rgba(0,200,255,0.15)',btnColor:'var(--neon-blue)',warn:false}
+  );
 }
 function navDesarquivar(key){
   const arch=_navGetArchived().filter(k=>k!==key);
@@ -15582,13 +15591,21 @@ function renderNavArquivadas(){
   }
   el.innerHTML=arch.map(key=>{
     const m=_NAV_META[key];if(!m)return'';
-    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:10px">
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;transition:border-color .15s"
+      onmouseover="this.style.borderColor='rgba(0,200,255,0.3)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1" onclick="showPage('${key}')" title="Abrir ${m.label}">
         <span style="font-size:16px">${m.icon}</span>
-        <span style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.5px">${m.label}</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.5px">${m.label}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:1px">Clique para acessar</div>
+        </div>
       </div>
-      <button onclick="navDesarquivar('${key}')"
-        style="padding:5px 14px;background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">↩ RESTAURAR</button>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="showPage('${key}')"
+          style="padding:5px 12px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap">▶ ABRIR</button>
+        <button onclick="navDesarquivar('${key}')"
+          style="padding:5px 12px;background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap">↩ RESTAURAR</button>
+      </div>
     </div>`;
   }).join('');
 }

@@ -2161,9 +2161,15 @@
   .lanc-hist-title{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);letter-spacing:1px;}
   /* ── Calculadora flutuante ── */
   /* #calc-btn removido — calculadora agora está no menu do + */
-  #calc-widget{position:fixed!important;bottom:90px!important;right:14px!important;
-    top:auto!important;left:auto!important;transform:none!important;
-    z-index:9990;width:320px;min-width:240px;max-width:500px;
+  #calc-widget{
+    position:fixed !important;
+    top:56px !important;
+    right:14px !important;
+    bottom:auto !important;
+    left:auto !important;
+    transform:none !important;
+    z-index:9999 !important;
+    width:320px;min-width:240px;max-width:500px;
     background:var(--card);border:1px solid var(--border);
     border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.4);
     display:none;user-select:none;touch-action:none;overflow:hidden;resize:both;}
@@ -16827,14 +16833,12 @@ let _calcMinimized=false;
 function toggleCalc(){
   const w=document.getElementById('calc-widget');
   const show=w.style.display==='none'||!w.style.display;
+  // Só controla display — CSS com !important cuida da posição fixa
   w.style.display=show?'block':'none';
   if(show){
-    // Sempre abre maximizada — fixa no topo abaixo do botão
     w.classList.remove('minimized');
     _calcMinimized=false;
     const mb=document.getElementById('calc-min-btn');if(mb)mb.textContent='_';
-    // Posição fixa — acima do botão no canto inferior direito
-    w.style.cssText+='bottom:90px!important;right:14px!important;top:auto!important;left:auto!important;transform:none!important;';
   }
 }
 
@@ -20045,8 +20049,8 @@ function trfBadgeProgresso(meta){
 <div id="sync-indicator" style="position:fixed;bottom:12px;left:70px;font-size:10px;font-family:'JetBrains Mono',monospace;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none"></div>
 <button id="btn-calc-fixo" onclick="toggleCalc()"
   title="Calculadora"
-  style="position:fixed!important;bottom:54px!important;right:14px!important;
-    top:auto!important;z-index:9991;
+  style="position:fixed!important;top:12px!important;right:14px!important;
+    bottom:auto!important;z-index:10000;
     height:36px;border-radius:20px;
     background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);
     cursor:pointer;display:flex;align-items:center;justify-content:center;

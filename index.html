@@ -15623,7 +15623,7 @@ async function cfgTestarGemini(){
   cfgMsgShow(document.getElementById('cfg-gemini-msg'),'','Testando...');
   try{
     const r=await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+k,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key='+k,
       {method:'POST',headers:{'Content-Type':'application/json'},
        body:JSON.stringify({contents:[{parts:[{text:'Responda apenas: OK'}]}]})}
     );
@@ -19914,7 +19914,7 @@ async function mktScanNF(input){
     const prompt='Você é um assistente de leitura de notas fiscais brasileiras.\nAnalise esta nota fiscal e extraia TODOS os itens comprados.\nRetorne APENAS um array JSON válido, sem markdown, sem explicação, sem bloco de código.\nFormato exato de cada objeto:\n{"nome":"Nome do produto","quantidade":1,"unidade":"un","precoUnit":9.90,"categoria":"Mercearia"}\nCategorias possíveis: Hortifruti, Carnes, Laticinios, Padaria, Higiene, Limpeza, Mercearia, Frios, Outros.\nUnidades possíveis: un, kg, g, L, mL, cx, pct, dz.\nSe não identificar algum campo use: quantidade=1, unidade="un", categoria="Outros".\nRetorne apenas o array JSON, começando com [ e terminando com ].';
     const body={contents:[{parts:[{inline_data:{mime_type:mimeType,data:base64}},{text:prompt}]}]};
     const resp=await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key='+key,
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}
     );
     const data=await resp.json();

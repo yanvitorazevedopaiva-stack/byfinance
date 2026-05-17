@@ -2948,10 +2948,7 @@
     #lanc-formas-wrap .lanc-forma-btn{font-size:9px!important;}
   }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>// EMAILJS: restrinja o domínio em emailjs.com → Account → API Keys → Allowed Origins
-// Adicione: https://byfinance.vercel.app (ou seu domínio de produção)
-emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
+<!-- Emails gerenciados pelo Supabase Auth (signUp confirmação + resetPasswordForEmail recuperação) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -3042,41 +3039,8 @@ emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
           <button class="login-eye" type="button" onclick="loginToggleEye(this,'ca-pass2')">👁</button>
         </div>
       </div>
-      <button class="login-btn" id="ca-btn" onclick="iniciarVerificacaoCadastro()">CRIAR CONTA</button>
+      <button class="login-btn" id="ca-btn" onclick="doCadastro()">CRIAR CONTA</button>
       <div class="login-error" id="ca-error"></div>
-    </div>
-
-    <!-- PAINEL VERIFICAR CADASTRO -->
-    <div id="login-panel-verificar" class="login-panel">
-      <button class="login-back" onclick="switchLoginTab('cadastro')">← VOLTAR</button>
-
-      <!-- Sub-passo A: botão enviar (antes de enviar) -->
-      <div id="verif-sa">
-        <div class="rk-email-mask" id="verif-sa-mask"></div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.6;text-align:center">
-          Clique para receber o código de verificação no e-mail acima.
-        </div>
-        <button class="login-btn" id="verif-send-btn" onclick="enviarCodigoVerificacao()">ENVIAR CÓDIGO</button>
-        <div class="login-error" id="verif-send-err"></div>
-      </div>
-
-      <!-- Sub-passo B: entrada do código (após envio) -->
-      <div id="verif-sb" style="display:none">
-        <div class="rk-email-mask" id="verif-msg"></div>
-        <div class="login-field">
-          <label>CÓDIGO DE VERIFICAÇÃO</label>
-          <div class="login-field-wrap">
-            <input id="verif-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="_ _ _ _ _ _"
-              autocomplete="one-time-code" class="no-icon"
-              style="text-align:center;letter-spacing:10px;font-family:'JetBrains Mono',monospace;font-size:22px;padding-left:14px;text-transform:uppercase"
-              onkeydown="if(event.key==='Enter')confirmarVerificacao()"
-              oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-          </div>
-        </div>
-        <button class="login-btn" onclick="confirmarVerificacao()">CONFIRMAR</button>
-        <div class="login-error" id="verif-error"></div>
-        <div class="login-forgot"><span id="verif-resend" onclick="reenviarCodigo()">Reenviar código</span></div>
-      </div>
     </div>
 
     <!-- PAINEL RECUPERAR SENHA — 4 etapas -->
@@ -6186,6 +6150,13 @@ emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
         auth.uid()::text = user_id
       </div>
       <div id="cfg-auth-status" style="margin-top:10px;font-size:12px"></div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.8;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-weight:700;color:var(--text);margin-bottom:6px">📧 Personalizar email de confirmação:</div>
+        <div>1. supabase.com → seu projeto → Authentication → Email Templates</div>
+        <div>2. Edite o template "Confirm signup" com o nome do seu sistema</div>
+        <div>3. Edite "Reset Password" para personalizar a recuperação</div>
+        <div>4. Salve — o Supabase usa automaticamente em todos os envios</div>
+      </div>
     </div>
   </div>
 
@@ -7194,15 +7165,10 @@ function switchLoginTab(tab){
   document.querySelectorAll('.login-panel').forEach(p=>p.classList.remove('active'));
   const panel=document.getElementById('login-panel-'+tab);
   if(panel) panel.classList.add('active');
-  ['li-error','ca-error','rk-error','verif-error'].forEach(id=>{
+  ['li-error','ca-error','rk-error'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){el.textContent='';el.style.color='';}
   });
-  // Verificação: limpa código (focus só quando verif-sb estiver visível)
-  if(tab==='verificar'){
-    const inp=document.getElementById('verif-code');
-    if(inp) inp.value='';
-  }
 }
 // ── estado recovery ──
 let _rkUser=null, _rkCooldown=null, _rkResendTimer=null;
@@ -7245,18 +7211,38 @@ function rkVoltar(){
 
 function rkMostrarS1(){_rkUser=null;_rkClearErrors();_rkShow('rk-s1');document.getElementById('rk-email-inp')?.focus();}
 
-async function doForgotPassword(emailInput){
-  const email=(emailInput||document.getElementById('rk-email-inp')?.value||'').trim();
-  if(!email||!email.includes('@')){alert('Digite seu e-mail para recuperar a senha.');return;}
-  if(!_supabase){alert('Supabase não disponível. Use o sistema de recuperação manual.');return;}
+async function doForgotPassword(){
+  const input=(document.getElementById('li-user')?.value?.trim()
+    ||document.getElementById('rk-email-inp')?.value?.trim()
+    ||'');
+  if(!input){alert('Digite seu email ou usuário para recuperar a senha.');return;}
+  let emailToUse=input;
+  if(!input.includes('@')){
+    try{
+      const {data}=await _supabase.from('user_data').select('data')
+        .eq('user_id','__profile__'+input.toLowerCase()).maybeSingle();
+      if(data?.data?.email){
+        emailToUse=data.data.email;
+      }else{
+        const users=_getUsers();
+        const u=Object.keys(users).find(k=>k.toLowerCase()===input.toLowerCase());
+        if(u) emailToUse=_getUserEmail(u);
+        if(!emailToUse||!emailToUse.includes('@')){
+          alert('Email não encontrado para este usuário. Digite seu email diretamente.');return;
+        }
+      }
+    }catch(e){
+      alert('Erro ao buscar email. Tente digitar seu email diretamente.');return;
+    }
+  }
   try{
-    const {error}=await _supabase.auth.resetPasswordForEmail(email,{
+    const {error}=await _supabase.auth.resetPasswordForEmail(emailToUse,{
       redirectTo:'https://byfinance.vercel.app'
     });
     if(error) throw error;
-    alert('✓ E-mail de recuperação enviado! Verifique sua caixa de entrada.');
+    alert('✓ Email de recuperação enviado para '+emailToUse+'. Verifique sua caixa de entrada.');
   }catch(e){
-    alert('Erro ao enviar e-mail: '+e.message);
+    alert('Erro ao enviar email: '+(e.message||'Tente novamente.'));
   }
 }
 
@@ -7296,40 +7282,31 @@ async function rkVerificarEmail(){
   _rkShow('rk-s2');
 }
 
-function rkEnviarCodigo(){
+async function rkEnviarCodigo(){
   const err=document.getElementById('rk-send-error');
   const btn=document.getElementById('rk-send-btn');
   err.style.color=''; err.textContent='';
   if(!_rkUser){_rkShow('rk-s1');return;}
 
   const email=_getUserEmail(_rkUser);
-  if(!email){err.textContent='Conta sem e-mail cadastrado.';return;}
-
-  const rk=Math.floor(100000+Math.random()*900000).toString();
-  localStorage.setItem('financeOS_rk_'+_rkUser,rk);
+  if(!email){err.textContent='Conta sem e-mail cadastrado. Entre em contato com o suporte.';return;}
 
   btn.disabled=true;
   btn.innerHTML='<span class="rk-sending-dot">●</span> ENVIANDO...';
 
-  sendRecoveryEmail(_rkUser,email,rk)
-    .then(()=>{
-      btn.innerHTML='ENVIAR CÓDIGO'; btn.disabled=false;
-      document.getElementById('rk-s3-mask').textContent='📧 Código enviado para '+_maskEmail(email);
-      const inp=document.getElementById('rk-key');
-      if(inp){inp.value='';inp.focus();}
-      _rkClearErrors(); _rkShow('rk-s3');
-    })
-    .catch(()=>{
-      let secs=30;
-      err.textContent='Falha no envio. Aguarde para tentar novamente.';
-      btn.innerHTML=`AGUARDE ${secs}s`;
-      clearInterval(_rkCooldown);
-      _rkCooldown=setInterval(()=>{
-        secs--;
-        if(secs<=0){clearInterval(_rkCooldown);btn.innerHTML='ENVIAR CÓDIGO';btn.disabled=false;}
-        else btn.innerHTML=`AGUARDE ${secs}s`;
-      },1000);
+  try{
+    if(!_supabase) throw new Error('Supabase não disponível.');
+    const {error}=await _supabase.auth.resetPasswordForEmail(email,{
+      redirectTo:'https://byfinance.vercel.app'
     });
+    if(error) throw error;
+    btn.innerHTML='ENVIAR CÓDIGO'; btn.disabled=false;
+    err.style.color='var(--neon-green)';
+    err.textContent='✓ Link de redefinição enviado para '+_maskEmail(email)+'. Verifique sua caixa de entrada.';
+  }catch(e){
+    btn.innerHTML='ENVIAR CÓDIGO'; btn.disabled=false;
+    err.textContent='Falha no envio: '+(e.message||'Tente novamente.');
+  }
 }
 
 function rkConfirmarCodigo(){
@@ -7349,24 +7326,23 @@ function rkConfirmarCodigo(){
   document.getElementById('rk-pass')?.focus();
 }
 
-function reenviarRecovery(){
+async function reenviarRecovery(){
   const resend=document.getElementById('rk-resend');
   const err=document.getElementById('rk-code-err');
-  if(!_rkUser){err.textContent='Sessão expirada.';return;}
+  if(!_rkUser){if(err)err.textContent='Sessão expirada.';return;}
   const email=_getUserEmail(_rkUser);
-  if(!email) return;
-  const rk=Math.floor(100000+Math.random()*900000).toString();
-  localStorage.setItem('financeOS_rk_'+_rkUser,rk);
-  sendRecoveryEmail(_rkUser,email,rk).catch(()=>{});
-  let secs=30;
+  if(!email||!_supabase) return;
   resend.style.pointerEvents='none'; resend.style.color='var(--text3)';
-  resend.textContent=`Reenviar em ${secs}s...`;
-  clearInterval(_rkResendTimer);
-  _rkResendTimer=setInterval(()=>{
-    secs--;
-    if(secs<=0){clearInterval(_rkResendTimer);resend.textContent='Reenviar código';resend.style.pointerEvents='';resend.style.color='';}
-    else resend.textContent=`Reenviar em ${secs}s...`;
-  },1000);
+  resend.textContent='Reenviando...';
+  try{
+    await _supabase.auth.resetPasswordForEmail(email,{redirectTo:'https://byfinance.vercel.app'});
+    resend.textContent='✓ Link reenviado';
+    setTimeout(()=>{resend.textContent='Reenviar link';resend.style.pointerEvents='';resend.style.color='';},5000);
+  }catch(e){
+    resend.textContent='Reenviar link';
+    resend.style.pointerEvents=''; resend.style.color='';
+    if(err)err.textContent='Erro: '+e.message;
+  }
 }
 
 async function doRecuperar(){
@@ -7486,21 +7462,7 @@ async function doLogin(){
 }
 
 let _pendingRegisterUser='';
-// ── EmailJS ──────────────────────────────────────────────
-function sendVerificationEmail(usuario, email, codigo){
-  return emailjs.send('service_t5gjjvb','template_dvly19b',{
-    usuario: usuario,
-    email:   email,
-    chave:   codigo
-  });
-}
-function sendRecoveryEmail(usuario, email, chave){
-  return emailjs.send('service_t5gjjvb','template_pqz5mug',{
-    usuario: usuario,
-    email:   email,
-    chave:   chave
-  });
-}
+// Emails enviados pelo Supabase Auth (signUp e resetPasswordForEmail)
 
 function _maskEmail(email){
   const [user,domain]=email.split('@');
@@ -7599,131 +7561,7 @@ async function doCadastro(){
 }
 const doRegister=doCadastro; // alias
 
-// ── Verificação de cadastro por e-mail ───────────────────────
-let _verifResendTimer=null;
-
-function iniciarVerificacaoCadastro(){
-  const u=(document.getElementById('ca-user')?.value||'').trim();
-  const email=(document.getElementById('ca-email')?.value||'').trim();
-  const p=document.getElementById('ca-pass')?.value||'';
-  const p2=document.getElementById('ca-pass2')?.value||'';
-  const err=document.getElementById('ca-error');
-  err.style.color=''; err.textContent='';
-
-  if(!u||!email||!p||!p2){err.textContent='Preencha todos os campos.';return;}
-  if(u.length<3){err.textContent='Usuário deve ter ao menos 3 caracteres.';return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='E-mail inválido.';return;}
-  const _errSenha2=_validarSenha(p);
-  if(_errSenha2){err.textContent=_errSenha2;return;}
-  if(p!==p2){err.textContent='As senhas não coincidem.';return;}
-  const users=_getUsers();
-  if(users[u]){err.textContent='Usuário já cadastrado.';return;}
-
-  // Armazena dados e vai para painel de verificação (sem enviar ainda)
-  window._verifCode=null;
-  window._verifEmail=email;
-  window._verifDados={u,email,p};
-  clearTimeout(window._verifExpiry);
-
-  // Mostra painel com botão ENVIAR CÓDIGO
-  switchLoginTab('verificar');
-  document.getElementById('verif-sa-mask').textContent='📧 '+_maskEmail(email);
-  document.getElementById('verif-sa').style.display='block';
-  document.getElementById('verif-sb').style.display='none';
-  const sb=document.getElementById('verif-send-btn');
-  if(sb){sb.textContent='ENVIAR CÓDIGO';sb.disabled=false;}
-}
-
-function enviarCodigoVerificacao(){
-  const btn=document.getElementById('verif-send-btn');
-  const err=document.getElementById('verif-send-err');
-  err.style.color=''; err.textContent='';
-  const dados=window._verifDados;
-  if(!dados){err.textContent='Sessão expirada. Volte ao cadastro.';return;}
-
-  const codigo=Math.floor(100000+Math.random()*900000).toString();
-  window._verifCode=codigo;
-  clearTimeout(window._verifExpiry);
-  window._verifExpiry=setTimeout(()=>{window._verifCode=null;},600000);
-
-  btn.disabled=true; btn.textContent='ENVIANDO...';
-
-  sendVerificationEmail(dados.u,dados.email,codigo)
-    .then(()=>{
-      btn.disabled=false; btn.textContent='ENVIAR CÓDIGO';
-      document.getElementById('verif-msg').textContent='📧 Código enviado para '+_maskEmail(dados.email);
-      document.getElementById('verif-sa').style.display='none';
-      document.getElementById('verif-sb').style.display='block';
-      const inp=document.getElementById('verif-code');
-      if(inp){inp.value='';inp.focus();}
-    })
-    .catch(()=>{
-      btn.disabled=false; btn.textContent='ENVIAR CÓDIGO';
-      err.textContent='Falha no envio. Verifique o e-mail e tente novamente.';
-      window._verifCode=null;
-    });
-}
-
-async function confirmarVerificacao(){
-  const input=(document.getElementById('verif-code')?.value||'').trim();
-  const err=document.getElementById('verif-error');
-  err.style.color=''; err.textContent='';
-
-  if(!window._verifCode){
-    err.textContent='Código expirado. Reenvie um novo código.';return;
-  }
-  if(input!==window._verifCode){
-    err.textContent='Código inválido. Tente novamente.';
-    document.getElementById('verif-code').value='';
-    document.getElementById('verif-code').focus();
-    return;
-  }
-  // Código correto — cria a conta
-  const {u,email,p}=window._verifDados||{};
-  if(!u||!p){err.textContent='Dados expirados. Volte e tente novamente.';return;}
-
-  window._verifCode=null; window._verifEmail=null; window._verifDados=null;
-  clearTimeout(window._verifExpiry);
-
-  // Cria a conta e entra direto — e-mail verificado é o método de recuperação
-  const users=_getUsers();
-  if(users[u]){err.textContent='Usuário já cadastrado por outra sessão.';return;}
-  users[u]=await _hashPass(p);
-  _saveUsers(users);
-  _setUserEmail(u,email);
-  // Login imediato após verificação
-  _startSession(u);
-}
-
-function reenviarCodigo(){
-  const resend=document.getElementById('verif-resend');
-  const err=document.getElementById('verif-error');
-  if(!window._verifDados){err.style.color='var(--neon-red)';err.textContent='Sessão expirada. Volte ao cadastro.';return;}
-
-  const {u,email}=window._verifDados;
-  const novoCodigo=Math.floor(100000+Math.random()*900000).toString();
-  window._verifCode=novoCodigo;
-  clearTimeout(window._verifExpiry);
-  window._verifExpiry=setTimeout(()=>{window._verifCode=null;},600000);
-
-  sendVerificationEmail(u,email,novoCodigo).catch(()=>{});
-
-  // Cooldown 30s
-  resend.style.pointerEvents='none'; resend.style.color='var(--text3)';
-  let secs=30;
-  resend.textContent=`Reenviar em ${secs}s...`;
-  clearInterval(_verifResendTimer);
-  _verifResendTimer=setInterval(()=>{
-    secs--;
-    if(secs<=0){
-      clearInterval(_verifResendTimer);
-      resend.textContent='Reenviar código';
-      resend.style.pointerEvents=''; resend.style.color='';
-    } else {
-      resend.textContent=`Reenviar em ${secs}s...`;
-    }
-  },1000);
-}
+// Verificação de cadastro gerenciada pelo Supabase Auth (email automático no signUp)
 
 function doLoginAfterRegister(){
   if(_pendingRegisterUser) _startSession(_pendingRegisterUser);
@@ -7851,7 +7689,7 @@ async function initAuth(){
   }
   // Enter key support
   ['li-user','li-pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
-  ['ca-user','ca-email','ca-pass','ca-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')iniciarVerificacaoCadastro();});});
+  ['ca-user','ca-email','ca-pass','ca-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')doCadastro();});});
   // Enter key: recovery fields
   document.getElementById('rk-email-inp')?.addEventListener('keydown',e=>{if(e.key==='Enter')rkVerificarEmail();});
   document.getElementById('rk-key')?.addEventListener('keydown',e=>{if(e.key==='Enter')rkConfirmarCodigo();});

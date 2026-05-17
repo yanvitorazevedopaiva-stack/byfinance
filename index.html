@@ -2998,7 +2998,11 @@
       </div>
       <button class="login-btn" onclick="doLogin()">ACESSAR</button>
       <div class="login-error" id="li-error"></div>
-      <div class="login-forgot"><span onclick="openRecovery()">Esqueci a senha</span></div>
+      <div class="login-forgot">
+        <span onclick="openRecovery()">Esqueci a senha</span>
+        <span style="margin:0 8px;color:var(--border)">·</span>
+        <span onclick="_byfClearMyLockout()" style="font-size:10px;color:var(--text3)">Limpar bloqueio</span>
+      </div>
     </div>
 
     <!-- PAINEL CADASTRO -->
@@ -7068,6 +7072,24 @@ if(_supabase){
   });
 }
 
+function _byfClearMyLockout(){
+  const uInput=(document.getElementById('li-user')?.value||'').trim().toLowerCase();
+  if(!uInput){alert('Digite seu usuário ou e-mail primeiro.');return;}
+  _clearAttempts(uInput);
+  const err=document.getElementById('li-error');
+  if(err){err.style.color='var(--neon-green)';err.textContent='✓ Bloqueio removido. Tente novamente.';}
+}
+
+async function _byfReenviarConfirmacao(email){
+  if(!_supabase||!email) return;
+  try{
+    await _supabase.auth.resend({type:'signup',email:email});
+    alert('✓ E-mail de confirmação reenviado para '+email+'. Verifique sua caixa de entrada (e o spam).');
+  }catch(e){
+    alert('Erro ao reenviar: '+(e.message||'Tente novamente.'));
+  }
+}
+
 function _byfShowPasswordResetModal(){
   const existing=document.getElementById('byf-pwd-reset-modal');
   if(existing) existing.remove();
@@ -7432,6 +7454,7 @@ async function doLogin(){
 
   // ── Supabase Auth (modo principal) ──
   if(_supabase){
+    let _supabaseEmailUsed=null;
     try{
       let emailToUse=uInput;
       if(!uInput.includes('@')){
@@ -7446,16 +7469,21 @@ async function doLogin(){
           else throw new Error('FALLBACK_LOCAL');
         }
       }
+      _supabaseEmailUsed=emailToUse;
       const {data,error}=await _supabase.auth.signInWithPassword({email:emailToUse,password:p});
       if(error){
-        // E-mail ainda não confirmado → aviso específico, sem registrar tentativa
-        const msg=error.message.toLowerCase();
-        if(msg.includes('email not confirmed')||msg.includes('not confirmed')){
-          if(err)err.textContent='E-mail não confirmado. Verifique sua caixa de entrada e clique no link.';
+        const msg=(error.message||'').toLowerCase();
+        // E-mail ainda não confirmado — aviso específico + botão reenviar
+        if(msg.includes('email not confirmed')||msg.includes('not confirmed')||msg.includes('email_not_confirmed')){
+          if(err){
+            err.innerHTML=`E-mail não confirmado. Verifique sua caixa de entrada.<br>
+              <span style="color:var(--neon-blue);cursor:pointer;text-decoration:underline;font-size:11px"
+                onclick="_byfReenviarConfirmacao('${emailToUse}')">Reenviar e-mail de confirmação</span>`;
+          }
           if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
           return;
         }
-        // Outro erro Supabase → tenta fallback local antes de registrar falha
+        // Credenciais inválidas no Supabase → tenta fallback local
         throw new Error('FALLBACK_LOCAL');
       }
       // ── Supabase OK ──
@@ -7480,14 +7508,22 @@ async function doLogin(){
         if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
         return;
       }
-      // FALLBACK_LOCAL → tenta sistema local abaixo (conta antiga ou Supabase indisponível)
+      // FALLBACK_LOCAL → tenta sistema local
     }
   }
 
-  // ── Fallback local (contas antigas ou sem Supabase) ──
+  // ── Fallback local (contas antigas / sem Supabase) ──
   let users=_getUsers();
+  // Busca por username
   let u=Object.keys(users).find(k=>k.toLowerCase()===uInput.toLowerCase());
+  // Busca por email (financeOS_email_X)
   if(!u) u=_findUserByEmail(uInput);
+  // Busca pelo mapeamento novo byf_email_to_user_
+  if(!u&&uInput.includes('@')){
+    const mappedUser=localStorage.getItem('byf_email_to_user_'+uKey);
+    if(mappedUser) u=Object.keys(users).find(k=>k===mappedUser)||mappedUser;
+  }
+  // Busca no Supabase __users__ (contas sincronizadas)
   if(!u&&_supabase){
     try{
       const {data}=await _supabase.from('user_data').select('data').eq('user_id','__users__').maybeSingle();
@@ -7495,6 +7531,7 @@ async function doLogin(){
         localStorage.setItem('financeOS_users',JSON.stringify(data.data.financeOS_users));
         users=data.data.financeOS_users;
         u=Object.keys(users).find(k=>k.toLowerCase()===uInput.toLowerCase());
+        if(!u) u=_findUserByEmail(uInput);
       }
     }catch(e){}
   }

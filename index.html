@@ -7037,7 +7037,7 @@ const DEFAULT = {
   receitas: {},
 };
 
-let _geminiKey=localStorage.getItem('gemini_api_key')||'';
+let _geminiKey=''; // preenchido via _decryptGeminiKey() após login
 const SUPABASE_URL='https://wrgqwzfbiatsdhkxdtgk.supabase.co';
 const SUPABASE_KEY='sb_publishable_ANZFNtpvkjmvubNTuorZXw_PNfEMtF5';
 let _supabase=null;
@@ -7061,7 +7061,55 @@ if(_supabase){
       sessionStorage.setItem('byf_session_start',Date.now());
       sessionStorage.setItem('byf_supabase_uid',session.user.id);
     }
+    // Usuário clicou no link de recuperação de senha — exibir modal de nova senha
+    if(event==='PASSWORD_RECOVERY'){
+      _byfShowPasswordResetModal();
+    }
   });
+}
+
+function _byfShowPasswordResetModal(){
+  const existing=document.getElementById('byf-pwd-reset-modal');
+  if(existing) existing.remove();
+  const el=document.createElement('div');
+  el.id='byf-pwd-reset-modal';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:19999;display:flex;align-items:center;justify-content:center;padding:20px';
+  el.innerHTML=`
+    <div style="background:var(--card);border:1px solid rgba(0,200,255,0.3);border-radius:16px;padding:28px;width:min(400px,94vw);box-shadow:0 8px 40px rgba(0,0,0,.6)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-blue);margin-bottom:18px">🔑 REDEFINIR SENHA</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">Defina uma nova senha para sua conta.</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input id="byf-new-pwd" type="password" placeholder="Nova senha (mín. 8 chars + especial)"
+          style="padding:10px 14px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:14px;width:100%;box-sizing:border-box">
+        <input id="byf-new-pwd2" type="password" placeholder="Repita a nova senha"
+          style="padding:10px 14px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:14px;width:100%;box-sizing:border-box">
+        <div id="byf-pwd-msg" style="font-size:12px;min-height:16px"></div>
+        <button onclick="_byfConfirmPasswordReset()"
+          style="padding:12px;background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:.5px">
+          ✓ SALVAR NOVA SENHA
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  document.getElementById('byf-new-pwd')?.focus();
+}
+
+async function _byfConfirmPasswordReset(){
+  const nova=document.getElementById('byf-new-pwd')?.value||'';
+  const nova2=document.getElementById('byf-new-pwd2')?.value||'';
+  const msg=document.getElementById('byf-pwd-msg');
+  const _err=_validarSenha(nova);
+  if(_err){if(msg){msg.style.color='var(--neon-red)';msg.textContent=_err;}return;}
+  if(nova!==nova2){if(msg){msg.style.color='var(--neon-red)';msg.textContent='As senhas não coincidem.';}return;}
+  if(msg){msg.style.color='var(--text3)';msg.textContent='Salvando...';}
+  try{
+    const {error}=await _supabase.auth.updateUser({password:nova});
+    if(error) throw error;
+    if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Senha redefinida com sucesso!';}
+    setTimeout(()=>{document.getElementById('byf-pwd-reset-modal')?.remove();},1800);
+  }catch(e){
+    if(msg){msg.style.color='var(--neon-red)';msg.textContent='Erro: '+(e.message||'Tente novamente.');}
+  }
 }
 let _syncTimer=null;
 
@@ -17161,7 +17209,7 @@ function cfgImportarDados(){
         // Importa módulo por módulo
         const modulos=data.modulos;
         Object.entries(modulos).forEach(([k,v])=>{
-          try{save(k,v);}catch(err){console.warn('Falha ao importar',k,err);}
+          try{save(k,v);}catch(err){console.warn('Falha ao importar módulo',err.message);}
         });
         alert('✓ Importação concluída! Recarregando...');
         setTimeout(()=>window.location.reload(),500);

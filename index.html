@@ -17945,13 +17945,22 @@ const _HELP_DATA={
     {icon:'🔒',title:'Privacidade',text:'Os dados ficam salvos localmente e no Supabase vinculados à sua conta. Ninguém mais tem acesso.'},
   ]},
 };
+let _helpCloseTimer=null;
+
 function showHelp(pageId){
+  clearTimeout(_helpCloseTimer);
   const d=_HELP_DATA[pageId];
   if(!d) return;
+  // Remove modal anterior sem piscar
+  const old=document.getElementById('help-modal-overlay');
+  if(old) old.remove();
   const el=document.createElement('div');
   el.className='help-modal-overlay';
   el.id='help-modal-overlay';
   el.onclick=(e)=>{if(e.target===el) closeHelp();};
+  // Hover no overlay cancela o timer; sair do overlay fecha
+  el.addEventListener('mouseenter',()=>clearTimeout(_helpCloseTimer));
+  el.addEventListener('mouseleave',()=>_helpCloseTimerStart());
   el.innerHTML=`
     <div class="help-modal">
       <button class="help-close" onclick="closeHelp()">✕</button>
@@ -17963,10 +17972,24 @@ function showHelp(pageId){
     </div>`;
   document.body.appendChild(el);
 }
+function _helpCloseTimerStart(){
+  _helpCloseTimer=setTimeout(closeHelp,250);
+}
 function closeHelp(){
+  clearTimeout(_helpCloseTimer);
   const el=document.getElementById('help-modal-overlay');
   if(el) el.remove();
 }
+// Hover global em qualquer .help-btn — sem alterar HTML
+document.addEventListener('mouseenter',e=>{
+  if(e.target?.classList?.contains('help-btn')){
+    const m=(e.target.getAttribute('onclick')||'').match(/showHelp\('([^']+)'\)/);
+    if(m) showHelp(m[1]);
+  }
+},true);
+document.addEventListener('mouseleave',e=>{
+  if(e.target?.classList?.contains('help-btn')) _helpCloseTimerStart();
+},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape') closeHelp();});
 
 // ===================== DOCUMENTOS PESSOAIS =====================

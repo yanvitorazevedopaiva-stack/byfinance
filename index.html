@@ -2706,118 +2706,246 @@
     .bem-tab{padding:7px 10px;font-size:10px;}
   }
 
-  /* ══════════════════════════════════════════
-     MOBILE FIXES — max-width: 768px
-  ══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════
+     MOBILE REDESIGN v2 — consolidado, corrigido, melhorado
+  ══════════════════════════════════════════════════════════ */
 
-  /* 1. FUNDO DARK NO MOBILE */
-  @media(max-width:768px){
-    body:not(.day){background:#050a0f!important;color:#e0f0ff!important;}
-    body:not(.day) .page,
-    body:not(.day) #main{background:#050a0f!important;}
+  /* ── Bottom bar: melhorias visuais ── */
+  .mob-bottom-bar{
+    height:72px;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    background:rgba(14,31,48,0.97);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    box-shadow:0 -1px 0 rgba(0,200,255,0.1),0 -4px 24px rgba(0,0,0,0.4);
   }
-
-  /* 2. TABELAS COM SCROLL HORIZONTAL */
-  @media(max-width:768px){
-    table,.tbl-wrap,.table-wrap,
-    #fat-tbody,#gf-tbody,#lanc-tbody,#parc-tbody,
-    .semanal-tabela-wrap{
-      display:block;
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-      white-space:nowrap;
-      max-width:100%;
-    }
-    /* thead/tbody/tr devem continuar como table-* */
-    thead,tbody,tfoot{display:table-header-group;}
-    tbody{display:table-row-group;}
-    tfoot{display:table-footer-group;}
-    tr{display:table-row;}
-    th,td{display:table-cell;}
+  body.day .mob-bottom-bar{background:rgba(255,255,255,0.97);box-shadow:0 -1px 0 rgba(0,0,0,0.08),0 -4px 16px rgba(0,0,0,0.12);}
+  .mob-nav-item{position:relative;min-height:44px;padding:2px 0 4px;}
+  .mob-nav-item.active{color:var(--neon-blue);}
+  .mob-nav-item.active::after{
+    content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:32px;height:3px;background:var(--neon-blue);border-radius:0 0 4px 4px;
   }
-
-  /* 3. SEMANAL — TABELA DE DIAS */
-  @media(max-width:768px){
-    #semanal-tabela-container,.semanal-dias-wrap,
-    .month-tabs,#sem-view-tabs{
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-    }
-    #semanal-tabela-container table{min-width:600px;}
-    .semanal-semana-table{min-width:600px;}
+  body.day .mob-nav-item.active{color:#2563eb;}
+  body.day .mob-nav-item.active::after{background:#2563eb;}
+  .mob-nav-icon{font-size:20px;line-height:1;margin-bottom:1px;}
+  .mob-nav-item span:last-child{font-size:9px;letter-spacing:.3px;}
+  .mob-nav-center-btn{
+    width:50px;height:50px;
+    box-shadow:0 0 0 4px rgba(0,255,157,0.15),0 4px 20px rgba(0,255,157,0.4);
+    transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
   }
+  .mob-nav-center:active .mob-nav-center-btn{transform:scale(0.93);}
 
-  /* 4. FORMULÁRIOS — CAMPOS EMPILHADOS */
-  @media(max-width:768px){
-    .form-row,.form-grid,.input-row,.grid-2,.grid-cols-2{
-      display:flex!important;
-      flex-direction:column!important;
-      gap:12px!important;
-    }
-    .form-row>*,.form-grid>*,.input-row>*{
-      width:100%!important;
-      min-width:unset!important;
-    }
+  /* ── Drawer: melhorias ── */
+  #mob-drawer{width:min(290px,88vw);}
+  .mob-drawer-header{
+    padding:env(safe-area-inset-top,20px) 16px 14px;
+    padding-top:calc(env(safe-area-inset-top,0px) + 20px);
+    background:linear-gradient(135deg,rgba(0,255,157,0.06),rgba(0,200,255,0.04));
   }
-
-  /* 5. CARDS DE RESUMO — EMPILHAR VERTICALMENTE */
-  @media(max-width:768px){
-    .dash-cards,.cards-grid,.resumo-cards,.parc-cards{
-      grid-template-columns:1fr!important;
-      gap:12px!important;
-    }
+  .mob-drawer-logo{font-size:14px;letter-spacing:3px;}
+  .mob-drawer-section{padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .mob-drawer-label{font-size:10px;letter-spacing:2px;padding:10px 8px 4px;opacity:.5;}
+  .mob-drawer-item{
+    border-radius:12px;padding:14px 12px;font-size:13px;gap:12px;
+    transition:background .15s,transform .1s;
+    -webkit-tap-highlight-color:transparent;
   }
+  .mob-drawer-item:active{transform:scale(0.98);background:rgba(0,200,255,0.1);}
+  .mob-drawer-icon{font-size:18px;width:24px;flex-shrink:0;}
+  .mob-drawer-footer{padding:8px;border-top:1px solid var(--border);background:rgba(0,0,0,0.1);}
 
-  /* 6. CALCULADORA E FAB — MOBILE (inferior esquerdo) */
   @media(max-width:768px){
-    #calc-widget{
-      top:auto!important;bottom:148px!important;
-      left:16px!important;right:auto!important;
-      width:calc(100vw - 32px)!important;max-width:320px!important;
-    }
-    #fab-lanc{top:auto!important;bottom:80px!important;left:16px!important;right:auto!important;}
-    #fab-speed-dial{top:auto!important;bottom:148px!important;left:16px!important;right:auto!important;align-items:flex-start!important;}
-  }
-
-  /* 7. FATURAS — TABELA DE MESES */
-  @media(max-width:768px){
-    #fat-table-wrap,.fat-meses-wrap,.fat-hist-wrap{
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-    }
-    #fat-table-wrap table,.fat-meses-wrap table,
-    #fat-table{min-width:800px;}
-  }
-
-  /* 8. INPUTS — EVITAR ZOOM NO IOS/ANDROID */
-  @media(max-width:768px){
-    input,select,textarea{font-size:16px!important;}
-  }
-
-  /* 9. PÁGINA PRINCIPAL — PADDING CORRETO */
-  @media(max-width:768px){
-    #main{
-      margin-left:0!important;
-      width:100%!important;
-      padding:16px!important;
-      padding-bottom:80px!important;
-      box-sizing:border-box!important;
-    }
-    .page{padding:12px!important;}
-    .page-title{font-size:18px!important;margin-bottom:16px!important;}
-  }
-
-  /* 10. BOTTOM BAR — Z-INDEX GARANTIDO */
-  @media(max-width:768px){
-    #mob-bottom-bar,.mob-bottom-bar{
-      z-index:9000!important;
-      position:fixed!important;
-      bottom:0!important;
-      left:0!important;
-      right:0!important;
-    }
+    /* ── ESTRUTURA PRINCIPAL ── */
+    body:not(.day){background:#050a0f!important;}
+    #main{margin-left:0!important;width:100%!important;padding:16px 14px 88px!important;box-sizing:border-box!important;}
+    .page{padding:0 0 20px!important;}
+    #mob-bottom-bar{z-index:9000!important;position:fixed!important;bottom:0!important;left:0!important;right:0!important;}
     #mob-drawer{z-index:9200!important;}
     #mob-drawer-overlay{z-index:9100!important;}
+
+    /* ── TÍTULOS DE PÁGINA ── */
+    .page-title{font-size:20px!important;margin-bottom:8px!important;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .page-sub{font-size:10px!important;margin-bottom:14px!important;letter-spacing:.3px;}
+    .sec-title{font-size:12px!important;letter-spacing:.4px;}
+
+    /* ── CARDS ── */
+    .card{padding:14px!important;border-radius:14px!important;}
+    .card-value{font-size:20px!important;}
+    .card-label{font-size:10px!important;}
+
+    /* ── TOUCH TARGETS: inputs e buttons ── */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+    select{min-height:44px;padding-top:10px!important;padding-bottom:10px!important;}
+    .btn{min-height:42px;font-size:11px!important;padding:10px 14px!important;display:inline-flex;align-items:center;justify-content:center;}
+    .btn-sm{min-height:34px!important;font-size:10px!important;padding:6px 10px!important;}
+    .btn-lancar{min-height:50px!important;font-size:13px!important;}
+    .lanc-forma-btn{min-height:40px!important;font-size:10px!important;padding:8px 6px!important;}
+
+    /* ── INPUTS: evitar zoom iOS/Android ── */
+    input,select,textarea{font-size:16px!important;}
+
+    /* ── GRIDS → responsivos ── */
+    .grid4{grid-template-columns:1fr 1fr!important;}
+    .grid3{grid-template-columns:1fr 1fr!important;}
+    .grid2{grid-template-columns:1fr!important;}
+
+    /* Grids inline style genérico — colapsa para 1 coluna */
+    div[style*="grid-template-columns"]{grid-template-columns:1fr!important;}
+
+    /* Exceções: 2 colunas onde faz sentido */
+    .grid4.keep-2{grid-template-columns:1fr 1fr!important;}
+    #page-dashboard .grid4{grid-template-columns:1fr 1fr!important;}
+    #inv-sumario{grid-template-columns:1fr 1fr!important;}
+    .rel-sec-grid{grid-template-columns:1fr 1fr!important;}
+    .gf-proj{grid-template-columns:1fr 1fr!important;}
+
+    /* ── FORMULÁRIOS ESPECÍFICOS ── */
+    /* Lançamentos: 4 cols → empilha */
+    [style*="grid-template-columns:3fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important;}
+    /* Cartões: 7 cols → 2 cols */
+    [style*="grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important;}
+    /* Empréstimo: 2 cols → 1 col */
+    #lanc-cred-fields,#lanc-emp-fields [style*="grid-template-columns"]{grid-template-columns:1fr!important;}
+    /* Receita: 4 cols → 2 cols */
+    #page-receita [style*="grid-template-columns:2fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important;}
+    #page-receita [style*="grid-template-columns:1fr 1fr auto auto"]{grid-template-columns:1fr!important;}
+    /* Investimentos form */
+    #page-investimentos [style*="grid-template-columns:2fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important;}
+    #page-investimentos [style*="grid-template-columns:1fr 1fr 2fr auto"]{grid-template-columns:1fr 1fr!important;}
+    /* Gastos: form com 6 cols */
+    #page-gastos [style*="grid-template-columns:2fr 1fr 1fr 1fr 80px auto"]{grid-template-columns:1fr 1fr!important;}
+    /* Mercado: grid lateral → stacked */
+    #mkt-grid{grid-template-columns:1fr!important;}
+    /* Parceiros: 3 cols → 1 col */
+    #page-parceiros [style*="grid-template-columns:2fr 1fr 1fr"]{grid-template-columns:1fr!important;}
+
+    /* ── BOTÕES DE FORMA DE PAGAMENTO ── */
+    #lanc-formas-wrap{gap:5px!important;flex-wrap:wrap!important;}
+    #lanc-formas-wrap .lanc-forma-btn{flex:0 0 calc(50% - 3px)!important;}
+
+    /* ── LANÇAMENTOS HERO ── */
+    .lanc-hero{padding:16px 14px!important;border-radius:14px!important;}
+    .lanc-hero-title{font-size:22px!important;}
+    .lanc-hero-topbar{flex-direction:column!important;gap:8px!important;align-items:flex-start!important;}
+    .lanc-hero-pills{flex-wrap:wrap!important;gap:6px!important;}
+    .btn-lancar{width:100%!important;border-radius:12px!important;}
+
+    /* ── SEMANAL ── */
+    .sem-compare-wrap{flex-direction:column!important;}
+    .sem-compare-bars{width:100%!important;}
+    .sem-limit-cfg{flex-wrap:wrap!important;gap:8px!important;}
+    .month-tabs,#sem-view-tabs{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;flex-wrap:nowrap!important;padding-bottom:4px!important;}
+
+    /* ── TABELAS ── */
+    .tbl-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+    table{min-width:480px;}
+    #fat-table{min-width:640px!important;}
+    .crono-tbl{min-width:580px!important;}
+    .parc-tl-grid{min-width:420px!important;}
+    #plan-table{min-width:460px!important;}
+    .semanal-semana-table{min-width:520px!important;}
+
+    /* ── FATURAS ── */
+    .fat-sim-grid{grid-template-columns:1fr!important;}
+    .fat-hist-wrap,#fat-table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+
+    /* ── GASTOS FIXOS ── */
+    .health-bar-wrap{flex-direction:column!important;gap:14px!important;}
+    .health-right{flex-direction:row!important;flex-wrap:wrap!important;width:100%!important;}
+    .health-metric{flex:1;min-width:100px!important;}
+
+    /* ── CARTÕES ── */
+    .ct-cards-grid{grid-template-columns:1fr!important;}
+    .ct-vcard-dates{grid-template-columns:1fr 1fr!important;}
+
+    /* ── PLANEJAMENTO ── */
+    .plan-tabs{gap:4px!important;padding:4px!important;overflow-x:auto!important;flex-wrap:nowrap!important;}
+    .plan-tab{padding:7px 10px!important;font-size:10px!important;white-space:nowrap!important;}
+    #plan-anos-tabs{flex-wrap:wrap!important;}
+    #plan-table-wrap{overflow-x:auto!important;}
+    .mp-input-row{grid-template-columns:1fr auto!important;}
+
+    /* ── METAS ── */
+    .plan-tabs.meta-tabs{flex-wrap:wrap!important;}
+
+    /* ── MEUS BENS ── */
+    .bens-grid{grid-template-columns:1fr!important;}
+    .bem-ficha-header{flex-direction:column!important;}
+    .bem-ficha-foto{width:100%!important;height:160px!important;}
+    .bem-fin-cards{grid-template-columns:1fr 1fr!important;}
+    .bem-tabs{gap:4px!important;padding:4px!important;}
+    .bem-tab{padding:7px 10px!important;font-size:10px!important;}
+
+    /* ── CALCULADORA ── */
+    #calc-widget{
+      top:auto!important;bottom:80px!important;
+      left:50%!important;right:auto!important;transform:translateX(-50%)!important;
+      width:calc(100vw - 24px)!important;max-width:340px!important;
+    }
+    #calc-widget.minimized{bottom:80px!important;}
+
+    /* ── FAB ── */
+    #fab-lanc{top:auto!important;bottom:80px!important;left:16px!important;right:auto!important;}
+    #fab-speed-dial{top:auto!important;bottom:80px!important;left:16px!important;right:auto!important;align-items:flex-start!important;}
+
+    /* ── COMPRAS ── */
+    .cp-form-row{grid-template-columns:1fr!important;}
+    .cp-tbl-header{display:none!important;}
+    .cp-row{grid-template-columns:1fr auto!important;}
+    .cp-afford-grid{grid-template-columns:1fr!important;}
+    .cp-afford-box{max-width:96vw!important;}
+
+    /* ── FINANCIAMENTOS ── */
+    #page-financiamentos [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important;}
+
+    /* ── CONFIG ── */
+    .cfg-grid{grid-template-columns:1fr!important;}
+
+    /* ── SOBRE ── */
+    .sobre-info-grid{grid-template-columns:1fr!important;}
+
+    /* ── LOGIN ── */
+    .login-box{width:min(420px,92vw)!important;padding:24px 16px!important;}
+    .login-tabs{margin-bottom:16px!important;}
+
+    /* ── MODAIS ── */
+    [style*="width:min(420px"],[style*="width:min(440px"],[style*="width:min(480px"],
+    [style*="width:min(540px"],[style*="width:min(560px"],[style*="width:min(400px"]{
+      width:min(95vw,480px)!important;max-width:95vw!important;
+    }
+    .bem-modal-box{width:95vw!important;max-width:95vw!important;}
+    [id$="-modal"] > div{padding:14px!important;}
+
+    /* ── GRÁFICOS ── */
+    canvas{max-width:100%!important;}
+    #dash-graficos{grid-template-columns:1fr!important;}
+
+    /* ── DASHBOARD ── */
+    #page-dashboard .grid4{grid-template-columns:1fr 1fr!important;}
+    #page-dashboard .card-value{font-size:18px!important;}
+    #page-dashboard .sec-title{font-size:10px!important;}
+    .d-metas-widget,.d-tarefas-widget{grid-template-columns:1fr!important;}
+
+    /* ── PARCELAS ── */
+    .parc-timeline-wrap{padding:10px!important;}
+
+    /* ── RELATÓRIOS ── */
+    .rel-sec-grid{grid-template-columns:1fr 1fr!important;}
+
+    /* ── SCROLLBAR ESCONDIDA NAS ABAS ── */
+    .month-tabs::-webkit-scrollbar,.plan-tabs::-webkit-scrollbar,
+    .bem-tabs::-webkit-scrollbar,#sem-view-tabs::-webkit-scrollbar{display:none!important;}
+  }
+
+  /* ── TELAS MUITO PEQUENAS (< 380px) ── */
+  @media(max-width:380px){
+    #main{padding:12px 10px 88px!important;}
+    .page-title{font-size:17px!important;}
+    .grid4{grid-template-columns:1fr 1fr!important;}
+    .card{padding:12px 10px!important;}
+    .mob-drawer-item{font-size:12px!important;padding:12px 10px!important;}
+    #lanc-formas-wrap .lanc-forma-btn{font-size:9px!important;}
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -5139,7 +5267,7 @@
         <button id="mkt-add-tab-man" onclick="mktAddMesTab('man')" style="flex:1;padding:8px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;cursor:pointer">MANUAL</button>
       </div>
       <div id="mkt-add-panel-cat">
-        <input id="mkt-add-busca" type="text" placeholder="Buscar item..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px" oninput="mktFiltrarCatalogoPicker()">
+        <input id="mkt-add-busca" type="text" placeholder="Buscar por nome ou referência (ex: I27000)..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px" oninput="mktFiltrarCatalogoPicker()">
         <div id="mkt-add-cat-lista" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
       </div>
       <div id="mkt-add-panel-man" style="display:none;flex-direction:column;gap:10px">
@@ -19559,16 +19687,16 @@ function _verAnexoBemDoc(id){
     <span class="mob-nav-icon">🏠</span>
     <span>INÍCIO</span>
   </button>
-  <button class="mob-nav-item" id="mbn-cartoes" onclick="mobNav('cartoes')">
-    <span class="mob-nav-icon">💳</span>
-    <span>CARTÕES</span>
+  <button class="mob-nav-item" id="mbn-gastos" onclick="mobNav('gastos')">
+    <span class="mob-nav-icon">📋</span>
+    <span>GASTOS</span>
   </button>
   <button class="mob-nav-center" id="mbn-lancamentos" onclick="mobNav('lancamentos')">
     <div class="mob-nav-center-btn">⚡</div>
     <span class="mob-nav-center-label">LANÇAR</span>
   </button>
   <button class="mob-nav-item" id="mbn-semanal" onclick="mobNav('semanal')">
-    <span class="mob-nav-icon">📊</span>
+    <span class="mob-nav-icon">📅</span>
     <span>SEMANAL</span>
   </button>
   <button class="mob-nav-item" id="mbn-mais" onclick="openMobDrawer()">
@@ -19583,46 +19711,52 @@ function _verAnexoBemDoc(id){
 <!-- DRAWER MENU -->
 <div id="mob-drawer">
   <div class="mob-drawer-header">
-    <span class="mob-drawer-logo">◈ PERSONA</span>
+    <div>
+      <span class="mob-drawer-logo">◈ BY PERSONA</span>
+      <div id="mob-drawer-user" style="font-size:10px;color:var(--text3);margin-top:3px;font-family:'JetBrains Mono',monospace"></div>
+    </div>
     <button class="mob-drawer-close" onclick="closeMobDrawer()">✕</button>
   </div>
 
   <div class="mob-drawer-section">
-    <div class="mob-drawer-label">FINANCEIRO</div>
+    <div class="mob-drawer-label">💰 FINANCEIRO</div>
     <button class="mob-drawer-item" onclick="mobNavDrawer('gastos')">
-      <span class="mob-drawer-icon">◉</span>GASTOS FIXOS
+      <span class="mob-drawer-icon">📋</span>GASTOS FIXOS
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('faturas')">
-      <span class="mob-drawer-icon">▣</span>FATURAS
+      <span class="mob-drawer-icon">🧾</span>FATURAS
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('parcelas')">
-      <span class="mob-drawer-icon">◐</span>PARCELAS
+      <span class="mob-drawer-icon">📆</span>PARCELAS
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('financiamentos')">
-      <span class="mob-drawer-icon">◫</span>FINANCIAMENTOS
+      <span class="mob-drawer-icon">🏦</span>FINANCIAMENTOS
     </button>
   </div>
 
   <div class="mob-drawer-section">
-    <div class="mob-drawer-label">PATRIMÔNIO</div>
+    <div class="mob-drawer-label">🏛 PATRIMÔNIO</div>
     <button class="mob-drawer-item" onclick="mobNavDrawer('investimentos')">
-      <span class="mob-drawer-icon">◈</span>INVESTIMENTOS
+      <span class="mob-drawer-icon">📈</span>INVESTIMENTOS
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('bens')">
-      <span class="mob-drawer-icon">◆</span>MEUS BENS
+      <span class="mob-drawer-icon">🏷️</span>MEUS BENS
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('compras')">
-      <span class="mob-drawer-icon">◑</span>COMPRAS
+      <span class="mob-drawer-icon">🛍️</span>COMPRAS
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('parceiros')">
+      <span class="mob-drawer-icon">🏪</span>PARCEIROS
     </button>
   </div>
 
   <div class="mob-drawer-section">
-    <div class="mob-drawer-label">ANÁLISE</div>
+    <div class="mob-drawer-label">📊 ANÁLISE</div>
     <button class="mob-drawer-item" onclick="mobNavDrawer('planejamento')">
-      <span class="mob-drawer-icon">◎</span>PLANEJAMENTO
+      <span class="mob-drawer-icon">🗓️</span>PLANEJAMENTO
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('receita')">
-      <span class="mob-drawer-icon">◈</span>RECEITA
+      <span class="mob-drawer-icon">💰</span>RECEITA
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('metas')">
       <span class="mob-drawer-icon">🎯</span>METAS
@@ -19631,26 +19765,29 @@ function _verAnexoBemDoc(id){
       <span class="mob-drawer-icon">🛒</span>MERCADO
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('tarefas')">
-      <span class="mob-drawer-icon">✓</span>TAREFAS
+      <span class="mob-drawer-icon">✅</span>TAREFAS
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('relatorios')">
-      <span class="mob-drawer-icon">▦</span>RELATÓRIOS
+      <span class="mob-drawer-icon">📊</span>RELATÓRIOS
+    </button>
+    <button class="mob-drawer-item" onclick="mobNavDrawer('documentos')">
+      <span class="mob-drawer-icon">🗂️</span>DOCUMENTOS
     </button>
   </div>
 
   <div class="mob-drawer-footer">
     <button class="mob-drawer-item" onclick="toggleTheme()" id="mob-theme-btn">
-      <span class="mob-drawer-icon" id="mob-theme-icon">☀</span>
+      <span class="mob-drawer-icon" id="mob-theme-icon">☀️</span>
       <span id="mob-theme-label">MODO DIURNO</span>
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('config')">
-      <span class="mob-drawer-icon">⚙</span>CONFIGURAÇÕES
+      <span class="mob-drawer-icon">⚙️</span>CONFIGURAÇÕES
     </button>
     <button class="mob-drawer-item" onclick="mobNavDrawer('sobre')">
-      <span class="mob-drawer-icon">ℹ</span>SOBRE
+      <span class="mob-drawer-icon">ℹ️</span>SOBRE
     </button>
     <button class="mob-drawer-item" onclick="closeMobDrawer();doLogout()" style="color:rgba(255,100,100,0.85)">
-      <span class="mob-drawer-icon">⏻</span>SAIR
+      <span class="mob-drawer-icon">🚪</span>SAIR
     </button>
   </div>
 </div>
@@ -19659,7 +19796,7 @@ function _verAnexoBemDoc(id){
 // ══════════════════════════════════════
 // MOBILE NAVIGATION
 // ══════════════════════════════════════
-const _MOB_BAR_PAGES=['dashboard','cartoes','lancamentos','semanal'];
+const _MOB_BAR_PAGES=['dashboard','gastos','lancamentos','semanal'];
 
 function mobNav(page){
   showPage(page);
@@ -19676,16 +19813,25 @@ function _mobUpdateBar(page){
   document.querySelectorAll('.mob-nav-item,.mob-nav-center').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('mbn-'+page);
   if(el) el.classList.add('active');
-  // marca "MAIS" como ativo quando página está no drawer
   if(!_MOB_BAR_PAGES.includes(page)){
     const mais=document.getElementById('mbn-mais');
     if(mais) mais.classList.add('active');
+  }
+  // Atualiza nome do usuário no header do drawer
+  const drawerUser=document.getElementById('mob-drawer-user');
+  if(drawerUser&&typeof _authUser!=='undefined'&&_authUser){
+    drawerUser.textContent=_authUser.toUpperCase();
   }
 }
 
 function openMobDrawer(){
   document.getElementById('mob-drawer').classList.add('open');
   document.getElementById('mob-drawer-overlay').classList.add('open');
+  // Atualiza nome no drawer ao abrir
+  const drawerUser=document.getElementById('mob-drawer-user');
+  if(drawerUser&&typeof _authUser!=='undefined'&&_authUser){
+    drawerUser.textContent=_authUser.toUpperCase();
+  }
 }
 
 function closeMobDrawer(){
@@ -19693,7 +19839,19 @@ function closeMobDrawer(){
   document.getElementById('mob-drawer-overlay').classList.remove('open');
 }
 
-// Atualiza bar quando página muda pelo menu lateral ou outro gatilho
+// Fechar drawer com swipe para esquerda
+(function(){
+  let _swX=null;
+  const drawer=document.getElementById('mob-drawer');
+  if(!drawer) return;
+  drawer.addEventListener('touchstart',e=>{_swX=e.touches[0].clientX;},{passive:true});
+  drawer.addEventListener('touchmove',e=>{
+    if(_swX===null) return;
+    if(_swX-e.touches[0].clientX>50) closeMobDrawer();
+  },{passive:true});
+  drawer.addEventListener('touchend',()=>{_swX=null;},{passive:true});
+})();
+
 document.addEventListener('DOMContentLoaded',()=>{
   if(typeof renderNav==='function') renderNav('dashboard');
   _mobUpdateBar('dashboard');
@@ -20489,11 +20647,30 @@ function mktAddMesTab(tab){
   if(tM){tM.style.borderBottomColor=tab==='man'?'var(--neon-blue)':'transparent';tM.style.color=tab==='man'?'var(--neon-blue)':'var(--text3)';}
 }
 function mktFiltrarCatalogoPicker(){
-  const busca=(document.getElementById('mkt-add-busca')?.value||'').toLowerCase();
-  const cat=_mktGetCatalogo().filter(i=>!busca||i.nome.toLowerCase().includes(busca)||i.cat.toLowerCase().includes(busca));
+  const busca=(document.getElementById('mkt-add-busca')?.value||'').toLowerCase().trim();
+  const cat=_mktGetCatalogo().filter(i=>
+    !busca||
+    i.nome.toLowerCase().includes(busca)||
+    i.cat.toLowerCase().includes(busca)||
+    (i.sku||'').toLowerCase().includes(busca)
+  );
   const el=document.getElementById('mkt-add-cat-lista');if(!el)return;
-  if(!cat.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Nenhum item encontrado.</div>';return;}
-  el.innerHTML=cat.map(it=>`<button onclick="mktAddItemDosCatalogo(${it.id})" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:all .15s" onmouseover="this.style.background='rgba(0,200,255,0.07)';this.style.borderColor='rgba(0,200,255,0.3)'" onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'"><span style="font-size:18px">${_MKT_EMOJI[it.cat]||'📦'}</span><div style="flex:1"><div style="font-size:12px;font-weight:600">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}x · ${it.preco>0?_mktFmt(it.preco):'sem preço'}</div></div><span style="font-size:10px;color:var(--neon-green)">+ ADD</span></button>`).join('');
+  if(!cat.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Nenhum item encontrado. Tente buscar pelo nome ou referência (I27000...).</div>';return;}
+  el.innerHTML=cat.map(it=>`
+    <button onclick="mktAddItemDosCatalogo(${it.id})"
+      style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:all .15s;box-sizing:border-box"
+      onmouseover="this.style.background='rgba(0,200,255,0.07)';this.style.borderColor='rgba(0,200,255,0.3)'"
+      onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'">
+      <span style="font-size:18px;flex-shrink:0">${_MKT_EMOJI[it.cat]||'📦'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.nome)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+          ${it.sku?`<span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);padding:1px 5px;border-radius:4px;letter-spacing:.3px">${it.sku}</span>`:''}
+          <span style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · ${it.preco>0?_mktFmt(it.preco):'sem preço'}</span>
+        </div>
+      </div>
+      <span style="font-size:10px;color:var(--neon-green);font-weight:700;flex-shrink:0">+ ADD</span>
+    </button>`).join('');
 }
 function mktAddItemDosCatalogo(catItemId){const it=_mktGetCatalogo().find(x=>x.id===catItemId);if(!it||!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;if(lista.itens.find(i=>i.refId===catItemId)){alert(`"${it.nome}" já está nesta lista.`);return;}lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:0,comprado:false});_mktSetListas(listas);mktFecharAddMes();_mktRenderMes();}
 function mktAddItemManual(){const nome=(document.getElementById('mkt-add-man-nome')?.value||'').trim();if(!nome){alert('Informe o nome.');return;}const cat=document.getElementById('mkt-add-man-cat')?.value||'Outros';const qtd=parseFloat(document.getElementById('mkt-add-man-qtd')?.value)||1;const unidade=document.getElementById('mkt-add-man-unidade')?.value||'un';const preco=_mktParseBRL(document.getElementById('mkt-add-man-preco')?.value);if(!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens.push({id:Date.now(),refId:null,nome,cat,qtd,unidade,precoPrev:preco,precoReal:0,comprado:false});_mktSetListas(listas);['mkt-add-man-nome','mkt-add-man-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('mkt-add-man-qtd').value='1';document.getElementById('mkt-add-man-unidade').value='un';mktFecharAddMes();_mktRenderMes();}

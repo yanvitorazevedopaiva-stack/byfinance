@@ -7433,36 +7433,42 @@ async function doLogin(){
   // ── Supabase Auth (modo principal) ──
   if(_supabase){
     try{
-      // Resolver email: input pode ser username ou email direto
       let emailToUse=uInput;
       if(!uInput.includes('@')){
-        // Busca email pelo username no perfil salvo
+        // Input é username → buscar email
         const {data:profileData}=await _supabase.from('user_data')
           .select('data').eq('user_id','__profile__'+uKey).maybeSingle();
         if(profileData?.data?.email){
           emailToUse=profileData.data.email;
-        } else {
-          // Tenta email salvo localmente
+        }else{
           const localEmail=_getUserEmail(uInput)||localStorage.getItem('byf_email_to_user_'+uKey);
           if(localEmail) emailToUse=localEmail;
           else throw new Error('FALLBACK_LOCAL');
         }
       }
       const {data,error}=await _supabase.auth.signInWithPassword({email:emailToUse,password:p});
-      if(error) throw error;
-      // Login Supabase OK
+      if(error){
+        // E-mail ainda não confirmado → aviso específico, sem registrar tentativa
+        const msg=error.message.toLowerCase();
+        if(msg.includes('email not confirmed')||msg.includes('not confirmed')){
+          if(err)err.textContent='E-mail não confirmado. Verifique sua caixa de entrada e clique no link.';
+          if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
+          return;
+        }
+        // Outro erro Supabase → tenta fallback local antes de registrar falha
+        throw new Error('FALLBACK_LOCAL');
+      }
+      // ── Supabase OK ──
       _clearAttempts(uKey);
       const username=data.user.user_metadata?.username
         ||localStorage.getItem('byf_username_'+data.user.id)
         ||uInput;
-      // Persistir sessão
       sessionStorage.setItem('byf_supabase_uid',data.user.id);
       localStorage.setItem('byf_username_'+data.user.id,username);
       if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
       _startSession(username);
       return;
     }catch(e){
-      // Se o erro não é "precisa de fallback local", registra tentativa
       if(e.message!=='FALLBACK_LOCAL'){
         const bloqueado=_registerFailedAttempt(uKey);
         if(bloqueado){
@@ -7474,7 +7480,7 @@ async function doLogin(){
         if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
         return;
       }
-      // e.message==='FALLBACK_LOCAL' → cai para modo local abaixo
+      // FALLBACK_LOCAL → tenta sistema local abaixo (conta antiga ou Supabase indisponível)
     }
   }
 

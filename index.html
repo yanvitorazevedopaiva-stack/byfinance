@@ -3932,11 +3932,18 @@
       <div id="lanc-parcela-preview" style="font-size:11px;color:var(--text3);padding-bottom:8px;white-space:nowrap"></div>
     </div>
 
-    <!-- Radio oculto para compatibilidade com addLancamento() -->
-    <div id="lanc-out-fields" style="display:none">
-      <input type="radio" name="lanc-out" value="Pix" id="lanc-radio-pix" checked>
-      <input type="radio" name="lanc-out" value="Débito" id="lanc-radio-debito">
-      <input type="radio" name="lanc-out" value="Dinheiro" id="lanc-radio-dinheiro">
+
+    <!-- Estabelecimento / Parceiro -->
+    <div style="margin-bottom:12px;position:relative">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:10px;color:var(--text3);letter-spacing:.5px">🏪 ESTABELECIMENTO</span>
+        <span style="font-size:10px;color:var(--text3)">(opcional)</span>
+        <span style="font-size:10px;color:var(--neon-blue);cursor:pointer;margin-left:auto" onclick="showPage('parceiros')">VER PARCEIROS ↗</span>
+      </div>
+      <input type="text" id="lanc-estabelecimento" placeholder="Digite o nome do estabelecimento..."
+        autocomplete="off" oninput="lancEstabBuscar(this.value)"
+        style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+      <div id="lanc-estab-sugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,.4)"></div>
     </div>
 
     <!-- Vincular a Bem (opcional) -->
@@ -3960,14 +3967,13 @@
   </div>
 
   <!-- HISTÓRICO RÁPIDO -->
-  <!-- PARCEIROS (TAREFA 9) -->
+  <!-- PARCEIROS — demonstrativo top 5 -->
   <div style="margin-top:12px">
-    <div class="lanc-parceiros-toggle" onclick="toggleParceiros()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:9px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);transition:border-color .15s" onmouseover="this.style.borderColor='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)'">
-      🏪 ESTABELECIMENTOS PARCEIROS (<span class="lanc-parceiros-count">0</span> cadastrados) ▾
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:9px 9px 0 0;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3)">
+      <span>🏪 ESTABELECIMENTOS PARCEIROS · TOP 5</span>
+      <span style="color:var(--neon-blue);cursor:pointer;font-weight:700" onclick="showPage('parceiros')">GERENCIAR ↗</span>
     </div>
-    <div id="lanc-parceiros-section" style="display:none;margin-top:8px;padding:12px;background:var(--card2);border:1px solid var(--border);border-radius:9px">
-      <div id="lanc-parceiros-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:10px"></div>
-    </div>
+    <div id="lanc-parceiros-top5" style="padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-top:none;border-radius:0 0 9px 9px"></div>
   </div>
 
   <div class="lanc-hist-card" id="lanc-hist-wrap">
@@ -4991,17 +4997,16 @@
       </div>
       <div>
         <div class="card" style="margin-bottom:14px">
-          <div class="sec-title" style="margin-bottom:10px">📎 NOTA FISCAL</div>
-          <div id="mkt-mes-nf-preview" style="display:none;margin-bottom:10px"></div>
-          <div id="mkt-mes-nf-drop" style="border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s"
+          <div class="sec-title" style="margin-bottom:10px">📎 NOTAS FISCAIS</div>
+          <div id="mkt-mes-nf-lista"></div>
+          <div id="mkt-mes-nf-drop" style="border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;margin-top:4px"
             onclick="document.getElementById('mkt-mes-nf-file').click()"
             onmouseover="this.style.borderColor='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:22px;margin-bottom:4px">📄</div>
-            <div style="font-size:11px;color:var(--text2)">Clique para anexar NF</div>
+            <div style="font-size:20px;margin-bottom:4px">➕</div>
+            <div style="font-size:11px;color:var(--text2)">Clique para adicionar NF</div>
             <div style="font-size:10px;color:var(--text3);margin-top:2px">PNG, JPG ou PDF</div>
             <input type="file" id="mkt-mes-nf-file" accept="image/*,application/pdf" style="display:none" onchange="mktAnexarNF(this)">
           </div>
-          <div id="mkt-mes-nf-info" style="display:none;margin-top:8px;display:flex;gap:6px"></div>
         </div>
         <div class="card">
           <div class="sec-title" style="margin-bottom:10px">AÇÕES</div>
@@ -5588,6 +5593,52 @@
 </div>
 
 <!-- ========== COMPRAS ========== -->
+<!-- ========== PARCEIROS ========== -->
+<div id="page-parceiros" class="page">
+  <div class="page-title">PARCEIROS<span class="help-btn" onclick="showHelp('parceiros')">?</span></div>
+  <div class="page-sub">// ESTABELECIMENTOS E PARCEIROS DE NEGÓCIO</div>
+
+  <!-- Formulário de cadastro -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="sec-title" style="margin-bottom:14px">➕ CADASTRAR PARCEIRO</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;align-items:end;margin-bottom:10px">
+      <div>
+        <div class="card-label" style="margin-bottom:4px">NOME / ESTABELECIMENTO</div>
+        <input id="parc-nome" type="text" placeholder="Ex: Supermercado Extra, Posto Shell..."
+          style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+      </div>
+      <div>
+        <div class="card-label" style="margin-bottom:4px">CATEGORIA</div>
+        <select id="parc-cat" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          <option>Alimentação</option><option>Mercado</option><option>Combustível</option>
+          <option>Farmácia</option><option>Restaurante</option><option>Vestuário</option>
+          <option>Eletrônicos</option><option>Serviços</option><option>Saúde</option>
+          <option>Lazer</option><option>Educação</option><option>Outros</option>
+        </select>
+      </div>
+      <div>
+        <div class="card-label" style="margin-bottom:4px">CONTATO / SITE</div>
+        <input id="parc-contato" type="text" placeholder="Opcional"
+          style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+      </div>
+    </div>
+    <button onclick="parcCadastrar()" class="btn btn-green" style="width:100%">✓ CADASTRAR PARCEIRO</button>
+    <div id="parc-msg" style="font-size:11px;margin-top:8px;text-align:center"></div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid4" style="margin-bottom:20px">
+    <div class="card"><div class="card-label">TOTAL CADASTRADOS</div><div class="card-value val-blue" id="parc-kpi-total">0</div></div>
+    <div class="card"><div class="card-label">TOTAL GASTO</div><div class="card-value val-yellow" id="parc-kpi-gasto">R$ 0,00</div></div>
+    <div class="card"><div class="card-label">MAIS FREQUENTE</div><div class="card-value val-green" id="parc-kpi-freq" style="font-size:14px">—</div></div>
+    <div class="card"><div class="card-label">MAIOR GASTO</div><div class="card-value val-red" id="parc-kpi-maior" style="font-size:14px">—</div></div>
+  </div>
+
+  <!-- Lista completa -->
+  <div class="sec-title" style="margin-bottom:12px">TODOS OS PARCEIROS</div>
+  <div id="parc-lista"></div>
+</div>
+
 <div id="page-compras" class="page">
   <div class="page-title">COMPRAS<span class="help-btn" onclick="showHelp('compras')">?</span></div>
   <div class="page-sub">// DECISÃO CONSCIENTE · 15 DD → LEMBRETE · 30 DD → CONFIRMAR OU EXCLUIR</div>
@@ -7734,7 +7785,7 @@ function closeSidebar(){
 // ===================== NAVIGATION =====================
 let currentPage='dashboard', _currentPage='dashboard';
 const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,financiamentos:3,parcelas:4,lancamentos:5,semanal:6,faturas:7,planejamento:8,receita:9,investimentos:10,bens:11,compras:12,relatorios:13,documentos:14,config:15,sobre:16,metas:17,mercado:18,tarefas:19};
-const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',financiamentos:'FINANCIAMENTOS',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',compras:'COMPRAS',relatorios:'RELATÓRIOS',documentos:'DOCUMENTOS PESSOAIS',config:'CONFIGURAÇÕES',sobre:'SOBRE',metas:'METAS',mercado:'MERCADO',tarefas:'TAREFAS'};
+const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',financiamentos:'FINANCIAMENTOS',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',parceiros:'PARCEIROS',compras:'COMPRAS',relatorios:'RELATÓRIOS',documentos:'DOCUMENTOS PESSOAIS',config:'CONFIGURAÇÕES',sobre:'SOBRE',metas:'METAS',mercado:'MERCADO',tarefas:'TAREFAS'};
 
 function showPage(id){
   // Mesma página clicada → reseta para tela principal da seção
@@ -7794,7 +7845,7 @@ function renderPage(id){
     receita:renderReceita,investimentos:renderInvestimentos,bens:renderBens,
     financiamentos:renderFinanciamentos,documentos:renderDocumentosUsuario,
     compras:renderCompras,relatorios:renderRelatorios,semanal:renderSemanal,config:renderConfig,sobre:renderSobre,
-    metas:renderMetasPage,mercado:renderMercado,tarefas:renderTarefas};
+    metas:renderMetasPage,mercado:renderMercado,tarefas:renderTarefas,parceiros:renderParceirosPage};
   if(fns[id]) fns[id]();
 }
 
@@ -9070,6 +9121,7 @@ function getSemanaFromData(dateStr){
 }
 
 let lancTipo='credito'; // 'credito' | 'emprestimo' | 'pix_credito' | 'outros'
+let _lancFormaLabel='Pix'; // substitui os radio buttons: 'Pix' | 'Dinheiro'
 
 let _lancFormaAtual='pix'; // estado interno da forma selecionada
 
@@ -9083,7 +9135,6 @@ function setLancTipo(tipo){
 function setLancForma(forma){
   _lancFormaAtual=forma;
   const credFields=document.getElementById('lanc-cred-fields');
-  const outFields=document.getElementById('lanc-out-fields');
   const parcWrap=document.getElementById('lanc-parc-wrap');
   const empFields=document.getElementById('lanc-emp-fields');
   const pixCredFields=document.getElementById('lanc-pixcred-fields');
@@ -9104,7 +9155,6 @@ function setLancForma(forma){
   if(forma==='debito'||forma==='cred-vista'||forma==='cred-parc'){
     lancTipo='credito';
     credFields.style.display='grid';
-    outFields.style.display='none';
     if(parcWrap){
       parcWrap.style.display=forma==='cred-parc'?'block':'none';
       if(forma!=='cred-parc'){const ps=document.getElementById('lanc-parcelas');if(ps)ps.value='1';}
@@ -9112,21 +9162,16 @@ function setLancForma(forma){
   } else if(forma==='emprestimo'){
     lancTipo='emprestimo';
     credFields.style.display='none';
-    outFields.style.display='none';
     if(empFields) empFields.style.display='block';
   } else if(forma==='pix-credito'){
     lancTipo='pix_credito';
     credFields.style.display='none';
-    outFields.style.display='none';
     if(pixCredFields) pixCredFields.style.display='block';
   } else {
     lancTipo='outros';
     credFields.style.display='none';
-    outFields.style.display='block';
-    const radioMap={pix:'lanc-radio-pix',dinheiro:'lanc-radio-dinheiro'};
-    const rid=radioMap[forma]||'lanc-radio-pix';
-    const r=document.getElementById(rid);
-    if(r) r.checked=true;
+    const formaLabel={pix:'Pix',dinheiro:'Dinheiro'};
+    _lancFormaLabel=formaLabel[forma]||'Pix';
   }
   atualizarPreviewParcela();
 }
@@ -9154,6 +9199,7 @@ function atualizarPreviewParcela(){
 }
 
 function renderLancamentos(){
+  lancRenderTop5Parceiros();
   // Popula cartões no select
   const cartSel=document.getElementById('lanc-cartao');
   if(cartSel){
@@ -9278,7 +9324,7 @@ function lancAcApply(i){
     document.getElementById('lanc-val').value=l.valTotal&&l.nParc>1?l.valTotal:l.val||'';
   } else {
     document.getElementById('lanc-val').value=l.val||'';
-    document.querySelectorAll('input[name="lanc-out"]').forEach(r=>{r.checked=(r.value===(l.forma||'Pix'));});
+    _lancFormaLabel=l.forma||'Pix';
   }
   const cs=document.getElementById('lanc-cat');
   if(cs&&l.cat)[...cs.options].forEach(o=>{if(o.value===l.cat||o.textContent===l.cat)o.selected=true;});
@@ -9671,8 +9717,7 @@ function duplicarLanc(id,sem){
     } else {
       setLancTipo('outros');
       document.getElementById('lanc-val').value=l.val||'';
-      const radios=document.querySelectorAll('input[name="lanc-out"]');
-      radios.forEach(r=>{r.checked=(r.value===l.forma);});
+      _lancFormaLabel=l.forma||'Pix';
     }
     atualizarPreviewParcela();
     document.getElementById('lanc-desc').focus();
@@ -9864,8 +9909,8 @@ function lancMktConfirmarCadastroRapido(){
   const cat=document.getElementById('cad-rap-cat')?.value||'Outros';
   if(!nome){alert('Digite o nome do item.');return;}
   const agora=new Date().toISOString();
-  const novoItem={id:Date.now(),nome,cat,qtd:1,unidade:'un',preco,foto:null,dataCadastro:agora,ultimaAtualizacao:agora};
   const itens=_mktGetCatalogo();
+  const novoItem={id:Date.now(),sku:_mktGetNextSku(),nome,cat,qtd:1,unidade:'un',preco,foto:null,dataCadastro:agora,ultimaAtualizacao:agora};
   itens.push(novoItem);
   _mktSetCatalogo(itens);
   _lancMktItemSelecionado=novoItem;
@@ -9968,9 +10013,8 @@ function addLancamento(){
     setData('lancamentos',allPC);
 
   } else {
-    // Pix / Débito / Dinheiro — só semanal
-    const checked=document.querySelector('input[name="lanc-out"]:checked');
-    const forma=checked?checked.value:'Pix';
+    // Pix / Dinheiro — só semanal
+    const forma=_lancFormaLabel||'Pix';
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
     all[semana].push({id,desc,data,forma,cat,val});
@@ -10037,6 +10081,15 @@ function addLancamento(){
   }
   _updateLancStats();
   renderUltimosLancs();
+
+  // Estabelecimento / parceiro de negócio
+  const _estabInp=document.getElementById('lanc-estabelecimento');
+  const _estabNome=_estabInp?.value.trim()||'';
+  if(_estabNome){
+    salvarParceiro(_estabNome,val);
+    _estabInp.value='';
+    lancRenderTop5Parceiros();
+  }
 
   // Vincular despesa a um Bem (se selecionado)
   const bemSelEl=document.getElementById('lanc-bem-sel');
@@ -14093,6 +14146,7 @@ const _NAV_META={
   financiamentos:{icon:'🏦',label:'FINANCIAMENTOS'},
   investimentos:{icon:'📈',label:'INVESTIMENTOS'},
   bens:{icon:'🏷️',label:'MEUS BENS'},
+  parceiros:{icon:'🏪',label:'PARCEIROS'},
   compras:{icon:'🛍️',label:'COMPRAS'},
   mercado:{icon:'🛒',label:'MERCADO'},
   tarefas:{icon:'✅',label:'TAREFAS'},
@@ -14102,7 +14156,7 @@ const _NAV_META={
 };
 const _NAV_DEFAULT={
   b1:['dashboard','gastos','cartoes','parcelas','semanal','faturas'],
-  b2:['planejamento','metas','receita','investimentos','bens','compras','mercado','tarefas','relatorios','documentos']
+  b2:['planejamento','metas','receita','investimentos','bens','parceiros','compras','mercado','tarefas','relatorios','documentos']
 };
 // páginas que saem dos blocos (ficam em ícones próprios)
 const _NAV_EXCLUDED=new Set(['config','lancamentos']);
@@ -14171,6 +14225,7 @@ function _showNavToast(msg){
   el.textContent=msg;el.style.opacity='1';
   clearTimeout(el._t);el._t=setTimeout(()=>{el.style.opacity='0';},3000);
 }
+const _showToast=_showNavToast;
 
 let _navDragKey=null,_navDragBlock=null;
 
@@ -16608,42 +16663,138 @@ function lancTransporteVeiculo(){
   if(sel) sel.innerHTML='<option value="">— nenhum —</option>'+bens.map(b=>`<option value="${b.id}">${esc(b.nome)}</option>`).join('');
 }
 
-// ===================== TAREFA 9 — PARCEIROS =====================
+// ===================== PARCEIROS DE NEGÓCIO =====================
 function getParceiros(){return load('parceiros')||[];}
 function setParceiros(v){save('parceiros',v);}
-function toggleParceiros(){
-  const s=document.getElementById('lanc-parceiros-section');
-  if(!s)return;
-  const open=s.style.display==='none'||!s.style.display;
-  s.style.display=open?'block':'none';
-  if(open) renderParceiros();
-}
-function renderParceiros(){
-  const el=document.getElementById('lanc-parceiros-grid');
-  if(!el)return;
+
+function salvarParceiro(nome,valor){
+  if(!nome||!nome.trim())return;
   const lista=getParceiros();
-  if(!lista.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">Nenhum parceiro cadastrado ainda.</div>';return;}
-  el.innerHTML=lista.map(p=>`
-  <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px">
-    <div style="font-weight:700;font-size:13px">${esc(p.nome)}</div>
-    <div style="font-size:11px;color:var(--text3)">${esc(p.categoria||'—')} · ${p.frequencia||0}x · Último: ${p.ultimaCompra?_fmtData(p.ultimaCompra):'—'}</div>
-    <button class="btn btn-sm" onclick="removerParceiro(${p.id})" style="margin-top:6px;color:var(--neon-red);border-color:rgba(255,68,68,0.2);font-size:10px">✕</button>
-  </div>`).join('');
-  const cnt=document.querySelector('.lanc-parceiros-count');
-  if(cnt) cnt.textContent=lista.length;
-}
-function removerParceiro(id){
-  setParceiros(getParceiros().filter(p=>p.id!==id));
-  renderParceiros();
-}
-function salvarParceiro(nome,categoria){
-  if(!nome)return;
-  const lista=getParceiros();
-  const ex=lista.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
-  if(ex){ex.frequencia=(ex.frequencia||0)+1;ex.ultimaCompra=new Date().toISOString().slice(0,10);}
-  else lista.push({id:Date.now(),nome,categoria,frequencia:1,ultimaCompra:new Date().toISOString().slice(0,10)});
+  const ex=lista.find(p=>p.nome.toLowerCase()===nome.toLowerCase().trim());
+  const hoje=new Date().toISOString().slice(0,10);
+  if(ex){
+    ex.frequencia=(ex.frequencia||0)+1;
+    ex.totalGasto=(ex.totalGasto||0)+(parseFloat(valor)||0);
+    ex.ultimaCompra=hoje;
+  }else{
+    lista.push({id:Date.now(),nome:nome.trim(),categoria:'Outros',contato:'',frequencia:1,
+      totalGasto:parseFloat(valor)||0,ultimaCompra:hoje});
+  }
   setParceiros(lista);
 }
+
+function parcCadastrar(){
+  const nome=(document.getElementById('parc-nome')?.value||'').trim();
+  const cat=document.getElementById('parc-cat')?.value||'Outros';
+  const contato=(document.getElementById('parc-contato')?.value||'').trim();
+  const msg=document.getElementById('parc-msg');
+  if(!nome){if(msg){msg.style.color='var(--neon-red)';msg.textContent='Informe o nome do parceiro.';}return;}
+  const lista=getParceiros();
+  const ex=lista.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
+  if(ex){if(msg){msg.style.color='var(--neon-yellow)';msg.textContent='Parceiro já existe — dados atualizados.';} ex.categoria=cat;ex.contato=contato;setParceiros(lista);}
+  else{lista.push({id:Date.now(),nome,categoria:cat,contato,frequencia:0,totalGasto:0,ultimaCompra:null});setParceiros(lista);}
+  if(document.getElementById('parc-nome')) document.getElementById('parc-nome').value='';
+  if(document.getElementById('parc-contato')) document.getElementById('parc-contato').value='';
+  if(msg){msg.style.color='var(--neon-green)';msg.textContent='✓ Parceiro salvo!';setTimeout(()=>{msg.textContent='';},2500);}
+  renderParceirosPage();
+}
+
+function removerParceiro(id){
+  showConfirm('Remover Parceiro','Remover este parceiro?',()=>{
+    setParceiros(getParceiros().filter(p=>p.id!==id));
+    renderParceirosPage();
+  });
+}
+
+function renderParceirosPage(){
+  const lista=getParceiros();
+  // KPIs
+  const totalGasto=lista.reduce((a,p)=>a+(p.totalGasto||0),0);
+  const maisFreq=lista.reduce((a,p)=>(p.frequencia||0)>(a.frequencia||0)?p:a,{});
+  const maiorGasto=lista.reduce((a,p)=>(p.totalGasto||0)>(a.totalGasto||0)?p:a,{});
+  const kT=document.getElementById('parc-kpi-total');if(kT)kT.textContent=lista.length;
+  const kG=document.getElementById('parc-kpi-gasto');if(kG)kG.textContent=fmt(totalGasto);
+  const kF=document.getElementById('parc-kpi-freq');if(kF)kF.textContent=maisFreq.nome||'—';
+  const kM=document.getElementById('parc-kpi-maior');if(kM)kM.textContent=maiorGasto.nome||'—';
+
+  // Lista completa
+  const el=document.getElementById('parc-lista');if(!el)return;
+  if(!lista.length){el.innerHTML='<div class="card" style="text-align:center;color:var(--text3);padding:32px;font-size:13px">Nenhum parceiro cadastrado ainda.<br><br>Use o formulário acima para adicionar.</div>';return;}
+  const sorted=[...lista].sort((a,b)=>(b.totalGasto||0)-(a.totalGasto||0));
+  el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:var(--bg2)">
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--text3);letter-spacing:.5px">NOME</th>
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--text3);letter-spacing:.5px">CATEGORIA</th>
+        <th style="padding:10px 14px;text-align:center;font-size:10px;color:var(--text3);letter-spacing:.5px">VISITAS</th>
+        <th style="padding:10px 14px;text-align:right;font-size:10px;color:var(--text3);letter-spacing:.5px">TOTAL GASTO</th>
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--text3);letter-spacing:.5px">ÚLTIMA COMPRA</th>
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--text3);letter-spacing:.5px">CONTATO</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${sorted.map(p=>`
+        <tr style="border-top:1px solid var(--border)">
+          <td style="padding:10px 14px;font-weight:700;color:var(--text)">${esc(p.nome)}</td>
+          <td style="padding:10px 14px;color:var(--text2)">${esc(p.categoria||'—')}</td>
+          <td style="padding:10px 14px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">${p.frequencia||0}x</td>
+          <td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-yellow)">${fmt(p.totalGasto||0)}</td>
+          <td style="padding:10px 14px;color:var(--text3);font-size:11px">${p.ultimaCompra?_fmtData(p.ultimaCompra):'—'}</td>
+          <td style="padding:10px 14px;color:var(--text3);font-size:11px">${esc(p.contato||'—')}</td>
+          <td style="padding:10px 14px"><button onclick="removerParceiro(${p.id})" style="background:none;border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);cursor:pointer;border-radius:6px;padding:3px 8px;font-size:11px">✕</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function lancRenderTop5Parceiros(){
+  const el=document.getElementById('lanc-parceiros-top5');
+  if(!el)return;
+  const lista=getParceiros();
+  if(!lista.length){el.innerHTML='<div style="color:var(--text3);font-size:11px;padding:4px 0">Nenhum parceiro cadastrado ainda. <span style="color:var(--neon-blue);cursor:pointer" onclick="showPage(\'parceiros\')">Cadastrar ↗</span></div>';return;}
+  const top5=[...lista].sort((a,b)=>(b.totalGasto||0)-(a.totalGasto||0)).slice(0,5);
+  el.innerHTML=top5.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;${i<top5.length-1?'border-bottom:1px solid var(--border)':''}">
+      <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);width:14px">${i+1}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${esc(p.nome)}</div>
+        <div style="font-size:10px;color:var(--text3)">${esc(p.categoria||'—')} · ${p.frequencia||0} visitas</div>
+      </div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-yellow)">${fmt(p.totalGasto||0)}</span>
+    </div>`).join('');
+}
+
+// Autocomplete estabelecimento no formulário de lançamento
+function lancEstabBuscar(q){
+  const sug=document.getElementById('lanc-estab-sugestoes');
+  if(!sug)return;
+  if(!q||q.length<1){sug.style.display='none';return;}
+  const lista=getParceiros();
+  const filtrados=lista.filter(p=>p.nome.toLowerCase().includes(q.toLowerCase())).slice(0,6);
+  if(!filtrados.length){sug.style.display='none';return;}
+  sug.style.display='block';
+  sug.innerHTML=filtrados.map(p=>`
+    <div onclick="lancEstabSelecionar('${p.nome.replace(/'/g,"\\'")}')"
+      style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"
+      onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+      <div>
+        <span style="font-size:13px;color:var(--text);font-weight:700">${esc(p.nome)}</span>
+        <span style="font-size:10px;color:var(--text3);margin-left:8px">${esc(p.categoria||'')}</span>
+      </div>
+      <span style="font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">${fmt(p.totalGasto||0)}</span>
+    </div>`).join('');
+}
+function lancEstabSelecionar(nome){
+  const inp=document.getElementById('lanc-estabelecimento');
+  if(inp) inp.value=nome;
+  const sug=document.getElementById('lanc-estab-sugestoes');
+  if(sug) sug.style.display='none';
+}
+document.addEventListener('click',e=>{
+  const sug=document.getElementById('lanc-estab-sugestoes');
+  const inp=document.getElementById('lanc-estabelecimento');
+  if(sug&&inp&&!inp.contains(e.target)&&!sug.contains(e.target)) sug.style.display='none';
+});
 
 // ===================== TAREFA 11 — MULTI-MOEDA =====================
 const MOEDAS_CONFIG={
@@ -17781,6 +17932,12 @@ const _HELP_DATA={
     {icon:'📊',title:'O que é',text:'Gere relatórios em PDF do seu sistema financeiro por período e seção.'},
     {icon:'📄',title:'O que inclui',text:'Escolha quais seções incluir: gastos, receita, metas, investimentos, planejamento.'},
     {icon:'📅',title:'Período',text:'Selecione o mês e ano do relatório. Ideal para análise mensal ou declaração de IR.'},
+  ]},
+  parceiros:{title:'PARCEIROS',tag:'// ESTABELECIMENTOS E NEGÓCIOS',items:[
+    {icon:'🏪',title:'O que é',text:'Cadastre os estabelecimentos onde você compra com frequência: supermercados, postos, farmácias, restaurantes.'},
+    {icon:'📊',title:'Ranking automático',text:'O sistema calcula automaticamente quantas vezes você visitou cada parceiro e o total gasto em cada um.'},
+    {icon:'⚡',title:'Integração com Lançamentos',text:'No formulário de lançamento, selecione o estabelecimento. O sistema atualiza o histórico automaticamente.'},
+    {icon:'🏆',title:'Top 5',text:'Os 5 parceiros com maior valor gasto aparecem no resumo dentro de Lançamentos para consulta rápida.'},
   ]},
   documentos:{title:'DOCUMENTOS PESSOAIS',tag:'// SEU DATABOOK',items:[
     {icon:'🗂️',title:'O que é',text:'Centralize seus documentos importantes: RG, CPF, CNH, certidões, exames médicos.'},
@@ -19890,6 +20047,36 @@ function _mktAtualizarSelectListas(){
     pendentes.map(l=>`<option value="${l.id}">📅 ${_mktMesLabel(l.mes)} (${l.itens.length} item${l.itens.length!==1?'s':''})</option>`).join('');
 }
 
+function _mktGetNextSku(){
+  const itens=_mktGetCatalogo();
+  let max=26999;
+  itens.forEach(it=>{
+    if(it.sku&&/^I\d+$/.test(it.sku)){
+      const n=parseInt(it.sku.slice(1));
+      if(!isNaN(n)&&n>max) max=n;
+    }
+  });
+  return 'I'+(max+1);
+}
+function _mktMigrateSku(){
+  if(load('mkt_sku_v1')) return;
+  const itens=_mktGetCatalogo();
+  let changed=false,counter=27000;
+  // determina o maior SKU já existente
+  itens.forEach(it=>{
+    if(it.sku&&/^I\d+$/.test(it.sku)){
+      const n=parseInt(it.sku.slice(1));
+      if(!isNaN(n)&&n>=counter) counter=n+1;
+    }
+  });
+  // atribui SKU aos que não têm
+  itens.forEach(it=>{
+    if(!it.sku){it.sku='I'+counter++;changed=true;}
+  });
+  if(changed) _mktSetCatalogo(itens);
+  save('mkt_sku_v1','1');
+}
+
 function mktCadastrarItem(){
   const nome=(document.getElementById('mkt-nome')?.value||'').trim();
   const cat=document.getElementById('mkt-cat')?.value||'Outros';
@@ -19902,7 +20089,7 @@ function mktCadastrarItem(){
   // Salva SEMPRE no catálogo
   const newId=Date.now();
   const c=_mktGetCatalogo();
-  c.push({id:newId,nome,cat,qtd,unidade,preco,foto:_mktCadFotoB64||'',dataCadastro:new Date().toISOString(),ultimaAtualizacao:new Date().toISOString()});
+  c.push({id:newId,sku:_mktGetNextSku(),nome,cat,qtd,unidade,preco,foto:_mktCadFotoB64||'',dataCadastro:new Date().toISOString(),ultimaAtualizacao:new Date().toISOString()});
   _mktSetCatalogo(c);
 
   // Vincula à lista do mês se checkbox marcado
@@ -19973,6 +20160,7 @@ function mktToggleCatalogo(){_mktUpdateArrows();}// compat
 
 
 function _mktRenderCatalogo(){
+  _mktMigrateSku();
   const el=document.getElementById('mkt-catalogo-lista');if(!el)return;
   const cat=_mktGetCatalogo();
   const cnt=document.getElementById('mkt-cat-count');
@@ -19991,6 +20179,7 @@ function _mktRenderCatalogo(){
       </div>
       <div style="padding:8px 10px;flex:1">
         <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px" title="${esc(it.nome)}">${esc(it.nome)}</div>
+        <div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);letter-spacing:.5px;margin-bottom:3px;opacity:.8">${it.sku||''}</div>
         <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${_MKT_EMOJI[it.cat]||'📦'} ${it.cat} · ${it.qtd}${it.unidade||'un'}</div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-yellow)">${it.preco>0?_mktFmt(it.preco):'—'}</div>
         <div style="font-size:10px;color:var(--text3);margin-top:3px">${it.dataCadastro?'cadastrado em '+new Date(it.dataCadastro).toLocaleDateString('pt-BR'):'cadastrado anteriormente'}</div>
@@ -20213,17 +20402,63 @@ function mktFiltrarCatalogoPicker(){
 }
 function mktAddItemDosCatalogo(catItemId){const it=_mktGetCatalogo().find(x=>x.id===catItemId);if(!it||!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;if(lista.itens.find(i=>i.refId===catItemId)){alert(`"${it.nome}" já está nesta lista.`);return;}lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:0,comprado:false});_mktSetListas(listas);mktFecharAddMes();_mktRenderMes();}
 function mktAddItemManual(){const nome=(document.getElementById('mkt-add-man-nome')?.value||'').trim();if(!nome){alert('Informe o nome.');return;}const cat=document.getElementById('mkt-add-man-cat')?.value||'Outros';const qtd=parseFloat(document.getElementById('mkt-add-man-qtd')?.value)||1;const unidade=document.getElementById('mkt-add-man-unidade')?.value||'un';const preco=_mktParseBRL(document.getElementById('mkt-add-man-preco')?.value);if(!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens.push({id:Date.now(),refId:null,nome,cat,qtd,unidade,precoPrev:preco,precoReal:0,comprado:false});_mktSetListas(listas);['mkt-add-man-nome','mkt-add-man-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('mkt-add-man-qtd').value='1';document.getElementById('mkt-add-man-unidade').value='un';mktFecharAddMes();_mktRenderMes();}
-function mktAnexarNF(inp){if(!inp.files[0]||!_mktMesId)return;const f=inp.files[0];const r=new FileReader();r.onload=e=>{const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.nf={nome:f.name,tipo:f.type,dados:e.target.result};_mktSetListas(listas);_mktRenderNF(lista);};r.readAsDataURL(f);}
-function _mktRenderNF(lista){
-  const prev=document.getElementById('mkt-mes-nf-preview');const drop=document.getElementById('mkt-mes-nf-drop');const info=document.getElementById('mkt-mes-nf-info');if(!prev||!drop)return;
-  if(lista.nf?.dados){prev.style.display='block';drop.style.display='none';
-    if(lista.nf.tipo?.startsWith('image/')){prev.innerHTML=`<img src="${lista.nf.dados}" style="max-width:100%;border-radius:8px;border:1px solid var(--border)">`;}
-    else{prev.innerHTML=`<div style="padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:8px"><span style="font-size:22px">📄</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--neon-blue)">${esc(lista.nf.nome)}</div></div></div>`;}
-    if(info){info.style.display='flex';info.innerHTML=`<button onclick="mktVerNF()" style="flex:1;padding:7px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:7px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">📄 VER NF</button><button onclick="mktRemoverNF()" style="margin-left:6px;flex:1;padding:7px;background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);border-radius:7px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700">✕ REMOVER</button>`;}}
-  else{prev.style.display='none';prev.innerHTML='';drop.style.display='block';if(info)info.style.display='none';}
+function mktAnexarNF(inp){
+  if(!inp.files[0]||!_mktMesId)return;
+  const f=inp.files[0];
+  const r=new FileReader();
+  r.onload=e=>{
+    const listas=_mktGetListas();
+    const lista=listas.find(l=>l.id===_mktMesId);
+    if(!lista)return;
+    // migra NF legada (campo único) para array
+    if(!lista.nfs) lista.nfs=lista.nf?.dados?[{id:Date.now()-1,nome:lista.nf.nome,tipo:lista.nf.tipo,dados:lista.nf.dados}]:[];
+    lista.nfs.push({id:Date.now(),nome:f.name,tipo:f.type,dados:e.target.result});
+    lista.nf=null;
+    _mktSetListas(listas);
+    inp.value='';
+    _mktRenderNF(lista);
+  };
+  r.readAsDataURL(f);
 }
-function mktRemoverNF(){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.nf=null;_mktSetListas(listas);const nfFile=document.getElementById('mkt-mes-nf-file');if(nfFile)nfFile.value='';_mktRenderNF(lista);}
-function mktVerNF(){const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!lista?.nf?.dados)return;verAnexo(lista.nf.nome,lista.nf.tipo,lista.nf.dados,'NF · '+_mktMesLabel(lista.mes));}
+function _mktRenderNF(lista){
+  // suporte a formato legado
+  const nfs=[...(lista.nfs||[])];
+  if(lista.nf?.dados&&!nfs.length) nfs.push({id:0,nome:lista.nf.nome,tipo:lista.nf.tipo,dados:lista.nf.dados});
+  const container=document.getElementById('mkt-mes-nf-lista');
+  if(!container) return;
+  if(!nfs.length){container.innerHTML='';return;}
+  container.innerHTML=nfs.map(nf=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      ${nf.tipo?.startsWith('image/')
+        ?`<img src="${nf.dados}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)">`
+        :`<div style="width:48px;height:48px;background:rgba(0,200,255,0.1);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">📄</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(nf.nome)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${nf.tipo?.startsWith('image/')?'Imagem':'PDF'}</div>
+      </div>
+      <button onclick="mktVerNF(${nf.id})" style="padding:5px 8px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:7px;cursor:pointer;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;white-space:nowrap">👁 VER</button>
+      <button onclick="mktRemoverNF(${nf.id})" style="padding:5px 8px;background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);border-radius:7px;cursor:pointer;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace">✕</button>
+    </div>`).join('');
+}
+function mktRemoverNF(id){
+  const listas=_mktGetListas();
+  const lista=listas.find(l=>l.id===_mktMesId);
+  if(!lista)return;
+  if(!lista.nfs) lista.nfs=lista.nf?.dados?[{id:0,nome:lista.nf.nome,tipo:lista.nf.tipo,dados:lista.nf.dados}]:[];
+  lista.nfs=lista.nfs.filter(n=>n.id!==id);
+  lista.nf=null;
+  _mktSetListas(listas);
+  _mktRenderNF(lista);
+}
+function mktVerNF(id){
+  const lista=_mktGetListas().find(l=>l.id===_mktMesId);
+  if(!lista)return;
+  const nfs=[...(lista.nfs||[])];
+  if(lista.nf?.dados&&!nfs.length) nfs.push({id:0,nome:lista.nf.nome,tipo:lista.nf.tipo,dados:lista.nf.dados});
+  const nf=id===undefined?nfs[0]:nfs.find(n=>n.id===id);
+  if(!nf?.dados)return;
+  verAnexo(nf.nome,nf.tipo,nf.dados,'NF · '+_mktMesLabel(lista.mes));
+}
 function mktConcluirLista(){
   const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;
   const pend=lista.itens.filter(i=>!i.comprado).length;
@@ -20412,7 +20647,7 @@ function mktScannerConfirmar(){
   const todos=_mktGetCatalogo();
   const idx=todos.findIndex(i=>i.nome.toLowerCase().trim()===nome.toLowerCase());
   if(idx>=0){todos[idx].preco=preco;todos[idx].ultimaAtualizacao=agora;}
-  else{todos.push({id:Date.now(),nome,cat,qtd,unidade,preco,foto:null,dataCadastro:agora,ultimaAtualizacao:agora});}
+  else{todos.push({id:Date.now(),sku:_mktGetNextSku(),nome,cat,qtd,unidade,preco,foto:null,dataCadastro:agora,ultimaAtualizacao:agora});}
   _mktSetCatalogo(todos);
   _mktScanOk++;_mktScanIdx++;
   mktScannerRenderItem();

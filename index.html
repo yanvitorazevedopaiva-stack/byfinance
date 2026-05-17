@@ -716,6 +716,11 @@
   }
   tr:hover td { background:var(--td-hover); color:var(--text); }
 
+  /* ===== CAMPO TIP ===== */
+  .tip{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.22);color:var(--neon-blue);font-size:9px;font-style:italic;font-weight:700;cursor:help;margin-left:4px;vertical-align:middle;flex-shrink:0;font-family:serif;line-height:1;user-select:none;}
+  .tip:hover{background:rgba(0,200,255,0.18);border-color:var(--neon-blue);}
+  #_field-tip{position:fixed;z-index:8500;background:var(--card);border:1px solid rgba(0,200,255,0.25);border-radius:10px;padding:10px 14px;font-size:11px;color:var(--text2);line-height:1.6;width:240px;box-shadow:0 6px 24px rgba(0,0,0,.5);pointer-events:none;font-family:'Inter',sans-serif;font-weight:400;white-space:normal;letter-spacing:0;text-transform:none;display:none;transition:opacity .12s;}
+
   /* ===== AJUDA CONTEXTUAL ===== */
   .help-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);font-size:11px;font-weight:700;cursor:pointer;margin-left:8px;flex-shrink:0;transition:all .2s;font-family:'JetBrains Mono',monospace;vertical-align:middle;}
   .help-btn:hover{background:rgba(0,200,255,0.2);border-color:var(--neon-blue);transform:scale(1.1);}
@@ -3418,11 +3423,11 @@
     <div class="sec-title">ADICIONAR DESPESA</div>
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 80px auto;gap:10px;align-items:end">
       <div>
-        <div class="card-label" style="margin-bottom:4px">DESCRIÇÃO</div>
+        <div class="card-label" style="margin-bottom:4px">DESCRIÇÃO <span class="tip" data-tip="Nome da despesa que você paga todo mês. Ex: Aluguel, Netflix, Academia, Conta de água. Vai aparecer na lista de gastos fixos.">i</span></div>
         <input type="text" id="gf-new-desc" placeholder="Ex: Academia, Streaming..." style="width:100%">
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">CATEGORIA</div>
+        <div class="card-label" style="margin-bottom:4px">CATEGORIA <span class="tip" data-tip="Tipo da despesa fixa. Usado para agrupar nos relatórios e identificar onde vai seu dinheiro todo mês.">i</span></div>
         <select id="gf-new-cat" style="width:100%" onchange="gfCatChange(this.value)">
           <option>Moradia</option><option>Pessoal</option><option>Streaming</option>
           <option>Saúde</option><option>Alimentação</option><option>Educação</option>
@@ -3432,7 +3437,7 @@
         <input id="gf-new-cat-outros" type="text" placeholder="Especifique a categoria..." style="display:none;width:100%;margin-top:6px;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">PRIORIDADE</div>
+        <div class="card-label" style="margin-bottom:4px">PRIORIDADE <span class="tip" data-tip="🔴 Essencial: não pode deixar de pagar (aluguel, luz, água). 🟡 Importante: difícil cortar. 🔵 Opcional: pode eliminar se precisar economizar. Ajuda a identificar o que cortar numa crise.">i</span></div>
         <select id="gf-new-prio" style="width:100%">
           <option value="essencial">🔴 Essencial</option>
           <option value="importante">🟡 Importante</option>
@@ -3440,11 +3445,11 @@
         </select>
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">VALOR (R$)</div>
+        <div class="card-label" style="margin-bottom:4px">VALOR (R$) <span class="tip" data-tip="Quanto você paga por mês. Soma no total de Gastos Fixos, é descontado do salário no cálculo de sobra e aparece no Planejamento Anual na coluna Dívidas.">i</span></div>
         <input type="number" id="gf-new-val" placeholder="0,00" step="0.01" min="0" style="width:100%">
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">VENCE DIA</div>
+        <div class="card-label" style="margin-bottom:4px">VENCE DIA <span class="tip" data-tip="Dia do mês em que essa conta vence. O Dashboard vai te alertar automaticamente quando a data estiver chegando.">i</span></div>
         <input type="number" id="gf-new-venc" placeholder="1-31" min="1" max="31" style="width:100%;padding:8px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:center">
       </div>
       <button class="btn" onclick="addGastoFixo()">+ ADICIONAR</button>
@@ -3515,11 +3520,11 @@
     <div class="sec-title">ADICIONAR CARTÃO</div>
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px">
       <div>
-        <div class="card-label" style="margin-bottom:4px">NOME</div>
+        <div class="card-label" style="margin-bottom:4px">NOME <span class="tip" data-tip="Nome para identificar o cartão. Ex: Nubank, Itaú Gold, Inter Black. Aparece nos selects de pagamento em todo o sistema.">i</span></div>
         <input type="text" id="ct-new-nome" placeholder="Ex: Nubank, Inter..." style="width:100%">
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">TIPO</div>
+        <div class="card-label" style="margin-bottom:4px">TIPO <span class="tip" data-tip="Crédito: tem fatura mensal, você paga depois. Débito: debita na sua conta na hora. Crédito e Débito: funciona dos dois modos.">i</span></div>
         <select id="ct-new-tipo" onchange="ctTipoChange()" style="width:100%">
           <option value="">— selecione —</option>
           <option value="Crédito">Crédito</option>
@@ -3528,7 +3533,7 @@
         </select>
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">COR</div>
+        <div class="card-label" style="margin-bottom:4px">COR <span class="tip" data-tip="Cor visual do cartão nos painéis e gráficos. Apenas para identificação visual, não afeta os cálculos.">i</span></div>
         <select id="ct-new-cor" style="width:100%">
           <option value="purple">Roxo</option>
           <option value="blue">Azul</option>
@@ -3545,15 +3550,15 @@
         </select>
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">LIMITE (R$)</div>
+        <div class="card-label" style="margin-bottom:4px">LIMITE (R$) <span class="tip" data-tip="Valor máximo de crédito que o banco te deu. O sistema alerta quando você está próximo de estourar o limite.">i</span></div>
         <input type="number" id="ct-new-limite" placeholder="0,00" step="0.01" min="0" style="width:100%">
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">FECHAMENTO</div>
+        <div class="card-label" style="margin-bottom:4px">FECHAMENTO <span class="tip" data-tip="Dia do mês em que a fatura fecha. Compras feitas APÓS esse dia vão para a fatura do mês seguinte, não do atual.">i</span></div>
         <input type="number" id="ct-new-fecha" placeholder="Dia" min="1" max="31" style="width:100%">
       </div>
       <div>
-        <div class="card-label" style="margin-bottom:4px">VENCIMENTO</div>
+        <div class="card-label" style="margin-bottom:4px">VENCIMENTO <span class="tip" data-tip="Dia do mês em que você paga a fatura. O Dashboard te avisa quando estiver chegando para você não atrasar e pagar juros.">i</span></div>
         <input type="number" id="ct-new-venc" placeholder="Dia" min="1" max="31" style="width:100%">
       </div>
       <button class="btn" onclick="addCartao()">+ ADICIONAR</button>
@@ -3804,7 +3809,7 @@
     <!-- Linha 1: Desc, Data, Categoria, Valor -->
     <div style="display:grid;grid-template-columns:3fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
       <div class="lanc-ac-wrap">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO <span class="tip" data-tip="O que você comprou ou pagou. Ex: Gasolina Posto BR, Mercado Extra, Conta de Luz. Aparece no histórico, relatórios e busca do Semanal.">i</span></div>
         <input type="text" id="lanc-desc" placeholder="Ex: Pão, Gasolina, Tênis..."
           style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"
           oninput="lancAcRender(this.value)"
@@ -3813,11 +3818,11 @@
         <div id="lanc-ac-dropdown"></div>
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DATA</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DATA <span class="tip" data-tip="Quando aconteceu o gasto ou recebimento. Define em qual semana o lançamento vai aparecer na página Semanal.">i</span></div>
         <input type="date" id="lanc-data" onchange="lancOnChangeData(this.value)" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA <span class="tip" data-tip="Classifica o tipo de gasto. Usado para análise de onde você mais gasta e nos relatórios mensais. Ao escolher Mercado, aparece opções extras da lista de compras.">i</span></div>
         <select id="lanc-cat" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px" onchange="lancCatChange(this.value);lancOnCatChange(this.value);lancCatChangeTerceiro&&lancCatChangeTerceiro(this.value);this.value==='Transporte'&&lancTransporteVeiculo&&lancTransporteVeiculo()">
           <option>Alimentação</option><option>Transporte</option><option>Moradia</option>
           <option>Lazer e Entretenimento</option><option>Saúde</option><option>Educação</option>
@@ -3833,7 +3838,7 @@
         </div>
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR TOTAL (R$)</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR TOTAL (R$) <span class="tip" data-tip="Quanto você gastou ou recebeu. Se for parcelado no cartão, informe o valor total da compra — o sistema divide pelas parcelas automaticamente.">i</span></div>
         <input type="number" id="lanc-val" placeholder="0,00" step="0.01" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace">
       </div>
     </div>
@@ -3854,7 +3859,7 @@
         </button>
       </div>
       <div style="position:relative;margin-bottom:10px">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">ITEM DE MERCADO</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">ITEM DE MERCADO <span class="tip" data-tip="Produto que você comprou. Digite para buscar no catálogo cadastrado. Se escolher LISTA, o item entra na lista de compras do mês em Mercado.">i</span></div>
         <input id="lanc-mkt-item-input" type="text" placeholder="Digite para buscar item cadastrado..."
           oninput="lancMktBuscarItem(this.value)" autocomplete="off"
           style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
@@ -3870,7 +3875,7 @@
 
     <!-- Linha 2: Forma de pagamento -->
     <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;letter-spacing:.5px">FORMA DE PAGAMENTO</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;letter-spacing:.5px">FORMA DE PAGAMENTO <span class="tip" data-tip="Como você pagou. Débito/PIX/Dinheiro: saída imediata, vai direto ao Semanal. Crédito: vai para a fatura do cartão. Parcelado: divide o valor nos próximos meses. Empréstimo: cria parcelas no Planejamento.">i</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="lanc-formas-wrap">
         <button id="lb-debito"      class="lanc-forma-btn" onclick="setLancForma('debito')">💳 DÉBITO</button>
         <button id="lb-cred-vista"  class="lanc-forma-btn" onclick="setLancForma('cred-vista')">💳 CRÉDITO À VISTA</button>
@@ -3886,19 +3891,19 @@
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:10px">🏦 DETALHES DO EMPRÉSTIMO</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">BANCO / INSTITUIÇÃO</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">BANCO / INSTITUIÇÃO <span class="tip" data-tip="Nome de quem emprestou o dinheiro. Ex: Caixa Econômica, Nubank, um amigo. Aparece na lista de parcelas.">i</span></div>
             <input id="lanc-emp-inst" type="text" placeholder="Ex: Caixa, Nubank, Amigo..." style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Nº DE PARCELAS</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Nº DE PARCELAS <span class="tip" data-tip="Em quantas vezes você vai pagar a dívida. O sistema cria uma parcela por mês no Planejamento Anual.">i</span></div>
             <input id="lanc-emp-nparc" type="number" min="1" placeholder="Ex: 6" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--neon-blue);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DATA 1ª PARCELA</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DATA 1ª PARCELA <span class="tip" data-tip="Data do primeiro pagamento. As parcelas seguintes são criadas nos meses seguintes automaticamente.">i</span></div>
             <input id="lanc-emp-inicio" type="date" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TAXA DE JUROS (% a.m., opcional)</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TAXA DE JUROS (% a.m.) <span class="tip" data-tip="Juros mensais do empréstimo. Se não souber ou não tiver juros, deixe 0 e o sistema divide o valor igualmente nas parcelas.">i</span></div>
             <input id="lanc-emp-juros" type="number" step="0.01" min="0" placeholder="0" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:12px;box-sizing:border-box">
           </div>
         </div>
@@ -3908,7 +3913,7 @@
       <div id="lanc-pixcred-fields" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:10px">
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:10px">💸 DETALHES DO PIX CRÉDITO</div>
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">INSTITUIÇÃO</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">INSTITUIÇÃO <span class="tip" data-tip="Empresa que financiou o PIX parcelado. Ex: Nubank, Inter, C6 Bank. Aparece na descrição do lançamento.">i</span></div>
           <input id="lanc-pixcred-inst" type="text" placeholder="Ex: Nubank, Inter, C6..." style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
         </div>
       </div>
@@ -3938,7 +3943,7 @@
     <!-- Estabelecimento / Parceiro -->
     <div style="margin-bottom:12px;position:relative">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <span style="font-size:10px;color:var(--text3);letter-spacing:.5px">🏪 ESTABELECIMENTO</span>
+        <span style="font-size:10px;color:var(--text3);letter-spacing:.5px">🏪 ESTABELECIMENTO <span class="tip" data-tip="Onde você comprou ou pagou. Ex: Supermercado Extra, Posto Shell, Farmácia Raia. Registra no histórico de Parceiros com total gasto e frequência.">i</span></span>
         <span style="font-size:10px;color:var(--text3)">(opcional)</span>
         <span style="font-size:10px;color:var(--neon-blue);cursor:pointer;margin-left:auto" onclick="showPage('parceiros')">VER PARCEIROS ↗</span>
       </div>
@@ -3950,7 +3955,7 @@
 
     <!-- Vincular a Bem (opcional) -->
     <div id="lanc-bem-wrap" style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="font-size:10px;color:var(--text3);letter-spacing:.5px;white-space:nowrap">🔗 VINCULAR A BEM:</div>
+      <div style="font-size:10px;color:var(--text3);letter-spacing:.5px;white-space:nowrap">🔗 VINCULAR A BEM <span class="tip" data-tip="Associa este gasto a um bem que você possui (carro, moto, imóvel). O valor vai para o histórico de manutenção e gastos daquele bem na página Meus Bens.">i</span></div>
       <select id="lanc-bem-sel" style="flex:1;min-width:180px;padding:7px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
         <option value="">— nenhum —</option>
       </select>
@@ -4880,8 +4885,8 @@
               onmouseover="this.style.borderColor='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)'" title="Clique para adicionar foto">📷</div>
             <input type="file" id="mkt-foto-input" accept="image/*" style="display:none" onchange="mktPreviewCadFoto(this)">
             <div style="flex:1">
-              <input id="mkt-nome" type="text" placeholder="Nome do item *" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
-              <div style="font-size:10px;color:var(--text3);margin-top:3px" id="mkt-foto-label">Sem foto</div>
+              <input id="mkt-nome" type="text" placeholder="Nome do item * — Ex: Arroz, Leite, Detergente" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+              <div style="font-size:10px;color:var(--text3);margin-top:3px" id="mkt-foto-label">Sem foto <span class="tip" data-tip="Nome do produto. Fica salvo no catálogo com SKU único, histórico de preços e foto. Aparece no autocomplete ao fazer lançamentos de Mercado.">i</span></div>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -4900,7 +4905,7 @@
               </select>
             </div>
           </div>
-          <input id="mkt-preco" type="text" inputmode="numeric" placeholder="Preço (R$) conforme NF" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+          <input id="mkt-preco" type="text" inputmode="numeric" placeholder="Preço (R$) — usado para calcular o total da lista" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
           <!-- Vincular ao cadastrar -->
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);transition:border-color .2s"
             onmouseover="this.style.borderColor='rgba(0,255,157,0.35)'" onmouseout="this.style.borderColor='var(--border)'">
@@ -5240,23 +5245,23 @@
       <div class="sec-title" style="margin-bottom:16px">NOVA TAREFA</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO *</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TÍTULO * <span class="tip" data-tip="O que você precisa fazer. Ex: Pagar fatura Nubank, Revisar orçamento, Ligar para banco. Aparece na lista de tarefas e no modal de abertura do sistema.">i</span></div>
           <input id="trf-titulo" type="text" placeholder="O que precisa ser feito?" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
         </div>
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO (opcional)</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO (opcional) <span class="tip" data-tip="Detalhes da tarefa. Ex: número da conta para pagar, contato a ligar, endereço para ir. Aparece ao expandir a tarefa na lista.">i</span></div>
           <input id="trf-desc" type="text" placeholder="Detalhes adicionais..." style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA <span class="tip" data-tip="Tipo da tarefa. Usado para filtrar e organizar. Financeiro, Pessoal, Trabalho, Casa, etc.">i</span></div>
             <select id="trf-cat" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
               <option value="Estudo">📚 Estudo</option><option value="Casa">🏠 Casa</option><option value="Trabalho">💼 Trabalho</option>
               <option value="Compromisso">📅 Compromisso</option><option value="Pessoal">⭐ Pessoal</option>
             </select>
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRIORIDADE</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRIORIDADE <span class="tip" data-tip="🔴 Alta: urgente, não pode esperar. 🟡 Média: importante mas tem tempo. 🔵 Baixa: pode aguardar. Tarefas de alta prioridade aparecem destacadas no topo da lista.">i</span></div>
             <select id="trf-prio" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
               <option value="Alta">🔴 Alta</option><option value="Media" selected>🟡 Média</option><option value="Baixa">🔵 Baixa</option>
             </select>
@@ -5264,7 +5269,7 @@
         </div>
         <!-- Feature 3: "Dia certo" + Meta diária -->
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DIA CERTO (dia exato para fazer)</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DIA CERTO <span class="tip" data-tip="Dia específico em que você vai executar esta tarefa. Diferente de prazo: é o dia que você RESERVOU para fazer. Tarefas atrasadas aparecem em vermelho.">i</span></div>
           <input id="trf-prazo" type="date" style="width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
         </div>
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border)">
@@ -5272,7 +5277,7 @@
           <span style="font-size:11px;color:var(--text2);font-weight:600">Meta diária (repete todos os dias)</span>
         </label>
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">RECORRÊNCIA (repete após concluir)</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">RECORRÊNCIA <span class="tip" data-tip="Se a tarefa se repete automaticamente. Ex: Toda semana = o sistema cria a próxima tarefa assim que você concluir esta. Ideal para tarefas financeiras rotineiras.">i</span></div>
           <select id="trf-recorrencia" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
             <option value="0">🚫 Não repete</option>
             <option value="7">📅 Toda semana (7 dias)</option>
@@ -5284,7 +5289,7 @@
           </select>
         </div>
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VINCULAR A META (opcional)</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VINCULAR A META <span class="tip" data-tip="Associa esta tarefa a uma meta maior. Quando você concluir a tarefa, o progresso da meta é atualizado automaticamente. Ótimo para metas que precisam de ações repetidas.">i</span></div>
           <select id="trf-meta" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
             <option value="">— Sem vínculo —</option>
           </select>
@@ -5359,19 +5364,19 @@
     <!-- Linha 1 -->
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO <span class="tip" data-tip="De onde vem o dinheiro. Ex: Salário empresa, Freela projeto X, Aluguel apartamento. Aparece no histórico de receitas e nos relatórios mensais.">i</span></div>
         <input id="rec-desc" type="text" placeholder="Ex: Salário, Freelance..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px">
       </div>
       <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">VALOR RECEBIDO (R$)</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">VALOR RECEBIDO (R$) <span class="tip" data-tip="Quanto entrou na sua conta. Vai para a coluna Receita no Planejamento Anual e aparece no Dashboard como Receita do Mês.">i</span></div>
         <input id="rec-val" type="number" min="0" step="0.01" placeholder="0,00" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--neon-green);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px">
       </div>
       <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">DATA PREVISTA</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">DATA PREVISTA <span class="tip" data-tip="Quando o dinheiro vai entrar na sua conta. Define em qual mês a receita é contabilizada no Planejamento Anual.">i</span></div>
         <input id="rec-data" type="date" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px">
       </div>
       <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CATEGORIA <span class="tip" data-tip="Tipo da receita. Salário, Freelance, Aluguel recebido, Investimento, etc. Usado nos gráficos de composição de renda.">i</span></div>
         <select id="rec-cat" onchange="recOnChangeCat(this.value)" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
           <option>Salário</option><option>Freelance</option><option>Bônus</option><option>Investimento</option><option>Aluguel</option><option>Outros</option>
         </select>
@@ -5385,7 +5390,7 @@
     <!-- Linha 2 -->
     <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end">
       <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CONTA / CARTÃO RECEBIDO</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CONTA / CARTÃO RECEBIDO <span class="tip" data-tip="Onde caiu esse dinheiro. Conta corrente, poupança, cartão de débito, etc. Serve para controle de fluxo de caixa.">i</span></div>
         <select id="rec-conta" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--neon-blue);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
           <option value="">— Selecionar conta —</option>
         </select>
@@ -5466,11 +5471,11 @@
     <div class="sec-title">NOVO INVESTIMENTO</div>
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px;margin-top:12px">
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">NOME / DESCRIÇÃO</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">NOME / DESCRIÇÃO <span class="tip" data-tip="Identifique o investimento. Ex: Tesouro Selic 2027, Ações ITUB4, CDB Nubank 120% CDI. Aparece na lista e nos gráficos de alocação.">i</span></div>
         <input id="inv-nome" type="text" placeholder="Ex: Tesouro IPCA+ 2029" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TIPO</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TIPO <span class="tip" data-tip="Categoria do investimento. Usado nos gráficos de alocação da carteira para você ver quanto tem em cada tipo de ativo.">i</span></div>
         <select id="inv-tipo" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif">
           <option>Tesouro Direto</option><option>CDB</option><option>LCI/LCA</option>
           <option>Poupança</option><option>Ações</option><option>FII</option>
@@ -5478,25 +5483,25 @@
         </select>
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">INSTITUIÇÃO</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">INSTITUIÇÃO <span class="tip" data-tip="Onde seu dinheiro está aplicado. Ex: XP Investimentos, BTG, Nubank, Banco Inter. Serve para localizar o investimento rapidamente.">i</span></div>
         <input id="inv-inst" type="text" placeholder="Ex: Rico, XP, Nubank" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DATA INÍCIO</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DATA INÍCIO <span class="tip" data-tip="Quando você fez o investimento. Usado para calcular há quanto tempo o dinheiro está aplicado e a rentabilidade no período.">i</span></div>
         <input id="inv-data" type="date" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:12px;align-items:end">
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR INVESTIDO (R$)</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR INVESTIDO (R$) <span class="tip" data-tip="Quanto você colocou originalmente neste investimento. Serve de base para calcular quanto ganhou ou perdeu.">i</span></div>
         <input id="inv-investido" type="number" min="0" step="0.01" placeholder="0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px">
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ATUAL (R$)</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR ATUAL (R$) <span class="tip" data-tip="Quanto vale hoje este investimento. Atualize periodicamente para acompanhar a rentabilidade real. Compõe seu patrimônio total no Dashboard.">i</span></div>
         <input id="inv-atual" type="number" min="0" step="0.01" placeholder="0,00" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-green);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px">
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">OBSERVAÇÃO (opcional)</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">OBSERVAÇÃO <span class="tip" data-tip="Informações extras úteis. Ex: 'Vence em 12/2026', 'SELIC+0.5%', 'ticker PETR4'. Aparece na linha da tabela de investimentos.">i</span></div>
         <input id="inv-obs" type="text" placeholder="Vencimento, indexador, ticker..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
       </div>
       <button class="btn btn-green" onclick="addInvestimento()" style="white-space:nowrap">+ ADICIONAR</button>
@@ -5512,11 +5517,11 @@
       <div class="sec-title" style="margin:0">EVOLUÇÃO DO PATRIMÔNIO</div>
       <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:3px">MÊS</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px">MÊS <span class="tip" data-tip="Mês de referência do registro. Use para construir o histórico de crescimento do seu patrimônio ao longo do tempo.">i</span></div>
           <input id="inv-h-mes" type="month" style="padding:6px 10px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
         </div>
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:3px">TOTAL (R$)</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px">TOTAL (R$) <span class="tip" data-tip="Valor total do seu patrimônio naquele mês. Registre mês a mês para gerar o gráfico de evolução patrimonial.">i</span></div>
           <input id="inv-h-val" type="number" min="0" step="0.01" placeholder="0,00" style="width:130px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);color:var(--neon-green);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px">
         </div>
         <button class="btn btn-sm" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3);background:rgba(0,255,157,0.06)" onclick="addInvSnapshot()">+ Registrar Mês</button>
@@ -17839,6 +17844,35 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   });
 });
+
+// ===================== FIELD TIPS =====================
+(function(){
+  let _tipEl=null;
+  function _getTip(){
+    if(!_tipEl){_tipEl=document.getElementById('_field-tip');
+      if(!_tipEl){_tipEl=document.createElement('div');_tipEl.id='_field-tip';document.body.appendChild(_tipEl);}}
+    return _tipEl;
+  }
+  document.addEventListener('mouseenter',e=>{
+    if(!e.target?.classList?.contains('tip')) return;
+    const txt=e.target.getAttribute('data-tip');if(!txt) return;
+    const el=_getTip();
+    el.textContent=txt;el.style.display='block';el.style.opacity='1';
+    requestAnimationFrame(()=>{
+      const r=e.target.getBoundingClientRect();
+      const w=el.offsetWidth||240,h=el.offsetHeight||60;
+      let left=r.left+r.width/2-w/2;
+      let top=r.top-h-8;
+      if(top<8){top=r.bottom+8;}
+      if(left<8)left=8;
+      if(left+w>window.innerWidth-8)left=window.innerWidth-w-8;
+      el.style.left=left+'px';el.style.top=top+'px';
+    });
+  },true);
+  document.addEventListener('mouseleave',e=>{
+    if(e.target?.classList?.contains('tip')&&_tipEl)_tipEl.style.display='none';
+  },true);
+})();
 
 // ===================== AJUDA CONTEXTUAL =====================
 const _HELP_DATA={

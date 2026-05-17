@@ -720,6 +720,8 @@
   .help-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);font-size:11px;font-weight:700;cursor:pointer;margin-left:8px;flex-shrink:0;transition:all .2s;font-family:'JetBrains Mono',monospace;vertical-align:middle;}
   .help-btn:hover{background:rgba(0,200,255,0.2);border-color:var(--neon-blue);transform:scale(1.1);}
   .help-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9990;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .help-tooltip{position:fixed;z-index:9990;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;width:320px;max-width:calc(100vw - 20px);box-shadow:0 8px 40px rgba(0,0,0,.5);animation:helpTtIn .15s ease;}
+  @keyframes helpTtIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
   .help-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:480px;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.5);}
   .help-modal-tag{font-size:10px;font-weight:700;color:var(--neon-blue);font-family:'JetBrains Mono',monospace;letter-spacing:.8px;margin-bottom:8px;}
   .help-modal-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px;font-family:'JetBrains Mono',monospace;}
@@ -17946,49 +17948,85 @@ const _HELP_DATA={
   ]},
 };
 let _helpCloseTimer=null;
+let _helpMode=null; // 'hover' | 'click'
 
-function showHelp(pageId){
+function _helpContent(d){
+  return `<div class="help-modal-tag">${d.tag}</div>
+    <div class="help-modal-title" style="font-size:16px;margin-bottom:12px">${d.title}</div>
+    <div class="help-modal-body">${d.items.map(i=>`<div class="help-item"><span class="help-icon">${i.icon}</span><div class="help-text"><strong>${i.title}</strong>${i.text}</div></div>`).join('')}</div>`;
+}
+
+// ── HOVER: abre tooltip posicionado ao lado/abaixo do botão ──
+function showHelpHover(pageId,triggerEl){
   clearTimeout(_helpCloseTimer);
+  if(_helpMode==='click') return; // clique tem prioridade
   const d=_HELP_DATA[pageId];
   if(!d) return;
-  // Remove modal anterior sem piscar
-  const old=document.getElementById('help-modal-overlay');
-  if(old) old.remove();
+  document.getElementById('help-tooltip')?.remove();
+  const tt=document.createElement('div');
+  tt.id='help-tooltip';
+  tt.className='help-tooltip';
+  tt.addEventListener('mouseenter',()=>clearTimeout(_helpCloseTimer));
+  tt.addEventListener('mouseleave',()=>closeHelp());
+  tt.innerHTML=_helpContent(d);
+  document.body.appendChild(tt);
+  _helpMode='hover';
+  // Posicionamento após render
+  requestAnimationFrame(()=>{
+    const r=triggerEl.getBoundingClientRect();
+    const W=tt.offsetWidth||320;
+    const H=tt.offsetHeight||300;
+    const vw=window.innerWidth;
+    const vh=window.innerHeight;
+    // Preferência: abaixo e alinhado à esquerda do botão
+    let left=r.left;
+    let top=r.bottom+8;
+    // Se sai pela direita, empurra para esquerda
+    if(left+W>vw-10) left=vw-W-10;
+    // Se sai pela base, mostra acima
+    if(top+H>vh-10) top=r.top-H-8;
+    // Clamp
+    left=Math.max(10,left);
+    top=Math.max(10,top);
+    tt.style.left=left+'px';
+    tt.style.top=top+'px';
+  });
+}
+
+// ── CLIQUE: abre centralizado na tela com overlay escuro ──
+function showHelp(pageId){
+  clearTimeout(_helpCloseTimer);
+  document.getElementById('help-tooltip')?.remove();
+  document.getElementById('help-modal-overlay')?.remove();
+  const d=_HELP_DATA[pageId];
+  if(!d) return;
   const el=document.createElement('div');
   el.className='help-modal-overlay';
   el.id='help-modal-overlay';
   el.onclick=(e)=>{if(e.target===el) closeHelp();};
-  // Hover no overlay cancela o timer; sair do overlay fecha
-  el.addEventListener('mouseenter',()=>clearTimeout(_helpCloseTimer));
-  el.addEventListener('mouseleave',()=>_helpCloseTimerStart());
-  el.innerHTML=`
-    <div class="help-modal">
-      <button class="help-close" onclick="closeHelp()">✕</button>
-      <div class="help-modal-tag">${d.tag}</div>
-      <div class="help-modal-title">${d.title}</div>
-      <div class="help-modal-body">
-        ${d.items.map(i=>`<div class="help-item"><span class="help-icon">${i.icon}</span><div class="help-text"><strong>${i.title}</strong>${i.text}</div></div>`).join('')}
-      </div>
-    </div>`;
+  el.innerHTML=`<div class="help-modal"><button class="help-close" onclick="closeHelp()">✕</button>${_helpContent(d)}</div>`;
   document.body.appendChild(el);
+  _helpMode='click';
 }
-function _helpCloseTimerStart(){
-  _helpCloseTimer=setTimeout(closeHelp,250);
-}
+
 function closeHelp(){
   clearTimeout(_helpCloseTimer);
-  const el=document.getElementById('help-modal-overlay');
-  if(el) el.remove();
+  document.getElementById('help-tooltip')?.remove();
+  document.getElementById('help-modal-overlay')?.remove();
+  _helpMode=null;
 }
-// Hover global em qualquer .help-btn — sem alterar HTML
+
+// Delegação global hover nos botões ?
 document.addEventListener('mouseenter',e=>{
   if(e.target?.classList?.contains('help-btn')){
     const m=(e.target.getAttribute('onclick')||'').match(/showHelp\('([^']+)'\)/);
-    if(m) showHelp(m[1]);
+    if(m) showHelpHover(m[1],e.target);
   }
 },true);
 document.addEventListener('mouseleave',e=>{
-  if(e.target?.classList?.contains('help-btn')) _helpCloseTimerStart();
+  if(e.target?.classList?.contains('help-btn')&&_helpMode==='hover'){
+    _helpCloseTimer=setTimeout(closeHelp,120);
+  }
 },true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape') closeHelp();});
 

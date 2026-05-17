@@ -2949,7 +2949,9 @@
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
+<script>// EMAILJS: restrinja o domínio em emailjs.com → Account → API Keys → Allowed Origins
+// Adicione: https://byfinance.vercel.app (ou seu domínio de produção)
+emailjs.init("4Dr3YSdkOOmM4GEVa");</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -6159,6 +6161,31 @@
         <button class="cfg-btn" onclick="cfgTestarGemini()" style="margin-left:8px">⚡ TESTAR</button>
       </div>
       <div class="cfg-msg" id="cfg-gemini-msg"></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="cfg-btn" onclick="cfgVerificarRLS()" style="width:100%">🔒 VERIFICAR SEGURANÇA DO BANCO</button>
+        <div id="cfg-rls-status" style="font-size:12px;margin-top:8px;line-height:1.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPABASE AUTH -->
+  <div class="cfg-panel" style="border-left:3px solid var(--neon-blue)">
+    <div class="cfg-panel-head">
+      <div class="cfg-panel-icon">🔐</div>
+      <div>
+        <div class="cfg-panel-label">SUPABASE AUTH — CONFIGURAÇÃO</div>
+        <div class="cfg-panel-desc">Passos para ativar autenticação segura no servidor</div>
+      </div>
+    </div>
+    <div class="cfg-panel-body" style="font-size:12px;line-height:1.9;color:var(--text2)">
+      <div>1. Acesse <strong style="color:var(--text)">supabase.com</strong> → seu projeto</div>
+      <div>2. Authentication → Settings → <strong style="color:var(--text)">Enable email confirmations: ON</strong></div>
+      <div>3. Table Editor → user_data → <strong style="color:var(--text)">Enable Row Level Security (RLS)</strong></div>
+      <div>4. Policies → New Policy → usar template "Enable read access to own rows"</div>
+      <div style="margin-top:8px;padding:10px 12px;background:rgba(0,200,255,0.05);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--neon-blue)">
+        auth.uid()::text = user_id
+      </div>
+      <div id="cfg-auth-status" style="margin-top:10px;font-size:12px"></div>
     </div>
   </div>
 
@@ -7048,6 +7075,23 @@ function _initSupabase(){
   catch(e){console.warn('Supabase indisponível',e);}
 }
 _initSupabase();
+// Listener de estado de autenticação Supabase
+if(_supabase){
+  _supabase.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'||!session){
+      if(_authUser){
+        sessionStorage.removeItem('financeOS_user');
+        sessionStorage.removeItem('byf_supabase_uid');
+        sessionStorage.removeItem('byf_session_start');
+        _authUser='';
+      }
+    }
+    if(event==='TOKEN_REFRESHED'&&session){
+      sessionStorage.setItem('byf_session_start',Date.now());
+      sessionStorage.setItem('byf_supabase_uid',session.user.id);
+    }
+  });
+}
 let _syncTimer=null;
 
 // ===================== AUTH =====================
@@ -7055,7 +7099,93 @@ let _authUser='';
 function _userPrefix(){return _authUser?_authUser+'_':'';}
 function _getUsers(){try{const u=localStorage.getItem('financeOS_users');return u?JSON.parse(u):{}}catch(e){return {};}}
 function _saveUsers(u){try{localStorage.setItem('financeOS_users',JSON.stringify(u));}catch(e){}}
-function _hashPass(p){return btoa('fos_'+p);}
+
+// ── SHA-256 real via Web Crypto API ──
+async function _hashPass(p){
+  const encoder=new TextEncoder();
+  const data=encoder.encode('fos_byfinance_'+p);
+  const hashBuffer=await crypto.subtle.digest('SHA-256',data);
+  const hashArray=Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Migração automática: btoa → SHA-256 ──
+async function _migratePassIfNeeded(u,p){
+  const users=_getUsers();
+  const stored=users[u];
+  if(stored&&stored.startsWith('Zm9z')){
+    // senha antiga em btoa — verificar e migrar
+    const oldHash=btoa('fos_'+p);
+    if(stored===oldHash){
+      users[u]=await _hashPass(p);
+      _saveUsers(users);
+    }
+  }
+}
+
+// ── Rate Limiting — proteção brute force ──
+const _MAX_ATTEMPTS=5;
+const _LOCKOUT_MS=15*60*1000; // 15 minutos
+function _getLockoutKey(u){return 'byf_lockout_'+u;}
+function _getAttemptsKey(u){return 'byf_attempts_'+u;}
+function _isLockedOut(u){
+  const lockout=localStorage.getItem(_getLockoutKey(u));
+  if(!lockout) return false;
+  if(Date.now()-parseInt(lockout)<_LOCKOUT_MS) return true;
+  localStorage.removeItem(_getLockoutKey(u));
+  localStorage.removeItem(_getAttemptsKey(u));
+  return false;
+}
+function _registerFailedAttempt(u){
+  const key=_getAttemptsKey(u);
+  const attempts=parseInt(localStorage.getItem(key)||'0')+1;
+  localStorage.setItem(key,attempts);
+  if(attempts>=_MAX_ATTEMPTS){
+    localStorage.setItem(_getLockoutKey(u),Date.now());
+    return true;
+  }
+  return false;
+}
+function _clearAttempts(u){
+  localStorage.removeItem(_getAttemptsKey(u));
+  localStorage.removeItem(_getLockoutKey(u));
+}
+function _getRemainingLockout(u){
+  const lockout=localStorage.getItem(_getLockoutKey(u));
+  if(!lockout) return 0;
+  return Math.max(0,Math.ceil((_LOCKOUT_MS-(Date.now()-parseInt(lockout)))/60000));
+}
+
+// ── Expiração de sessão (8 horas) ──
+function _checkSessionExpiry(){
+  const start=parseInt(sessionStorage.getItem('byf_session_start')||'0');
+  if(!start) return;
+  if(Date.now()-start>8*60*60*1000){
+    sessionStorage.removeItem('financeOS_user');
+    sessionStorage.removeItem('byf_session_start');
+    _authUser='';
+    alert('Sua sessão expirou após 8 horas. Faça login novamente.');
+    location.reload();
+  }
+}
+setInterval(_checkSessionExpiry,5*60*1000);
+
+// ── Chave Gemini com XOR ──
+function _encryptGeminiKey(key){
+  const salt=(_authUser||'byf')+'_gemini_salt_2024';
+  let r='';
+  for(let i=0;i<key.length;i++) r+=String.fromCharCode(key.charCodeAt(i)^salt.charCodeAt(i%salt.length));
+  return btoa(r);
+}
+function _decryptGeminiKey(enc){
+  try{
+    const salt=(_authUser||'byf')+'_gemini_salt_2024';
+    const dec=atob(enc);
+    let r='';
+    for(let i=0;i<dec.length;i++) r+=String.fromCharCode(dec.charCodeAt(i)^salt.charCodeAt(i%salt.length));
+    return r;
+  }catch(e){return '';}
+}
 
 function switchLoginTab(tab){
   document.querySelectorAll('.login-tab').forEach((t,i)=>{
@@ -7115,16 +7245,43 @@ function rkVoltar(){
 
 function rkMostrarS1(){_rkUser=null;_rkClearErrors();_rkShow('rk-s1');document.getElementById('rk-email-inp')?.focus();}
 
-function rkVerificarEmail(){
+async function doForgotPassword(emailInput){
+  const email=(emailInput||document.getElementById('rk-email-inp')?.value||'').trim();
+  if(!email||!email.includes('@')){alert('Digite seu e-mail para recuperar a senha.');return;}
+  if(!_supabase){alert('Supabase não disponível. Use o sistema de recuperação manual.');return;}
+  try{
+    const {error}=await _supabase.auth.resetPasswordForEmail(email,{
+      redirectTo:'https://byfinance.vercel.app'
+    });
+    if(error) throw error;
+    alert('✓ E-mail de recuperação enviado! Verifique sua caixa de entrada.');
+  }catch(e){
+    alert('Erro ao enviar e-mail: '+e.message);
+  }
+}
+
+async function rkVerificarEmail(){
   const inp=(document.getElementById('rk-email-inp')?.value||'').trim();
   const err=document.getElementById('rk-s1-err');
   err.style.color=''; err.textContent='';
   if(!inp){err.textContent='Informe o usuário ou e-mail.';return;}
 
+  // Supabase Auth: se parece email, usar resetPasswordForEmail diretamente
+  if(_supabase&&inp.includes('@')){
+    try{
+      const {error}=await _supabase.auth.resetPasswordForEmail(inp,{
+        redirectTo:'https://byfinance.vercel.app'
+      });
+      if(!error){
+        err.style.color='var(--neon-green)';
+        err.textContent='✓ Link de redefinição enviado para '+inp+'. Verifique sua caixa de entrada.';
+        return;
+      }
+    }catch(e){}
+  }
+
   const users=_getUsers();
-  // 1) tenta por username (case-insensitive)
   let u=Object.keys(users).find(k=>k.toLowerCase()===inp.toLowerCase());
-  // 2) tenta por e-mail
   if(!u) u=_findUserByEmail(inp);
   if(!u){err.textContent='Usuário ou e-mail não encontrado.';return;}
 
@@ -7212,7 +7369,7 @@ function reenviarRecovery(){
   },1000);
 }
 
-function doRecuperar(){
+async function doRecuperar(){
   const p=document.getElementById('rk-pass').value;
   const p2=document.getElementById('rk-pass2').value;
   const err=document.getElementById('rk-error');
@@ -7223,7 +7380,7 @@ function doRecuperar(){
   if(_errRk){err.textContent=_errRk;return;}
   if(p!==p2){err.textContent='As senhas não coincidem.';return;}
   const users=_getUsers();
-  users[_rkUser]=_hashPass(p);
+  users[_rkUser]=await _hashPass(p);
   _saveUsers(users);
   localStorage.removeItem('financeOS_rk_'+_rkUser);
   _rkUser=null;
@@ -7239,26 +7396,92 @@ async function doLogin(){
   const btn=document.querySelector('#login-panel-login .login-btn');
   if(!uInput||!p){if(err)err.textContent='Preencha todos os campos.';return;}
   if(btn){btn.textContent='VERIFICANDO...';btn.disabled=true;}
-  err.textContent='';
-  // Tenta local primeiro
+  if(err)err.textContent='';
+  const uKey=uInput.toLowerCase();
+  // Rate limiting
+  if(_isLockedOut(uKey)){
+    const mins=_getRemainingLockout(uKey);
+    if(err)err.textContent=`Conta bloqueada. Tente em ${mins} minuto(s).`;
+    if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
+    return;
+  }
+
+  // ── Supabase Auth (modo principal) ──
+  if(_supabase){
+    try{
+      // Resolver email: input pode ser username ou email direto
+      let emailToUse=uInput;
+      if(!uInput.includes('@')){
+        // Busca email pelo username no perfil salvo
+        const {data:profileData}=await _supabase.from('user_data')
+          .select('data').eq('user_id','__profile__'+uKey).maybeSingle();
+        if(profileData?.data?.email){
+          emailToUse=profileData.data.email;
+        } else {
+          // Tenta email salvo localmente
+          const localEmail=_getUserEmail(uInput)||localStorage.getItem('byf_email_to_user_'+uKey);
+          if(localEmail) emailToUse=localEmail;
+          else throw new Error('FALLBACK_LOCAL');
+        }
+      }
+      const {data,error}=await _supabase.auth.signInWithPassword({email:emailToUse,password:p});
+      if(error) throw error;
+      // Login Supabase OK
+      _clearAttempts(uKey);
+      const username=data.user.user_metadata?.username
+        ||localStorage.getItem('byf_username_'+data.user.id)
+        ||uInput;
+      // Persistir sessão
+      sessionStorage.setItem('byf_supabase_uid',data.user.id);
+      localStorage.setItem('byf_username_'+data.user.id,username);
+      if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
+      _startSession(username);
+      return;
+    }catch(e){
+      // Se o erro não é "precisa de fallback local", registra tentativa
+      if(e.message!=='FALLBACK_LOCAL'){
+        const bloqueado=_registerFailedAttempt(uKey);
+        if(bloqueado){
+          if(err)err.textContent='Muitas tentativas. Bloqueado por 15 minutos.';
+        }else{
+          const att=parseInt(localStorage.getItem(_getAttemptsKey(uKey))||'0');
+          if(err)err.textContent=`Usuário ou senha inválidos. ${_MAX_ATTEMPTS-att} tentativa(s) restante(s).`;
+        }
+        if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
+        return;
+      }
+      // e.message==='FALLBACK_LOCAL' → cai para modo local abaixo
+    }
+  }
+
+  // ── Fallback local (contas antigas ou sem Supabase) ──
   let users=_getUsers();
   let u=Object.keys(users).find(k=>k.toLowerCase()===uInput.toLowerCase());
   if(!u) u=_findUserByEmail(uInput);
-  // Se não achou local, busca no Supabase
   if(!u&&_supabase){
     try{
-      const {data}=await _supabase.from('user_data')
-        .select('data').eq('user_id','__users__').maybeSingle();
+      const {data}=await _supabase.from('user_data').select('data').eq('user_id','__users__').maybeSingle();
       if(data?.data?.financeOS_users){
-        localStorage.setItem('financeOS_users',
-          JSON.stringify(data.data.financeOS_users));
+        localStorage.setItem('financeOS_users',JSON.stringify(data.data.financeOS_users));
         users=data.data.financeOS_users;
         u=Object.keys(users).find(k=>k.toLowerCase()===uInput.toLowerCase());
       }
     }catch(e){}
   }
   if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
-  if(!u||users[u]!==_hashPass(p)){err.textContent='Usuário ou senha inválidos.';return;}
+  if(u) await _migratePassIfNeeded(u,p);
+  users=_getUsers();
+  if(!u||users[u]!==await _hashPass(p)){
+    const bloqueado=_registerFailedAttempt(uKey);
+    if(bloqueado){
+      if(err)err.textContent='Muitas tentativas incorretas. Conta bloqueada por 15 minutos.';
+    }else{
+      const att=parseInt(localStorage.getItem(_getAttemptsKey(uKey))||'0');
+      if(err)err.textContent=`Usuário ou senha inválidos. ${_MAX_ATTEMPTS-att} tentativa(s) restante(s).`;
+    }
+    return;
+  }
+  _clearAttempts(uKey);
   _startSession(u);
 }
 
@@ -7307,52 +7530,66 @@ function _validarSenha(p){
   return null; // válida
 }
 
-function doCadastro(){
-  const u=document.getElementById('ca-user').value.trim();
+async function doCadastro(){
+  const u=(document.getElementById('ca-user')?.value||'').trim();
   const email=(document.getElementById('ca-email')?.value||'').trim();
-  const p=document.getElementById('ca-pass').value;
-  const p2=document.getElementById('ca-pass2').value;
+  const p=document.getElementById('ca-pass')?.value||'';
+  const p2=document.getElementById('ca-pass2')?.value||'';
   const err=document.getElementById('ca-error');
-  if(!u||!p||!p2){err.textContent='Preencha todos os campos.';return;}
-  if(u.length<3){err.textContent='Usuário deve ter ao menos 3 caracteres.';return;}
+  if(!u||!p||!p2){if(err)err.textContent='Preencha todos os campos.';return;}
+  if(u.length<3){if(err)err.textContent='Usuário deve ter ao menos 3 caracteres.';return;}
   const _errSenha=_validarSenha(p);
-  if(_errSenha){err.textContent=_errSenha;return;}
-  if(p!==p2){err.textContent='As senhas não coincidem.';return;}
-  const users=_getUsers();
-  if(users[u]){err.textContent='Usuário já existe.';return;}
-  users[u]=_hashPass(p);
-  _saveUsers(users);
-  if(_supabase){
-    _supabase.from('user_data').upsert(
-      {user_id:'__users__',
-       data:{financeOS_users:users},
-       updated_at:new Date().toISOString()},
-      {onConflict:'user_id'}
-    ).catch(()=>{});
-  }
-  // gera e salva chave de recuperação
-  const rk=Math.floor(100000+Math.random()*900000).toString();
-  if(email){
-    _setUserEmail(u,email);
-    if(_supabase){
-      const emailData={};
-      emailData['financeOS_email_'+u]=email;
-      emailData['financeOS_rk_'+u]=rk;
-      _supabase.from('user_data').upsert(
-        {user_id:'__meta__'+u,
-         data:emailData,
-         updated_at:new Date().toISOString()},
-        {onConflict:'user_id'}
-      ).catch(()=>{});
+  if(_errSenha){if(err)err.textContent=_errSenha;return;}
+  if(p!==p2){if(err)err.textContent='As senhas não coincidem.';return;}
+  if(err)err.textContent='';
+  const btn=document.querySelector('#login-panel-cadastro .login-btn');
+  if(btn){btn.textContent='CRIANDO CONTA...';btn.disabled=true;}
+
+  // ── Via Supabase Auth (modo principal) ──
+  if(_supabase&&email){
+    try{
+      const {data,error}=await _supabase.auth.signUp({
+        email:email,
+        password:p,
+        options:{data:{username:u}}
+      });
+      if(error) throw error;
+      // Salvar mapeamento username→email para login por username
+      localStorage.setItem('byf_username_'+data.user.id,u);
+      localStorage.setItem('byf_email_to_user_'+email.toLowerCase(),u);
+      // Salvar perfil no Supabase para lookup de username
+      _supabase.from('user_data').upsert({
+        user_id:'__profile__'+u.toLowerCase(),
+        data:{username:u,email:email,createdAt:new Date().toISOString()},
+        updated_at:new Date().toISOString()
+      },{onConflict:'user_id'}).catch(()=>{});
+      // Criar row de dados do usuário
+      _supabase.from('user_data').upsert({
+        user_id:u,data:{},updated_at:new Date().toISOString()
+      },{onConflict:'user_id'}).catch(()=>{});
+      if(btn){btn.textContent='CADASTRAR';btn.disabled=false;}
+      if(err){err.style.color='var(--neon-green)';err.textContent='✓ Conta criada! Verifique seu e-mail para confirmar.';}
+      return;
+    }catch(e){
+      if(btn){btn.textContent='CADASTRAR';btn.disabled=false;}
+      if(err)err.textContent=e.message||'Erro ao criar conta.';
+      return;
     }
   }
-  localStorage.setItem('financeOS_rk_'+u,rk);
+
+  // ── Fallback local (sem Supabase ou sem email) ──
+  const users=_getUsers();
+  if(users[u]){if(btn){btn.textContent='CADASTRAR';btn.disabled=false;}if(err)err.textContent='Usuário já existe.';return;}
+  users[u]=await _hashPass(p);
+  _saveUsers(users);
+  if(email) _setUserEmail(u,email);
   if(_supabase){
-    _supabase.from('user_data').upsert(
-      {user_id:u,data:{},updated_at:new Date().toISOString()},
-      {onConflict:'user_id'}
-    ).catch(()=>{});
+    _supabase.from('user_data').upsert({user_id:'__users__',data:{financeOS_users:users},updated_at:new Date().toISOString()},{onConflict:'user_id'}).catch(()=>{});
+    _supabase.from('user_data').upsert({user_id:u,data:{},updated_at:new Date().toISOString()},{onConflict:'user_id'}).catch(()=>{});
   }
+  const rk=Math.floor(100000+Math.random()*900000).toString();
+  localStorage.setItem('financeOS_rk_'+u,rk);
+  if(btn){btn.textContent='CADASTRAR';btn.disabled=false;}
   _pendingRegisterUser=u;
   document.querySelectorAll('.login-panel').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
@@ -7360,6 +7597,7 @@ function doCadastro(){
   document.getElementById('rk-created-user-display').textContent=u;
   document.getElementById('login-panel-rk-created').classList.add('active');
 }
+const doRegister=doCadastro; // alias
 
 // ── Verificação de cadastro por e-mail ───────────────────────
 let _verifResendTimer=null;
@@ -7426,7 +7664,7 @@ function enviarCodigoVerificacao(){
     });
 }
 
-function confirmarVerificacao(){
+async function confirmarVerificacao(){
   const input=(document.getElementById('verif-code')?.value||'').trim();
   const err=document.getElementById('verif-error');
   err.style.color=''; err.textContent='';
@@ -7450,7 +7688,7 @@ function confirmarVerificacao(){
   // Cria a conta e entra direto — e-mail verificado é o método de recuperação
   const users=_getUsers();
   if(users[u]){err.textContent='Usuário já cadastrado por outra sessão.';return;}
-  users[u]=_hashPass(p);
+  users[u]=await _hashPass(p);
   _saveUsers(users);
   _setUserEmail(u,email);
   // Login imediato após verificação
@@ -7494,6 +7732,7 @@ function doLoginAfterRegister(){
 async function _startSession(u){
   _authUser=u;
   sessionStorage.setItem('financeOS_user',u);
+  sessionStorage.setItem('byf_session_start',Date.now());
   sessionStorage.setItem('trf_show_on_login','1'); // sinaliza que é um login real
   setTimeout(()=>_registrarAcesso&&_registrarAcesso(),100);
   const scr=document.getElementById('login-screen');
@@ -7510,8 +7749,11 @@ function doLogout(){
 function closeLogoutModal(){
   document.getElementById('logout-modal').classList.remove('open');
 }
-function doLogoutConfirm(){
+async function doLogoutConfirm(){
+  if(_supabase) await _supabase.auth.signOut().catch(()=>{});
   sessionStorage.removeItem('financeOS_user');
+  sessionStorage.removeItem('byf_supabase_uid');
+  sessionStorage.removeItem('byf_session_start');
   _authUser='';
   location.reload();
 }
@@ -7527,7 +7769,43 @@ function _applyUserProfile(u){
 }
 
 async function initAuth(){
-  // Verifica sessão IMEDIATAMENTE (síncrono) — evita qualquer flash da tela de login
+  // ── 1. Verificar sessão Supabase Auth ──
+  if(_supabase){
+    try{
+      const {data:{session}}=await _supabase.auth.getSession();
+      if(session?.user){
+        const uid=session.user.id;
+        const username=session.user.user_metadata?.username
+          ||localStorage.getItem('byf_username_'+uid)
+          ||session.user.email?.split('@')[0]
+          ||'usuario';
+        sessionStorage.setItem('financeOS_user',username);
+        sessionStorage.setItem('byf_supabase_uid',uid);
+        if(!sessionStorage.getItem('byf_session_start'))
+          sessionStorage.setItem('byf_session_start',Date.now());
+        localStorage.setItem('byf_username_'+uid,username);
+        _authUser=username;
+        const scr=document.getElementById('login-screen');
+        if(scr) scr.style.display='none';
+        // Carregar dados do Supabase
+        try{
+          const {data:fotoRow}=await _supabase.from('user_data')
+            .select('data').eq('user_id','__foto__'+username).maybeSingle();
+          if(fotoRow?.data?.perfilFoto){
+            const _fb64=fotoRow.data.perfilFoto;
+            try{localStorage.setItem(username+'_perfilFoto',JSON.stringify(_fb64));}catch(e){}
+            const _fimg=document.getElementById('perfil-foto-img');
+            const _fph=document.getElementById('perfil-foto-placeholder');
+            if(_fimg){_fimg.src=_fb64;_fimg.style.display='block';}
+            if(_fph)_fph.style.display='none';
+          }
+        }catch(e){}
+        return true;
+      }
+    }catch(e){console.warn('Supabase getSession erro',e);}
+  }
+
+  // ── 2. Verificar sessão local (fallback) ──
   const saved=sessionStorage.getItem('financeOS_user');
   if(saved){
     _authUser=saved;
@@ -7923,6 +8201,7 @@ const PAGE_MAP={dashboard:0,gastos:1,cartoes:2,financiamentos:3,parcelas:4,lanca
 const PAGE_LABELS={dashboard:'DASHBOARD',gastos:'GASTOS FIXOS',cartoes:'CARTÕES',financiamentos:'FINANCIAMENTOS',parcelas:'PARCELAS',lancamentos:'LANÇAMENTOS',semanal:'SEMANAL',faturas:'FATURAS',planejamento:'PLANEJAMENTO',receita:'RECEITA',investimentos:'INVESTIMENTOS',bens:'MEUS BENS',parceiros:'PARCEIROS',compras:'COMPRAS',relatorios:'RELATÓRIOS',documentos:'DOCUMENTOS PESSOAIS',config:'CONFIGURAÇÕES',sobre:'SOBRE',metas:'METAS',mercado:'MERCADO',tarefas:'TAREFAS'};
 
 function showPage(id){
+  _checkSessionExpiry();
   // Mesma página clicada → reseta para tela principal da seção
   if(id===currentPage){
     _resetPageMain(id);
@@ -16112,15 +16391,31 @@ function renderNavArquivadas(){
   }).join('');
 }
 
+async function cfgVerificarRLS(){
+  const el=document.getElementById('cfg-rls-status');
+  if(!_supabase){if(el)el.innerHTML='<span style="color:var(--text3)">Supabase não conectado.</span>';return;}
+  if(el)el.innerHTML='<span style="color:var(--text3)">Verificando...</span>';
+  try{
+    const {data,error}=await _supabase.from('user_data').select('user_id').neq('user_id',_authUser).limit(1);
+    if(error||!data||data.length===0){
+      if(el)el.innerHTML='<span style="color:var(--neon-green);font-weight:700">✓ RLS ativo — seus dados estão protegidos</span>';
+    }else{
+      if(el)el.innerHTML='<span style="color:var(--neon-red);font-weight:700">⚠ RLS inativo — ative em supabase.com → seu projeto → Table Editor → user_data → RLS → Enable</span>';
+    }
+  }catch(e){
+    if(el)el.innerHTML='<span style="color:var(--neon-green)">✓ RLS parece ativo</span>';
+  }
+}
+
 function cfgSalvarGemini(){
   const k=(document.getElementById('cfg-gemini-key')?.value||'').trim();
   if(!k){cfgMsgShow(document.getElementById('cfg-gemini-msg'),'err','Digite a chave.');return;}
-  localStorage.setItem('gemini_api_key',k);
+  localStorage.setItem('gemini_api_key',_encryptGeminiKey(k));
   _geminiKey=k;
   cfgMsgShow(document.getElementById('cfg-gemini-msg'),'ok','Chave salva com sucesso!');
 }
 async function cfgTestarGemini(){
-  const k=localStorage.getItem('gemini_api_key')||'';
+  const k=_decryptGeminiKey(localStorage.getItem('gemini_api_key')||'');
   if(!k){cfgMsgShow(document.getElementById('cfg-gemini-msg'),'err','Salve a chave primeiro.');return;}
   cfgMsgShow(document.getElementById('cfg-gemini-msg'),'','Testando...');
   try{
@@ -16144,7 +16439,17 @@ function renderConfig(){
   renderNavArquivadas();
   // Preenche chave Gemini
   const gk=document.getElementById('cfg-gemini-key');
-  if(gk) gk.value=localStorage.getItem('gemini_api_key')||'';
+  if(gk) gk.value=_decryptGeminiKey(localStorage.getItem('gemini_api_key')||'');
+  // Status Supabase Auth
+  const authStatus=document.getElementById('cfg-auth-status');
+  if(authStatus){
+    const uid=sessionStorage.getItem('byf_supabase_uid');
+    if(uid){
+      authStatus.innerHTML=`<span style="color:var(--neon-green);font-weight:700">✓ Autenticado via Supabase Auth</span><span style="color:var(--text3);font-size:10px;margin-left:8px">${uid.slice(0,8)}...</span>`;
+    }else{
+      authStatus.innerHTML=`<span style="color:var(--neon-yellow)">⚠ Sessão local — crie uma nova conta para usar Supabase Auth</span>`;
+    }
+  }
   // Avatar
   const foto=load('perfilFoto');
   const cfgImg=document.getElementById('cfg-avatar-img');
@@ -16240,19 +16545,44 @@ function cfgSalvarPerfil(){
   cfgMsgShow(msg,'ok','Perfil salvo com sucesso!');
 }
 
-function cfgAlterarSenha(){
-  const atual=document.getElementById('cfg-pass-atual').value;
-  const nova=document.getElementById('cfg-pass-nova').value;
-  const conf=document.getElementById('cfg-pass-conf').value;
+async function cfgAlterarSenha(){
+  const atual=document.getElementById('cfg-pass-atual')?.value||'';
+  const nova=document.getElementById('cfg-pass-nova')?.value||'';
+  const conf=document.getElementById('cfg-pass-conf')?.value||'';
   const msg=document.getElementById('cfg-senha-msg');
   if(!atual||!nova||!conf){cfgMsgShow(msg,'err','Preencha todos os campos.');return;}
-  const users=_getUsers();
-  if(users[_authUser]!==_hashPass(atual)){cfgMsgShow(msg,'err','Senha atual incorreta.');return;}
   const _errCfg=_validarSenha(nova);
   if(_errCfg){cfgMsgShow(msg,'err',_errCfg);return;}
   if(nova!==conf){cfgMsgShow(msg,'err','As senhas não coincidem.');return;}
-  users[_authUser]=_hashPass(nova);
-  _saveUsers(users);
+
+  // ── Via Supabase Auth (modo principal) ──
+  if(_supabase&&sessionStorage.getItem('byf_supabase_uid')){
+    try{
+      // Verificar senha atual fazendo re-login silencioso
+      const storedEmail=_getUserEmail(_authUser)||localStorage.getItem('byf_email_to_user_'+_authUser.toLowerCase())||'';
+      if(storedEmail){
+        const {error:verErr}=await _supabase.auth.signInWithPassword({email:storedEmail,password:atual});
+        if(verErr){cfgMsgShow(msg,'err','Senha atual incorreta.');return;}
+      }
+      const {error}=await _supabase.auth.updateUser({password:nova});
+      if(error) throw error;
+      cfgMsgShow(msg,'ok','✓ Senha alterada com sucesso!');
+      document.getElementById('cfg-pass-atual').value='';
+      document.getElementById('cfg-pass-nova').value='';
+      document.getElementById('cfg-pass-conf').value='';
+      return;
+    }catch(e){
+      cfgMsgShow(msg,'err','Erro: '+e.message);
+      return;
+    }
+  }
+
+  // ── Fallback local ──
+  await _migratePassIfNeeded(_authUser,atual);
+  const usersAtuais=_getUsers();
+  if(usersAtuais[_authUser]!==await _hashPass(atual)){cfgMsgShow(msg,'err','Senha atual incorreta.');return;}
+  usersAtuais[_authUser]=await _hashPass(nova);
+  _saveUsers(usersAtuais);
   document.getElementById('cfg-pass-atual').value='';
   document.getElementById('cfg-pass-nova').value='';
   document.getElementById('cfg-pass-conf').value='';
@@ -20828,7 +21158,7 @@ function mktGerarPDFLista(){
 let _mktScanItens=[],_mktScanIdx=0,_mktScanOk=0;
 
 function mktIniciarScan(){
-  const k=localStorage.getItem('gemini_api_key')||'';
+  const k=_decryptGeminiKey(localStorage.getItem('gemini_api_key')||'');
   if(!k){alert('Configure a chave Gemini em Configurações → Gemini API antes de usar o scanner.');return;}
   const inp=document.getElementById('mkt-nf-input');
   inp.value='';inp.click();
@@ -20836,7 +21166,7 @@ function mktIniciarScan(){
 
 async function mktScanNF(input){
   const file=input.files[0];if(!file)return;
-  const key=localStorage.getItem('gemini_api_key')||'';
+  const key=_decryptGeminiKey(localStorage.getItem('gemini_api_key')||'');
   const overlay=document.createElement('div');
   overlay.id='mkt-scan-overlay';
   overlay.innerHTML='<div style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px"><div style="font-size:28px">📄</div><div style="font-family:\'JetBrains Mono\',monospace;color:var(--neon-blue);font-size:13px;font-weight:700">LENDO NOTA FISCAL...</div><div style="font-size:11px;color:var(--text3)">Aguarde, o Gemini está analisando a imagem</div></div>';

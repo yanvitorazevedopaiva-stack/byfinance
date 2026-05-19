@@ -109,6 +109,7 @@ Se não conseguir identificar um gasto, retorne: {"erro": "não identificado"}`;
   );
 
   const data = await res.json();
+  console.log('Gemini raw:', JSON.stringify(data));
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
   try {

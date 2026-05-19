@@ -27,7 +27,9 @@ async function supabaseQuery(path, method = 'GET', body = null) {
     },
     body: body ? JSON.stringify(body) : null,
   });
-  return res.json();
+  const text = await res.text();
+  if (!text || text.trim() === '') return [];
+  try { return JSON.parse(text); } catch(e) { return []; }
 }
 
 // Busca usuário pelo número de telefone cadastrado

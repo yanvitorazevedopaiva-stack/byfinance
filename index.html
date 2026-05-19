@@ -16667,24 +16667,47 @@ function cfgLimparDados(){
 async function cfgExcluirConta(){
   showConfirm(`Excluir Conta "${_authUser}"`,
     'Excluir sua conta e todos os dados permanentemente?\nVocê será deslogado e não poderá recuperar nada.',
-    async ()=>{
-      // 1. Limpar localStorage completo
-      const chaves=_cfgColetarChavesUsuario(_authUser);
-      chaves.forEach(k=>localStorage.removeItem(k));
-      // 2. Remover mapeamentos byf_username_X e byf_email_to_user_X
-      const uid=sessionStorage.getItem('byf_supabase_uid')||'';
-      if(uid) localStorage.removeItem('byf_username_'+uid);
-      const email=_getUserEmail(_authUser)||'';
-      if(email) localStorage.removeItem('byf_email_to_user_'+email.toLowerCase());
-      // 3. Deletar tudo no Supabase
-      await _cfgDeletarSupabaseUsuario(_authUser);
-      // 4. Sair do Supabase Auth
-      if(_supabase) await _supabase.auth.signOut().catch(()=>{});
-      // 5. Limpar sessão
-      sessionStorage.clear();
-      location.reload();
-    },{icon:'✕',btnLabel:'EXCLUIR CONTA',btnBg:'rgba(255,68,68,0.18)',btnColor:'var(--neon-red)',warn:true}
+    ()=>_cfgExcluirContaExecutar(),
+    {icon:'✕',btnLabel:'EXCLUIR CONTA',btnBg:'rgba(255,68,68,0.18)',btnColor:'var(--neon-red)',warn:true}
   );
+}
+
+async function _cfgExcluirContaExecutar(){
+  const msg=document.getElementById('cfg-dados-msg');
+  try{
+    cfgMsgShow(msg,'','Apagando conta...');
+
+    // 1. Limpar localStorage
+    const chaves=_cfgColetarChavesUsuario(_authUser);
+    chaves.forEach(k=>localStorage.removeItem(k));
+    const uid=sessionStorage.getItem('byf_supabase_uid')||'';
+    if(uid) localStorage.removeItem('byf_username_'+uid);
+    const email=_getUserEmail(_authUser)||'';
+    if(email) localStorage.removeItem('byf_email_to_user_'+email.toLowerCase());
+
+    // 2. Deletar dados do Supabase (tabelas user_data)
+    await _cfgDeletarSupabaseUsuario(_authUser);
+
+    // 3. Deletar usuário do Supabase Auth via API (service role)
+    if(uid){
+      await fetch('/api/delete-account',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({user_id:uid})
+      }).catch(()=>{});
+    }
+
+    // 4. Sign out local
+    if(_supabase) await _supabase.auth.signOut().catch(()=>{});
+
+    // 5. Limpar sessão e recarregar → vai para tela de login
+    sessionStorage.clear();
+    localStorage.removeItem('financeOS_users');
+    location.reload();
+
+  }catch(e){
+    cfgMsgShow(msg,'err','Erro ao excluir conta. Tente novamente.');
+  }
 }
 
 function cfgLimparDadosSilencioso(){

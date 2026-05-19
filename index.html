@@ -7791,6 +7791,7 @@ async function initAuth(){
           sessionStorage.setItem('byf_session_start',Date.now());
         localStorage.setItem('byf_username_'+uid,username);
         _authUser=username;
+        _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
         const scr=document.getElementById('login-screen');
         if(scr) scr.style.display='none';
         // Carregar dados do Supabase

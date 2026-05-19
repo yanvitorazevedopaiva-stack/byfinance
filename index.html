@@ -738,6 +738,14 @@
   .help-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text3);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .help-close:hover{color:var(--text);border-color:var(--text3);}
 
+  /* ===== MERCADO DRAG CATÁLOGO ===== */
+  .mkt-drag-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);cursor:grab;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text);user-select:none;transition:border-color .15s,transform .1s;flex-shrink:0;}
+  .mkt-drag-chip:hover{border-color:rgba(0,200,255,0.4);color:var(--neon-blue);}
+  .mkt-drag-chip:active{cursor:grabbing;transform:scale(0.96);}
+  .mkt-drag-chip.dragging{opacity:.5;}
+  #mkt-drop-zone{border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;font-size:11px;color:var(--text3);transition:all .15s;margin-bottom:10px;display:none;}
+  #mkt-drop-zone.drag-over{border-color:var(--neon-green);background:rgba(0,255,157,0.04);color:var(--neon-green);}
+
   /* ===== MERCADO SCROLL ===== */
   #mkt-catalogo-wrap::-webkit-scrollbar{display:none;}
   #mkt-catalogo-wrap.dragging{cursor:grabbing;}
@@ -2998,11 +3006,7 @@
       </div>
       <button class="login-btn" onclick="doLogin()">ACESSAR</button>
       <div class="login-error" id="li-error"></div>
-      <div class="login-forgot">
-        <span onclick="openRecovery()">Esqueci a senha</span>
-        <span style="margin:0 8px;color:var(--border)">·</span>
-        <span onclick="_byfClearMyLockout()" style="font-size:10px;color:var(--text3)">Limpar bloqueio</span>
-      </div>
+      <div class="login-forgot"><span onclick="openRecovery()">Esqueci a senha</span></div>
     </div>
 
     <!-- PAINEL CADASTRO -->
@@ -5094,11 +5098,26 @@
     </div>
     <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start" id="mkt-mes-grid">
       <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div class="sec-title" style="margin:0">ITENS DA LISTA</div>
           <button class="btn btn-sm" id="mkt-btn-add-item" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ ITEM</button>
         </div>
-        <div id="mkt-mes-itens"></div>
+        <!-- Chips arrastáveis do catálogo -->
+        <div id="mkt-drag-catalog-strip" style="margin-bottom:10px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'JetBrains Mono',monospace;letter-spacing:.3px">↓ ARRASTE DO CATÁLOGO PARA ADICIONAR</div>
+          <div id="mkt-drag-chips" style="display:flex;gap:6px;flex-wrap:wrap;max-height:80px;overflow-y:auto"></div>
+        </div>
+        <!-- Drop zone -->
+        <div id="mkt-drop-zone"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="mktDropItemNaLista(event)">
+          🛒 Solte aqui para adicionar à lista
+        </div>
+        <div id="mkt-mes-itens"
+          ondragover="event.preventDefault();document.getElementById('mkt-drop-zone').classList.add('drag-over')"
+          ondragleave="document.getElementById('mkt-drop-zone').classList.remove('drag-over')"
+          ondrop="mktDropItemNaLista(event)"></div>
       </div>
       <div>
         <div class="card" style="margin-bottom:14px">
@@ -16534,54 +16553,84 @@ function cfgRemoverUsuario(u){
   renderConfig();
 }
 
-function cfgLimparDados(){
-  if(!confirm('Apagar TODOS os seus dados financeiros?\nEsta ação não pode ser desfeita.')) return;
+function _cfgColetarChavesUsuario(u){
+  // Coleta TODAS as chaves localStorage relacionadas ao usuário
   const toRemove=[];
   for(let i=0;i<localStorage.length;i++){
     const k=localStorage.key(i);
-    if(k&&k.startsWith(_authUser+'_')) toRemove.push(k);
+    if(!k) continue;
+    if(k.startsWith(u+'_')) toRemove.push(k);           // dados financeiros
+    if(k==='financeOS_email_'+u) toRemove.push(k);      // email
+    if(k==='financeOS_rk_'+u) toRemove.push(k);         // chave recuperação
+    if(k.startsWith('byf_lockout_'+u.toLowerCase())) toRemove.push(k);  // bloqueio
+    if(k.startsWith('byf_attempts_'+u.toLowerCase())) toRemove.push(k); // tentativas
   }
-  toRemove.forEach(k=>localStorage.removeItem(k));
-  if(_supabase&&_authUser){
-    _supabase.from('user_data').delete()
-      .eq('user_id',_authUser).catch(()=>{});
-    _supabase.from('user_data').delete()
-      .eq('user_id','__meta__'+_authUser).catch(()=>{});
-  }
-  const msg=document.getElementById('cfg-dados-msg');
-  cfgMsgShow(msg,'ok','Dados apagados. O sistema será recarregado.');
-  setTimeout(()=>location.reload(),1800);
+  return [...new Set(toRemove)];
 }
 
-function cfgExcluirConta(){
-  if(!confirm(`Excluir sua conta "${_authUser}" e todos os dados?\nVocê será deslogado e não poderá recuperar os dados.`)) return;
-  cfgLimparDadosSilencioso();
-  const users=_getUsers();
-  delete users[_authUser];
-  _saveUsers(users);
-  if(_supabase&&_authUser){
-    _supabase.from('user_data').delete()
-      .eq('user_id',_authUser).catch(()=>{});
-    _supabase.from('user_data').delete()
-      .eq('user_id','__meta__'+_authUser).catch(()=>{});
-    _supabase.from('user_data').upsert(
-      {user_id:'__users__',
-       data:{financeOS_users:users},
-       updated_at:new Date().toISOString()},
+async function _cfgDeletarSupabaseUsuario(u){
+  if(!_supabase||!u) return;
+  const uLower=u.toLowerCase();
+  const ops=[
+    _supabase.from('user_data').delete().eq('user_id',u).catch(()=>{}),
+    _supabase.from('user_data').delete().eq('user_id','__foto__'+u).catch(()=>{}),
+    _supabase.from('user_data').delete().eq('user_id','__meta__'+u).catch(()=>{}),
+    _supabase.from('user_data').delete().eq('user_id','__profile__'+uLower).catch(()=>{}),
+  ];
+  await Promise.all(ops);
+  // Remove usuário da tabela __users__
+  try{
+    const users=_getUsers();
+    delete users[u];
+    _saveUsers(users);
+    await _supabase.from('user_data').upsert(
+      {user_id:'__users__',data:{financeOS_users:users},updated_at:new Date().toISOString()},
       {onConflict:'user_id'}
-    ).catch(()=>{});
-  }
-  sessionStorage.removeItem('financeOS_user');
-  location.reload();
+    );
+  }catch(e){}
+}
+
+function cfgLimparDados(){
+  showConfirm('Apagar Todos os Dados',
+    'Apagar TODOS os seus dados financeiros? Esta ação não pode ser desfeita.',
+    async ()=>{
+      const chaves=_cfgColetarChavesUsuario(_authUser);
+      chaves.forEach(k=>localStorage.removeItem(k));
+      await _cfgDeletarSupabaseUsuario(_authUser);
+      const msg=document.getElementById('cfg-dados-msg');
+      cfgMsgShow(msg,'ok','Dados apagados. Recarregando...');
+      setTimeout(()=>location.reload(),1800);
+    },{icon:'🗑',btnLabel:'APAGAR',btnBg:'rgba(255,68,68,0.18)',btnColor:'var(--neon-red)',warn:true}
+  );
+}
+
+async function cfgExcluirConta(){
+  showConfirm(`Excluir Conta "${_authUser}"`,
+    'Excluir sua conta e todos os dados permanentemente?\nVocê será deslogado e não poderá recuperar nada.',
+    async ()=>{
+      // 1. Limpar localStorage completo
+      const chaves=_cfgColetarChavesUsuario(_authUser);
+      chaves.forEach(k=>localStorage.removeItem(k));
+      // 2. Remover mapeamentos byf_username_X e byf_email_to_user_X
+      const uid=sessionStorage.getItem('byf_supabase_uid')||'';
+      if(uid) localStorage.removeItem('byf_username_'+uid);
+      const email=_getUserEmail(_authUser)||'';
+      if(email) localStorage.removeItem('byf_email_to_user_'+email.toLowerCase());
+      // 3. Deletar tudo no Supabase
+      await _cfgDeletarSupabaseUsuario(_authUser);
+      // 4. Sair do Supabase Auth
+      if(_supabase) await _supabase.auth.signOut().catch(()=>{});
+      // 5. Limpar sessão
+      sessionStorage.clear();
+      location.reload();
+    },{icon:'✕',btnLabel:'EXCLUIR CONTA',btnBg:'rgba(255,68,68,0.18)',btnColor:'var(--neon-red)',warn:true}
+  );
 }
 
 function cfgLimparDadosSilencioso(){
-  const toRemove=[];
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
-    if(k&&k.startsWith(_authUser+'_')) toRemove.push(k);
-  }
-  toRemove.forEach(k=>localStorage.removeItem(k));
+  const chaves=_cfgColetarChavesUsuario(_authUser);
+  chaves.forEach(k=>localStorage.removeItem(k));
+  if(_supabase&&_authUser) _cfgDeletarSupabaseUsuario(_authUser).catch(()=>{});
 }
 
 function cfgMsgShow(el,type,text){
@@ -20873,9 +20922,96 @@ function _mktRenderListas(){
 }
 function mktAbrirMes(id){_mktMesId=id;document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}
 function mktVoltarMain(){document.getElementById('mkt-panel-mes').style.display='none';document.getElementById('mkt-panel-main').style.display='block';_mktMesId=null;_mktRenderListas();}
+
+// ── Drag catálogo → lista do mês ──
+function _mktRenderDragCatalog(){
+  const chips=document.getElementById('mkt-drag-chips');
+  const strip=document.getElementById('mkt-drag-catalog-strip');
+  const dropZone=document.getElementById('mkt-drop-zone');
+  const lista=_mktGetListas().find(l=>l.id===_mktMesId);
+  const isConcluido=lista?.status==='concluido';
+  if(!chips||!strip) return;
+  const cat=_mktGetCatalogo();
+  if(!cat.length||isConcluido){strip.style.display='none';if(dropZone)dropZone.style.display='none';return;}
+  strip.style.display='block';
+  if(dropZone) dropZone.style.display='block';
+  chips.innerHTML=cat.map(it=>`
+    <div class="mkt-drag-chip" draggable="true"
+      ondragstart="event.dataTransfer.setData('mkt_item_id','${it.id}');this.classList.add('dragging')"
+      ondragend="this.classList.remove('dragging')"
+      title="${esc(it.nome)} — ${it.preco>0?_mktFmt(it.preco):'sem preço'}">
+      <span>${_MKT_EMOJI[it.cat]||'📦'}</span>
+      <span>${esc(it.nome)}</span>
+      ${it.preco>0?`<span style="color:var(--neon-yellow);font-size:10px">${_mktFmt(it.preco)}</span>`:''}
+    </div>`).join('');
+}
+
+function mktDropItemNaLista(event){
+  event.preventDefault();
+  document.getElementById('mkt-drop-zone')?.classList.remove('drag-over');
+  const itemId=parseInt(event.dataTransfer.getData('mkt_item_id'));
+  if(!itemId||!_mktMesId) return;
+  const it=_mktGetCatalogo().find(x=>x.id===itemId);
+  if(!it) return;
+  const lista=_mktGetListas().find(l=>l.id===_mktMesId);
+  if(!lista||lista.status==='concluido') return;
+  if(lista.itens.find(i=>i.refId===itemId)){_showToast(`"${it.nome}" já está nesta lista.`);return;}
+  // Mostrar modal para informar preço pago e quantidade
+  _mktModalPrecoArrastado(it,lista);
+}
+
+function _mktModalPrecoArrastado(it,lista){
+  document.getElementById('mkt-drag-price-modal')?.remove();
+  const el=document.createElement('div');
+  el.id='mkt-drag-price-modal';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  el.innerHTML=`
+    <div style="background:var(--card);border:1px solid rgba(0,255,157,0.3);border-radius:14px;padding:24px;width:min(360px,94vw);box-shadow:0 8px 40px rgba(0,0,0,.6)">
+      <div style="font-size:13px;font-weight:700;color:var(--neon-green);font-family:'JetBrains Mono',monospace;margin-bottom:4px">🛒 ADICIONAR À LISTA</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">${esc(it.nome)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">QUANTIDADE</div>
+          <input id="mdp-qtd" type="number" min="0.001" step="0.001" value="${it.qtd||1}"
+            style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:14px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PREÇO PAGO (R$)</div>
+          <input id="mdp-preco" type="number" min="0" step="0.01" placeholder="${it.preco>0?it.preco.toFixed(2):'0,00'}" value="${it.preco>0?it.preco.toFixed(2):''}"
+            style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:8px;font-size:14px;font-family:'JetBrains Mono',monospace;font-weight:700;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="document.getElementById('mkt-drag-price-modal').remove()"
+          style="padding:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text3);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace">CANCELAR</button>
+        <button onclick="_mktConfirmarDrop(${it.id},${lista.id})"
+          style="padding:10px;background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace">✓ ADICIONAR</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>document.getElementById('mdp-preco')?.focus(),50);
+}
+
+function _mktConfirmarDrop(itemId,listaId){
+  const it=_mktGetCatalogo().find(x=>x.id===itemId);
+  if(!it) return;
+  const qtd=parseFloat(document.getElementById('mdp-qtd')?.value)||1;
+  const preco=parseFloat(document.getElementById('mdp-preco')?.value)||it.preco||0;
+  const listas=_mktGetListas();
+  const lista=listas.find(l=>l.id===listaId);
+  if(!lista){document.getElementById('mkt-drag-price-modal')?.remove();return;}
+  if(lista.itens.find(i=>i.refId===itemId)){_showToast(`"${it.nome}" já está na lista.`);document.getElementById('mkt-drag-price-modal')?.remove();return;}
+  lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:preco,comprado:false});
+  _mktSetListas(listas);
+  document.getElementById('mkt-drag-price-modal')?.remove();
+  _mktRenderMes();
+  gfRenderMercadoCard();
+  _showToast(`✓ "${it.nome}" adicionado à lista!`);
+}
 function _mktRenderMes(){
   if(!_mktMesId)return;const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!lista){mktVoltarMain();return;}
   const isConcluido=lista.status==='concluido';
+  _mktRenderDragCatalog();
   const titulo=document.getElementById('mkt-mes-titulo');const sub=document.getElementById('mkt-mes-sub');const badge=document.getElementById('mkt-mes-status-badge');
   if(titulo)titulo.textContent='LISTA DE '+_mktMesLabel(lista.mes).toUpperCase();
   if(sub)sub.textContent='Mercado · '+_mktMesLabel(lista.mes);
@@ -21103,8 +21239,24 @@ async function mktScanNF(input){
   try{
     const base64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
     const mimeType=file.type||'image/jpeg';
-    const prompt='Você é um assistente de leitura de notas fiscais brasileiras.\nAnalise esta nota fiscal e extraia TODOS os itens comprados.\nRetorne APENAS um array JSON válido, sem markdown, sem explicação, sem bloco de código.\nFormato exato de cada objeto:\n{"nome":"Nome do produto","quantidade":1,"unidade":"un","precoUnit":9.90,"categoria":"Mercearia"}\nCategorias possíveis: Hortifruti, Carnes, Laticinios, Padaria, Higiene, Limpeza, Mercearia, Frios, Outros.\nUnidades possíveis: un, kg, g, L, mL, cx, pct, dz.\nSe não identificar algum campo use: quantidade=1, unidade="un", categoria="Outros".\nRetorne apenas o array JSON, começando com [ e terminando com ].';
-    const body={contents:[{parts:[{inline_data:{mime_type:mimeType,data:base64}},{text:prompt}]}]};
+    const isPDF=mimeType==='application/pdf';
+    const prompt=`Você é um especialista em leitura de notas fiscais brasileiras.
+Esta é uma nota fiscal de supermercado brasileira. Analise com cuidado e extraia TODOS os itens.
+A nota pode estar em preto e branco ou baixa resolução — use o contexto para interpretar.
+Ignore linhas de desconto, CNPJ, endereço, totais e formas de pagamento.
+Foque apenas nos produtos comprados.
+
+Retorne APENAS um array JSON válido, sem markdown, sem explicação:
+[{"nome":"Nome do produto","quantidade":1,"unidade":"un","precoUnit":9.90,"categoria":"Mercearia"}]
+
+Categorias: Hortifruti, Carnes, Laticinios, Padaria, Higiene, Limpeza, Mercearia, Frios, Bebidas, Outros.
+Unidades: un, kg, g, L, mL, cx, pct, dz.
+Se não identificar quantidade ou preço, use 1 e 0.00 respectivamente.
+Retorne apenas o array JSON começando com [ e terminando com ].`;
+    const parts=isPDF
+      ?[{inline_data:{mime_type:'application/pdf',data:base64}},{text:prompt}]
+      :[{inline_data:{mime_type:mimeType,data:base64}},{text:prompt}];
+    const body={contents:[{parts}]};
     const resp=await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}

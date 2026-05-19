@@ -21744,7 +21744,7 @@ function trfBadgeProgresso(meta){
 // ── TELEGRAM PENDENTES DE AUTORIZAÇÃO ──────────────────────────────────────
 
 async function tgAuthCarregar(){
-  const uid=_authUID||(await _supabase.auth.getUser())?.data?.user?.id;
+  const uid=(typeof _authUID!=='undefined'&&_authUID)?_authUID:(await _supabase?.auth?.getUser())?.data?.user?.id;
   if(!_supabase||!uid) return [];
   try{
     const {data}=await _supabase.from('telegram_pendentes').select('*')

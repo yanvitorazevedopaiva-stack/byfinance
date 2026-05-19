@@ -243,17 +243,76 @@ export default async function handler(req, res) {
   if (!msg) return res.status(200).json({ ok: true });
 
   const chat_id = msg.chat.id;
-  const from = msg.from;
-
-  // Detecta tipo de mídia
-  let tipo_midia = 'texto';
-  let texto = msg.text || '';
-  let audioUrl = null;
-  let fotoUrl = null;
-  let mimeType = null;
-  let mensagem_original = texto;
+  const texto = msg.text || msg.caption || '';
 
   try {
+    // 1. Verifica se o chat_id já está vinculado
+    const vincRes = await supabaseQuery(
+      `/telegram_vinculos?chat_id=eq.${chat_id}&select=user_id`
+    );
+    const vinculo = vincRes?.[0];
+
+    // 2. Se NÃO vinculado — verifica se está enviando um token
+    if (!vinculo) {
+      const tokenLimpo = texto.trim().replace(/\s/g, '');
+
+      const tokenRes = await supabaseQuery(
+        `/telegram_tokens?token=eq.${tokenLimpo}&usado=eq.false&select=user_id,token,expires_at`
+      );
+      const tokenData = tokenRes?.[0];
+
+      if (!tokenData) {
+        await sendTelegram(chat_id,
+          `👋 *Olá! Bem-vindo ao BY Finance Bot!*\n\n` +
+          `Para começar a usar, você precisa vincular sua conta:\n\n` +
+          `1️⃣ Acesse o BY Finance no navegador\n` +
+          `2️⃣ Vá em *Configurações → Telegram*\n` +
+          `3️⃣ Clique em *"Gerar Código de Acesso"*\n` +
+          `4️⃣ Envie o código de 6 dígitos aqui\n\n` +
+          `_O código expira em 10 minutos._`
+        );
+        return res.status(200).json({ ok: true });
+      }
+
+      if (new Date(tokenData.expires_at) < new Date()) {
+        await sendTelegram(chat_id,
+          `⏰ *Código expirado!*\n\nGere um novo código em *Configurações → Telegram* no BY Finance.`
+        );
+        return res.status(200).json({ ok: true });
+      }
+
+      await supabaseQuery('/telegram_vinculos', 'POST', {
+        user_id: tokenData.user_id,
+        chat_id,
+        vinculado_em: new Date().toISOString()
+      });
+
+      await supabaseQuery(
+        `/telegram_tokens?user_id=eq.${tokenData.user_id}`,
+        'PATCH',
+        { usado: true }
+      );
+
+      await sendTelegram(chat_id,
+        `✅ *Conta vinculada com sucesso!*\n\n` +
+        `Agora você pode enviar seus gastos por:\n` +
+        `💬 *Texto:* "gastei 47 no iFood cartão Nubank"\n` +
+        `🎤 *Áudio:* grave falando o gasto\n` +
+        `📸 *Foto:* print de notificação ou comprovante\n\n` +
+        `_Todos os lançamentos aguardarão sua autorização no app._`
+      );
+      return res.status(200).json({ ok: true });
+    }
+
+    // 3. JÁ VINCULADO — processa normalmente
+    const user_id = vinculo.user_id;
+
+    let tipo_midia = 'texto';
+    let audioUrl = null;
+    let fotoUrl = null;
+    let mimeType = null;
+    let mensagem_original = texto;
+
     if (msg.voice || msg.audio) {
       tipo_midia = 'audio';
       const file_id = (msg.voice || msg.audio).file_id;
@@ -265,64 +324,87 @@ export default async function handler(req, res) {
       const file_id = msg.photo[msg.photo.length - 1].file_id;
       mimeType = 'image/jpeg';
       fotoUrl = await getTelegramFileUrl(file_id);
-      mensagem_original = '[Foto]';
-      if (msg.caption) {
-        texto = msg.caption;
-        mensagem_original = `[Foto] ${msg.caption}`;
-      }
+      mensagem_original = msg.caption ? `[Foto] ${msg.caption}` : '[Foto]';
     }
 
-    // Valida se o número do usuário está cadastrado no sistema
-    // Por enquanto aceita qualquer mensagem e retorna o lançamento
-    // TODO: validar phone quando Supabase tiver campo phone na user_data
-
-    // Interpreta com Gemini
     const gasto = await interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType });
 
-    if (gasto.erro) {
+    if (gasto.tipo === 'erro' || gasto.erro) {
       await sendTelegram(chat_id,
-        `❌ Não consegui identificar um gasto na sua mensagem.\n\nTente assim: _"gastei 47 reais no iFood cartão Nubank"_`
+        `❌ Não consegui identificar um gasto.\n\n` +
+        `Tente assim: _"gastei 47 reais no iFood cartão Nubank"_`
       );
       return res.status(200).json({ ok: true });
     }
 
-    // Salva no Supabase como pendente
-    // Nota: sem user_id por enquanto (validação de phone pendente)
-    // Salva chat_id para notificar depois
-    const registro = {
-      descricao: gasto.descricao,
-      valor: gasto.valor,
-      categoria: gasto.categoria || 'Outros',
-      cartao: gasto.cartao || 'Não informado',
-      data_lancamento: gasto.data_lancamento,
-      origem: 'telegram',
-      tipo_midia,
-      mensagem_original,
-      chat_id,
-      status: 'pendente',
-    };
+    if (gasto.tipo === 'consulta') {
+      await sendTelegram(chat_id,
+        `📊 Consultas ainda não estão disponíveis pelo bot.\n` +
+        `Acesse o BY Finance para ver seus relatórios.`
+      );
+      return res.status(200).json({ ok: true });
+    }
 
-    await supabaseQuery('/telegram_pendentes', 'POST', registro);
+    if (gasto.tipo === 'comando' && gasto.acao === 'cancelar_ultimo') {
+      const ultimos = await supabaseQuery(
+        `/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&order=created_at.desc&limit=1`
+      );
+      if (ultimos?.[0]) {
+        await supabaseQuery(`/telegram_pendentes?id=eq.${ultimos[0].id}`, 'PATCH', { status: 'rejeitado' });
+        await sendTelegram(chat_id, `✅ Último lançamento cancelado.`);
+      } else {
+        await sendTelegram(chat_id, `⚠ Nenhum lançamento pendente para cancelar.`);
+      }
+      return res.status(200).json({ ok: true });
+    }
 
-    // Responde no Telegram
-    const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', {
-      style: 'currency', currency: 'BRL'
-    });
+    const lancamentos = gasto.tipo === 'multiplos' ? gasto.lancamentos : [gasto];
 
-    await sendTelegram(chat_id,
-      `✅ *Lançamento registrado!*\n\n` +
-      `📝 ${gasto.descricao}\n` +
-      `💰 ${valor}\n` +
-      `🏷 ${gasto.categoria}\n` +
-      `💳 ${gasto.cartao}\n` +
-      `📅 ${gasto.data_lancamento}\n\n` +
-      `⏳ Aguardando sua autorização no BY Finance.\n` +
-      `Você tem *7 dias* para aprovar ou rejeitar.`
-    );
+    for (const l of lancamentos) {
+      await supabaseQuery('/telegram_pendentes', 'POST', {
+        user_id,
+        descricao: l.descricao,
+        valor: l.valor,
+        categoria: l.categoria || 'Outros',
+        cartao: l.cartao || 'Não informado',
+        data_lancamento: l.data_lancamento,
+        origem: 'telegram',
+        tipo_midia,
+        mensagem_original,
+        chat_id,
+        status: 'pendente',
+        parcelas: l.parcelas || null,
+        valor_parcela: l.valor_parcela || null,
+        observacao: l.observacao || null
+      });
+    }
+
+    if (gasto.tipo === 'multiplos') {
+      const lista = lancamentos.map(l =>
+        `• ${l.descricao} — ${parseFloat(l.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`
+      ).join('\n');
+      await sendTelegram(chat_id,
+        `✅ *${lancamentos.length} lançamentos registrados!*\n\n${lista}\n\n` +
+        `⏳ Aguardando autorização no BY Finance.`
+      );
+    } else {
+      const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const parcelaInfo = gasto.parcelas ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
+      await sendTelegram(chat_id,
+        `✅ *Lançamento registrado!*\n\n` +
+        `📝 ${gasto.descricao}\n` +
+        `💰 ${valor}${parcelaInfo}\n` +
+        `🏷 ${gasto.categoria}\n` +
+        `💳 ${gasto.cartao}\n` +
+        `📅 ${gasto.data_lancamento}\n\n` +
+        `⏳ Aguardando sua autorização no BY Finance.\n` +
+        `Você tem *7 dias* para aprovar ou rejeitar.`
+      );
+    }
 
   } catch (err) {
     console.error('Erro no webhook:', err);
-    await sendTelegram(chat_id, '❌ Erro interno. Tente novamente em instantes.');
+    await sendTelegram(chat_id, '❌ Erro interno. Tente novamente.');
   }
 
   return res.status(200).json({ ok: true });

@@ -7211,6 +7211,7 @@ let _syncTimer=null;
 
 // ===================== AUTH =====================
 let _authUser='';
+let _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
 function _userPrefix(){return _authUser?_authUser+'_':'';}
 function _getUsers(){try{const u=localStorage.getItem('financeOS_users');return u?JSON.parse(u):{}}catch(e){return {};}}
 function _saveUsers(u){try{localStorage.setItem('financeOS_users',JSON.stringify(u));}catch(e){}}
@@ -7734,6 +7735,7 @@ function doLoginAfterRegister(){
 
 async function _startSession(u){
   _authUser=u;
+  _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
   sessionStorage.setItem('financeOS_user',u);
   sessionStorage.setItem('byf_session_start',Date.now());
   sessionStorage.setItem('trf_show_on_login','1'); // sinaliza que é um login real
@@ -7742,6 +7744,7 @@ async function _startSession(u){
   if(scr) scr.classList.add('fading');
   await _loadFromSupabase();
   setTimeout(()=>{if(scr)scr.style.display='none';_initApp();},420);
+  tgAuthRenderDashboard();
 }
 
 function doLogout(){
@@ -8787,7 +8790,6 @@ function renderDashboard(){
         <span style="color:var(--neon-green);font-family:'JetBrains Mono',monospace">${fmt(i.valorAtual||i.val||0)}</span>
       </div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0;text-align:center">Nenhum investimento.</div>'}`;
   }
-  tgAuthRenderDashboard();
 }
 
 // ===================== GASTOS FIXOS =====================
@@ -21758,23 +21760,25 @@ function tgAuthFmtValor(v){
 }
 
 async function tgAuthRenderDashboard(){
-  const lista=await tgAuthCarregar();
-  const badge=document.getElementById('d-tg-badge');
-  const el=document.getElementById('d-tg-pendentes-lista');
-  if(!el) return;
-  if(badge){if(lista.length){badge.style.display='inline';badge.textContent=lista.length;}else badge.style.display='none';}
-  if(!lista.length){el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">✓ Nenhum lançamento pendente</div>';return;}
-  el.innerHTML=lista.slice(0,3).map(p=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${esc(p.descricao)}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}</div>
-      </div>
-      <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
-      <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✓</button>
-      <button onclick="tgAuthRejeitar('${p.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>
-    </div>`).join('');
-  if(lista.length>3) el.innerHTML+=`<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3);cursor:pointer" onclick="tgAuthAbrirModal()">+ ${lista.length-3} mais pendentes</div>`;
+  setTimeout(async()=>{
+    const lista=await tgAuthCarregar();
+    const badge=document.getElementById('d-tg-badge');
+    const el=document.getElementById('d-tg-pendentes-lista');
+    if(!el) return;
+    if(badge){if(lista.length){badge.style.display='inline';badge.textContent=lista.length;}else badge.style.display='none';}
+    if(!lista.length){el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">✓ Nenhum lançamento pendente</div>';return;}
+    el.innerHTML=lista.slice(0,3).map(p=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${esc(p.descricao)}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
+        <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✓</button>
+        <button onclick="tgAuthRejeitar('${p.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>
+      </div>`).join('');
+    if(lista.length>3) el.innerHTML+=`<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3);cursor:pointer" onclick="tgAuthAbrirModal()">+ ${lista.length-3} mais pendentes</div>`;
+  },1500);
 }
 
 async function tgAuthRenderModal(){

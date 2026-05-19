@@ -3417,6 +3417,15 @@
     </div>
   </div>
 
+  <!-- 4b. PENDENTES TELEGRAM -->
+  <div class="card" style="margin-bottom:18px;border-color:rgba(0,255,157,0.2)" id="d-tg-pendentes-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="sec-title" style="margin:0;color:var(--neon-green)">📱 AUTORIZAÇÃO DE LANÇAMENTOS <span id="d-tg-badge" style="display:none;background:var(--neon-red);color:#fff;border-radius:50%;padding:1px 6px;font-size:10px;margin-left:6px"></span></div>
+      <button onclick="tgAuthAbrirModal()" style="font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid rgba(0,255,157,0.3);background:transparent;color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace">VER TODOS</button>
+    </div>
+    <div id="d-tg-pendentes-lista"><div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">Carregando...</div></div>
+  </div>
+
   <!-- 5. SEMANAL + INVESTIMENTOS + GASTOS POR CATEGORIA -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:14px;margin-bottom:18px">
     <div class="card">
@@ -21683,6 +21692,101 @@ function trfBadgeProgresso(meta){
   const superou=concSem>=metaSem;
   return `<span style="font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:6px;background:${superou?'rgba(0,255,157,0.15)':'rgba(0,200,255,0.1)'};color:${superou?'var(--neon-green)':'var(--text3)'};margin-left:6px">${superou?'✅ Meta superada!':concSem+'/'+metaSem+'x esta semana'}</span>`;
 }
+
+// ── TELEGRAM PENDENTES DE AUTORIZAÇÃO ──────────────────────────────────────
+
+async function tgAuthCarregar(){
+  if(!_supabase||!_authUID) return [];
+  try{
+    const {data}=await _supabase.from('telegram_pendentes').select('*')
+      .eq('user_id',_authUID).eq('status','pendente').order('created_at',{ascending:false});
+    return data||[];
+  }catch(e){return [];}
+}
+
+function tgAuthFmtValor(v){
+  return parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+async function tgAuthRenderDashboard(){
+  const lista=await tgAuthCarregar();
+  const badge=document.getElementById('d-tg-badge');
+  const el=document.getElementById('d-tg-pendentes-lista');
+  if(!el) return;
+  if(badge){if(lista.length){badge.style.display='inline';badge.textContent=lista.length;}else badge.style.display='none';}
+  if(!lista.length){el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">✓ Nenhum lançamento pendente</div>';return;}
+  el.innerHTML=lista.slice(0,3).map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${esc(p.descricao)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
+      <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✓</button>
+      <button onclick="tgAuthRejeitar('${p.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>
+    </div>`).join('');
+  if(lista.length>3) el.innerHTML+=`<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3);cursor:pointer" onclick="tgAuthAbrirModal()">+ ${lista.length-3} mais pendentes</div>`;
+}
+
+async function tgAuthRenderModal(){
+  const lista=await tgAuthCarregar();
+  const el=document.getElementById('tg-auth-lista');
+  const sub=document.getElementById('tg-auth-sub');
+  if(!el) return;
+  if(sub) sub.textContent=lista.length?`${lista.length} lançamento(s) aguardando aprovação`:'Nenhum pendente';
+  if(!lista.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:13px">✓ Nenhum lançamento pendente!</div>';return;}
+  el.innerHTML=lista.map(p=>`
+    <div style="padding:12px;border-radius:10px;margin-bottom:8px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700">${esc(p.descricao)}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">📅 ${p.data_lancamento} · 🏷 ${esc(p.categoria)} · 💳 ${esc(p.cartao)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">via ${p.tipo_midia||'texto'} · ${new Date(p.created_at).toLocaleString('pt-BR')}</div>
+        </div>
+        <div style="font-size:18px;font-weight:700;color:var(--neon-red)">${tgAuthFmtValor(p.valor)}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="tgAuthAprovar('${p.id}')" class="btn btn-green" style="flex:1;font-size:12px">✓ AUTORIZAR</button>
+        <button onclick="tgAuthRejeitar('${p.id}')" class="btn" style="flex:1;border-color:rgba(255,68,68,0.3);color:var(--neon-red);font-size:12px">✕ REJEITAR</button>
+      </div>
+    </div>`).join('');
+}
+
+async function tgAuthAprovar(id){
+  if(!_supabase) return;
+  const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',id).single();
+  if(!data) return;
+  const lancamentos=getLancamentos();
+  const novoId=Date.now();
+  lancamentos.push({id:novoId,descricao:data.descricao,valor:parseFloat(data.valor),categoria:data.categoria,cartao:data.cartao,data:data.data_lancamento,tipo:'despesa',origem:'telegram'});
+  setLancamentos(lancamentos);
+  await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',id);
+  tgAuthRenderDashboard();
+  tgAuthRenderModal();
+  _showToast('✓ Lançamento autorizado!');
+}
+
+async function tgAuthRejeitar(id){
+  await _supabase.from('telegram_pendentes').update({status:'rejeitado'}).eq('id',id);
+  tgAuthRenderDashboard();
+  tgAuthRenderModal();
+  _showToast('Lançamento rejeitado');
+}
+
+function tgAuthAbrirModal(){
+  const m=document.getElementById('tg-auth-modal');
+  if(m){m.style.display='flex';tgAuthRenderModal();}
+}
+
+function tgAuthFecharModal(){
+  const m=document.getElementById('tg-auth-modal');
+  if(m) m.style.display='none';
+}
+
+async function tgAuthVerificarEAbrir(){
+  const lista=await tgAuthCarregar();
+  if(lista.length>0) tgAuthAbrirModal();
+}
 </script>
 <!-- MODAL GLOBAL: Motivo ao desmarcar tarefa -->
 <div id="trf-motivo-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
@@ -21801,6 +21905,23 @@ function trfBadgeProgresso(meta){
     <button class="ck ck-s2" onclick="calcKey('0')">0</button>
     <button class="ck" onclick="calcKey('.')">.</button>
     <button class="ck ck-eq" onclick="calcKey('=')">=</button>
+  </div>
+</div>
+
+<!-- MODAL: Pendentes de Autorização Telegram -->
+<div id="tg-auth-modal" style="display:none;position:fixed;inset:0;z-index:5200;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid rgba(0,255,157,0.2);border-radius:18px;padding:26px;width:min(580px,94vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-shrink:0">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green);letter-spacing:1px">📱 PENDENTES DE AUTORIZAÇÃO</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px" id="tg-auth-sub">Lançamentos enviados pelo Telegram aguardando aprovação</div>
+      </div>
+      <button onclick="tgAuthFecharModal()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>
+    </div>
+    <div id="tg-auth-lista" style="flex:1;overflow-y:auto;min-height:0"></div>
+    <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:10px;flex-shrink:0">
+      <button onclick="tgAuthFecharModal()" class="btn" style="width:100%;border-color:rgba(0,255,157,0.4);color:var(--neon-green)">→ VER NO DASHBOARD</button>
+    </div>
   </div>
 </div>
 </body>

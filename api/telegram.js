@@ -16,6 +16,57 @@ async function sendTelegram(chat_id, text) {
   });
 }
 
+async function getContexto(chat_id) {
+  try {
+    const data = await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}&select=contexto`);
+    return data?.[0]?.contexto || {};
+  } catch(e) { return {}; }
+}
+
+async function setContexto(chat_id, contexto) {
+  try {
+    await supabaseQuery('/telegram_contexto', 'POST', {
+      chat_id,
+      contexto,
+      updated_at: new Date().toISOString()
+    });
+  } catch(e) {
+    await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}`, 'PATCH', {
+      contexto,
+      updated_at: new Date().toISOString()
+    });
+  }
+}
+
+async function limparContexto(chat_id) {
+  await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}`, 'PATCH', {
+    contexto: {},
+    updated_at: new Date().toISOString()
+  });
+}
+
+async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original) {
+  const registro = {
+    user_id,
+    descricao: gasto.descricao,
+    valor: gasto.valor,
+    categoria: gasto.categoria || 'Outros',
+    cartao: gasto.cartao || 'Não informado',
+    data_lancamento: gasto.data_lancamento,
+    origem: 'telegram',
+    tipo_midia,
+    mensagem_original,
+    chat_id,
+    status: 'pendente',
+    parcelas: gasto.parcelas || null,
+    valor_parcela: gasto.valor_parcela || null,
+    observacao: gasto.observacao || null
+  };
+  console.log('Salvando pendente:', JSON.stringify(registro));
+  const resultado = await supabaseQuery('/telegram_pendentes', 'POST', registro);
+  console.log('Resultado save:', JSON.stringify(resultado));
+}
+
 async function supabaseQuery(path, method = 'GET', body = null) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     method,
@@ -329,6 +380,52 @@ export default async function handler(req, res) {
       mensagem_original = msg.caption ? `[Foto] ${msg.caption}` : '[Foto]';
     }
 
+    // Carrega contexto anterior
+    const ctx = await getContexto(chat_id);
+
+    // Se tem lançamento parcial aguardando complemento
+    if (ctx.aguardando && texto) {
+      const campo = ctx.aguardando;
+      const gasto = ctx.gasto_parcial || {};
+
+      if (campo === 'cartao') {
+        gasto.cartao = texto;
+        gasto.tipo = 'lancamento';
+      } else if (campo === 'valor') {
+        const num = parseFloat(texto.replace(',', '.').replace(/[^\d.]/g, ''));
+        if (!isNaN(num)) gasto.valor = num;
+        gasto.tipo = 'lancamento';
+      } else if (campo === 'categoria') {
+        gasto.categoria = texto;
+        gasto.tipo = 'lancamento';
+      }
+
+      if (!gasto.valor || isNaN(gasto.valor)) {
+        await setContexto(chat_id, { aguardando: 'valor', gasto_parcial: gasto });
+        await sendTelegram(chat_id, `💰 Qual o valor gasto?`);
+        return res.status(200).json({ ok: true });
+      }
+      if (!gasto.cartao || gasto.cartao === 'Não informado') {
+        await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
+        await sendTelegram(chat_id,
+          `💳 Qual cartão ou forma de pagamento?\n\n` +
+          `Responda com: Nubank, Inter, PIX, Dinheiro, Débito...`
+        );
+        return res.status(200).json({ ok: true });
+      }
+
+      // Tem tudo — salva
+      await limparContexto(chat_id);
+      await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original);
+      const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      await sendTelegram(chat_id,
+        `✅ *Lançamento registrado!*\n\n` +
+        `📝 ${gasto.descricao}\n💰 ${valor}\n🏷 ${gasto.categoria}\n💳 ${gasto.cartao}\n📅 ${gasto.data_lancamento}\n\n` +
+        `⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`
+      );
+      return res.status(200).json({ ok: true });
+    }
+
     const gasto = await interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType });
 
     if (gasto.tipo === 'erro' || gasto.erro) {
@@ -362,26 +459,18 @@ export default async function handler(req, res) {
 
     const lancamentos = gasto.tipo === 'multiplos' ? gasto.lancamentos : [gasto];
 
+    // Verifica se lançamento único está sem cartão — pede antes de salvar
+    if (gasto.tipo === 'lancamento' && (!gasto.cartao || gasto.cartao === 'Não informado')) {
+      await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
+      await sendTelegram(chat_id,
+        `Entendi o gasto! 💳 Qual cartão ou forma de pagamento?\n\n` +
+        `Ex: Nubank, Inter, PIX, Dinheiro, Débito...`
+      );
+      return res.status(200).json({ ok: true });
+    }
+
     for (const l of lancamentos) {
-      const registro = {
-        user_id,
-        descricao: l.descricao,
-        valor: l.valor,
-        categoria: l.categoria || 'Outros',
-        cartao: l.cartao || 'Não informado',
-        data_lancamento: l.data_lancamento,
-        origem: 'telegram',
-        tipo_midia,
-        mensagem_original,
-        chat_id,
-        status: 'pendente',
-        parcelas: l.parcelas || null,
-        valor_parcela: l.valor_parcela || null,
-        observacao: l.observacao || null
-      };
-      console.log('Salvando pendente:', JSON.stringify(registro));
-      const resultado = await supabaseQuery('/telegram_pendentes', 'POST', registro);
-      console.log('Resultado save:', JSON.stringify(resultado));
+      await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original);
     }
 
     if (gasto.tipo === 'multiplos') {

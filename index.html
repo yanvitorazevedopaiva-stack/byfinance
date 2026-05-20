@@ -21830,52 +21830,133 @@ async function tgAuthRenderModal(){
     </div>`).join('');
 }
 
+let _tgAprovarId=null;
+let _tgFormaAtual='pix';
+
+function tgSetForma(forma,btn){
+  _tgFormaAtual=forma;
+  document.querySelectorAll('#tg-aprovar-formas .lanc-forma-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const wrap=document.getElementById('tg-aprovar-parcelas-wrap');
+  if(wrap) wrap.style.display=forma==='cred-parc'?'block':'none';
+}
+
 async function tgAuthAprovar(id){
+  _tgAprovarId=id;
   if(!_supabase) return;
   const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',id).single();
   if(!data) return;
 
-  const lancamentos=getLancamentos();
-  const novoId=Date.now();
-  lancamentos.push({
-    id:novoId,
-    descricao:data.descricao,
-    valor:parseFloat(data.valor),
-    categoria:data.categoria,
-    cartao:data.cartao,
-    data:data.data_lancamento,
-    tipo:'despesa',
-    origem:'telegram'
-  });
-  setLancamentos(lancamentos);
+  const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const resumo=document.getElementById('tg-aprovar-resumo');
+  if(resumo) resumo.innerHTML=`
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px">${esc(data.descricao)}</div>
+    <div style="color:var(--text3);font-size:12px">💰 ${valor} &nbsp;·&nbsp; 🏷 ${esc(data.categoria)} &nbsp;·&nbsp; 💳 ${esc(data.cartao)} &nbsp;·&nbsp; 📅 ${data.data_lancamento}</div>
+  `;
 
-  await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',id);
+  const bemSel=document.getElementById('tg-aprovar-bem');
+  if(bemSel){
+    const bens=typeof getBens==='function'?getBens():[];
+    bemSel.innerHTML='<option value="">— nenhum —</option>'+bens.map(b=>`<option value="${b.id}">${esc(b.nome||b.tipo||'Bem')}</option>`).join('');
+  }
+
+  const estab=document.getElementById('tg-aprovar-estab');
+  if(estab) estab.value=data.descricao||'';
+
+  tgSetForma('pix',document.querySelector('#tg-aprovar-formas .lanc-forma-btn'));
+
+  const modal=document.getElementById('tg-aprovar-modal');
+  if(modal) modal.style.display='flex';
+}
+
+async function tgConfirmarAutorizacao(){
+  if(!_tgAprovarId||!_supabase) return;
+  const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',_tgAprovarId).single();
+  if(!data) return;
+
+  const forma=_tgFormaAtual;
+  const nParc=parseInt(document.getElementById('tg-aprovar-nparc')?.value)||1;
+  const estab=document.getElementById('tg-aprovar-estab')?.value.trim()||'';
+  const bemId=document.getElementById('tg-aprovar-bem')?.value||'';
+  const semana=getSemanaFromData(data.data_lancamento);
+  const id=Date.now();
+  const val=parseFloat(data.valor);
+  const desc=estab||data.descricao;
+
+  if(forma==='cred-parc'||forma==='cred-vista'){
+    const cartao=data.cartao||'Nubank';
+    const nP=forma==='cred-parc'?nParc:1;
+    const valParc=parseFloat((val/nP).toFixed(2));
+    const formaStr=cartao+(nP===1?' (à vista)':` (${nP}x)`);
+    const parcelas=getData('parcelas');
+    const mesInicio=data.data_lancamento.substring(0,7);
+    const parcId=id+1;
+    parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nP,val:valParc});
+    setData('parcelas',parcelas);
+    const mesIdx=parseInt(data.data_lancamento.split('-')[1])-1;
+    const fat=getData('faturas');
+    if(!fat[cartao]) fat[cartao]=Array(12).fill(0);
+    for(let i=0;i<nP;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}
+    setData('faturas',fat);
+    const all=getData('lancamentos');
+    if(!all[semana]) all[semana]=[];
+    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram'});
+    setData('lancamentos',all);
+  }else{
+    const formaLabel={pix:'Pix',debito:'Débito',dinheiro:'Dinheiro','pix-credito':'PIX Crédito'};
+    const all=getData('lancamentos');
+    if(!all[semana]) all[semana]=[];
+    all[semana].push({id,desc,data:data.data_lancamento,forma:formaLabel[forma]||'Pix',cat:data.categoria,val,bemId:bemId||undefined,origem:'telegram'});
+    setData('lancamentos',all);
+  }
+
+  await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',_tgAprovarId);
 
   if(data.chat_id){
-    const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    const valor=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
     await fetch('/api/notify',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         chat_id:data.chat_id,
-        text:`✅ *Lançamento autorizado!*\n\n📝 ${data.descricao}\n💰 ${valor}\n🏷 ${data.categoria}\n💳 ${data.cartao}\n📅 ${data.data_lancamento}\n\n_Registrado com sucesso no BY Finance._`
+        text:`✅ *Lançamento autorizado!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria}\n💳 ${data.cartao}\n📅 ${data.data_lancamento}\n\n_Registrado com sucesso no BY Finance._`
       })
     });
   }
 
+  document.getElementById('tg-aprovar-modal').style.display='none';
   tgAuthRenderDashboard();
   tgAuthRenderModal();
   showSync('✓ Lançamento autorizado!','green');
 }
 
 async function tgAuthRejeitar(id){
+  _tgAprovarId=id;
   if(!_supabase) return;
   const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',id).single();
   if(!data) return;
 
-  const motivo=prompt('Motivo da rejeição (opcional):')||'';
+  const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const resumo=document.getElementById('tg-rejeitar-resumo');
+  if(resumo) resumo.innerHTML=`
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px">${esc(data.descricao)}</div>
+    <div style="color:var(--text3);font-size:12px">💰 ${valor} &nbsp;·&nbsp; 🏷 ${esc(data.categoria)} &nbsp;·&nbsp; 💳 ${esc(data.cartao)} &nbsp;·&nbsp; 📅 ${data.data_lancamento}</div>
+  `;
 
-  await _supabase.from('telegram_pendentes').update({status:'rejeitado'}).eq('id',id);
+  const motivo=document.getElementById('tg-rejeitar-motivo');
+  if(motivo) motivo.value='';
+
+  const modal=document.getElementById('tg-rejeitar-modal');
+  if(modal) modal.style.display='flex';
+}
+
+async function tgConfirmarRejeicao(){
+  if(!_tgAprovarId||!_supabase) return;
+  const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',_tgAprovarId).single();
+  if(!data) return;
+
+  const motivo=document.getElementById('tg-rejeitar-motivo')?.value.trim()||'';
+  await _supabase.from('telegram_pendentes').update({status:'rejeitado'}).eq('id',_tgAprovarId);
 
   if(data.chat_id){
     const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -21890,6 +21971,7 @@ async function tgAuthRejeitar(id){
     });
   }
 
+  document.getElementById('tg-rejeitar-modal').style.display='none';
   tgAuthRenderDashboard();
   tgAuthRenderModal();
   showSync('Lançamento rejeitado','red');
@@ -22111,6 +22193,65 @@ async function cfgTgDesvincular(){
     <button class="ck ck-s2" onclick="calcKey('0')">0</button>
     <button class="ck" onclick="calcKey('.')">.</button>
     <button class="ck ck-eq" onclick="calcKey('=')">=</button>
+  </div>
+</div>
+
+<div id="tg-aprovar-modal" style="display:none;position:fixed;inset:0;z-index:5300;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid rgba(0,255,157,0.2);border-radius:18px;padding:26px;width:min(520px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green)">✅ AUTORIZAR LANÇAMENTO</div>
+      <button onclick="document.getElementById('tg-aprovar-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
+    </div>
+    <div id="tg-aprovar-resumo" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15);margin-bottom:18px;font-size:13px"></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">FORMA DE PAGAMENTO</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="tg-aprovar-formas">
+          <button class="lanc-forma-btn" onclick="tgSetForma('pix',this)">🔄 PIX</button>
+          <button class="lanc-forma-btn" onclick="tgSetForma('debito',this)">💳 DÉBITO</button>
+          <button class="lanc-forma-btn" onclick="tgSetForma('cred-vista',this)">💳 CRÉDITO À VISTA</button>
+          <button class="lanc-forma-btn" onclick="tgSetForma('cred-parc',this)">💳 CRÉDITO PARCELADO</button>
+          <button class="lanc-forma-btn" onclick="tgSetForma('dinheiro',this)">💵 DINHEIRO</button>
+          <button class="lanc-forma-btn" onclick="tgSetForma('pix-credito',this)">💸 PIX CRÉDITO</button>
+        </div>
+      </div>
+      <div id="tg-aprovar-parcelas-wrap" style="display:none">
+        <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">Nº DE PARCELAS</label>
+        <input id="tg-aprovar-nparc" type="number" min="2" max="48" value="2" style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">ESTABELECIMENTO (opcional)</label>
+        <input id="tg-aprovar-estab" type="text" placeholder="Nome do estabelecimento..." style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">VINCULAR A BEM (opcional)</label>
+        <select id="tg-aprovar-bem" style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
+          <option value="">— nenhum —</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="tgConfirmarAutorizacao()" class="btn btn-green" style="flex:1;font-size:13px;padding:12px">⚡ CONFIRMAR LANÇAMENTO</button>
+      <button onclick="document.getElementById('tg-aprovar-modal').style.display='none'" class="btn" style="border-color:rgba(255,68,68,0.3);color:var(--neon-red);padding:12px 16px">✕</button>
+    </div>
+  </div>
+</div>
+
+<div id="tg-rejeitar-modal" style="display:none;position:fixed;inset:0;z-index:5300;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid rgba(255,68,68,0.2);border-radius:18px;padding:26px;width:min(480px,94vw);box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-red)">❌ REJEITAR LANÇAMENTO</div>
+      <button onclick="document.getElementById('tg-rejeitar-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
+    </div>
+    <div id="tg-rejeitar-resumo" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid rgba(255,68,68,0.15);margin-bottom:18px;font-size:13px"></div>
+    <div>
+      <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">MOTIVO DA REJEIÇÃO (opcional)</label>
+      <textarea id="tg-rejeitar-motivo" placeholder="Explique o motivo..." rows="3" style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;resize:none"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="tgConfirmarRejeicao()" class="btn" style="flex:1;border-color:rgba(255,68,68,0.4);color:var(--neon-red);font-size:13px;padding:12px">❌ CONFIRMAR REJEIÇÃO</button>
+      <button onclick="document.getElementById('tg-rejeitar-modal').style.display='none'" class="btn" style="padding:12px 16px">✕</button>
+    </div>
   </div>
 </div>
 

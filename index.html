@@ -8229,6 +8229,7 @@ function showPage(id){
   if(window.innerWidth<=768&&typeof _mobUpdateBar==='function') _mobUpdateBar(id);
   closeSidebar();
   renderPage(id);
+  if(id==='lancamentos') tgAuthVerificarEAbrir();
 }
 
 // Reseta a página para sua tela principal (chamado ao clicar no nav da página já ativa)
@@ -21852,7 +21853,10 @@ async function tgAuthRejeitar(id){
 
 function tgAuthAbrirModal(){
   const m=document.getElementById('tg-auth-modal');
-  if(m){m.style.display='flex';tgAuthRenderModal();}
+  if(m){
+    m.style.display='flex';
+    tgAuthRenderModal();
+  }
 }
 
 function tgAuthFecharModal(){
@@ -21862,7 +21866,9 @@ function tgAuthFecharModal(){
 
 async function tgAuthVerificarEAbrir(){
   const lista=await tgAuthCarregar();
-  if(lista.length>0) tgAuthAbrirModal();
+  if(lista.length>0){
+    tgAuthAbrirModal();
+  }
 }
 
 // ── TELEGRAM VINCULAÇÃO ─────────────────────────────────────────────────────

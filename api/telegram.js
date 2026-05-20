@@ -338,6 +338,10 @@ export default async function handler(req, res) {
   const chat_id = msg.chat.id;
   const texto = msg.text || msg.caption || '';
 
+  console.log('Chat ID:', chat_id, 'Texto:', texto);
+  const ctxDebug = await getContexto(chat_id);
+  console.log('Contexto carregado:', JSON.stringify(ctxDebug));
+
   try {
     // 1. Verifica se o chat_id já está vinculado
     const vincRes = await supabaseQuery(
@@ -400,6 +404,9 @@ export default async function handler(req, res) {
     // 3. JÁ VINCULADO — processa normalmente
     const user_id = vinculo.user_id;
 
+    // Carrega contexto anterior
+    const ctx = await getContexto(chat_id);
+
     let tipo_midia = 'texto';
     let audioUrl = null;
     let fotoUrl = null;
@@ -420,10 +427,7 @@ export default async function handler(req, res) {
       mensagem_original = msg.caption ? `[Foto] ${msg.caption}` : '[Foto]';
     }
 
-    // Carrega contexto anterior
-    const ctx = await getContexto(chat_id);
-
-    // Se tem lançamento parcial aguardando complemento
+    // Se tem lançamento parcial aguardando complemento — verificar ANTES do Gemini
     if (ctx.aguardando && texto) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};

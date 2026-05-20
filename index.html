@@ -3421,7 +3421,10 @@
   <div class="card" style="margin-bottom:18px;border-color:rgba(0,255,157,0.2)" id="d-tg-pendentes-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div class="sec-title" style="margin:0;color:var(--neon-green)">📱 AUTORIZAÇÃO DE LANÇAMENTOS <span id="d-tg-badge" style="display:none;background:var(--neon-red);color:#fff;border-radius:50%;padding:1px 6px;font-size:10px;margin-left:6px"></span></div>
-      <button onclick="tgAuthAbrirModal()" style="font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid rgba(0,255,157,0.3);background:transparent;color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace">VER TODOS</button>
+      <div style="display:flex;gap:6px">
+        <button onclick="tgAuthRenderDashboard()" title="Atualizar" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">↻</button>
+        <button onclick="tgAuthAbrirModal()" style="font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid rgba(0,255,157,0.3);background:transparent;color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace">VER TODOS</button>
+      </div>
     </div>
     <div id="d-tg-pendentes-lista"><div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">✓ Nenhum lançamento pendente</div></div>
   </div>
@@ -21784,46 +21787,38 @@ function tgAuthFmtValor(v){
   return parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 }
 
+function _tgRenderPendentes(lista){
+  const el=document.getElementById('d-tg-pendentes-lista');
+  const badge=document.getElementById('d-tg-badge');
+  if(!el) return;
+  if(badge){if(lista.length){badge.style.display='inline';badge.textContent=lista.length;}else badge.style.display='none';}
+  if(!lista.length){
+    el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">✓ Nenhum lançamento pendente</div>';
+    return;
+  }
+  el.innerHTML=lista.slice(0,3).map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${esc(p.descricao)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
+      <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✓</button>
+      <button onclick="tgAuthRejeitar('${p.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>
+    </div>`).join('');
+  if(lista.length>3) el.innerHTML+=`<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3);cursor:pointer" onclick="tgAuthAbrirModal()">+ ${lista.length-3} mais pendentes</div>`;
+}
+
 async function tgAuthRenderDashboard(delay=0){
-  const _executar=async()=>{
+  const _run=async()=>{
     const el=document.getElementById('d-tg-pendentes-lista');
-    const badge=document.getElementById('d-tg-badge');
     if(!el) return;
-    try{
-      // Sem UID disponível — não tenta buscar
-      const uid=(typeof _authUID!=='undefined'&&_authUID)
-        ||sessionStorage.getItem('byf_supabase_uid')
-        ||(await _supabase?.auth?.getUser())?.data?.user?.id;
-      if(!_supabase||!uid){
-        el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">Vincule o Telegram em Configurações para ver pendentes.</div>';
-        if(badge) badge.style.display='none';
-        return;
-      }
-      const lista=await tgAuthCarregar();
-      if(badge){if(lista.length){badge.style.display='inline';badge.textContent=lista.length;}else badge.style.display='none';}
-      if(!lista.length){
-        el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">✓ Nenhum lançamento pendente</div>';
-        return;
-      }
-      el.innerHTML=lista.slice(0,3).map(p=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600">${esc(p.descricao)}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}</div>
-          </div>
-          <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
-          <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✓</button>
-          <button onclick="tgAuthRejeitar('${p.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>
-        </div>`).join('');
-      if(lista.length>3) el.innerHTML+=`<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3);cursor:pointer" onclick="tgAuthAbrirModal()">+ ${lista.length-3} mais pendentes</div>`;
-    }catch(e){
-      // Garante que nunca fica preso em "Carregando..."
-      el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">✓ Nenhum lançamento pendente</div>';
-      if(badge) badge.style.display='none';
-    }
+    // Usa exatamente o mesmo caminho que tgAuthRenderModal (que funciona)
+    const lista=await tgAuthCarregar();
+    _tgRenderPendentes(lista);
   };
-  if(delay>0) setTimeout(()=>{_executar().catch(()=>{});},delay);
-  else _executar().catch(()=>{});
+  if(delay>0) setTimeout(()=>_run().catch(console.warn),delay);
+  else _run().catch(console.warn);
 }
 
 async function tgAuthRenderModal(){

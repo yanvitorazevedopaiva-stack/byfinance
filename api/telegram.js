@@ -231,6 +231,11 @@ Ações possíveis: "listar", "criar", "concluir"
 Para criar: titulo obrigatório, prazo opcional (formato YYYY-MM-DD), prioridade: Alta/Media/Baixa
 Para concluir: titulo com o nome ou parte do nome da tarefa
 
+Exemplos:
+- "quais minhas tarefas" → {"tipo":"tarefa","acao":"listar"}
+- "cria tarefa comprar pneu sexta" → {"tipo":"tarefa","acao":"criar","titulo":"Comprar pneu","prazo":"${new Date(Date.now()+4*86400000).toISOString().split('T')[0]}","prioridade":"Media"}
+- "concluí a tarefa do pneu" → {"tipo":"tarefa","acao":"concluir","titulo":"pneu"}
+
 CATEGORIAS DISPONÍVEIS:
 Alimentação, Transporte, Mercado, Saúde, Lazer, Moradia, Vestuário, Educação, Serviços, Investimento, Outros
 

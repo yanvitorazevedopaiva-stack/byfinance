@@ -21436,6 +21436,22 @@ function renderMercado(){
 // ── Tarefas: storage ──
 function _trfGet(){return load('tarefas')||[];}
 function _trfSet(d){save('tarefas',d);}
+
+async function _trfSyncSupabase(){
+  if(!_supabase||!_authUser) return;
+  try{
+    const {data}=await _supabase.from('user_data')
+      .select('data').eq('user_id',_authUser).maybeSingle();
+    const remotas=data?.data?.tarefas||data?.tarefas;
+    if(!Array.isArray(remotas)||!remotas.length) return;
+    const locais=_trfGet();
+    const idsLocais=new Set(locais.map(t=>t.id));
+    // Adiciona tarefas do Supabase que não existem localmente
+    const novas=remotas.filter(t=>t.id&&!idsLocais.has(t.id));
+    if(!novas.length) return;
+    _trfSet([...locais,...novas]);
+  }catch(e){}
+}
 let _trfFiltro='todas';
 let _trfMotivoId=null; // id da tarefa sendo desmarcada
 
@@ -21723,6 +21739,11 @@ function renderTarefas(){
   _trfRenderLista();
   // Regenera tarefas de metas semanais para a semana vigente
   _trfAtualizarTarefasSemanais();
+  // Sincroniza tarefas do Supabase (ex: criadas via Telegram) e re-renderiza se houver novas
+  _trfSyncSupabase().then(()=>{
+    _trfRenderKpis();
+    _trfRenderLista();
+  }).catch(()=>{});
 }
 
 function _trfAtualizarTarefasSemanais(){

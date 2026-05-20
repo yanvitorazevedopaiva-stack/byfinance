@@ -21344,18 +21344,22 @@ Retorne apenas o array JSON começando com [ e terminando com ].`;
     if(isPDF){
       // PDF: usa File API do Gemini (inline_data não suporta PDF)
       const uploadResp=await fetch(
-        'https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=media&key='+key,
+        `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=media&key=${encodeURIComponent(key)}`,
         {
           method:'POST',
           headers:{
             'Content-Type':'application/pdf',
             'X-Goog-Upload-Protocol':'raw',
-            'X-Goog-Upload-Header-Content-Type':'application/pdf'
+            'X-Goog-Upload-Command':'upload, finalize',
+            'X-Goog-Upload-Header-Content-Type':'application/pdf',
+            'X-Goog-Upload-Header-Content-Length':String(file.size)
           },
-          body:Uint8Array.from(atob(base64),c=>c.charCodeAt(0))
+          body:file
         }
       );
+      console.log('Upload status:',uploadResp.status);
       const uploadData=await uploadResp.json();
+      console.log('Upload data:',JSON.stringify(uploadData));
       const fileUri=uploadData?.file?.uri;
       if(!fileUri) throw new Error('Falha no upload do PDF para o Gemini');
       const bodyPDF={contents:[{parts:[

@@ -71,9 +71,14 @@ export default async function handler(req, res) {
         );
       }
 
-      // Envia alertas se houver
+      // 2. Tarefas urgentes (prazo hoje ou atrasadas)
+      const userData = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+      const tarefas = userData?.[0]?.data?.tarefas || [];
+      const hoje = new Date().toISOString().split('T')[0];
+      const urgentes = tarefas.filter(t => !t.concluida && t.prazo && t.prazo <= hoje);
+
+      // Envia resumo de lançamentos pendentes
       if (alertas.length > 0) {
-        // Saudação baseada no horário de Brasília (UTC-3)
         const horaBrasilia = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours();
         const saudacao = horaBrasilia >= 5 && horaBrasilia < 12
           ? '🌅 *Bom dia! Resumo BY Finance*'
@@ -84,6 +89,18 @@ export default async function handler(req, res) {
         await sendTelegram(chat_id, msg);
         enviados++;
         console.log(`Alerta enviado para chat_id ${chat_id} (user_id ${user_id})`);
+      }
+
+      // Envia alerta de tarefas urgentes (separado)
+      if (urgentes.length > 0) {
+        const txt = urgentes.map(t => {
+          const atrasada = t.prazo < hoje ? '⚠ ATRASADA' : '📅 HOJE';
+          return `• ${t.titulo || t.desc} — ${atrasada}`;
+        }).join('\n');
+        await sendTelegram(chat_id,
+          `📋 *Tarefas que precisam de atenção:*\n\n${txt}\n\nAcesse o BY Finance para atualizar.`
+        );
+        console.log(`Tarefas urgentes enviadas para chat_id ${chat_id}: ${urgentes.length}`);
       }
     }
 

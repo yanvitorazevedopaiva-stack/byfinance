@@ -21833,12 +21833,28 @@ async function tgAuthRenderModal(){
 let _tgAprovarId=null;
 let _tgFormaAtual='pix';
 
-function tgSetForma(forma,btn){
+function tgSetForma(forma,btn,cartaoSugerido){
   _tgFormaAtual=forma;
   document.querySelectorAll('#tg-aprovar-formas .lanc-forma-btn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  const wrap=document.getElementById('tg-aprovar-parcelas-wrap');
-  if(wrap) wrap.style.display=forma==='cred-parc'?'block':'none';
+  const precisaCartao=forma==='cred-parc'||forma==='cred-vista'||forma==='debito';
+  const wrapParc=document.getElementById('tg-aprovar-parcelas-wrap');
+  const wrapCart=document.getElementById('tg-aprovar-cartao-wrap');
+  if(wrapParc) wrapParc.style.display=forma==='cred-parc'?'block':'none';
+  if(wrapCart) wrapCart.style.display=precisaCartao?'block':'none';
+  if(precisaCartao){
+    const sel=document.getElementById('tg-aprovar-cartao');
+    if(sel){
+      const carts=getData('cartoes')||[];
+      sel.innerHTML='<option value="">— selecione o cartão —</option>'+
+        carts.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('');
+      // Pré-seleciona o cartão sugerido pelo Gemini se existir na lista
+      if(cartaoSugerido){
+        const opt=[...sel.options].find(o=>o.value.toLowerCase()===cartaoSugerido.toLowerCase());
+        if(opt) sel.value=opt.value;
+      }
+    }
+  }
 }
 
 async function tgAuthAprovar(id){
@@ -21851,7 +21867,10 @@ async function tgAuthAprovar(id){
   const resumo=document.getElementById('tg-aprovar-resumo');
   if(resumo) resumo.innerHTML=`
     <div style="font-weight:700;font-size:14px;margin-bottom:8px">${esc(data.descricao)}</div>
-    <div style="color:var(--text3);font-size:12px">💰 ${valor} &nbsp;·&nbsp; 🏷 ${esc(data.categoria)} &nbsp;·&nbsp; 💳 ${esc(data.cartao)} &nbsp;·&nbsp; 📅 ${data.data_lancamento}</div>
+    <div style="color:var(--text3);font-size:12px;line-height:1.8">
+      💰 ${valor} &nbsp;·&nbsp; 🏷 ${esc(data.categoria)} &nbsp;·&nbsp; 📅 ${data.data_lancamento}
+    </div>
+    ${data.cartao&&data.cartao!=='Não informado'?`<div style="margin-top:6px;font-size:11px;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">💳 Sugerido pelo bot: <strong>${esc(data.cartao)}</strong></div>`:''}
   `;
 
   const bemSel=document.getElementById('tg-aprovar-bem');
@@ -21863,7 +21882,7 @@ async function tgAuthAprovar(id){
   const estab=document.getElementById('tg-aprovar-estab');
   if(estab) estab.value=data.descricao||'';
 
-  tgSetForma('pix',document.querySelector('#tg-aprovar-formas .lanc-forma-btn'));
+  tgSetForma('pix',document.querySelector('#tg-aprovar-formas .lanc-forma-btn'),data.cartao);
 
   const modal=document.getElementById('tg-aprovar-modal');
   if(modal) modal.style.display='flex';
@@ -21884,7 +21903,7 @@ async function tgConfirmarAutorizacao(){
   const desc=estab||data.descricao;
 
   if(forma==='cred-parc'||forma==='cred-vista'){
-    const cartao=data.cartao||'Nubank';
+    const cartao=document.getElementById('tg-aprovar-cartao')?.value||data.cartao||'Nubank';
     const nP=forma==='cred-parc'?nParc:1;
     const valParc=parseFloat((val/nP).toFixed(2));
     const formaStr=cartao+(nP===1?' (à vista)':` (${nP}x)`);
@@ -21903,10 +21922,12 @@ async function tgConfirmarAutorizacao(){
     all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram'});
     setData('lancamentos',all);
   }else{
-    const formaLabel={pix:'Pix',debito:'Débito',dinheiro:'Dinheiro','pix-credito':'PIX Crédito'};
+    const cartaoSel=document.getElementById('tg-aprovar-cartao')?.value||'';
+    const formaLabel={pix:'Pix',dinheiro:'Dinheiro','pix-credito':'PIX Crédito'};
+    const formaStr=forma==='debito'?(cartaoSel?`${cartaoSel} (débito)`:'Débito'):(formaLabel[forma]||'Pix');
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
-    all[semana].push({id,desc,data:data.data_lancamento,forma:formaLabel[forma]||'Pix',cat:data.categoria,val,bemId:bemId||undefined,origem:'telegram'});
+    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val,cartao:cartaoSel||undefined,bemId:bemId||undefined,origem:'telegram'});
     setData('lancamentos',all);
   }
 
@@ -22214,6 +22235,12 @@ async function cfgTgDesvincular(){
           <button class="lanc-forma-btn" onclick="tgSetForma('dinheiro',this)">💵 DINHEIRO</button>
           <button class="lanc-forma-btn" onclick="tgSetForma('pix-credito',this)">💸 PIX CRÉDITO</button>
         </div>
+      </div>
+      <div id="tg-aprovar-cartao-wrap" style="display:none">
+        <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">CARTÃO</label>
+        <select id="tg-aprovar-cartao" style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid rgba(0,200,255,0.35);color:var(--neon-blue);font-family:'JetBrains Mono',monospace;font-size:13px">
+          <option value="">— selecione o cartão —</option>
+        </select>
       </div>
       <div id="tg-aprovar-parcelas-wrap" style="display:none">
         <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">Nº DE PARCELAS</label>

@@ -427,76 +427,81 @@ export default async function handler(req, res) {
       mensagem_original = msg.caption ? `[Foto] ${msg.caption}` : '[Foto]';
     }
 
-    // Se tem lançamento parcial aguardando complemento — verificar ANTES do Gemini
+    // ── Fluxo de contexto: resposta a pergunta anterior ──────────────────────
     if (ctx.aguardando && texto) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
 
-      // Preenche o campo que estava aguardando
-      if (campo === 'cartao') {
-        gasto.cartao = texto;
-        gasto.tipo = 'lancamento';
-        // Cartão preenchido → próximo passo obrigatório: modalidade
-        if (!gasto.modalidade) {
-          await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
-          await sendTelegram(chat_id,
-            `${iconeModalidade('')} Como foi o pagamento?\n\n` +
-            `🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`
-          );
-          return res.status(200).json({ ok: true });
-        }
-      } else if (campo === 'modalidade') {
+      if (campo === 'modalidade') {
+        // Usuário respondeu a modalidade
         gasto.modalidade = texto;
         gasto.tipo = 'lancamento';
+        const modLow = texto.toLowerCase();
+        const isPix = modLow.includes('pix');
+        const isDinheiro = modLow.includes('dinheiro') || modLow.includes('especie') || modLow.includes('espécie');
+
+        if (isPix || isDinheiro) {
+          // PIX/Dinheiro não precisa de cartão — salva direto
+          gasto.cartao = gasto.modalidade;
+          await limparContexto(chat_id);
+          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original);
+          const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          await sendTelegram(chat_id,
+            `✅ *Lançamento registrado!*\n\n` +
+            `📝 ${gasto.descricao}\n💰 ${valor}\n🏷 ${gasto.categoria}\n` +
+            `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n` +
+            `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+            `⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`
+          );
+        } else {
+          // Crédito/Débito → precisa saber o cartão/banco
+          await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
+          await sendTelegram(chat_id,
+            `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`
+          );
+        }
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'cartao') {
+        // Usuário respondeu o cartão — tem tudo, salva direto
+        gasto.cartao = texto;
+        gasto.tipo = 'lancamento';
+        await limparContexto(chat_id);
+        await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original);
+        const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        await sendTelegram(chat_id,
+          `✅ *Lançamento registrado!*\n\n` +
+          `📝 ${gasto.descricao}\n💰 ${valor}\n🏷 ${gasto.categoria}\n` +
+          `💳 ${fmtCartao(gasto.cartao)}\n` +
+          `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade || gasto.cartao}\n` +
+          `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+          `⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`
+        );
+        return res.status(200).json({ ok: true });
+
       } else if (campo === 'valor') {
         const num = parseFloat(texto.replace(',', '.').replace(/[^\d.]/g, ''));
         if (!isNaN(num)) gasto.valor = num;
         gasto.tipo = 'lancamento';
+        // Continua para verificar o que falta abaixo
       } else if (campo === 'categoria') {
         gasto.categoria = texto;
         gasto.tipo = 'lancamento';
       }
 
-      // Verifica se ainda falta valor
+      // Verificações de campos faltantes (para valor/categoria recém preenchidos)
       if (!gasto.valor || isNaN(gasto.valor)) {
         await setContexto(chat_id, { aguardando: 'valor', gasto_parcial: gasto });
         await sendTelegram(chat_id, `💰 Qual o valor gasto?`);
         return res.status(200).json({ ok: true });
       }
-      // Verifica se ainda falta cartão
-      if (!gasto.cartao || gasto.cartao === 'Não informado') {
-        await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
-        await sendTelegram(chat_id,
-          `💳 Qual cartão ou forma de pagamento?\n\n` +
-          `Responda com: Nubank, Inter, PIX, Dinheiro, Débito...`
-        );
-        return res.status(200).json({ ok: true });
-      }
-      // Verifica se ainda falta modalidade
       if (!gasto.modalidade) {
         await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
         await sendTelegram(chat_id,
-          `${iconeModalidade('')} Como foi o pagamento?\n\n` +
-          `🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`
+          `${iconeModalidade('')} Como foi o pagamento?\n\n🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`
         );
         return res.status(200).json({ ok: true });
       }
-
-      // Tudo preenchido — salva e limpa contexto
-      await limparContexto(chat_id);
-      await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original);
-      const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      await sendTelegram(chat_id,
-        `✅ *Lançamento registrado!*\n\n` +
-        `📝 ${gasto.descricao}\n` +
-        `💰 ${valor}\n` +
-        `🏷 ${gasto.categoria}\n` +
-        `💳 ${fmtCartao(gasto.cartao)}\n` +
-        `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade || 'Não informado'}\n` +
-        `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
-        `⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`
-      );
-      return res.status(200).json({ ok: true });
     }
 
     const gasto = await interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType });
@@ -532,23 +537,24 @@ export default async function handler(req, res) {
 
     const lancamentos = gasto.tipo === 'multiplos' ? gasto.lancamentos : [gasto];
 
-    // Verifica se lançamento único está sem cartão
-    if (gasto.tipo === 'lancamento' && (!gasto.cartao || gasto.cartao === 'Não informado')) {
-      await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
-      await sendTelegram(chat_id,
-        `Entendi o gasto! 💳 Qual cartão ou forma de pagamento?\n\n` +
-        `Ex: Nubank, Inter, PIX, Dinheiro, Débito...`
-      );
-      return res.status(200).json({ ok: true });
-    }
-    // Verifica modalidade
+    // Pós-Gemini: perguntar modalidade PRIMEIRO, depois cartão se necessário
     if (gasto.tipo === 'lancamento' && !gasto.modalidade) {
       await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
       await sendTelegram(chat_id,
-        `${iconeModalidade('')} Como foi o pagamento?\n\n` +
-        `🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`
+        `Entendi! ${iconeModalidade('')} Como foi o pagamento?\n\n🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`
       );
       return res.status(200).json({ ok: true });
+    }
+    // Se tem modalidade mas não tem cartão (e é crédito/débito)
+    if (gasto.tipo === 'lancamento' && (!gasto.cartao || gasto.cartao === 'Não informado')) {
+      const modLow = (gasto.modalidade || '').toLowerCase();
+      if (!modLow.includes('pix') && !modLow.includes('dinheiro')) {
+        await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
+        await sendTelegram(chat_id, `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`);
+        return res.status(200).json({ ok: true });
+      }
+      // PIX/Dinheiro: cartao = modalidade
+      gasto.cartao = gasto.modalidade;
     }
 
     for (const l of lancamentos) {

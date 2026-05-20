@@ -21441,7 +21441,7 @@ async function _trfSyncSupabase(){
   if(!_supabase||!_authUser) return;
   try{
     const {data}=await _supabase.from('user_data')
-      .select('data').eq('user_id',_authUser).maybeSingle();
+      .select('data').eq('user_id',_authUID||sessionStorage.getItem('byf_supabase_uid')).maybeSingle();
     const remotas=data?.data?.tarefas||data?.tarefas;
     if(!Array.isArray(remotas)||!remotas.length) return;
     const locais=_trfGet();

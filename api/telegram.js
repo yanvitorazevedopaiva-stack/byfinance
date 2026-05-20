@@ -443,6 +443,14 @@ export default async function handler(req, res) {
       mimeType = 'image/jpeg';
       fotoUrl = await getTelegramFileUrl(file_id);
       mensagem_original = msg.caption ? `[Foto] ${msg.caption}` : '[Foto]';
+      if (msg.caption) texto = msg.caption;
+    } else if (msg.document && msg.document.mime_type === 'application/pdf') {
+      tipo_midia = 'pdf';
+      const file_id = msg.document.file_id;
+      mimeType = 'application/pdf';
+      fotoUrl = await getTelegramFileUrl(file_id);
+      mensagem_original = msg.caption ? `[PDF] ${msg.caption}` : '[PDF]';
+      if (msg.caption) texto = msg.caption;
     }
 
     // ── Fluxo de contexto: resposta a pergunta anterior ──────────────────────

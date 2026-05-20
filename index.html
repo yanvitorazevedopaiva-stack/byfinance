@@ -20821,8 +20821,11 @@ function _mktRenderCatalogo(){
   }
   el.style.display='flex';
   el.innerHTML=cat.map(it=>`
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s;flex-shrink:0;width:162px" onmouseover="this.style.borderColor='rgba(0,200,255,0.35)'" onmouseout="this.style.borderColor='var(--border)'"
-      ondragstart="return false">
+    <div draggable="true"
+      ondragstart="event.dataTransfer.setData('mkt_cat_item_id','${it.id}');this.style.opacity='.5'"
+      ondragend="this.style.opacity='1'"
+      style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,opacity .15s;flex-shrink:0;width:162px;cursor:grab" onmouseover="this.style.borderColor='rgba(0,200,255,0.35)'" onmouseout="this.style.borderColor='var(--border)'"
+      title="Arraste para uma lista pendente abaixo">
       <div style="height:90px;background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative">
         ${it.foto?`<img src="${it.foto}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:36px">${_MKT_EMOJI[it.cat]||'📦'}</span>`}
       </div>
@@ -21002,12 +21005,33 @@ function _mktRenderListas(){
   const concluidas=listas.filter(l=>l.status==='concluido').sort((a,b)=>b.mes.localeCompare(a.mes));
   const elP=document.getElementById('mkt-listas-pendente');
   if(elP){if(!pendentes.length){elP.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:12px">Nenhuma lista pendente.</div>';}
-  else{elP.innerHTML=pendentes.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);const comp=l.itens.filter(i=>i.comprado).length;return`<div onclick="mktAbrirMes(${l.id})" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;margin-bottom:8px;transition:all .15s" onmouseover="this.style.background='rgba(0,200,255,0.05)';this.style.borderColor='rgba(0,200,255,0.3)'" onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'"><span style="font-size:22px">🛒</span><div style="flex:1"><div style="font-size:13px;font-weight:700">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${comp}/${l.itens.length} comprados${total>0?' · '+_mktFmt(total):''}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(255,215,0,0.12);color:var(--neon-yellow);border:1px solid rgba(255,215,0,0.25)">PENDENTE</span><span style="color:var(--text3);font-size:16px">›</span></div>`;}).join('');}}
+  else{elP.innerHTML=pendentes.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);const comp=l.itens.filter(i=>i.comprado).length;return`<div
+    ondragover="event.preventDefault();this.style.borderColor='rgba(0,255,157,0.6)';this.style.background='rgba(0,255,157,0.05)'"
+    ondragleave="this.style.borderColor='var(--border)';this.style.background='var(--bg2)'"
+    ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='var(--bg2)';mktDropCatalogoNaLista(event,${l.id})"
+    style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;margin-bottom:8px;transition:all .15s"
+    onmouseover="this.style.background='rgba(0,200,255,0.05)';this.style.borderColor='rgba(0,200,255,0.3)'"
+    onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'"
+    onclick="mktAbrirMes(${l.id})">
+    <span style="font-size:22px">🛒</span><div style="flex:1"><div style="font-size:13px;font-weight:700">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${comp}/${l.itens.length} comprados${total>0?' · '+_mktFmt(total):''}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(255,215,0,0.12);color:var(--neon-yellow);border:1px solid rgba(255,215,0,0.25)">PENDENTE</span><span style="color:var(--text3);font-size:16px">›</span>
+    </div>`;}).join('');}}
   const elH=document.getElementById('mkt-listas-hist');
   if(elH){if(!concluidas.length){elH.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista concluída.</div>';}
   else{elH.innerHTML=concluidas.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);return`<div onclick="mktAbrirMes(${l.id})" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;margin-bottom:6px;opacity:.8;transition:all .15s" onmouseover="this.style.opacity='1';this.style.borderColor='rgba(0,255,157,0.3)'" onmouseout="this.style.opacity='.8';this.style.borderColor='var(--border)'"><span style="font-size:20px">✅</span><div style="flex:1"><div style="font-size:13px;font-weight:600">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${_mktFmt(total)}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(0,255,157,0.1);color:var(--neon-green);border:1px solid rgba(0,255,157,0.25)">CONCLUÍDO</span><span style="color:var(--text3);font-size:16px">›</span></div>`;}).join('');}}
   _mktRenderAnalise();
 }
+function mktDropCatalogoNaLista(event,listaId){
+  const itemId=parseInt(event.dataTransfer.getData('mkt_cat_item_id'));
+  if(!itemId) return;
+  const it=_mktGetCatalogo().find(x=>x.id===itemId);
+  if(!it) return;
+  const listas=_mktGetListas();
+  const lista=listas.find(l=>l.id===listaId);
+  if(!lista||lista.status!=='pendente'){_showToast('Só é possível adicionar a listas pendentes.');return;}
+  if(lista.itens.find(i=>i.refId===itemId)){_showToast(`"${it.nome}" já está nesta lista.`);return;}
+  _mktModalPrecoArrastado(it,lista);
+}
+
 function mktAbrirMes(id){_mktMesId=id;document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}
 function mktVoltarMain(){document.getElementById('mkt-panel-mes').style.display='none';document.getElementById('mkt-panel-main').style.display='block';_mktMesId=null;_mktRenderListas();}
 
@@ -21436,11 +21460,13 @@ function mktScannerRenderItem(){
     +'<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PREÇO (R$)</div><input id="scan-preco" type="number" value="'+item.precoUnit+'" min="0" step="0.01" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:\'JetBrains Mono\',monospace"></div></div>'
     +'<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div><select id="scan-cat" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">'+catOpts+'</select></div>'
     +'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">'
+    +(_mktScanIdx>0?'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:20px">':'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">')
+    +(_mktScanIdx>0?'<button onclick="mktScannerVoltar()" style="padding:11px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:\'JetBrains Mono\',monospace">← VOLTAR</button>':'')
     +'<button onclick="mktScannerPular()" style="padding:11px;background:var(--bg2);border:1px solid var(--border);color:var(--text3);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:\'JetBrains Mono\',monospace">✗ PULAR</button>'
     +'<button onclick="mktScannerConfirmar()" style="padding:11px;background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:\'JetBrains Mono\',monospace">✓ OK — PRÓXIMO</button>'
     +'</div>'
-    +'<div style="text-align:center;margin-top:14px"><div style="display:flex;gap:4px;justify-content:center">'+dots+'</div></div>'
+    +'<div style="margin-top:10px"><button onclick="mktScannerVincularMes()" style="width:100%;padding:9px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:var(--neon-purple,#a855f7);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:\'JetBrains Mono\',monospace">📅 VINCULAR AO MÊS PENDENTE</button></div>'
+    +'<div style="text-align:center;margin-top:12px"><div style="display:flex;gap:4px;justify-content:center">'+dots+'</div></div>'
     +'</div></div>';
   const old=document.getElementById('mkt-scanner-modal');if(old)old.remove();
   document.body.insertAdjacentHTML('beforeend',html);
@@ -21463,6 +21489,47 @@ function mktScannerConfirmar(){
 }
 
 function mktScannerPular(){_mktScanIdx++;mktScannerRenderItem();}
+function mktScannerVoltar(){if(_mktScanIdx>0){_mktScanIdx--;mktScannerRenderItem();}}
+
+function mktScannerVincularMes(){
+  // Pega o item atual do scanner (sem confirmar no catálogo)
+  const nome=(document.getElementById('scan-nome')?.value||'').trim();
+  const qtd=parseFloat(document.getElementById('scan-qtd')?.value)||1;
+  const unidade=document.getElementById('scan-unidade')?.value||'un';
+  const preco=parseFloat(document.getElementById('scan-preco')?.value)||0;
+  const cat=document.getElementById('scan-cat')?.value||'Outros';
+  // Busca listas pendentes
+  const pendentes=_mktGetListas().filter(l=>l.status==='pendente');
+  if(!pendentes.length){_showToast('Nenhuma lista pendente encontrada. Crie uma lista primeiro.');return;}
+  // Se só há uma lista pendente, abre modal direto; se houver múltiplas, mostra picker
+  if(pendentes.length===1){
+    const it={id:Date.now(),nome,cat,qtd,unidade,preco,dataCadastro:new Date().toISOString()};
+    _mktModalPrecoArrastado(it,pendentes[0]);
+    return;
+  }
+  // Múltiplas listas → picker
+  const opts=pendentes.map(l=>`<button onclick="mktScannerVincularNaLista(${l.id})" style="width:100%;padding:10px 14px;text-align:left;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;margin-bottom:6px;font-size:13px;font-family:'JetBrains Mono',monospace" onmouseover="this.style.borderColor='rgba(0,255,157,0.4)'" onmouseout="this.style.borderColor='var(--border)'">🛒 ${_mktMesLabel(l.mes).toUpperCase()}</button>`).join('');
+  const el=document.createElement('div');
+  el.id='mkt-scan-picker';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  el.innerHTML=`<div style="background:var(--card);border:1px solid rgba(0,255,157,0.2);border-radius:14px;padding:22px;width:min(360px,94vw)">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green);margin-bottom:14px">📅 ESCOLHA A LISTA</div>
+    ${opts}
+    <button onclick="document.getElementById('mkt-scan-picker').remove()" style="width:100%;padding:9px;background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;cursor:pointer;font-size:12px;margin-top:4px">CANCELAR</button>
+  </div>`;
+  document.body.appendChild(el);
+  // Guarda item atual para uso na função de vincular
+  window._mktScanItemAtual={nome,cat,qtd,unidade,preco};
+}
+
+function mktScannerVincularNaLista(listaId){
+  document.getElementById('mkt-scan-picker')?.remove();
+  const listas=_mktGetListas();
+  const lista=listas.find(l=>l.id===listaId);
+  if(!lista||lista.status!=='pendente'){_showToast('Lista não encontrada ou já concluída.');return;}
+  const it=window._mktScanItemAtual||{};
+  _mktModalPrecoArrastado({id:Date.now(),...it},lista);
+}
 function renderMercado(){
   _mktRenderCatalogo();_mktRenderListas();_mktRenderAnalise();
   if(_mktMesId){document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}

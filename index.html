@@ -21551,6 +21551,16 @@ async function _trfSyncSupabase(){
     if(!Array.isArray(remotas)||!remotas.length) return;
     const locais=_trfGet();
     const idsLocais=new Set(locais.map(t=>t.id));
+    // Atualiza tarefas existentes que foram concluídas remotamente
+    let houveMudanca=false;
+    locais.forEach(t=>{
+      const remota=remotas.find(r=>r.id===t.id);
+      if(remota&&remota.concluida&&!t.concluida){
+        t.concluida=true;
+        houveMudanca=true;
+      }
+    });
+    if(houveMudanca) _trfSet(locais);
     // Adiciona tarefas do Supabase que não existem localmente
     const novas=remotas.filter(t=>t.id&&!idsLocais.has(t.id)).map(t=>({
       ...t,
@@ -21559,7 +21569,7 @@ async function _trfSyncSupabase(){
       concluida: t.concluida ?? false,
     }));
     if(!novas.length) return;
-    _trfSet([...locais,...novas]);
+    _trfSet([..._trfGet(),...novas]);
   }catch(e){}
 }
 let _trfFiltro='todas';

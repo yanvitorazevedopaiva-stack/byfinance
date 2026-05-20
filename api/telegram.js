@@ -708,7 +708,15 @@ export default async function handler(req, res) {
         const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dados = tarefas?.[0]?.data || {};
         const lista = dados.tarefas || [];
-        const idx = lista.findIndex(t => t.titulo.toLowerCase().includes(gasto.titulo.toLowerCase()));
+        const idx = lista.findIndex(t => {
+          const tituloTarefa = (t.titulo || t.desc || '').toLowerCase().trim();
+          const tituloGasto = gasto.titulo.toLowerCase().trim();
+          const limpar = str => str.replace(/\b(a|o|as|os|de|da|do|das|dos|para|que|um|uma|uns|umas)\b/g, '').replace(/\s+/g, ' ').trim();
+          const tituloLimpo = limpar(tituloTarefa);
+          const gastoLimpo = limpar(tituloGasto);
+          return tituloLimpo.includes(gastoLimpo) || gastoLimpo.includes(tituloLimpo) ||
+            tituloTarefa.includes(tituloGasto) || tituloGasto.includes(tituloTarefa);
+        });
         if (idx === -1) {
           await sendTelegram(chat_id, `❌ Tarefa não encontrada: "${gasto.titulo}"`);
         } else {

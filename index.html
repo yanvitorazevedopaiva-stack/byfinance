@@ -21447,7 +21447,12 @@ async function _trfSyncSupabase(){
     const locais=_trfGet();
     const idsLocais=new Set(locais.map(t=>t.id));
     // Adiciona tarefas do Supabase que não existem localmente
-    const novas=remotas.filter(t=>t.id&&!idsLocais.has(t.id));
+    const novas=remotas.filter(t=>t.id&&!idsLocais.has(t.id)).map(t=>({
+      ...t,
+      desc:   t.desc   ?? t.titulo ?? '',
+      cat:    t.cat    ?? 'Pessoal',
+      concluida: t.concluida ?? false,
+    }));
     if(!novas.length) return;
     _trfSet([...locais,...novas]);
   }catch(e){}

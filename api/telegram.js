@@ -153,53 +153,81 @@ async function urlToBase64(url) {
 
 async function interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType }) {
   const prompt = `Você é o assistente financeiro do BY Finance, um sistema financeiro pessoal brasileiro.
-Seu papel é interpretar mensagens de voz, texto, fotos e comprovantes enviados pelo usuário e extrair informações de gastos.
+Seu papel é interpretar mensagens de voz, texto, fotos e comprovantes enviados pelo usuário.
+Seja EXTREMAMENTE flexível na interpretação — o usuário pode se expressar de formas variadas e informais.
 
-REGRAS GERAIS:
+REGRAS FUNDAMENTAIS:
 - Responda SOMENTE com JSON válido, sem markdown, sem explicação, sem texto extra
-- Se a mensagem for uma CORREÇÃO do lançamento anterior, use o tipo "correcao"
-- Se for uma CONSULTA (quanto gastei?, qual meu saldo?), use o tipo "consulta"
-- Se for um COMANDO (cancela, lista pendentes), use o tipo "comando"
-- Se for um LANÇAMENTO normal, use o tipo "lancamento"
-- Se for sobre TAREFAS (listar, criar, concluir), use o tipo "tarefa"
-- Se não conseguir identificar nada, retorne {"tipo":"erro","motivo":"descrição do problema"}
+- NUNCA retorne erro se conseguir extrair alguma informação útil
+- Prefira retornar lancamento_parcial a retornar erro
+- Se não entender NADA, retorne {"tipo":"erro","motivo":"..."}
 
-FORMATO PARA LANÇAMENTO ÚNICO:
+━━━ LANÇAMENTOS FINANCEIROS ━━━
+
+GATILHOS DE GASTO — qualquer uma dessas expressões indica um lançamento:
+Verbos: gastei, paguei, comprei, adquiri, consumi, desembolsei, investi, coloquei, botei, meti, saiu, foi, custou, valeu, cobrou
+Substantivos: gasto, despesa, conta, pagamento, compra, débito, saída, custo
+Inglês: spent, paid, bought, charged
+Gírias: "saiu X conto", "foi X pila", "X reais fora", "X pau", "X mangos", "X conto", "uma nota de X"
+Sem verbo: "pão 60", "uber 23", "netflix 45", "mercado 150", "farmácia 45"
+Com símbolo: "$ 60", "R$ 80", "60,00", "60 reais", "sessenta reais"
+Implícito: "80 no restaurante", "50 com uber", "200 na farmácia"
+
+INTERPRETAR VALORES:
+- Números soltos: "80", "R$80", "80 reais", "oitenta reais" → 80.00
+- "mil" → 1000, "duzentos" → 200, "cinquenta" → 50
+- "80,50" ou "80.50" → 80.50
+- "1k" → 1000, "1.5k" → 1500
+- Parcelamento: "200 em 12x", "3x de 50", "12 parcelas de 30" → extrair total e parcelas
+
+INTERPRETAR DESCRIÇÃO:
+- Local: "no mercado", "na farmácia", "no uber", "no ifood", "na academia"
+- Produto: "comprei pão", "paguei netflix", "gasolina"
+- Se só tiver valor → campo_faltando = "descricao"
+- Se só tiver descrição → campo_faltando = "valor"
+
+FORMATO LANÇAMENTO COMPLETO:
 {
   "tipo": "lancamento",
-  "descricao": "descrição clara do gasto",
+  "descricao": "descrição clara",
   "valor": 47.00,
   "categoria": "Alimentação",
-  "cartao": "Nubank",
-  "data_lancamento": "2026-05-19",
+  "cartao": "Não informado",
+  "modalidade": null,
+  "data_lancamento": "${new Date().toISOString().split('T')[0]}",
   "parcelas": null,
   "valor_parcela": null,
   "observacao": null
 }
 
-FORMATO PARA MÚLTIPLOS LANÇAMENTOS (quando o usuário cita mais de um gasto):
+FORMATO LANÇAMENTO PARCIAL:
 {
-  "tipo": "multiplos",
-  "lancamentos": [
-    {"descricao": "iFood", "valor": 47.00, "categoria": "Alimentação", "cartao": "Nubank", "data_lancamento": "2026-05-19", "parcelas": null},
-    {"descricao": "Uber", "valor": 23.00, "categoria": "Transporte", "cartao": "Nubank", "data_lancamento": "2026-05-19", "parcelas": null}
-  ]
+  "tipo": "lancamento_parcial",
+  "campo_faltando": "descricao",
+  "descricao": null,
+  "valor": 80.00,
+  "categoria": "Outros",
+  "cartao": "Não informado",
+  "data_lancamento": "${new Date().toISOString().split('T')[0]}"
 }
 
-FORMATO PARA PARCELAMENTO:
+FORMATO MÚLTIPLOS LANÇAMENTOS:
+{
+  "tipo": "multiplos",
+  "lancamentos": [...]
+}
+
+FORMATO PARCELAMENTO:
 {
   "tipo": "lancamento",
-  "descricao": "descrição do produto/serviço",
+  "descricao": "...",
   "valor": 200.00,
   "valor_parcela": 16.67,
   "parcelas": 12,
-  "categoria": "Outros",
-  "cartao": "Nubank",
-  "data_lancamento": "2026-05-19",
   "observacao": "Compra parcelada em 12x"
 }
 
-FORMATO PARA CORREÇÃO:
+FORMATO CORREÇÃO:
 {
   "tipo": "correcao",
   "campo": "valor",
@@ -207,98 +235,116 @@ FORMATO PARA CORREÇÃO:
   "descricao_nova": null
 }
 
-FORMATO PARA CONSULTA:
-{
-  "tipo": "consulta",
-  "pergunta": "gastos_hoje"
-}
+━━━ CATEGORIAS ━━━
+Alimentação: ifood, rappi, uber eats, delivery, restaurante, lanchonete, padaria, café, bar, pizza, hamburger, açaí, sorvete, doceria, sushi, churrasco, refeição, almoço, jantar, café da manhã, lanche, marmita, comida
+Transporte: uber, 99, táxi, combustível, gasolina, etanol, diesel, pedágio, metrô, ônibus, passagem, estacionamento, moto, bicicleta, patinete, rodoviária, aeroporto
+Mercado: supermercado, mercado, hortifruti, açougue, mercearia, quitanda, feira, sacolão, atacado, assaí, carrefour, extra, pão de açúcar
+Saúde: farmácia, remédio, medicamento, médico, consulta, exame, hospital, clínica, dentista, psicólogo, fisioterapeuta, plano de saúde, academia, suplemento
+Lazer: cinema, netflix, spotify, amazon prime, disney, show, festa, viagem, hotel, pousada, parque, teatro, museu, ingresso, jogo, game, steam
+Moradia: aluguel, condomínio, água, luz, energia, internet, gás, IPTU, seguro, reforma, manutenção, faxina, diarista
+Vestuário: roupa, calçado, tênis, sapato, bolsa, acessório, moda, loja, shopping
+Educação: curso, livro, escola, faculdade, mensalidade, material escolar, caneta, caderno, apostila, workshop, treinamento
+Serviços: salão, barbearia, manicure, lavanderia, conserto, reparo, oficina, mecânico, encanador, eletricista, assinatura, streaming
+Investimento: ação, fundo, tesouro, criptomoeda, bitcoin, poupança, CDB, LCI, LCA, previdência
+Outros: qualquer coisa que não se encaixe acima
 
-FORMATO PARA COMANDO:
-{
-  "tipo": "comando",
-  "acao": "cancelar_ultimo"
-}
+━━━ BANCOS E ABREVIAÇÕES ━━━
+"nu", "nubank", "roxinho", "lilas" → "Nubank"
+"inter", "banco inter", "laranjinha" → "Inter"
+"itau", "itaú", "itauzinho" → "Itaú"
+"brad", "bradesco", "vermelhinho" → "Bradesco"
+"bb", "brasil", "banco do brasil" → "Banco do Brasil"
+"cef", "caixa", "caixa economica" → "Caixa"
+"c6", "c6bank", "pretinho" → "C6 Bank"
+"xp", "xp invest" → "XP"
+"next" → "Next"
+"picpay" → "PicPay"
+"pagbank", "pagseguro" → "PagBank"
+"mercado pago", "mp" → "Mercado Pago"
+"will", "will bank" → "Will Bank"
+"neon" → "Neon"
+"santander", "san" → "Santander"
+"original" → "Original"
+"débito", "debito" → "Débito"
+"dinheiro", "especie", "espécie", "cash", "vivo" → "Dinheiro"
+"pix", "transferencia", "ted", "doc" → "PIX"
+Se não informado → "Não informado"
 
-FORMATO PARA TAREFA:
+━━━ DATAS ━━━
+"hoje" → ${new Date().toISOString().split('T')[0]}
+"ontem" → ${new Date(Date.now()-86400000).toISOString().split('T')[0]}
+"anteontem" → ${new Date(Date.now()-172800000).toISOString().split('T')[0]}
+"amanhã" → ${new Date(Date.now()+86400000).toISOString().split('T')[0]}
+"depois de amanhã" → ${new Date(Date.now()+172800000).toISOString().split('T')[0]}
+Dias da semana: calcule o próximo dia a partir de hoje (${new Date().toISOString().split('T')[0]})
+Se não informada → ${new Date().toISOString().split('T')[0]}
+
+━━━ TAREFAS ━━━
+
+GATILHOS DE TAREFA — qualquer uma dessas expressões indica uma tarefa:
+"adiciona tarefa", "cria tarefa", "nova tarefa", "anota aí", "coloca no caderno"
+"lembra de", "me lembra", "não esquecer", "preciso fazer", "tenho que fazer"
+"agenda X para", "marca X para", "X para sexta", "X amanhã"
+"to do", "todo", "pendência", "compromisso", "obrigação"
+"preciso comprar", "preciso ligar", "preciso resolver", "preciso pagar"
+"deixa anotado", "registra aí", "salva aí"
+Urgência: "urgente", "importante", "crítico", "não pode esquecer", "prioridade" → prioridade Alta
+Sem prazo informado → pedir_prazo = true
+
+GATILHOS DE LISTAR TAREFAS:
+"minhas tarefas", "quais tarefas", "o que tenho para fazer", "pendências"
+"lista tarefas", "ver tarefas", "mostrar tarefas", "tarefas do dia"
+"o que está pendente", "o que falta fazer", "minha lista"
+
+GATILHOS DE CONCLUIR TAREFA:
+"concluí", "terminei", "fiz", "resolvi", "pronto", "feito", "ok a tarefa"
+"marca como feito", "marca como concluído", "risca da lista"
+"já fiz", "já resolvi", "já paguei", "já liguei"
+
+FORMATO TAREFA COMPLETA:
 {
   "tipo": "tarefa",
-  "acao": "listar",
-  "titulo": null,
-  "prazo": null,
-  "prioridade": "Media"
+  "acao": "criar",
+  "titulo": "Nome da tarefa",
+  "prazo": "${new Date(Date.now()+86400000).toISOString().split('T')[0]}",
+  "prioridade": "Alta",
+  "pedir_prazo": false
 }
-Ações possíveis: "listar", "criar", "concluir"
-Para criar: titulo obrigatório, prazo opcional (formato YYYY-MM-DD), prioridade: Alta/Media/Baixa
-Para concluir: titulo com o nome ou parte do nome da tarefa
 
-Exemplos:
-- "quais minhas tarefas" → {"tipo":"tarefa","acao":"listar"}
-- "cria tarefa comprar pneu sexta" → {"tipo":"tarefa","acao":"criar","titulo":"Comprar pneu","prazo":"${new Date(Date.now()+4*86400000).toISOString().split('T')[0]}","prioridade":"Media"}
-- "concluí a tarefa do pneu" → {"tipo":"tarefa","acao":"concluir","titulo":"pneu"}
+FORMATO TAREFA SEM PRAZO:
+{
+  "tipo": "tarefa",
+  "acao": "criar",
+  "titulo": "Nome da tarefa",
+  "prazo": null,
+  "prioridade": "Media",
+  "pedir_prazo": true
+}
 
-CATEGORIAS DISPONÍVEIS:
-Alimentação, Transporte, Mercado, Saúde, Lazer, Moradia, Vestuário, Educação, Serviços, Investimento, Outros
+FORMATO LISTAR:
+{"tipo":"tarefa","acao":"listar"}
 
-BANCOS E ABREVIAÇÕES (normalize sempre para o nome completo):
-- "nu", "nubank", "roxinho" → "Nubank"
-- "inter", "banco inter" → "Inter"
-- "itau", "itaú" → "Itaú"
-- "brad", "bradesco" → "Bradesco"
-- "bb", "brasil", "banco do brasil" → "Banco do Brasil"
-- "cef", "caixa" → "Caixa"
-- "c6", "c6bank" → "C6 Bank"
-- "xp", "xp investimentos" → "XP"
-- "next" → "Next"
-- "picpay" → "PicPay"
-- "pagbank", "pagseguro" → "PagBank"
-- "mercado pago", "mp" → "Mercado Pago"
-- "will", "will bank" → "Will Bank"
-- "neon" → "Neon"
-- "débito", "debito", "dinheiro", "pix", "especie" → "Dinheiro/PIX"
-- Se não informado → "Não informado"
+FORMATO CONCLUIR:
+{"tipo":"tarefa","acao":"concluir","titulo":"parte do nome"}
 
-INTERPRETAÇÃO DE VALORES:
-- "47 reais" → 47.00
-- "47,50" ou "47.50" → 47.50
-- "mil reais" → 1000.00
-- "duzentos" → 200.00
-- "200 em 12x" → valor: 200.00, parcelas: 12, valor_parcela: 16.67
-- "3x de 50" → valor: 150.00, parcelas: 3, valor_parcela: 50.00
+━━━ CONSULTAS ━━━
+"quanto gastei hoje", "gastos de hoje", "total hoje" → {"tipo":"consulta","pergunta":"gastos_hoje"}
+"quanto gastei esse mês", "total do mês", "meu mês" → {"tipo":"consulta","pergunta":"gastos_mes"}
+"quanto tenho", "meu saldo", "situação financeira" → {"tipo":"consulta","pergunta":"saldo"}
 
-INTERPRETAÇÃO DE DATAS:
-- "hoje" → ${new Date().toISOString().split('T')[0]}
-- "ontem" → ${new Date(Date.now()-86400000).toISOString().split('T')[0]}
-- "anteontem" → ${new Date(Date.now()-172800000).toISOString().split('T')[0]}
-- Se não informada → ${new Date().toISOString().split('T')[0]}
+━━━ COMANDOS ━━━
+"cancela", "cancela o último", "desfaz", "erro" → {"tipo":"comando","acao":"cancelar_ultimo"}
+"lista pendentes", "pendentes", "o que está pendente para autorizar" → {"tipo":"comando","acao":"listar_pendentes"}
 
-INTERPRETAÇÃO DE CATEGORIAS:
-- ifood, rappi, uber eats, delivery → Alimentação
-- restaurante, lanchonete, padaria, café, bar → Alimentação
-- uber, 99, táxi, combustível, gasolina, pedágio, metrô, ônibus → Transporte
-- supermercado, mercado, hortifruti, açougue → Mercado
-- farmácia, remédio, médico, consulta, exame, hospital → Saúde
-- cinema, netflix, spotify, show, festa, viagem, hotel → Lazer
-- aluguel, condomínio, água, luz, internet, gás → Moradia
-- roupa, calçado, acessório → Vestuário
-- curso, livro, escola, faculdade → Educação
-- salão, barbearia, academia, assinatura → Serviços
-- ação, fundo, tesouro, criptomoeda, investimento → Investimento
-
-COMANDOS RECONHECIDOS:
-- "cancela", "cancela o último", "desfaz" → {"tipo":"comando","acao":"cancelar_ultimo"}
-- "lista pendentes", "o que está pendente" → {"tipo":"comando","acao":"listar_pendentes"}
-- "quanto gastei hoje", "gastos de hoje" → {"tipo":"consulta","pergunta":"gastos_hoje"}
-- "quanto gastei esse mês", "total do mês" → {"tipo":"consulta","pergunta":"gastos_mes"}
-
-PARA FOTOS E COMPROVANTES:
-- Analise prints de notificação bancária extraindo valor, banco e estabelecimento
-- Analise comprovantes de pagamento extraindo valor, destinatário e banco
-- Analise notas fiscais extraindo itens, valor total e estabelecimento
-- Se houver múltiplos itens numa nota, retorne o tipo "multiplos"
-- Para PDFs de fatura, liste os principais lançamentos como "multiplos"
+━━━ FOTOS E COMPROVANTES ━━━
+- Prints de notificação bancária: extrair valor, banco e estabelecimento
+- Comprovantes de pagamento: extrair valor, destinatário e banco
+- Notas fiscais: extrair itens, valor total e estabelecimento
+- Múltiplos itens numa nota → tipo "multiplos"
+- PDFs de fatura → listar principais lançamentos como "multiplos"
 
 Data de hoje: ${new Date().toISOString().split('T')[0]}
-Mensagem do usuário: `;
+Mensagem: `;
 
   let contents = [];
 
@@ -458,7 +504,48 @@ export default async function handler(req, res) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
 
-      if (campo === 'modalidade') {
+      if (campo === 'prazo_tarefa') {
+        // Parse simples de data da resposta do usuário
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const t = texto.toLowerCase().trim();
+        let prazo = null;
+        if (t.includes('amanhã') || t.includes('amanha')) {
+          prazo = new Date(hoje.getTime()+86400000).toISOString().split('T')[0];
+        } else if (t.includes('depois de amanhã') || t.includes('depois de amanha')) {
+          prazo = new Date(hoje.getTime()+172800000).toISOString().split('T')[0];
+        } else if (t.includes('semana que vem')) {
+          const d = new Date(hoje); d.setDate(d.getDate()+(8-d.getDay())%7||7);
+          prazo = d.toISOString().split('T')[0];
+        } else if (t.includes('sábado') || t.includes('sabado') || t.includes('final de semana')) {
+          const d = new Date(hoje); const diff=(6-d.getDay()+7)%7||7; d.setDate(d.getDate()+diff);
+          prazo = d.toISOString().split('T')[0];
+        } else {
+          const dias = {segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,domingo:0};
+          for(const [nome,num] of Object.entries(dias)){
+            if(t.includes(nome)){const d=new Date(hoje);const diff=(num-d.getDay()+7)%7||7;d.setDate(d.getDate()+diff);prazo=d.toISOString().split('T')[0];break;}
+          }
+          // Tenta parse de data no formato DD/MM ou DD/MM/YYYY
+          if(!prazo){const m=t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);if(m){const y=m[3]?parseInt(m[3])+(m[3].length===2?2000:0):hoje.getFullYear();prazo=`${y}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;}}
+        }
+        gasto.prazo = prazo;
+        gasto.pedir_prazo = false;
+        // Cria a tarefa diretamente
+        const tarefasD = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+        const dadosD = tarefasD?.[0]?.data || {};
+        const listaD = dadosD.tarefas || [];
+        listaD.push({id:Date.now(),titulo:gasto.titulo,prazo:gasto.prazo||null,prio:gasto.prioridade||'Media',concluida:false,origem:'telegram'});
+        dadosD.tarefas = listaD;
+        await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify({data:dadosD,updated_at:new Date().toISOString()})});
+        await limparContexto(chat_id);
+        const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
+        await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade||'Média'}`);
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'descricao') {
+        gasto.descricao = texto;
+        gasto.tipo = 'lancamento';
+        // Continua para verificar campos restantes abaixo
+      } else if (campo === 'modalidade') {
         // Usuário respondeu a modalidade
         gasto.modalidade = texto;
         gasto.tipo = 'lancamento';
@@ -540,6 +627,20 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    if (gasto.tipo === 'lancamento_parcial') {
+      const campo = gasto.campo_faltando;
+      if (campo === 'descricao') {
+        await setContexto(chat_id, { aguardando: 'descricao', gasto_parcial: gasto });
+        await sendTelegram(chat_id, `📝 O que foi essa compra?\nEx: iFood, mercado, farmácia, uber...`);
+        return res.status(200).json({ ok: true });
+      }
+      if (campo === 'valor') {
+        await setContexto(chat_id, { aguardando: 'valor', gasto_parcial: gasto });
+        await sendTelegram(chat_id, `💰 Qual o valor gasto?`);
+        return res.status(200).json({ ok: true });
+      }
+    }
+
     if (gasto.tipo === 'consulta') {
       await sendTelegram(chat_id,
         `📊 Consultas ainda não estão disponíveis pelo bot.\n` +
@@ -563,6 +664,14 @@ export default async function handler(req, res) {
           }).join('\n');
           await sendTelegram(chat_id, `📋 *Tarefas pendentes:*\n\n${txt}`);
         }
+        return res.status(200).json({ ok: true });
+      }
+
+      if (gasto.acao === 'criar' && gasto.titulo && gasto.pedir_prazo) {
+        await setContexto(chat_id, { aguardando: 'prazo_tarefa', gasto_parcial: gasto });
+        await sendTelegram(chat_id,
+          `📅 Para quando é essa tarefa?\nEx: amanhã, sexta, 25/05, semana que vem`
+        );
         return res.status(200).json({ ok: true });
       }
 

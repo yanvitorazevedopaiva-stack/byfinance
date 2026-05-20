@@ -363,7 +363,7 @@ export default async function handler(req, res) {
     const lancamentos = gasto.tipo === 'multiplos' ? gasto.lancamentos : [gasto];
 
     for (const l of lancamentos) {
-      await supabaseQuery('/telegram_pendentes', 'POST', {
+      const registro = {
         user_id,
         descricao: l.descricao,
         valor: l.valor,
@@ -378,7 +378,10 @@ export default async function handler(req, res) {
         parcelas: l.parcelas || null,
         valor_parcela: l.valor_parcela || null,
         observacao: l.observacao || null
-      });
+      };
+      console.log('Salvando pendente:', JSON.stringify(registro));
+      const resultado = await supabaseQuery('/telegram_pendentes', 'POST', registro);
+      console.log('Resultado save:', JSON.stringify(resultado));
     }
 
     if (gasto.tipo === 'multiplos') {

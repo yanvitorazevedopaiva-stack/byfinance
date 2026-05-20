@@ -48,9 +48,13 @@ function iconeModalidade(forma) {
 
 async function getContexto(chat_id) {
   try {
-    const data = await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}&select=contexto`);
+    const data = await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}&select=contexto,id`);
+    console.log('getContexto resultado:', JSON.stringify(data));
     return data?.[0]?.contexto || {};
-  } catch(e) { return {}; }
+  } catch(e) {
+    console.error('getContexto erro:', e);
+    return {};
+  }
 }
 
 async function setContexto(chat_id, contexto) {

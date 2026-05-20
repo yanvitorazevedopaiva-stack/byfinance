@@ -16,6 +16,36 @@ async function sendTelegram(chat_id, text) {
   });
 }
 
+function fmtData(data) {
+  if (!data) return '';
+  const [y, m, d] = data.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function fmtCartao(cartao) {
+  if (!cartao) return 'Não informado';
+  return cartao
+    .replace(/nubank/gi, 'Nubank')
+    .replace(/\binter\b/gi, 'Inter')
+    .replace(/ita[uú]/gi, 'Itaú')
+    .replace(/bradesco/gi, 'Bradesco')
+    .replace(/caixa/gi, 'Caixa')
+    .replace(/\bpix\b/gi, 'PIX')
+    .replace(/dinheiro/gi, 'Dinheiro')
+    .replace(/d[eé]bito/gi, 'Débito')
+    .replace(/c[ré]dito/gi, 'Crédito');
+}
+
+function iconeModalidade(forma) {
+  if (!forma) return '💳';
+  const f = forma.toLowerCase();
+  if (f.includes('pix')) return '🔄';
+  if (f.includes('débito') || f.includes('debito')) return '💳';
+  if (f.includes('dinheiro') || f.includes('especie') || f.includes('espécie')) return '💵';
+  if (f.includes('crédito') || f.includes('credito')) return '💳';
+  return '💳';
+}
+
 async function getContexto(chat_id) {
   try {
     const data = await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}&select=contexto`);
@@ -52,6 +82,7 @@ async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_orig
     valor: gasto.valor,
     categoria: gasto.categoria || 'Outros',
     cartao: gasto.cartao || 'Não informado',
+    modalidade: gasto.modalidade || gasto.cartao || 'Não informado',
     data_lancamento: gasto.data_lancamento,
     origem: 'telegram',
     tipo_midia,
@@ -391,6 +422,9 @@ export default async function handler(req, res) {
       if (campo === 'cartao') {
         gasto.cartao = texto;
         gasto.tipo = 'lancamento';
+      } else if (campo === 'modalidade') {
+        gasto.modalidade = texto;
+        gasto.tipo = 'lancamento';
       } else if (campo === 'valor') {
         const num = parseFloat(texto.replace(',', '.').replace(/[^\d.]/g, ''));
         if (!isNaN(num)) gasto.valor = num;
@@ -413,6 +447,14 @@ export default async function handler(req, res) {
         );
         return res.status(200).json({ ok: true });
       }
+      if (!gasto.modalidade) {
+        await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
+        await sendTelegram(chat_id,
+          `${iconeModalidade('')} Como foi o pagamento?\n\n` +
+          `🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`
+        );
+        return res.status(200).json({ ok: true });
+      }
 
       // Tem tudo — salva
       await limparContexto(chat_id);
@@ -420,7 +462,12 @@ export default async function handler(req, res) {
       const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       await sendTelegram(chat_id,
         `✅ *Lançamento registrado!*\n\n` +
-        `📝 ${gasto.descricao}\n💰 ${valor}\n🏷 ${gasto.categoria}\n💳 ${gasto.cartao}\n📅 ${gasto.data_lancamento}\n\n` +
+        `📝 ${gasto.descricao}\n` +
+        `💰 ${valor}\n` +
+        `🏷 ${gasto.categoria}\n` +
+        `💳 ${fmtCartao(gasto.cartao)}\n` +
+        `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade || 'Não informado'}\n` +
+        `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
         `⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`
       );
       return res.status(200).json({ ok: true });
@@ -459,12 +506,21 @@ export default async function handler(req, res) {
 
     const lancamentos = gasto.tipo === 'multiplos' ? gasto.lancamentos : [gasto];
 
-    // Verifica se lançamento único está sem cartão — pede antes de salvar
+    // Verifica se lançamento único está sem cartão
     if (gasto.tipo === 'lancamento' && (!gasto.cartao || gasto.cartao === 'Não informado')) {
       await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
       await sendTelegram(chat_id,
         `Entendi o gasto! 💳 Qual cartão ou forma de pagamento?\n\n` +
         `Ex: Nubank, Inter, PIX, Dinheiro, Débito...`
+      );
+      return res.status(200).json({ ok: true });
+    }
+    // Verifica modalidade
+    if (gasto.tipo === 'lancamento' && !gasto.modalidade) {
+      await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
+      await sendTelegram(chat_id,
+        `${iconeModalidade('')} Como foi o pagamento?\n\n` +
+        `🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`
       );
       return res.status(200).json({ ok: true });
     }
@@ -489,8 +545,9 @@ export default async function handler(req, res) {
         `📝 ${gasto.descricao}\n` +
         `💰 ${valor}${parcelaInfo}\n` +
         `🏷 ${gasto.categoria}\n` +
-        `💳 ${gasto.cartao}\n` +
-        `📅 ${gasto.data_lancamento}\n\n` +
+        `💳 ${fmtCartao(gasto.cartao)}\n` +
+        `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade || 'Não informado'}\n` +
+        `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
         `⏳ Aguardando sua autorização no BY Finance.\n` +
         `Você tem *7 dias* para aprovar ou rejeitar.`
       );

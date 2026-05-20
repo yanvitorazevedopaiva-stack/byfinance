@@ -3422,7 +3422,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div class="sec-title" style="margin:0;color:var(--neon-green)">📱 AUTORIZAÇÃO DE LANÇAMENTOS <span id="d-tg-badge" style="display:none;background:var(--neon-red);color:#fff;border-radius:50%;padding:1px 6px;font-size:10px;margin-left:6px"></span></div>
       <div style="display:flex;gap:6px">
-        <button onclick="tgAuthRenderDashboard()" title="Atualizar" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">↻</button>
+        <button onclick="tgAuthRenderDashboard()" title="Atualizar lista" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:'JetBrains Mono',monospace">↻ ATUALIZAR</button>
         <button onclick="tgAuthAbrirModal()" style="font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid rgba(0,255,157,0.3);background:transparent;color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace">VER TODOS</button>
       </div>
     </div>
@@ -8461,6 +8461,7 @@ function _scaleOpts(yFmt){
 }
 
 function renderDashboard(){
+  tgAuthRenderDashboard();
   // Modal de tarefas — abre 1x por sessão, 600ms após o dashboard renderizar
   setTimeout(trfAbrirDailyModal, 600);
 

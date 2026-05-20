@@ -7744,7 +7744,7 @@ async function _startSession(u){
   if(scr) scr.classList.add('fading');
   await _loadFromSupabase();
   setTimeout(()=>{if(scr)scr.style.display='none';_initApp();},420);
-  tgAuthRenderDashboard();
+  tgAuthRenderDashboard(1500);
 }
 
 function doLogout(){
@@ -21784,8 +21784,8 @@ function tgAuthFmtValor(v){
   return parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 }
 
-async function tgAuthRenderDashboard(){
-  setTimeout(async()=>{
+async function tgAuthRenderDashboard(delay=0){
+  const _executar=async()=>{
     const lista=await tgAuthCarregar();
     const badge=document.getElementById('d-tg-badge');
     const el=document.getElementById('d-tg-pendentes-lista');
@@ -21803,7 +21803,8 @@ async function tgAuthRenderDashboard(){
         <button onclick="tgAuthRejeitar('${p.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>
       </div>`).join('');
     if(lista.length>3) el.innerHTML+=`<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3);cursor:pointer" onclick="tgAuthAbrirModal()">+ ${lista.length-3} mais pendentes</div>`;
-  },1500);
+  };
+  if(delay>0) setTimeout(_executar,delay); else _executar();
 }
 
 async function tgAuthRenderModal(){
@@ -21890,8 +21891,13 @@ async function tgAuthAprovar(id){
 
 async function tgConfirmarAutorizacao(){
   if(!_tgAprovarId||!_supabase) return;
-  const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',_tgAprovarId).single();
-  if(!data) return;
+  // Guarda e zera o ID imediatamente — previne duplo clique
+  const pendId=_tgAprovarId;
+  _tgAprovarId=null;
+  const btnConfirmar=document.querySelector('#tg-aprovar-modal .btn-green');
+  if(btnConfirmar){btnConfirmar.disabled=true;btnConfirmar.textContent='⏳ Processando...';}
+  const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',pendId).single();
+  if(!data){if(btnConfirmar){btnConfirmar.disabled=false;btnConfirmar.textContent='⚡ CONFIRMAR LANÇAMENTO';}return;}
 
   const forma=_tgFormaAtual;
   const nParc=parseInt(document.getElementById('tg-aprovar-nparc')?.value)||1;
@@ -21931,7 +21937,7 @@ async function tgConfirmarAutorizacao(){
     setData('lancamentos',all);
   }
 
-  await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',_tgAprovarId);
+  await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
 
   if(data.chat_id){
     const valor=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -21946,9 +21952,11 @@ async function tgConfirmarAutorizacao(){
   }
 
   document.getElementById('tg-aprovar-modal').style.display='none';
-  tgAuthRenderDashboard();
-  tgAuthRenderModal();
-  showSync('✓ Lançamento autorizado!','green');
+  document.getElementById('tg-auth-modal').style.display='none';
+  if(btnConfirmar){btnConfirmar.disabled=false;btnConfirmar.textContent='⚡ CONFIRMAR LANÇAMENTO';}
+  // Aguarda 500ms para o Supabase refletir o update antes de re-renderizar
+  setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();},500);
+  _showToast('✓ Lançamento autorizado!');
 }
 
 async function tgAuthRejeitar(id){
@@ -21973,11 +21981,15 @@ async function tgAuthRejeitar(id){
 
 async function tgConfirmarRejeicao(){
   if(!_tgAprovarId||!_supabase) return;
-  const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',_tgAprovarId).single();
-  if(!data) return;
+  const pendId=_tgAprovarId;
+  _tgAprovarId=null;
+  const btnRej=document.querySelector('#tg-rejeitar-modal .btn:first-child');
+  if(btnRej){btnRej.disabled=true;btnRej.textContent='⏳ Processando...';}
+  const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',pendId).single();
+  if(!data){if(btnRej){btnRej.disabled=false;btnRej.textContent='❌ CONFIRMAR REJEIÇÃO';}return;}
 
   const motivo=document.getElementById('tg-rejeitar-motivo')?.value.trim()||'';
-  await _supabase.from('telegram_pendentes').update({status:'rejeitado'}).eq('id',_tgAprovarId);
+  await _supabase.from('telegram_pendentes').update({status:'rejeitado'}).eq('id',pendId);
 
   if(data.chat_id){
     const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -21993,9 +22005,10 @@ async function tgConfirmarRejeicao(){
   }
 
   document.getElementById('tg-rejeitar-modal').style.display='none';
-  tgAuthRenderDashboard();
-  tgAuthRenderModal();
-  showSync('Lançamento rejeitado','red');
+  document.getElementById('tg-auth-modal').style.display='none';
+  if(btnRej){btnRej.disabled=false;btnRej.textContent='❌ CONFIRMAR REJEIÇÃO';}
+  setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();},500);
+  _showToast('Lançamento rejeitado.');
 }
 
 function tgAuthAbrirModal(){

@@ -21341,9 +21341,43 @@ Categorias: Hortifruti, Carnes, Laticinios, Padaria, Higiene, Limpeza, Mercearia
 Unidades: un, kg, g, L, mL, cx, pct, dz.
 Se não identificar quantidade ou preço, use 1 e 0.00 respectivamente.
 Retorne apenas o array JSON começando com [ e terminando com ].`;
-    const parts=isPDF
-      ?[{inline_data:{mime_type:'application/pdf',data:base64}},{text:prompt}]
-      :[{inline_data:{mime_type:mimeType,data:base64}},{text:prompt}];
+    if(isPDF){
+      // PDF: usa File API do Gemini (inline_data não suporta PDF)
+      const uploadResp=await fetch(
+        'https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=media&key='+key,
+        {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/pdf',
+            'X-Goog-Upload-Protocol':'raw',
+            'X-Goog-Upload-Header-Content-Type':'application/pdf'
+          },
+          body:Uint8Array.from(atob(base64),c=>c.charCodeAt(0))
+        }
+      );
+      const uploadData=await uploadResp.json();
+      const fileUri=uploadData?.file?.uri;
+      if(!fileUri) throw new Error('Falha no upload do PDF para o Gemini');
+      const bodyPDF={contents:[{parts:[
+        {file_data:{mime_type:'application/pdf',file_uri:fileUri}},
+        {text:prompt}
+      ]}]};
+      const resp=await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bodyPDF)}
+      );
+      const data=await resp.json();
+      const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||'[]';
+      const clean=raw.replace(/```json|```/g,'').trim();
+      const itens=JSON.parse(clean);
+      document.body.removeChild(overlay);
+      if(!itens.length){alert('Nenhum item encontrado na nota.');return;}
+      mktAbrirScanner(itens);
+      return;
+    }
+
+    // Imagem: usa inline_data normalmente
+    const parts=[{inline_data:{mime_type:mimeType,data:base64}},{text:prompt}];
     const body={contents:[{parts}]};
     const resp=await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,

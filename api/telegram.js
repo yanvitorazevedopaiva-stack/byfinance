@@ -55,16 +55,21 @@ async function getContexto(chat_id) {
 
 async function setContexto(chat_id, contexto) {
   try {
-    await supabaseQuery('/telegram_contexto', 'POST', {
-      chat_id,
-      contexto,
-      updated_at: new Date().toISOString()
-    });
+    const existing = await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}&select=id`);
+    if (existing && existing.length > 0) {
+      await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}`, 'PATCH', {
+        contexto,
+        updated_at: new Date().toISOString()
+      });
+    } else {
+      await supabaseQuery('/telegram_contexto', 'POST', {
+        chat_id,
+        contexto,
+        updated_at: new Date().toISOString()
+      });
+    }
   } catch(e) {
-    await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}`, 'PATCH', {
-      contexto,
-      updated_at: new Date().toISOString()
-    });
+    console.error('Erro setContexto:', e);
   }
 }
 

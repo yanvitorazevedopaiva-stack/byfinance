@@ -73,9 +73,14 @@ export default async function handler(req, res) {
 
       // Envia alertas se houver
       if (alertas.length > 0) {
-        const msg =
-          `🌅 *Bom dia! Resumo BY Finance*\n\n` +
-          alertas.join('\n\n---\n\n');
+        // Saudação baseada no horário de Brasília (UTC-3)
+        const horaBrasilia = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours();
+        const saudacao = horaBrasilia >= 5 && horaBrasilia < 12
+          ? '🌅 *Bom dia! Resumo BY Finance*'
+          : horaBrasilia >= 12 && horaBrasilia < 18
+          ? '☀️ *Boa tarde! Resumo BY Finance*'
+          : '🌙 *Boa noite! Resumo BY Finance*';
+        const msg = `${saudacao}\n\n` + alertas.join('\n\n---\n\n');
         await sendTelegram(chat_id, msg);
         enviados++;
         console.log(`Alerta enviado para chat_id ${chat_id} (user_id ${user_id})`);

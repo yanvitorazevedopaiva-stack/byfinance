@@ -161,6 +161,7 @@ REGRAS GERAIS:
 - Se for uma CONSULTA (quanto gastei?, qual meu saldo?), use o tipo "consulta"
 - Se for um COMANDO (cancela, lista pendentes), use o tipo "comando"
 - Se for um LANÇAMENTO normal, use o tipo "lancamento"
+- Se for sobre TAREFAS (listar, criar, concluir), use o tipo "tarefa"
 - Se não conseguir identificar nada, retorne {"tipo":"erro","motivo":"descrição do problema"}
 
 FORMATO PARA LANÇAMENTO ÚNICO:
@@ -217,6 +218,18 @@ FORMATO PARA COMANDO:
   "tipo": "comando",
   "acao": "cancelar_ultimo"
 }
+
+FORMATO PARA TAREFA:
+{
+  "tipo": "tarefa",
+  "acao": "listar",
+  "titulo": null,
+  "prazo": null,
+  "prioridade": "Media"
+}
+Ações possíveis: "listar", "criar", "concluir"
+Para criar: titulo obrigatório, prazo opcional (formato YYYY-MM-DD), prioridade: Alta/Media/Baixa
+Para concluir: titulo com o nome ou parte do nome da tarefa
 
 CATEGORIAS DISPONÍVEIS:
 Alimentação, Transporte, Mercado, Saúde, Lazer, Moradia, Vestuário, Educação, Serviços, Investimento, Outros
@@ -520,6 +533,79 @@ export default async function handler(req, res) {
         `Acesse o BY Finance para ver seus relatórios.`
       );
       return res.status(200).json({ ok: true });
+    }
+
+    if (gasto.tipo === 'tarefa') {
+      if (gasto.acao === 'listar') {
+        const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+        const dados = tarefas?.[0]?.data || {};
+        const lista = (dados.tarefas || []).filter(t => !t.concluida).slice(0, 8);
+        if (!lista.length) {
+          await sendTelegram(chat_id, `✅ Nenhuma tarefa pendente!`);
+        } else {
+          const txt = lista.map(t => {
+            const prazo = t.prazo ? ` · 📅 ${new Date(t.prazo).toLocaleDateString('pt-BR')}` : '';
+            const prio = t.prio === 'Alta' ? ' 🔴' : t.prio === 'Media' ? ' 🟡' : ' 🟢';
+            return `• ${t.titulo}${prio}${prazo}`;
+          }).join('\n');
+          await sendTelegram(chat_id, `📋 *Tarefas pendentes:*\n\n${txt}`);
+        }
+        return res.status(200).json({ ok: true });
+      }
+
+      if (gasto.acao === 'criar' && gasto.titulo) {
+        const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+        const dados = tarefas?.[0]?.data || {};
+        const lista = dados.tarefas || [];
+        const nova = {
+          id: Date.now(),
+          titulo: gasto.titulo,
+          prazo: gasto.prazo || null,
+          prio: gasto.prioridade || 'Media',
+          concluida: false,
+          origem: 'telegram'
+        };
+        lista.push(nova);
+        dados.tarefas = lista;
+        await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ data: dados, updated_at: new Date().toISOString() })
+        });
+        const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo).toLocaleDateString('pt-BR')}` : '';
+        await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade || 'Média'}`);
+        return res.status(200).json({ ok: true });
+      }
+
+      if (gasto.acao === 'concluir' && gasto.titulo) {
+        const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+        const dados = tarefas?.[0]?.data || {};
+        const lista = dados.tarefas || [];
+        const idx = lista.findIndex(t => t.titulo.toLowerCase().includes(gasto.titulo.toLowerCase()));
+        if (idx === -1) {
+          await sendTelegram(chat_id, `❌ Tarefa não encontrada: "${gasto.titulo}"`);
+        } else {
+          lista[idx].concluida = true;
+          dados.tarefas = lista;
+          await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ data: dados, updated_at: new Date().toISOString() })
+          });
+          await sendTelegram(chat_id, `✅ Tarefa concluída: *${lista[idx].titulo}*`);
+        }
+        return res.status(200).json({ ok: true });
+      }
     }
 
     if (gasto.tipo === 'comando' && gasto.acao === 'cancelar_ultimo') {

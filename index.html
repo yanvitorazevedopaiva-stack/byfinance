@@ -21834,21 +21834,65 @@ async function tgAuthAprovar(id){
   if(!_supabase) return;
   const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',id).single();
   if(!data) return;
+
   const lancamentos=getLancamentos();
   const novoId=Date.now();
-  lancamentos.push({id:novoId,descricao:data.descricao,valor:parseFloat(data.valor),categoria:data.categoria,cartao:data.cartao,data:data.data_lancamento,tipo:'despesa',origem:'telegram'});
+  lancamentos.push({
+    id:novoId,
+    descricao:data.descricao,
+    valor:parseFloat(data.valor),
+    categoria:data.categoria,
+    cartao:data.cartao,
+    data:data.data_lancamento,
+    tipo:'despesa',
+    origem:'telegram'
+  });
   setLancamentos(lancamentos);
+
   await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',id);
+
+  if(data.chat_id){
+    const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    await fetch('/api/notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        chat_id:data.chat_id,
+        text:`✅ *Lançamento autorizado!*\n\n📝 ${data.descricao}\n💰 ${valor}\n🏷 ${data.categoria}\n💳 ${data.cartao}\n📅 ${data.data_lancamento}\n\n_Registrado com sucesso no BY Finance._`
+      })
+    });
+  }
+
   tgAuthRenderDashboard();
   tgAuthRenderModal();
-  _showToast('✓ Lançamento autorizado!');
+  showSync('✓ Lançamento autorizado!','green');
 }
 
 async function tgAuthRejeitar(id){
+  if(!_supabase) return;
+  const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',id).single();
+  if(!data) return;
+
+  const motivo=prompt('Motivo da rejeição (opcional):')||'';
+
   await _supabase.from('telegram_pendentes').update({status:'rejeitado'}).eq('id',id);
+
+  if(data.chat_id){
+    const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    const motivoTxt=motivo?`\n\n💬 *Motivo:* ${motivo}`:'';
+    await fetch('/api/notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        chat_id:data.chat_id,
+        text:`❌ *Lançamento rejeitado*\n\n📝 ${data.descricao}\n💰 ${valor}${motivoTxt}`
+      })
+    });
+  }
+
   tgAuthRenderDashboard();
   tgAuthRenderModal();
-  _showToast('Lançamento rejeitado');
+  showSync('Lançamento rejeitado','red');
 }
 
 function tgAuthAbrirModal(){

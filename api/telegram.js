@@ -419,9 +419,19 @@ export default async function handler(req, res) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
 
+      // Preenche o campo que estava aguardando
       if (campo === 'cartao') {
         gasto.cartao = texto;
         gasto.tipo = 'lancamento';
+        // Cartão preenchido → próximo passo obrigatório: modalidade
+        if (!gasto.modalidade) {
+          await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
+          await sendTelegram(chat_id,
+            `${iconeModalidade('')} Como foi o pagamento?\n\n` +
+            `🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`
+          );
+          return res.status(200).json({ ok: true });
+        }
       } else if (campo === 'modalidade') {
         gasto.modalidade = texto;
         gasto.tipo = 'lancamento';
@@ -434,11 +444,13 @@ export default async function handler(req, res) {
         gasto.tipo = 'lancamento';
       }
 
+      // Verifica se ainda falta valor
       if (!gasto.valor || isNaN(gasto.valor)) {
         await setContexto(chat_id, { aguardando: 'valor', gasto_parcial: gasto });
         await sendTelegram(chat_id, `💰 Qual o valor gasto?`);
         return res.status(200).json({ ok: true });
       }
+      // Verifica se ainda falta cartão
       if (!gasto.cartao || gasto.cartao === 'Não informado') {
         await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
         await sendTelegram(chat_id,
@@ -447,6 +459,7 @@ export default async function handler(req, res) {
         );
         return res.status(200).json({ ok: true });
       }
+      // Verifica se ainda falta modalidade
       if (!gasto.modalidade) {
         await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
         await sendTelegram(chat_id,
@@ -456,7 +469,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
       }
 
-      // Tem tudo — salva
+      // Tudo preenchido — salva e limpa contexto
       await limparContexto(chat_id);
       await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original);
       const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

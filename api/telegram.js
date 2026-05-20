@@ -331,6 +331,14 @@ FORMATO CONCLUIR:
 "quanto gastei hoje", "gastos de hoje", "total hoje" → {"tipo":"consulta","pergunta":"gastos_hoje"}
 "quanto gastei esse mês", "total do mês", "meu mês" → {"tipo":"consulta","pergunta":"gastos_mes"}
 "quanto tenho", "meu saldo", "situação financeira" → {"tipo":"consulta","pergunta":"saldo"}
+"fatura do nu", "fatura do inter", "valor da fatura", "quanto está a fatura", "minha fatura" → {"tipo":"consulta","pergunta":"fatura","cartao":"Nubank"}
+"quais faturas", "todas as faturas", "minhas faturas" → {"tipo":"consulta","pergunta":"faturas_todas"}
+
+FORMATO CONSULTA FATURA:
+{"tipo":"consulta","pergunta":"fatura","cartao":"Nubank","mes":null}
+{"tipo":"consulta","pergunta":"faturas_todas","mes":null}
+O campo "mes" pode ser: null (mês atual), "proximo" (próximo mês), ou número 1-12.
+O campo "cartao" deve ser normalizado igual aos bancos (Nubank, Inter, Itaú, etc).
 
 ━━━ COMANDOS ━━━
 "cancela", "cancela o último", "desfaz", "erro" → {"tipo":"comando","acao":"cancelar_ultimo"}
@@ -642,10 +650,52 @@ export default async function handler(req, res) {
     }
 
     if (gasto.tipo === 'consulta') {
-      await sendTelegram(chat_id,
-        `📊 Consultas ainda não estão disponíveis pelo bot.\n` +
-        `Acesse o BY Finance para ver seus relatórios.`
-      );
+      if (gasto.pergunta === 'fatura' || gasto.pergunta === 'faturas_todas') {
+        const userData = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+        const faturas = userData?.[0]?.data?.faturas || {};
+        const mesIdx = gasto.mes && gasto.mes !== 'proximo'
+          ? (parseInt(gasto.mes) - 1)
+          : gasto.mes === 'proximo'
+          ? (new Date().getMonth() + 1) % 12
+          : new Date().getMonth();
+        const mesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesIdx];
+
+        if (gasto.pergunta === 'faturas_todas') {
+          const cartoes = Object.keys(faturas);
+          if (!cartoes.length) {
+            await sendTelegram(chat_id, `📊 Nenhuma fatura encontrada para ${mesNome}.`);
+          } else {
+            const lista = cartoes.map(c => {
+              const val = (faturas[c]||[])[mesIdx] || 0;
+              return `💳 ${c}: ${val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+            }).join('\n');
+            await sendTelegram(chat_id, `📊 *Faturas de ${mesNome}:*\n\n${lista}`);
+          }
+          return res.status(200).json({ ok: true });
+        }
+
+        if (gasto.pergunta === 'fatura') {
+          const cartao = gasto.cartao || '';
+          const cartaoKey = Object.keys(faturas).find(c =>
+            c.toLowerCase().includes(cartao.toLowerCase()) ||
+            cartao.toLowerCase().includes(c.toLowerCase())
+          );
+          if (!cartaoKey) {
+            await sendTelegram(chat_id,
+              `❌ Cartão "${cartao}" não encontrado.\n\nCartões disponíveis: ${Object.keys(faturas).join(', ') || 'nenhum'}`
+            );
+          } else {
+            const val = (faturas[cartaoKey]||[])[mesIdx] || 0;
+            await sendTelegram(chat_id,
+              `💳 *Fatura ${cartaoKey} — ${mesNome}*\n\n` +
+              `💰 ${val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+            );
+          }
+          return res.status(200).json({ ok: true });
+        }
+      }
+
+      await sendTelegram(chat_id, `📊 Consultas detalhadas disponíveis em breve.\nAcesse o BY Finance para ver seus relatórios.`);
       return res.status(200).json({ ok: true });
     }
 

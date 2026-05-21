@@ -5126,22 +5126,7 @@
           <div class="sec-title" style="margin:0">ITENS DA LISTA</div>
           <button class="btn btn-sm" id="mkt-btn-add-item" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ ITEM</button>
         </div>
-        <!-- Chips arrastáveis do catálogo -->
-        <div id="mkt-drag-catalog-strip" style="margin-bottom:10px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'JetBrains Mono',monospace;letter-spacing:.3px">↓ ARRASTE DO CATÁLOGO PARA ADICIONAR</div>
-          <div id="mkt-drag-chips" style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-ms-overflow-style:none"></div>
-        </div>
-        <!-- Drop zone -->
-        <div id="mkt-drop-zone"
-          ondragover="event.preventDefault();this.classList.add('drag-over')"
-          ondragleave="this.classList.remove('drag-over')"
-          ondrop="mktDropItemNaLista(event)">
-          🛒 Solte aqui para adicionar à lista
-        </div>
-        <div id="mkt-mes-itens"
-          ondragover="event.preventDefault();document.getElementById('mkt-drop-zone').classList.add('drag-over')"
-          ondragleave="document.getElementById('mkt-drop-zone').classList.remove('drag-over')"
-          ondrop="mktDropItemNaLista(event)"></div>
+        <div id="mkt-mes-itens"></div>
       </div>
       <div>
         <div class="card" style="margin-bottom:14px">
@@ -21156,7 +21141,6 @@ function _mktConfirmarDrop(itemId,listaId){
 function _mktRenderMes(){
   if(!_mktMesId)return;const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!lista){mktVoltarMain();return;}
   const isConcluido=lista.status==='concluido';
-  _mktRenderDragCatalog();
   const titulo=document.getElementById('mkt-mes-titulo');const sub=document.getElementById('mkt-mes-sub');const badge=document.getElementById('mkt-mes-status-badge');
   if(titulo)titulo.textContent='LISTA DE '+_mktMesLabel(lista.mes).toUpperCase();
   if(sub)sub.textContent='Mercado · '+_mktMesLabel(lista.mes);

@@ -16438,6 +16438,31 @@ async function cfgTestarGemini(){
   }
 }
 
+function cfgTogglePanel(bodyId){
+  // Fecha todos os outros painéis (accordion — só um aberto por vez)
+  document.querySelectorAll('.cfg-panel-body').forEach(el=>{
+    if(el.id&&el.id!==bodyId){
+      el.style.display='none';
+      // Reseta a seta do painel fechado
+      const arrowId='cfg-arrow-'+el.id.replace('cfg-body-','');
+      const arrow=document.getElementById(arrowId);
+      if(arrow){arrow.textContent='›';arrow.style.transform='rotate(0deg)';}
+    }
+  });
+  // Alterna o painel clicado
+  const body=document.getElementById(bodyId);
+  if(!body) return;
+  const isOpen=body.style.display==='block';
+  body.style.display=isOpen?'none':'block';
+  // Rotaciona a seta
+  const arrowId='cfg-arrow-'+bodyId.replace('cfg-body-','');
+  const arrow=document.getElementById(arrowId);
+  if(arrow){
+    arrow.textContent=isOpen?'›':'∨';
+    arrow.style.transform=isOpen?'rotate(0deg)':'rotate(0deg)';
+  }
+}
+
 function renderConfig(){
   renderNavArquivadas();
   // Preenche chave Gemini

@@ -22661,17 +22661,17 @@ async function cfgTgGerarToken(){
     const expiresAt=new Date(Date.now()+10*60*1000).toISOString();
     await _supabase.from('telegram_tokens').upsert({user_id:_authUID,token,nome,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
 
-    // Determina qual display usar (painel vinculado ou não-vinculado)
-    const jaVinculado=document.getElementById('cfg-tg-vinculado')?.style.display==='block';
-    const wrapId=jaVinculado?'cfg-tg-token-wrap2':'cfg-tg-token-wrap';
-    const displayId=jaVinculado?'cfg-tg-token-display2':'cfg-tg-token-display';
-    const timerId=jaVinculado?'cfg-tg-timer2':'cfg-tg-timer';
-
-    const wrap=document.getElementById(wrapId);
-    const display=document.getElementById(displayId);
-    const timer=document.getElementById(timerId);
+    // Atualiza ambos os displays (painel vinculado e não-vinculado)
+    const wrap=document.getElementById('cfg-tg-token-wrap');
+    const display=document.getElementById('cfg-tg-token-display');
+    const timer=document.getElementById('cfg-tg-timer');
+    const wrap2=document.getElementById('cfg-tg-token-wrap2');
+    const display2=document.getElementById('cfg-tg-token-display2');
+    const timer2=document.getElementById('cfg-tg-timer2');
     if(wrap) wrap.style.display='block';
     if(display) display.textContent=token;
+    if(wrap2) wrap2.style.display='block';
+    if(display2) display2.textContent=token;
 
     let segundos=600;
     if(_cfgTgTimerInterval) clearInterval(_cfgTgTimerInterval);
@@ -22679,12 +22679,17 @@ async function cfgTgGerarToken(){
       segundos--;
       const min=Math.floor(segundos/60);
       const sec=segundos%60;
-      if(timer) timer.textContent=`Expira em ${min}:${sec.toString().padStart(2,'0')}`;
+      const txt=`Expira em ${min}:${sec.toString().padStart(2,'0')}`;
+      if(timer) timer.textContent=txt;
+      if(timer2) timer2.textContent=txt;
       if(segundos<=0){
         clearInterval(_cfgTgTimerInterval);
         if(wrap) wrap.style.display='none';
+        if(wrap2) wrap2.style.display='none';
         if(btn) btn.disabled=false;
-        if(timer) timer.textContent='Código expirado. Gere um novo.';
+        const expTxt='Código expirado. Gere um novo.';
+        if(timer) timer.textContent=expTxt;
+        if(timer2) timer2.textContent=expTxt;
       }
     },1000);
     if(btn) btn.disabled=false;

@@ -5144,11 +5144,41 @@
         <div class="card">
           <div class="sec-title" style="margin-bottom:10px">AÇÕES</div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <button id="mkt-btn-concluir" onclick="mktConcluirLista()" class="btn btn-green" style="width:100%">✓ CONCLUIR COMPRA</button>
+            <button id="mkt-btn-fechar-compra" onclick="mktAbrirFecharCompra()" class="btn btn-green" style="width:100%;display:none;font-size:13px">⚡ FECHAR COMPRA</button>
+            <button id="mkt-btn-concluir" onclick="mktConcluirLista()" class="btn" style="width:100%;border-color:rgba(0,255,157,0.3);color:var(--neon-green)">✓ CONCLUIR SEM LANÇAR</button>
             <button id="mkt-btn-reabrir" onclick="mktReabrirLista()" class="btn" style="width:100%;display:none;border-color:rgba(0,200,255,0.35);color:var(--neon-blue)">↺ REABRIR LISTA</button>
             <button onclick="mktExcluirLista()" class="btn" style="width:100%;border-color:rgba(255,68,68,0.3);color:var(--neon-red)">🗑 EXCLUIR LISTA</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Fechar compra com lançamento -->
+  <div id="mkt-fechar-modal" style="display:none;position:fixed;inset:0;z-index:5100;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid rgba(0,255,157,0.25);border-radius:18px;padding:26px;width:min(500px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 56px rgba(0,0,0,0.6)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green)">⚡ FECHAR COMPRA</div>
+        <button onclick="document.getElementById('mkt-fechar-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
+      </div>
+      <!-- Resumo -->
+      <div id="mkt-fechar-resumo" style="padding:14px;border-radius:10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15);margin-bottom:18px;font-size:13px"></div>
+      <!-- Forma de pagamento -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:6px;letter-spacing:.5px">FORMA DE PAGAMENTO</div>
+        <select id="mkt-fechar-forma" style="width:100%;padding:10px 12px;background:var(--bg2);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace">
+          <option value="Dinheiro/PIX">💚 Dinheiro / PIX</option>
+          <option value="Débito">💳 Débito</option>
+        </select>
+      </div>
+      <!-- Data -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:6px;letter-spacing:.5px">DATA DA COMPRA</div>
+        <input id="mkt-fechar-data" type="date" style="width:100%;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px">
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('mkt-fechar-modal').style.display='none'" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">CANCELAR</button>
+        <button onclick="mktConfirmarFecharCompra()" class="btn btn-green" style="flex:2;font-size:13px">⚡ CONFIRMAR E LANÇAR</button>
       </div>
     </div>
   </div>
@@ -21021,13 +21051,69 @@ function _mktRenderListas(){
     onmouseover="this.style.background='rgba(0,200,255,0.05)';this.style.borderColor='rgba(0,200,255,0.3)'"
     onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'"
     onclick="mktAbrirMes(${l.id})">
-    <span style="font-size:22px">🛒</span><div style="flex:1"><div style="font-size:13px;font-weight:700">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${comp}/${l.itens.length} comprados${total>0?' · '+_mktFmt(total):''}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(255,215,0,0.12);color:var(--neon-yellow);border:1px solid rgba(255,215,0,0.25)">PENDENTE</span><span style="color:var(--text3);font-size:16px">›</span>
+    <span style="font-size:22px">🛒</span><div style="flex:1"><div style="font-size:13px;font-weight:700">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${comp}/${l.itens.length} comprados${total>0?' · '+_mktFmt(total):''}</div></div>
+    <button onclick="event.stopPropagation();mktImprimirLista(${l.id})" title="Imprimir lista" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:14px;flex-shrink:0" onmouseover="this.style.borderColor='rgba(0,200,255,0.4)';this.style.color='var(--neon-blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">🖨</button>
+    <span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(255,215,0,0.12);color:var(--neon-yellow);border:1px solid rgba(255,215,0,0.25)">PENDENTE</span><span style="color:var(--text3);font-size:16px">›</span>
     </div>`;}).join('');}}
   const elH=document.getElementById('mkt-listas-hist');
   if(elH){if(!concluidas.length){elH.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista concluída.</div>';}
   else{elH.innerHTML=concluidas.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);return`<div onclick="mktAbrirMes(${l.id})" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;margin-bottom:6px;opacity:.8;transition:all .15s" onmouseover="this.style.opacity='1';this.style.borderColor='rgba(0,255,157,0.3)'" onmouseout="this.style.opacity='.8';this.style.borderColor='var(--border)'"><span style="font-size:20px">✅</span><div style="flex:1"><div style="font-size:13px;font-weight:600">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${_mktFmt(total)}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(0,255,157,0.1);color:var(--neon-green);border:1px solid rgba(0,255,157,0.25)">CONCLUÍDO</span><span style="color:var(--text3);font-size:16px">›</span></div>`;}).join('');}}
   _mktRenderAnalise();
 }
+function mktImprimirLista(listaId){
+  const lista=_mktGetListas().find(l=>l.id===listaId);
+  if(!lista||!lista.itens.length){_showToast('Lista vazia — nada para imprimir.');return;}
+  const mesLabel=_mktMesLabel(lista.mes);
+  const total=lista.itens.reduce((a,i)=>a+(i.qtd*(i.precoPrev||0)),0);
+  // Agrupa por categoria
+  const cats={};
+  lista.itens.forEach(i=>{const c=i.cat||'Outros';if(!cats[c])cats[c]=[];cats[c].push(i);});
+  const ordemCats=['Hortifruti','Carnes','Laticinios','Padaria','Higiene','Limpeza','Mercearia','Frios','Bebidas','Outros'];
+  const catsOrdenadas=[...new Set([...ordemCats,...Object.keys(cats)])].filter(c=>cats[c]);
+  const fmtPreco=v=>v>0?'R$ '+parseFloat(v).toFixed(2).replace('.',','):'—';
+  const linhasHTML=catsOrdenadas.map(cat=>{
+    const itens=cats[cat];
+    const linhas=itens.map(i=>`
+      <tr>
+        <td style="width:22px;font-size:16px">☐</td>
+        <td style="padding:4px 8px">${i.nome}</td>
+        <td style="text-align:center;padding:4px 8px;color:#555">${i.qtd} ${i.unidade||'un'}</td>
+        <td style="text-align:right;padding:4px 8px;font-family:monospace">${fmtPreco(i.precoPrev)}</td>
+      </tr>`).join('');
+    return`<tr><td colspan="4" style="padding:10px 0 4px;font-weight:700;font-size:13px;border-bottom:2px solid #333;letter-spacing:1px">${cat.toUpperCase()}</td></tr>${linhas}`;
+  }).join('');
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Lista de Compras — ${mesLabel}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Arial',sans-serif;font-size:13px;color:#111;background:#fff;padding:20px 28px}
+    h1{font-size:18px;font-weight:700;margin-bottom:2px}
+    .sub{font-size:12px;color:#555;margin-bottom:18px}
+    table{width:100%;border-collapse:collapse}
+    td{vertical-align:middle;border-bottom:1px solid #eee}
+    .total-row{font-weight:700;font-size:14px;border-top:2px solid #111;padding-top:10px}
+    .footer{margin-top:24px;font-size:11px;color:#888;text-align:center}
+    @media print{body{padding:10px 16px}button{display:none}}
+  </style></head><body>
+  <h1>BY Finance — Lista de Compras</h1>
+  <div class="sub">${mesLabel} · ${lista.itens.length} item${lista.itens.length!==1?'s':''} · Impresso em ${new Date().toLocaleDateString('pt-BR')}</div>
+  <table>
+    <thead><tr style="font-size:11px;color:#888;border-bottom:2px solid #111">
+      <th></th><th style="text-align:left;padding:4px 8px">PRODUTO</th>
+      <th style="padding:4px 8px">QTD</th>
+      <th style="text-align:right;padding:4px 8px">PREÇO</th>
+    </tr></thead>
+    <tbody>${linhasHTML}
+    <tr><td colspan="3" style="padding-top:14px;font-weight:700;border-top:2px solid #111">TOTAL ESTIMADO</td>
+      <td style="text-align:right;padding-top:14px;font-weight:700;font-family:monospace;font-size:15px;border-top:2px solid #111">${fmtPreco(total)}</td></tr>
+    </tbody>
+  </table>
+  <div class="footer">BY Persona Finance · byfinance.vercel.app</div>
+  <script>window.onload=()=>setTimeout(()=>window.print(),200)<\/script>
+  </body></html>`;
+  const w=window.open('','_blank','width=700,height=900');
+  if(w){w.document.write(html);w.document.close();}
+}
+
 function mktDropCatalogoNaLista(event,listaId){
   const itemId=parseInt(event.dataTransfer.getData('mkt_cat_item_id'));
   if(!itemId) return;
@@ -21146,7 +21232,12 @@ function _mktRenderMes(){
   if(sub)sub.textContent='Mercado · '+_mktMesLabel(lista.mes);
   if(badge){badge.textContent=isConcluido?'CONCLUÍDO':'PENDENTE';badge.style.background=isConcluido?'rgba(0,255,157,0.12)':'rgba(255,215,0,0.12)';badge.style.color=isConcluido?'var(--neon-green)':'var(--neon-yellow)';badge.style.border=isConcluido?'1px solid rgba(0,255,157,0.25)':'1px solid rgba(255,215,0,0.25)';}
   const btnC=document.getElementById('mkt-btn-concluir');const btnR=document.getElementById('mkt-btn-reabrir');const btnA=document.getElementById('mkt-btn-add-item');
-  if(btnC)btnC.style.display=isConcluido?'none':'block';if(btnR)btnR.style.display=isConcluido?'block':'none';if(btnA)btnA.style.display=isConcluido?'none':'flex';
+  const btnF=document.getElementById('mkt-btn-fechar-compra');
+  const temComprados=lista.itens.some(i=>i.comprado);
+  if(btnC)btnC.style.display=isConcluido?'none':'block';
+  if(btnF)btnF.style.display=(!isConcluido&&temComprados)?'block':'none';
+  if(btnR)btnR.style.display=isConcluido?'block':'none';
+  if(btnA)btnA.style.display=isConcluido?'none':'flex';
   const totalPrev=lista.itens.reduce((a,i)=>a+i.qtd*(i.precoPrev||0),0);
   const totalReal=lista.itens.reduce((a,i)=>a+i.qtd*(i.precoReal||i.precoPrev||0),0);
   const comp=lista.itens.filter(i=>i.comprado).length;
@@ -21158,6 +21249,87 @@ function _mktRenderMes(){
   const cats={};lista.itens.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
   el.innerHTML=Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join('');
 }
+function mktAbrirFecharCompra(){
+  if(!_mktMesId) return;
+  const lista=_mktGetListas().find(l=>l.id===_mktMesId);
+  if(!lista) return;
+  const comprados=lista.itens.filter(i=>i.comprado);
+  const naoComprados=lista.itens.filter(i=>!i.comprado);
+  const totalReal=comprados.reduce((a,i)=>a+i.qtd*(i.precoReal||i.precoPrev||0),0);
+  const totalPrev=comprados.reduce((a,i)=>a+i.qtd*(i.precoPrev||0),0);
+  const diff=totalReal-totalPrev;
+  const f=v=>_mktFmt(v);
+  const resumo=document.getElementById('mkt-fechar-resumo');
+  if(resumo) resumo.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="text-align:center;padding:10px;background:var(--bg3);border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;font-family:'JetBrains Mono',monospace">ITENS COMPRADOS</div>
+        <div style="font-size:20px;font-weight:700;color:var(--neon-green)">${comprados.length}<span style="font-size:13px;color:var(--text3)">/${lista.itens.length}</span></div>
+      </div>
+      <div style="text-align:center;padding:10px;background:var(--bg3);border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;font-family:'JetBrains Mono',monospace">TOTAL REAL</div>
+        <div style="font-size:18px;font-weight:700;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">${f(totalReal)}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text3);display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border)">
+      <span>Estimado:</span><span style="font-family:'JetBrains Mono',monospace">${f(totalPrev)}</span>
+    </div>
+    <div style="font-size:12px;display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);font-weight:700;color:${diff>0?'var(--neon-red)':'var(--neon-green)'}">
+      <span>Diferença:</span><span style="font-family:'JetBrains Mono',monospace">${diff>0?'+':''}${f(diff)}</span>
+    </div>
+    ${naoComprados.length?`<div style="margin-top:8px;font-size:11px;color:var(--text3);padding:6px 8px;background:rgba(255,68,68,0.06);border-radius:6px">⚠ ${naoComprados.length} item${naoComprados.length!==1?'s':''} não comprado${naoComprados.length!==1?'s':''} — permanecerão na lista como histórico.</div>`:''}
+  `;
+  // Popula cartões no select
+  const sel=document.getElementById('mkt-fechar-forma');
+  if(sel){
+    const carts=getData('cartoes')||[];
+    const cartOpts=carts.map(c=>`<option value="${esc(c.nome)} (${c.tipo||'Crédito'})">${esc(c.nome)}</option>`).join('');
+    sel.innerHTML=`<option value="Dinheiro/PIX">💚 Dinheiro / PIX</option><option value="Débito">💳 Débito</option>${cartOpts}`;
+  }
+  // Data padrão hoje
+  const dataEl=document.getElementById('mkt-fechar-data');
+  if(dataEl) dataEl.value=new Date().toISOString().split('T')[0];
+  document.getElementById('mkt-fechar-modal').style.display='flex';
+}
+
+function mktConfirmarFecharCompra(){
+  if(!_mktMesId) return;
+  const listas=_mktGetListas();
+  const lista=listas.find(l=>l.id===_mktMesId);
+  if(!lista) return;
+  const forma=document.getElementById('mkt-fechar-forma')?.value||'Dinheiro/PIX';
+  const data=document.getElementById('mkt-fechar-data')?.value||new Date().toISOString().split('T')[0];
+  const comprados=lista.itens.filter(i=>i.comprado);
+  const totalReal=comprados.reduce((a,i)=>a+i.qtd*(i.precoReal||i.precoPrev||0),0);
+  if(!totalReal){_showToast('Nenhum valor registrado nos itens comprados.');return;}
+  // Cria lançamento no semanal
+  const semana=getSemanaFromData(data);
+  const id=Date.now();
+  const all=getData('lancamentos');
+  if(!all[semana]) all[semana]=[];
+  all[semana].push({
+    id,
+    desc:'Mercado — '+_mktMesLabel(lista.mes),
+    data,
+    forma,
+    cat:'Mercado',
+    val:parseFloat(totalReal.toFixed(2)),
+    origem:'mercado_lista',
+    listaId:lista.id
+  });
+  setData('lancamentos',all);
+  // Conclui a lista
+  lista.status='concluido';
+  lista.concluidoEm=new Date().toISOString();
+  lista.lancamentoId=id;
+  _mktSetListas(listas);
+  // Fecha modal e atualiza
+  document.getElementById('mkt-fechar-modal').style.display='none';
+  _mktRenderMes();
+  gfRenderMercadoCard();
+  _showToast('✓ Compra finalizada e lançada!');
+}
+
 function mktToggleMesItem(itemId){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const it=lista.itens.find(i=>i.id===itemId);if(it)it.comprado=!it.comprado;_mktSetListas(listas);_mktRenderMes();}
 function mktUpdatePrecoReal(itemId,val){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const it=lista.itens.find(i=>i.id===itemId);if(it)it.precoReal=_mktParseBRL(val)||parseFloat(val)||0;_mktSetListas(listas);_mktRenderMes();}
 function mktRemoveMesItem(itemId){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens=lista.itens.filter(i=>i.id!==itemId);_mktSetListas(listas);_mktRenderMes();}
@@ -21417,7 +21589,7 @@ Retorne apenas o array JSON começando com [ e terminando com ].`;
       const itens=JSON.parse(clean);
       document.body.removeChild(overlay);
       if(!itens.length){alert('Nenhum item encontrado na nota.');return;}
-      mktAbrirScanner(itens);
+      _mktProcessarItensNF(itens);
       return;
     }
 
@@ -21434,7 +21606,7 @@ Retorne apenas o array JSON começando com [ e terminando com ].`;
     const itens=JSON.parse(clean);
     document.body.removeChild(overlay);
     if(!itens.length){alert('Nenhum item encontrado na nota. Tente uma foto mais nítida.');return;}
-    mktAbrirScanner(itens);
+    _mktProcessarItensNF(itens);
   }catch(e){
     const ov=document.getElementById('mkt-scan-overlay');if(ov)document.body.removeChild(ov);
     alert('Erro ao ler a nota fiscal. Verifique a imagem e tente novamente.');
@@ -21445,6 +21617,90 @@ Retorne apenas o array JSON começando com [ e terminando com ].`;
 function mktAbrirScanner(itens){
   _mktScanItens=itens;_mktScanIdx=0;_mktScanOk=0;
   mktScannerRenderItem();
+}
+
+// ── Cruzamento automático nota fiscal × lista pendente ──────────────────────
+
+function _mktNormNome(s){
+  // Remove acentos, caixa, palavras irrelevantes e abreviações
+  return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
+    .replace(/\b(marca|tipo|especial|premium|light|zero|original|un|kg|g|ml|lt|cx|pct|dz|gr|lata|caixa|pacote|garrafa|frasco|pote|sache|barra|unidade)\b/g,'')
+    .replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function _mktNomeSimilar(a,b){
+  const na=_mktNormNome(a);
+  const nb=_mktNormNome(b);
+  if(na===nb) return true;
+  if(na.includes(nb)||nb.includes(na)) return true;
+  // Compara palavras-chave (mín 3 chars) — 60% de coincidência
+  const wa=na.split(' ').filter(w=>w.length>=3);
+  const wb=nb.split(' ').filter(w=>w.length>=3);
+  if(!wa.length||!wb.length) return false;
+  const matches=wa.filter(w=>wb.some(x=>x.includes(w)||w.includes(x))).length;
+  return matches>=Math.ceil(Math.min(wa.length,wb.length)*0.6);
+}
+
+function _mktProcessarItensNF(itensScan){
+  const mesAtual=new Date().toISOString().substring(0,7);
+  const listaPendente=_mktGetListas().find(l=>l.mes===mesAtual&&l.status==='pendente');
+
+  // Sem lista pendente do mês → vai direto para o scanner
+  if(!listaPendente||!listaPendente.itens.length){
+    mktAbrirScanner(itensScan);
+    return;
+  }
+
+  // Cruzamento: itens da nota vs itens da lista pendente
+  const cruzados=[];
+  const naoEncontrados=[];
+  const listas=_mktGetListas();
+  const lista=listas.find(l=>l.id===listaPendente.id);
+
+  itensScan.forEach(itemNota=>{
+    const match=lista.itens.find(itemLista=>_mktNomeSimilar(itemNota.nome,itemLista.nome));
+    if(match){
+      // Marca como comprado e atualiza preço real
+      match.comprado=true;
+      match.precoReal=itemNota.precoUnit||match.precoPrev||0;
+      cruzados.push({nota:itemNota,lista:match});
+    }else{
+      naoEncontrados.push(itemNota);
+    }
+  });
+
+  // Salva lista com itens marcados
+  if(cruzados.length) _mktSetListas(listas);
+
+  // Modal de resumo
+  const el=document.createElement('div');
+  el.id='mkt-scan-resumo';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+  const cruzLine=cruzados.length?`<div style="display:flex;flex-direction:column;gap:5px;max-height:140px;overflow-y:auto;margin-bottom:12px">
+    ${cruzados.map(c=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 8px;background:rgba(0,255,157,0.06);border-radius:6px">
+      <span style="color:var(--neon-green)">✓ ${esc(c.lista.nome)}</span>
+      <span style="color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">${c.nota.precoUnit>0?'R$ '+c.nota.precoUnit.toFixed(2):''}</span>
+    </div>`).join('')}
+  </div>`:'';
+  const naoLine=naoEncontrados.length?`<div style="font-size:11px;color:var(--text3);margin-bottom:12px">
+    📋 ${naoEncontrados.length} item${naoEncontrados.length!==1?'s':''} novo${naoEncontrados.length!==1?'s':''} serão cadastrados no scanner.
+  </div>`:'<div style="font-size:11px;color:var(--text3);margin-bottom:12px">Todos os itens foram encontrados na lista!</div>';
+
+  el.innerHTML=`<div style="background:var(--card);border:1px solid rgba(0,255,157,0.25);border-radius:16px;padding:24px;width:min(480px,94vw);max-height:80vh;display:flex;flex-direction:column">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green);margin-bottom:4px">🛒 NOTA FISCAL PROCESSADA</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:16px">${esc(_mktMesLabel(listaPendente.mes))}</div>
+    ${cruzados.length?`<div style="font-size:12px;font-weight:700;color:var(--neon-green);margin-bottom:8px">✓ ${cruzados.length} item${cruzados.length!==1?'s':''} encontrado${cruzados.length!==1?'s':''} na lista — marcado${cruzados.length!==1?'s':''} como comprado${cruzados.length!==1?'s':''}:</div>`:'' }
+    ${cruzLine}${naoLine}
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button onclick="document.getElementById('mkt-scan-resumo').remove()" style="flex:1;padding:11px;background:var(--bg2);border:1px solid var(--border);color:var(--text3);border-radius:9px;cursor:pointer;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace">✕ CANCELAR</button>
+      <button onclick="document.getElementById('mkt-scan-resumo').remove();${naoEncontrados.length?'mktAbrirScanner(window._mktNFPendentes)':'_mktRenderMes&&_mktMesId?_mktRenderMes():null;gfRenderMercadoCard()'}" style="flex:2;padding:11px;background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:9px;cursor:pointer;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace">✓ CONTINUAR${naoEncontrados.length?' — SCANNER ('+naoEncontrados.length+')':' — CONCLUÍDO'}</button>
+    </div>
+  </div>`;
+  window._mktNFPendentes=naoEncontrados;
+  document.body.appendChild(el);
+  // Atualiza a lista no painel se estiver aberta
+  if(_mktMesId===listaPendente.id) _mktRenderMes();
+  gfRenderMercadoCard();
 }
 
 function mktScannerRenderItem(){

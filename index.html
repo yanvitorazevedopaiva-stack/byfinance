@@ -496,24 +496,20 @@
     box-shadow:0 0 10px var(--neon-blue);animation:lanc-dot-pulse 1.6s ease-in-out infinite;}
   @keyframes lanc-dot-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.65);}}
   /* Título com shimmer */
-  .lanc-hero-title{position:relative;z-index:1;
+  .lanc-hero-title{
+    position:relative;z-index:1;
     font-family:'JetBrains Mono',monospace;
-    font-size:68px;font-weight:900;letter-spacing:13px;line-height:1;margin-bottom:22px;
-    background:linear-gradient(100deg,
-      #1e1e1e 0%,
-      #6b0f1e 20%,
-      #b01828 38%,
-      #d04858 50%,
-      #b01828 62%,
-      #6b0f1e 80%,
-      #1e1e1e 100%);
+    font-size:52px;font-weight:900;letter-spacing:8px;line-height:1;margin-bottom:22px;
+    background:linear-gradient(135deg,#00c8ff 0%,#00ff9d 50%,#00c8ff 100%);
     background-size:200% auto;
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-    animation:lanc-shimmer 7s ease-in-out infinite;
-    filter:drop-shadow(0 0 22px rgba(160,20,40,0.45));}
+    animation:lanc-shimmer 4s ease-in-out infinite;
+    filter:drop-shadow(0 0 20px rgba(0,200,255,0.3));
+  }
   @keyframes lanc-shimmer{
-    0%,100%{background-position:200% center;}
-    50%{background-position:0% center;}}
+    0%,100%{background-position:0% center;}
+    50%{background-position:200% center;}
+  }
   /* Sub */
   .lanc-hero-sub{position:relative;z-index:1;font-size:13px;color:var(--text2);
     max-width:480px;margin:0 auto 26px;line-height:2;letter-spacing:.3px;}

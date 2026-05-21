@@ -6226,11 +6226,18 @@
         </div>
       </div>
       <div id="cfg-tg-vinculado" style="display:none">
-        <div style="padding:12px;border-radius:10px;background:rgba(0,255,157,0.06);border:1px solid rgba(0,255,157,0.2);margin-bottom:12px">
-          <div style="font-size:13px;font-weight:700;color:var(--neon-green);margin-bottom:4px">✅ Telegram vinculado</div>
-          <div id="cfg-tg-info" style="font-size:12px;color:var(--text3)"></div>
+        <div style="margin-bottom:12px;font-size:12px;color:var(--text3)">Números vinculados a esta conta:</div>
+        <div id="cfg-tg-vinculos-lista"></div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:8px;letter-spacing:.5px">ADICIONAR OUTRO NÚMERO</div>
+          <input id="cfg-tg-novo-nome" type="text" placeholder="Nome (ex: Bruna)"
+            style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;margin-bottom:8px;box-sizing:border-box">
+          <button class="cfg-btn cfg-btn-primary" onclick="cfgTgGerarToken()" id="cfg-tg-btn-gerar2"
+            style="background:rgba(0,255,157,0.12);border-color:rgba(0,255,157,0.4);color:var(--neon-green);width:100%">
+            📲 GERAR CÓDIGO PARA ESTE NÚMERO
+          </button>
         </div>
-        <button onclick="cfgTgDesvincular()" class="cfg-btn cfg-btn-danger" style="width:100%;font-size:12px">🔗 DESVINCULAR TELEGRAM</button>
+        <div class="cfg-msg" id="cfg-tg-msg2"></div>
       </div>
       <div class="cfg-msg" id="cfg-tg-msg"></div>
     </div>
@@ -22367,12 +22374,13 @@ let _tgFormaAtual='pix';
 
 function tgSetForma(forma,btn,cartaoSugerido){
   _tgFormaAtual=forma;
-  document.querySelectorAll('#tg-aprovar-formas .lanc-forma-btn').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  const precisaCartao=forma==='cred-parc'||forma==='cred-vista'||forma==='debito';
+  // Reset todas as classes — usa ativo-FORMA igual ao sistema de lançamentos
+  document.querySelectorAll('#tg-aprovar-formas .lanc-forma-btn').forEach(b=>{b.className='lanc-forma-btn';});
+  if(btn) btn.classList.add('ativo-'+forma);
+  const precisaCartao=forma==='cred-parc'||forma==='cred-vista'||forma==='debito'||forma==='pix-credito';
   const wrapParc=document.getElementById('tg-aprovar-parcelas-wrap');
   const wrapCart=document.getElementById('tg-aprovar-cartao-wrap');
-  if(wrapParc) wrapParc.style.display=forma==='cred-parc'?'block':'none';
+  if(wrapParc) wrapParc.style.display=(forma==='cred-parc'||forma==='pix-credito')?'block':'none';
   if(wrapCart) wrapCart.style.display=precisaCartao?'block':'none';
   if(precisaCartao){
     const sel=document.getElementById('tg-aprovar-cartao');
@@ -22380,7 +22388,6 @@ function tgSetForma(forma,btn,cartaoSugerido){
       const carts=getData('cartoes')||[];
       sel.innerHTML='<option value="">— selecione o cartão —</option>'+
         carts.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('');
-      // Pré-seleciona o cartão sugerido pelo Gemini se existir na lista
       if(cartaoSugerido){
         const opt=[...sel.options].find(o=>o.value.toLowerCase()===cartaoSugerido.toLowerCase());
         if(opt) sel.value=opt.value;
@@ -22422,6 +22429,19 @@ async function tgAuthAprovar(id){
 
 async function tgConfirmarAutorizacao(){
   if(!_tgAprovarId||!_supabase) return;
+  // Validação de forma de pagamento
+  if(!_tgFormaAtual){
+    alert('Selecione a forma de pagamento antes de confirmar.');
+    return;
+  }
+  const precisaCartaoVal=_tgFormaAtual==='cred-parc'||_tgFormaAtual==='cred-vista'||_tgFormaAtual==='debito'||_tgFormaAtual==='pix-credito';
+  if(precisaCartaoVal){
+    const cartaoVal=document.getElementById('tg-aprovar-cartao')?.value||'';
+    if(!cartaoVal){
+      alert('Selecione o cartão/banco antes de confirmar.');
+      return;
+    }
+  }
   // Guarda e zera o ID imediatamente — previne duplo clique
   const pendId=_tgAprovarId;
   _tgAprovarId=null;
@@ -22569,32 +22589,43 @@ let _cfgTgTimerInterval=null;
 async function cfgTgCarregarStatus(){
   if(!_supabase||!_authUID) return;
   try{
-    const {data}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUID).maybeSingle();
+    const {data}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUID).order('principal',{ascending:false});
     const naoVinc=document.getElementById('cfg-tg-nao-vinculado');
     const vinc=document.getElementById('cfg-tg-vinculado');
     const status=document.getElementById('cfg-tg-status');
-    if(data){
+    if(data&&data.length>0){
       if(naoVinc) naoVinc.style.display='none';
       if(vinc) vinc.style.display='block';
-      if(status){status.style.color='var(--neon-green)';status.style.borderColor='rgba(0,255,157,0.2)';status.textContent='✅ Bot vinculado e ativo';}
-      const info=document.getElementById('cfg-tg-info');
-      if(info){const dt=new Date(data.vinculado_em).toLocaleString('pt-BR');info.textContent=`Vinculado em ${dt}`;}
+      if(status){status.style.color='var(--neon-green)';status.style.borderColor='rgba(0,255,157,0.2)';status.textContent=`✅ ${data.length} número(s) vinculado(s)`;}
+      const lista=document.getElementById('cfg-tg-vinculos-lista');
+      if(lista){
+        lista.innerHTML=data.map(v=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700">${esc(v.nome||'Usuário')}${v.principal?'<span style="font-size:9px;color:var(--neon-green);border:1px solid rgba(0,255,157,0.3);border-radius:4px;padding:1px 5px;margin-left:6px">PRINCIPAL</span>':''}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Vinculado em ${new Date(v.vinculado_em).toLocaleDateString('pt-BR')}</div>
+            </div>
+            ${!v.principal?`<button onclick="cfgTgRemoverVinculo('${v.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>`:''}
+          </div>`).join('');
+      }
     }else{
       if(naoVinc) naoVinc.style.display='block';
       if(vinc) vinc.style.display='none';
       if(status){status.style.color='var(--text3)';status.textContent='⚠ Nenhum Telegram vinculado';}
     }
-  }catch(e){}
+  }catch(e){console.error('cfgTgCarregarStatus:',e);}
 }
 
 async function cfgTgGerarToken(){
   if(!_supabase||!_authUID) return;
-  const btn=document.getElementById('cfg-tg-btn-gerar');
+  const btn=document.getElementById('cfg-tg-btn-gerar')||document.getElementById('cfg-tg-btn-gerar2');
   if(btn) btn.disabled=true;
   try{
+    const nomeInput=document.getElementById('cfg-tg-novo-nome');
+    const nome=(nomeInput?.value.trim())||_authUser||'Usuário';
     const token=Math.floor(100000+Math.random()*900000).toString();
     const expiresAt=new Date(Date.now()+10*60*1000).toISOString();
-    await _supabase.from('telegram_tokens').upsert({user_id:_authUID,token,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
+    await _supabase.from('telegram_tokens').upsert({user_id:_authUID,token,nome,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
     const wrap=document.getElementById('cfg-tg-token-wrap');
     const display=document.getElementById('cfg-tg-token-display');
     if(wrap) wrap.style.display='block';
@@ -22630,14 +22661,27 @@ function cfgTgCopiarToken(){
 }
 
 async function cfgTgDesvincular(){
+  // Mantido para compatibilidade — remove todos os vínculos
   if(!_supabase||!_authUID) return;
-  if(!confirm('Desvincular o Telegram? Você precisará vincular novamente para usar o bot.')) return;
+  if(!confirm('Desvincular todos os números do Telegram? Você precisará vincular novamente.')) return;
   try{
     await _supabase.from('telegram_vinculos').delete().eq('user_id',_authUID);
     cfgTgCarregarStatus();
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Telegram desvinculado.');
   }catch(e){
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'err','Erro ao desvincular.');
+  }
+}
+
+async function cfgTgRemoverVinculo(vinculoId){
+  if(!_supabase) return;
+  if(!confirm('Remover este número do Telegram?')) return;
+  try{
+    await _supabase.from('telegram_vinculos').delete().eq('id',vinculoId);
+    cfgTgCarregarStatus();
+    cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Número removido.');
+  }catch(e){
+    cfgMsgShow(document.getElementById('cfg-tg-msg'),'err','Erro ao remover.');
   }
 }
 </script>

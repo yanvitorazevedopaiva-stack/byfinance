@@ -84,7 +84,7 @@ async function limparContexto(chat_id) {
   });
 }
 
-async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original) {
+async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, remetente) {
   const registro = {
     user_id,
     descricao: gasto.descricao,
@@ -100,7 +100,8 @@ async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_orig
     status: 'pendente',
     parcelas: gasto.parcelas || null,
     valor_parcela: gasto.valor_parcela || null,
-    observacao: gasto.observacao || null
+    observacao: gasto.observacao || null,
+    remetente: remetente || null
   };
   console.log('Salvando pendente:', JSON.stringify(registro));
   const resultado = await supabaseQuery('/telegram_pendentes', 'POST', registro);
@@ -417,7 +418,7 @@ export default async function handler(req, res) {
   try {
     // 1. Verifica se o chat_id já está vinculado
     const vincRes = await supabaseQuery(
-      `/telegram_vinculos?chat_id=eq.${chat_id}&select=user_id`
+      `/telegram_vinculos?chat_id=eq.${chat_id}&select=user_id,nome,principal`
     );
     const vinculo = vincRes?.[0];
 
@@ -453,6 +454,8 @@ export default async function handler(req, res) {
       await supabaseQuery('/telegram_vinculos', 'POST', {
         user_id: tokenData.user_id,
         chat_id,
+        nome: tokenData.nome || 'Usuário',
+        principal: false,
         vinculado_em: new Date().toISOString()
       });
 
@@ -475,6 +478,8 @@ export default async function handler(req, res) {
 
     // 3. JÁ VINCULADO — processa normalmente
     const user_id = vinculo.user_id;
+    const nomeRemetente = vinculo.nome || 'Usuário';
+    const isPrincipal = vinculo.principal === true;
 
     // Carrega contexto anterior
     const ctx = await getContexto(chat_id);
@@ -565,7 +570,7 @@ export default async function handler(req, res) {
           // PIX/Dinheiro não precisa de cartão — salva direto
           gasto.cartao = gasto.modalidade;
           await limparContexto(chat_id);
-          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original);
+          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
           const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           await sendTelegram(chat_id,
             `✅ *Lançamento registrado!*\n\n` +
@@ -588,7 +593,7 @@ export default async function handler(req, res) {
         gasto.cartao = texto;
         gasto.tipo = 'lancamento';
         await limparContexto(chat_id);
-        await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original);
+        await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
         const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         await sendTelegram(chat_id,
           `✅ *Lançamento registrado!*\n\n` +
@@ -735,7 +740,8 @@ export default async function handler(req, res) {
           prazo: gasto.prazo || null,
           prio: gasto.prioridade || 'Media',
           concluida: false,
-          origem: 'telegram'
+          origem: 'telegram',
+          origem_nome: nomeRemetente
         };
         lista.push(nova);
         dados.tarefas = lista;
@@ -749,8 +755,20 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify({ data: dados, updated_at: new Date().toISOString() })
         });
-        const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo).toLocaleDateString('pt-BR')}` : '';
+        const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
         await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade || 'Média'}`);
+        // Notifica outros números vinculados da mesma conta
+        const outrosVinculos = await supabaseQuery(
+          `/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`
+        );
+        for (const outro of (outrosVinculos || [])) {
+          await sendTelegram(outro.chat_id,
+            `📋 *${nomeRemetente} criou uma tarefa!*\n\n` +
+            `📝 ${gasto.titulo}\n` +
+            `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n` +
+            `🎯 Prioridade: ${gasto.prioridade || 'Média'}`
+          );
+        }
         return res.status(200).json({ ok: true });
       }
 
@@ -827,7 +845,7 @@ export default async function handler(req, res) {
     }
 
     for (const l of lancamentos) {
-      await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original);
+      await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original, nomeRemetente);
     }
 
     if (gasto.tipo === 'multiplos') {
@@ -841,6 +859,7 @@ export default async function handler(req, res) {
     } else {
       const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       const parcelaInfo = gasto.parcelas ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
+      const remetenteInfo = !isPrincipal ? `\n👤 Enviado por: *${nomeRemetente}*` : '';
       await sendTelegram(chat_id,
         `✅ *Lançamento registrado!*\n\n` +
         `📝 ${gasto.descricao}\n` +
@@ -848,7 +867,7 @@ export default async function handler(req, res) {
         `🏷 ${gasto.categoria}\n` +
         `💳 ${fmtCartao(gasto.cartao)}\n` +
         `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade || 'Não informado'}\n` +
-        `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+        `📅 ${fmtData(gasto.data_lancamento)}${remetenteInfo}\n\n` +
         `⏳ Aguardando sua autorização no BY Finance.\n` +
         `Você tem *7 dias* para aprovar ou rejeitar.`
       );

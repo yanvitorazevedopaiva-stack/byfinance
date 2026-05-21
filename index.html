@@ -4097,6 +4097,18 @@
     <div id="lanc-parceiros-top5" style="padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-top:none;border-radius:0 0 9px 9px"></div>
   </div>
 
+  <!-- PENDENTES TELEGRAM — bloco fixo na página de Lançamentos -->
+  <div id="lanc-tg-pendentes-wrap" style="margin-top:12px;display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(0,255,157,0.04);border:1px solid rgba(0,255,157,0.2);border-radius:9px 9px 0 0;font-size:11px;font-family:'JetBrains Mono',monospace">
+      <span style="color:var(--neon-green);font-weight:700">📱 PENDENTES DE AUTORIZAÇÃO <span id="lanc-tg-badge" style="display:none;background:var(--neon-red);color:#fff;border-radius:50%;padding:1px 6px;font-size:10px;margin-left:4px"></span></span>
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--text3);cursor:pointer" onclick="tgAuthRenderLanc()">↻</span>
+        <span style="color:var(--neon-green);cursor:pointer;font-weight:700" onclick="tgAuthAbrirModal()">VER TODOS ↗</span>
+      </div>
+    </div>
+    <div id="lanc-tg-lista" style="padding:10px 14px;background:rgba(0,255,157,0.02);border:1px solid rgba(0,255,157,0.2);border-top:none;border-radius:0 0 9px 9px"></div>
+  </div>
+
   <div class="lanc-hist-card" id="lanc-hist-wrap">
     <div class="lanc-hist-head">
       <span class="lanc-hist-title">⚡ ÚLTIMOS LANÇAMENTOS</span>
@@ -5117,7 +5129,7 @@
         <!-- Chips arrastáveis do catálogo -->
         <div id="mkt-drag-catalog-strip" style="margin-bottom:10px">
           <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'JetBrains Mono',monospace;letter-spacing:.3px">↓ ARRASTE DO CATÁLOGO PARA ADICIONAR</div>
-          <div id="mkt-drag-chips" style="display:flex;gap:6px;flex-wrap:wrap;max-height:80px;overflow-y:auto"></div>
+          <div id="mkt-drag-chips" style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-ms-overflow-style:none"></div>
         </div>
         <!-- Drop zone -->
         <div id="mkt-drop-zone"
@@ -9626,6 +9638,7 @@ function atualizarPreviewParcela(){
 }
 
 function renderLancamentos(){
+  tgAuthRenderLanc();
   lancRenderTop5Parceiros();
   // Popula cartões no select
   const cartSel=document.getElementById('lanc-cartao');
@@ -21472,18 +21485,56 @@ function mktScannerRenderItem(){
   document.body.insertAdjacentHTML('beforeend',html);
 }
 
-function mktScannerConfirmar(){
-  const nome=(document.getElementById('scan-nome')?.value||'').trim();
-  const qtd=parseFloat(document.getElementById('scan-qtd')?.value)||1;
-  const unidade=document.getElementById('scan-unidade')?.value||'un';
-  const preco=parseFloat(document.getElementById('scan-preco')?.value)||0;
-  const cat=document.getElementById('scan-cat')?.value||'Outros';
+// ── Helpers do scanner ──────────────────────────────────────────────────────
+
+// Salva/atualiza item no catálogo — retorna o id do item
+function _mktScanSalvarCatalogo(nome,qtd,unidade,preco,cat){
   const agora=new Date().toISOString();
   const todos=_mktGetCatalogo();
-  const idx=todos.findIndex(i=>i.nome.toLowerCase().trim()===nome.toLowerCase());
-  if(idx>=0){todos[idx].preco=preco;todos[idx].ultimaAtualizacao=agora;}
-  else{todos.push({id:Date.now(),sku:_mktGetNextSku(),nome,cat,qtd,unidade,preco,foto:null,dataCadastro:agora,ultimaAtualizacao:agora});}
+  const idx=todos.findIndex(i=>i.nome.toLowerCase().trim()===nome.toLowerCase().trim());
+  let itemId;
+  if(idx>=0){
+    todos[idx].preco=preco;todos[idx].qtd=qtd;todos[idx].unidade=unidade;
+    todos[idx].cat=cat;todos[idx].ultimaAtualizacao=agora;
+    itemId=todos[idx].id;
+  }else{
+    const novo={id:Date.now(),sku:_mktGetNextSku(),nome,cat,qtd,unidade,preco,foto:null,dataCadastro:agora,ultimaAtualizacao:agora};
+    todos.push(novo);itemId=novo.id;
+  }
   _mktSetCatalogo(todos);
+  return itemId;
+}
+
+// Adiciona item diretamente na lista sem modal
+function _mktScanAdicionarNaLista(lista,itemId,nome,cat,qtd,unidade,preco){
+  const listas=_mktGetListas();
+  const l=listas.find(x=>x.id===lista.id);
+  if(!l||l.status==='concluido') return false;
+  if(l.itens.find(i=>i.refId===itemId)) return false; // já existe
+  l.itens.push({id:Date.now()+1,refId:itemId,nome,cat,qtd,unidade,precoPrev:preco,precoReal:preco,comprado:false,origemScanner:true});
+  _mktSetListas(listas);
+  return true;
+}
+
+// ── Ações do scanner ─────────────────────────────────────────────────────────
+
+function _mktScanLerCampos(){
+  return {
+    nome:(document.getElementById('scan-nome')?.value||'').trim(),
+    qtd:parseFloat(document.getElementById('scan-qtd')?.value)||1,
+    unidade:document.getElementById('scan-unidade')?.value||'un',
+    preco:parseFloat(document.getElementById('scan-preco')?.value)||0,
+    cat:document.getElementById('scan-cat')?.value||'Outros',
+  };
+}
+
+// OK: salva no catálogo e avança
+function mktScannerConfirmar(){
+  const {nome,qtd,unidade,preco,cat}=_mktScanLerCampos();
+  if(!nome) return;
+  const existed=_mktGetCatalogo().find(i=>i.nome.toLowerCase().trim()===nome.toLowerCase().trim());
+  _mktScanSalvarCatalogo(nome,qtd,unidade,preco,cat);
+  _showToast(existed?`↑ "${nome}" atualizado`:`✓ "${nome}" cadastrado`);
   _mktScanOk++;_mktScanIdx++;
   mktScannerRenderItem();
 }
@@ -21491,20 +21542,30 @@ function mktScannerConfirmar(){
 function mktScannerPular(){_mktScanIdx++;mktScannerRenderItem();}
 function mktScannerVoltar(){if(_mktScanIdx>0){_mktScanIdx--;mktScannerRenderItem();}}
 
+// VINCULAR: salva no catálogo E adiciona na lista pendente — sem modal extra
 function mktScannerVincularMes(){
-  // Pega o item atual do scanner (sem confirmar no catálogo)
-  const nome=(document.getElementById('scan-nome')?.value||'').trim();
-  const qtd=parseFloat(document.getElementById('scan-qtd')?.value)||1;
-  const unidade=document.getElementById('scan-unidade')?.value||'un';
-  const preco=parseFloat(document.getElementById('scan-preco')?.value)||0;
-  const cat=document.getElementById('scan-cat')?.value||'Outros';
-  // Busca listas pendentes
+  const {nome,qtd,unidade,preco,cat}=_mktScanLerCampos();
+  if(!nome){_showToast('Informe o nome do item antes de vincular.');return;}
   const pendentes=_mktGetListas().filter(l=>l.status==='pendente');
-  if(!pendentes.length){_showToast('Nenhuma lista pendente encontrada. Crie uma lista primeiro.');return;}
-  // Se só há uma lista pendente, abre modal direto; se houver múltiplas, mostra picker
+  if(!pendentes.length){_showToast('Nenhuma lista pendente. Crie uma lista primeiro.');return;}
+
+  const _executar=(lista)=>{
+    // 1. Salva no catálogo
+    const itemId=_mktScanSalvarCatalogo(nome,qtd,unidade,preco,cat);
+    // 2. Adiciona na lista diretamente
+    const adicionado=_mktScanAdicionarNaLista(lista,itemId,nome,cat,qtd,unidade,preco);
+    if(!adicionado) _showToast(`"${nome}" já está nesta lista.`);
+    else _showToast(`✓ "${nome}" adicionado à lista!`);
+    // 3. Avança para o próximo item do scanner
+    _mktScanOk++;_mktScanIdx++;
+    // 4. Atualiza a lista se estiver aberta
+    if(_mktMesId===lista.id) _mktRenderMes();
+    gfRenderMercadoCard();
+    mktScannerRenderItem();
+  };
+
   if(pendentes.length===1){
-    const it={id:Date.now(),nome,cat,qtd,unidade,preco,dataCadastro:new Date().toISOString()};
-    _mktModalPrecoArrastado(it,pendentes[0]);
+    _executar(pendentes[0]);
     return;
   }
   // Múltiplas listas → picker
@@ -21518,7 +21579,6 @@ function mktScannerVincularMes(){
     <button onclick="document.getElementById('mkt-scan-picker').remove()" style="width:100%;padding:9px;background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;cursor:pointer;font-size:12px;margin-top:4px">CANCELAR</button>
   </div>`;
   document.body.appendChild(el);
-  // Guarda item atual para uso na função de vincular
   window._mktScanItemAtual={nome,cat,qtd,unidade,preco};
 }
 
@@ -21527,8 +21587,16 @@ function mktScannerVincularNaLista(listaId){
   const listas=_mktGetListas();
   const lista=listas.find(l=>l.id===listaId);
   if(!lista||lista.status!=='pendente'){_showToast('Lista não encontrada ou já concluída.');return;}
-  const it=window._mktScanItemAtual||{};
-  _mktModalPrecoArrastado({id:Date.now(),...it},lista);
+  const {nome,qtd,unidade,preco,cat}=window._mktScanItemAtual||{};
+  if(!nome) return;
+  const itemId=_mktScanSalvarCatalogo(nome,qtd,unidade,preco,cat);
+  const adicionado=_mktScanAdicionarNaLista(lista,itemId,nome,cat,qtd,unidade,preco);
+  if(!adicionado) _showToast(`"${nome}" já está nesta lista.`);
+  else _showToast(`✓ "${nome}" adicionado à lista!`);
+  _mktScanOk++;_mktScanIdx++;
+  if(_mktMesId===lista.id) _mktRenderMes();
+  gfRenderMercadoCard();
+  mktScannerRenderItem();
 }
 function renderMercado(){
   _mktRenderCatalogo();_mktRenderListas();_mktRenderAnalise();
@@ -21929,6 +21997,29 @@ function tgAuthFmtValor(v){
   return parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 }
 
+async function tgAuthRenderLanc(){
+  const wrap=document.getElementById('lanc-tg-pendentes-wrap');
+  const el=document.getElementById('lanc-tg-lista');
+  const badge=document.getElementById('lanc-tg-badge');
+  if(!el) return;
+  const lista=await tgAuthCarregar();
+  // Mostra ou oculta o bloco inteiro
+  if(wrap) wrap.style.display=lista.length?'block':'none';
+  if(!lista.length) return;
+  if(badge){badge.style.display='inline';badge.textContent=lista.length;}
+  el.innerHTML=lista.slice(0,5).map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(0,255,157,0.1)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(p.descricao)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
+      <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;flex-shrink:0">✓ AUTORIZAR</button>
+      <button onclick="tgAuthRejeitar('${p.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">✕</button>
+    </div>`).join('');
+  if(lista.length>5) el.innerHTML+=`<div style="text-align:center;padding:10px 0;font-size:11px;color:var(--text3);cursor:pointer" onclick="tgAuthAbrirModal()">+ ${lista.length-5} mais · Ver todos ↗</div>`;
+}
+
 function _tgRenderPendentes(lista){
   const el=document.getElementById('d-tg-pendentes-lista');
   const badge=document.getElementById('d-tg-badge');
@@ -22111,7 +22202,7 @@ async function tgConfirmarAutorizacao(){
   document.getElementById('tg-auth-modal').style.display='none';
   if(btnConfirmar){btnConfirmar.disabled=false;btnConfirmar.textContent='⚡ CONFIRMAR LANÇAMENTO';}
   // Aguarda 500ms para o Supabase refletir o update antes de re-renderizar
-  setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();},500);
+  setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();tgAuthRenderLanc();},500);
   _showToast('✓ Lançamento autorizado!');
 }
 
@@ -22163,7 +22254,7 @@ async function tgConfirmarRejeicao(){
   document.getElementById('tg-rejeitar-modal').style.display='none';
   document.getElementById('tg-auth-modal').style.display='none';
   if(btnRej){btnRej.disabled=false;btnRej.textContent='❌ CONFIRMAR REJEIÇÃO';}
-  setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();},500);
+  setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();tgAuthRenderLanc();},500);
   _showToast('Lançamento rejeitado.');
 }
 

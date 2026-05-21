@@ -499,17 +499,12 @@
   .lanc-hero-title{
     position:relative;z-index:1;
     font-family:'JetBrains Mono',monospace;
-    font-size:52px;font-weight:900;letter-spacing:8px;line-height:1;margin-bottom:22px;
-    background:linear-gradient(135deg,#00c8ff 0%,#00ff9d 50%,#00c8ff 100%);
-    background-size:200% auto;
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-    animation:lanc-shimmer 4s ease-in-out infinite;
-    filter:drop-shadow(0 0 20px rgba(0,200,255,0.3));
+    font-size:38px;font-weight:700;letter-spacing:2px;line-height:1;margin-bottom:18px;
+    color:#e8f2ff;
+    text-shadow:0 1px 0 rgba(255,255,255,0.06);
   }
-  @keyframes lanc-shimmer{
-    0%,100%{background-position:0% center;}
-    50%{background-position:200% center;}
-  }
+  body.day .lanc-hero-title{color:#0f1f35;}
+  @keyframes lanc-shimmer{0%{}}
   /* Sub */
   .lanc-hero-sub{position:relative;z-index:1;font-size:13px;color:var(--text2);
     max-width:480px;margin:0 auto 26px;line-height:2;letter-spacing:.3px;}

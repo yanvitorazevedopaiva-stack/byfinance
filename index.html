@@ -6236,6 +6236,15 @@
             style="background:rgba(0,255,157,0.12);border-color:rgba(0,255,157,0.4);color:var(--neon-green);width:100%">
             📲 GERAR CÓDIGO PARA ESTE NÚMERO
           </button>
+          <!-- Display do código gerado (para quando já está vinculado) -->
+          <div id="cfg-tg-token-wrap2" style="display:none;margin-top:14px">
+            <div style="text-align:center;margin-bottom:8px;font-size:11px;color:var(--text3)">Envie este código no bot <strong style="color:var(--neon-green)">@byfinance_br_bot</strong>:</div>
+            <div style="display:flex;align-items:center;gap:10px;justify-content:center">
+              <div id="cfg-tg-token-display2" style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:900;color:var(--neon-green);letter-spacing:6px;padding:12px 24px;border-radius:12px;background:rgba(0,255,157,0.08);border:2px solid rgba(0,255,157,0.3)"></div>
+              <button onclick="cfgTgCopiarToken2()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px">📋</button>
+            </div>
+            <div id="cfg-tg-timer2" style="text-align:center;margin-top:8px;font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace"></div>
+          </div>
         </div>
         <div class="cfg-msg" id="cfg-tg-msg2"></div>
       </div>
@@ -22651,13 +22660,21 @@ async function cfgTgGerarToken(){
     const token=Math.floor(100000+Math.random()*900000).toString();
     const expiresAt=new Date(Date.now()+10*60*1000).toISOString();
     await _supabase.from('telegram_tokens').upsert({user_id:_authUID,token,nome,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
-    const wrap=document.getElementById('cfg-tg-token-wrap');
-    const display=document.getElementById('cfg-tg-token-display');
+
+    // Determina qual display usar (painel vinculado ou não-vinculado)
+    const jaVinculado=document.getElementById('cfg-tg-vinculado')?.style.display==='block';
+    const wrapId=jaVinculado?'cfg-tg-token-wrap2':'cfg-tg-token-wrap';
+    const displayId=jaVinculado?'cfg-tg-token-display2':'cfg-tg-token-display';
+    const timerId=jaVinculado?'cfg-tg-timer2':'cfg-tg-timer';
+
+    const wrap=document.getElementById(wrapId);
+    const display=document.getElementById(displayId);
+    const timer=document.getElementById(timerId);
     if(wrap) wrap.style.display='block';
     if(display) display.textContent=token;
+
     let segundos=600;
     if(_cfgTgTimerInterval) clearInterval(_cfgTgTimerInterval);
-    const timer=document.getElementById('cfg-tg-timer');
     _cfgTgTimerInterval=setInterval(()=>{
       segundos--;
       const min=Math.floor(segundos/60);
@@ -22682,6 +22699,13 @@ function cfgTgCopiarToken(){
   if(display&&navigator.clipboard){
     navigator.clipboard.writeText(display.textContent);
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Código copiado!');
+  }
+}
+function cfgTgCopiarToken2(){
+  const display=document.getElementById('cfg-tg-token-display2');
+  if(display&&navigator.clipboard){
+    navigator.clipboard.writeText(display.textContent);
+    cfgMsgShow(document.getElementById('cfg-tg-msg2'),'ok','Código copiado!');
   }
 }
 

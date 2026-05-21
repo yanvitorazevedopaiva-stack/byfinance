@@ -21052,7 +21052,13 @@ function mktDropCatalogoNaLista(event,listaId){
   const lista=listas.find(l=>l.id===listaId);
   if(!lista||lista.status!=='pendente'){_showToast('Só é possível adicionar a listas pendentes.');return;}
   if(lista.itens.find(i=>i.refId===itemId)){_showToast(`"${it.nome}" já está nesta lista.`);return;}
-  _mktModalPrecoArrastado(it,lista);
+  // Abre o mesmo modal de vincular usado no botão 📅, com a lista pré-selecionada
+  mktAbrirVincular(itemId);
+  // Clica no botão da lista correta depois do modal renderizar
+  setTimeout(()=>{
+    const btn=document.querySelector(`#mkt-vincular-lista button[onclick="mktSelecionarMes(${listaId})"]`);
+    if(btn) btn.click();
+  },100);
 }
 
 function mktAbrirMes(id){_mktMesId=id;document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}
@@ -21091,8 +21097,12 @@ function mktDropItemNaLista(event){
   const lista=_mktGetListas().find(l=>l.id===_mktMesId);
   if(!lista||lista.status==='concluido') return;
   if(lista.itens.find(i=>i.refId===itemId)){_showToast(`"${it.nome}" já está nesta lista.`);return;}
-  // Mostrar modal para informar preço pago e quantidade
-  _mktModalPrecoArrastado(it,lista);
+  // Abre o mesmo modal de vincular com a lista pré-selecionada
+  mktAbrirVincular(itemId);
+  setTimeout(()=>{
+    const btn=document.querySelector(`#mkt-vincular-lista button[onclick="mktSelecionarMes(${_mktMesId})"]`);
+    if(btn) btn.click();
+  },100);
 }
 
 function _mktModalPrecoArrastado(it,lista){

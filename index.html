@@ -729,6 +729,15 @@
   .help-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text3);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .help-close:hover{color:var(--text);border-color:var(--text3);}
 
+  /* ===== MERCADO CARD DRAG HANDLE ===== */
+  .mkt-card-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0;width:162px;transition:border-color .15s,opacity .15s;cursor:default;}
+  .mkt-card-wrap:hover{border-color:rgba(0,200,255,0.35);}
+  .mkt-card-drag-handle{display:flex;align-items:center;justify-content:center;gap:4px;padding:5px 0;background:var(--bg3);border-bottom:1px solid var(--border);cursor:grab;user-select:none;transition:background .15s;}
+  .mkt-card-drag-handle:hover{background:rgba(0,200,255,0.08);}
+  .mkt-card-drag-handle:active{cursor:grabbing;}
+  .mkt-card-drag-handle span{width:4px;height:4px;border-radius:50%;background:var(--text3);display:inline-block;opacity:.6;}
+  .mkt-card-drag-handle em{font-size:9px;color:var(--text3);font-style:normal;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;opacity:.7;}
+
   /* ===== MERCADO DRAG CATÁLOGO ===== */
   .mkt-drag-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);cursor:grab;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text);user-select:none;transition:border-color .15s,transform .1s;flex-shrink:0;}
   .mkt-drag-chip:hover{border-color:rgba(0,200,255,0.4);color:var(--neon-blue);}
@@ -1747,6 +1756,10 @@
     border:1px solid rgba(0,200,255,0.22);color:var(--neon-blue);}
 
   /* Painéis */
+  .cfg-panel-arrow{font-size:16px;color:var(--text3);transition:transform .25s ease;flex-shrink:0;margin-left:auto;padding-left:10px;}
+  .cfg-panel-head{cursor:pointer;user-select:none;}
+  .cfg-panel-head:hover .cfg-panel-arrow{color:var(--text);}
+  .cfg-panel-body{overflow:hidden;transition:max-height .3s ease,padding .3s ease;}
   .cfg-panel{border-radius:16px;border:1px solid var(--border);
     background:var(--card);margin-bottom:16px;overflow:hidden;}
   .cfg-panel-head{display:flex;align-items:center;gap:14px;padding:18px 22px;
@@ -6052,15 +6065,17 @@
   </div>
 
   <!-- PERFIL -->
+  <!-- PERFIL -->
   <div class="cfg-panel cfg-panel-blue">
-    <div class="cfg-panel-head">
+    <div class="cfg-panel-head" onclick="cfgTogglePanel('cfg-body-perfil')">
       <div class="cfg-panel-icon">👤</div>
-      <div>
+      <div style="flex:1">
         <div class="cfg-panel-label">PERFIL DO USUÁRIO</div>
         <div class="cfg-panel-desc">Foto, nome de exibição e e-mail</div>
       </div>
+      <span class="cfg-panel-arrow" id="cfg-arrow-perfil">›</span>
     </div>
-    <div class="cfg-panel-body">
+    <div class="cfg-panel-body" id="cfg-body-perfil" style="display:none">
       <div class="cfg-avatar-row">
         <div class="cfg-avatar-wrap">
           <div class="cfg-avatar" id="cfg-avatar-wrap" onclick="document.getElementById('perfil-file').click()" title="Clique para alterar foto">
@@ -6072,114 +6087,70 @@
         <div class="cfg-avatar-info">
           <div class="cfg-uname" id="cfg-uname-disp">—</div>
           <div class="cfg-urole" id="cfg-urole-disp">// USUÁRIO</div>
-          <div style="margin-top:6px">
-            <span id="cfg-user-badge" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--neon-green);background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);padding:3px 10px;border-radius:6px;letter-spacing:1px"></span>
-          </div>
-          <div class="cfg-avatar-hint" style="margin-top:6px">Clique na foto para alterar</div>
+          <span id="cfg-user-badge" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--neon-green);background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);padding:3px 10px;border-radius:6px;letter-spacing:1px"></span>
         </div>
       </div>
       <div class="cfg-grid">
-        <div class="cfg-field">
-          <label>NOME DE EXIBIÇÃO</label>
-          <input id="cfg-nome" type="text" placeholder="Como quer ser chamado?">
-        </div>
-        <div class="cfg-field">
-          <label>E-MAIL DA CONTA</label>
-          <input id="cfg-email" type="email" placeholder="seu@email.com" autocomplete="email">
-        </div>
+        <div class="cfg-field"><label>NOME DE EXIBIÇÃO</label><input id="cfg-nome" type="text" placeholder="Como quer ser chamado?"></div>
+        <div class="cfg-field"><label>E-MAIL DA CONTA</label><input id="cfg-email" type="email" placeholder="seu@email.com" autocomplete="email"></div>
       </div>
-      <div class="cfg-btn-row">
-        <button class="cfg-btn cfg-btn-green" onclick="cfgSalvarPerfil()">✓ SALVAR PERFIL</button>
-      </div>
+      <div class="cfg-btn-row"><button class="cfg-btn cfg-btn-green" onclick="cfgSalvarPerfil()">✓ SALVAR PERFIL</button></div>
       <div class="cfg-msg" id="cfg-perfil-msg"></div>
     </div>
   </div>
 
   <!-- SEGURANÇA -->
   <div class="cfg-panel cfg-panel-yellow">
-    <div class="cfg-panel-head">
+    <div class="cfg-panel-head" onclick="cfgTogglePanel('cfg-body-seguranca')">
       <div class="cfg-panel-icon">🔒</div>
-      <div>
+      <div style="flex:1">
         <div class="cfg-panel-label">SEGURANÇA</div>
         <div class="cfg-panel-desc">Alterar senha de acesso à conta</div>
       </div>
+      <span class="cfg-panel-arrow" id="cfg-arrow-seguranca">›</span>
     </div>
-    <div class="cfg-panel-body">
+    <div class="cfg-panel-body" id="cfg-body-seguranca" style="display:none">
       <div class="cfg-grid">
-        <div class="cfg-field">
-          <label>SENHA ATUAL</label>
-          <div class="cfg-field-wrap">
-            <input id="cfg-pass-atual" type="password" placeholder="••••••••">
-            <button class="cfg-eye" type="button" onclick="loginToggleEye(this,'cfg-pass-atual')">👁</button>
-          </div>
-        </div>
+        <div class="cfg-field"><label>SENHA ATUAL</label><div class="cfg-field-wrap"><input id="cfg-pass-atual" type="password" placeholder="••••••••"><button class="cfg-eye" type="button" onclick="loginToggleEye(this,'cfg-pass-atual')">👁</button></div></div>
         <div></div>
-        <div class="cfg-field">
-          <label>NOVA SENHA</label>
-          <div class="cfg-field-wrap">
-            <input id="cfg-pass-nova" type="password" placeholder="mín. 8 chars + caractere especial" oninput="cfgPassStrength(this)">
-            <button class="cfg-eye" type="button" onclick="loginToggleEye(this,'cfg-pass-nova')">👁</button>
-          </div>
-          <div class="cfg-pass-strength">
-            <div class="cfg-pass-bar" id="cfg-pbar-1"></div>
-            <div class="cfg-pass-bar" id="cfg-pbar-2"></div>
-            <div class="cfg-pass-bar" id="cfg-pbar-3"></div>
-            <span class="cfg-pass-label" id="cfg-pass-label"></span>
-          </div>
-        </div>
-        <div class="cfg-field">
-          <label>CONFIRMAR NOVA SENHA</label>
-          <div class="cfg-field-wrap">
-            <input id="cfg-pass-conf" type="password" placeholder="repita a nova senha">
-            <button class="cfg-eye" type="button" onclick="loginToggleEye(this,'cfg-pass-conf')">👁</button>
-          </div>
-        </div>
+        <div class="cfg-field"><label>NOVA SENHA</label><div class="cfg-field-wrap"><input id="cfg-pass-nova" type="password" placeholder="mín. 8 chars + especial" oninput="cfgPassStrength(this)"><button class="cfg-eye" type="button" onclick="loginToggleEye(this,'cfg-pass-nova')">👁</button></div><div class="cfg-pass-strength"><div class="cfg-pass-bar" id="cfg-pbar-1"></div><div class="cfg-pass-bar" id="cfg-pbar-2"></div><div class="cfg-pass-bar" id="cfg-pbar-3"></div><span class="cfg-pass-label" id="cfg-pass-label"></span></div></div>
+        <div class="cfg-field"><label>CONFIRMAR NOVA SENHA</label><div class="cfg-field-wrap"><input id="cfg-pass-conf" type="password" placeholder="repita a nova senha"><button class="cfg-eye" type="button" onclick="loginToggleEye(this,'cfg-pass-conf')">👁</button></div></div>
       </div>
-      <div class="cfg-btn-row">
-        <button class="cfg-btn cfg-btn-primary" onclick="cfgAlterarSenha()">🔑 ALTERAR SENHA</button>
-      </div>
+      <div class="cfg-btn-row"><button class="cfg-btn cfg-btn-primary" onclick="cfgAlterarSenha()">🔑 ALTERAR SENHA</button></div>
       <div class="cfg-msg" id="cfg-senha-msg"></div>
     </div>
   </div>
 
   <!-- APARÊNCIA -->
   <div class="cfg-panel cfg-panel-green">
-    <div class="cfg-panel-head">
+    <div class="cfg-panel-head" onclick="cfgTogglePanel('cfg-body-aparencia')">
       <div class="cfg-panel-icon">🎨</div>
-      <div>
+      <div style="flex:1">
         <div class="cfg-panel-label">APARÊNCIA</div>
-        <div class="cfg-panel-desc">Tema do sistema</div>
+        <div class="cfg-panel-desc">Tema claro ou escuro</div>
       </div>
+      <span class="cfg-panel-arrow" id="cfg-arrow-aparencia">›</span>
     </div>
-    <div class="cfg-panel-body">
+    <div class="cfg-panel-body" id="cfg-body-aparencia" style="display:none">
       <div class="cfg-theme-row">
-        <button class="cfg-theme-btn" id="cfg-btn-dark" onclick="cfgSetTheme('dark')">
-          <span class="cfg-theme-icon">🌙</span>
-          <span>MODO NOTURNO</span>
-        </button>
-        <button class="cfg-theme-btn" id="cfg-btn-light" onclick="cfgSetTheme('day')">
-          <span class="cfg-theme-icon">☀</span>
-          <span>MODO DIURNO</span>
-        </button>
+        <button class="cfg-theme-btn" id="cfg-btn-dark" onclick="cfgSetTheme('dark')"><span class="cfg-theme-icon">🌙</span><span>MODO NOTURNO</span></button>
+        <button class="cfg-theme-btn" id="cfg-btn-light" onclick="cfgSetTheme('day')"><span class="cfg-theme-icon">☀</span><span>MODO DIURNO</span></button>
       </div>
     </div>
   </div>
 
   <!-- GEMINI API -->
   <div class="cfg-panel cfg-panel-blue">
-    <div class="cfg-panel-head">
+    <div class="cfg-panel-head" onclick="cfgTogglePanel('cfg-body-gemini')">
       <div class="cfg-panel-icon">🤖</div>
-      <div>
-        <div class="cfg-panel-label">GEMINI API — SCANNER DE NOTAS</div>
-        <div class="cfg-panel-desc">Chave gratuita em aistudio.google.com → Get API Key</div>
+      <div style="flex:1">
+        <div class="cfg-panel-label">GEMINI API</div>
+        <div class="cfg-panel-desc">Scanner de notas fiscais · aistudio.google.com</div>
       </div>
+      <span class="cfg-panel-arrow" id="cfg-arrow-gemini">›</span>
     </div>
-    <div class="cfg-panel-body">
-      <div class="cfg-field" style="margin-bottom:12px">
-        <label>CHAVE DA API GEMINI</label>
-        <input id="cfg-gemini-key" type="password" placeholder="AIza..."
-          style="width:100%;font-family:'JetBrains Mono',monospace;font-size:12px">
-      </div>
+    <div class="cfg-panel-body" id="cfg-body-gemini" style="display:none">
+      <div class="cfg-field" style="margin-bottom:12px"><label>CHAVE DA API GEMINI</label><input id="cfg-gemini-key" type="password" placeholder="AIza..." style="width:100%;font-family:'JetBrains Mono',monospace;font-size:12px"></div>
       <div class="cfg-btn-row">
         <button class="cfg-btn cfg-btn-green" onclick="cfgSalvarGemini()">✓ SALVAR CHAVE</button>
         <button class="cfg-btn" onclick="cfgTestarGemini()" style="margin-left:8px">⚡ TESTAR</button>
@@ -6194,78 +6165,64 @@
 
   <!-- SUPABASE AUTH -->
   <div class="cfg-panel" style="border-left:3px solid var(--neon-blue)">
-    <div class="cfg-panel-head">
+    <div class="cfg-panel-head" onclick="cfgTogglePanel('cfg-body-supabase')">
       <div class="cfg-panel-icon">🔐</div>
-      <div>
-        <div class="cfg-panel-label">SUPABASE AUTH — CONFIGURAÇÃO</div>
-        <div class="cfg-panel-desc">Passos para ativar autenticação segura no servidor</div>
+      <div style="flex:1">
+        <div class="cfg-panel-label">SUPABASE AUTH</div>
+        <div class="cfg-panel-desc">Configuração de autenticação segura e RLS</div>
       </div>
+      <span class="cfg-panel-arrow" id="cfg-arrow-supabase">›</span>
     </div>
-    <div class="cfg-panel-body" style="font-size:12px;line-height:1.9;color:var(--text2)">
-      <div>1. Acesse <strong style="color:var(--text)">supabase.com</strong> → seu projeto</div>
-      <div>2. Authentication → Settings → <strong style="color:var(--text)">Enable email confirmations: ON</strong></div>
-      <div>3. Table Editor → user_data → <strong style="color:var(--text)">Enable Row Level Security (RLS)</strong></div>
-      <div>4. Policies → New Policy → usar template "Enable read access to own rows"</div>
-      <div style="margin-top:8px;padding:10px 12px;background:rgba(0,200,255,0.05);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--neon-blue)">
-        auth.uid()::text = user_id
-      </div>
-      <div id="cfg-auth-status" style="margin-top:10px;font-size:12px"></div>
-      <div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.8;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-weight:700;color:var(--text);margin-bottom:6px">📧 Personalizar email de confirmação:</div>
-        <div>1. supabase.com → seu projeto → Authentication → Email Templates</div>
-        <div>2. Edite o template "Confirm signup" com o nome do seu sistema</div>
-        <div>3. Edite "Reset Password" para personalizar a recuperação</div>
-        <div>4. Salve — o Supabase usa automaticamente em todos os envios</div>
+    <div class="cfg-panel-body" id="cfg-body-supabase" style="display:none">
+      <div id="cfg-auth-status" style="font-size:12px;margin-bottom:12px;line-height:1.5"></div>
+      <div style="padding:10px 12px;background:rgba(0,200,255,0.05);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--neon-blue);margin-bottom:12px">auth.uid()::text = user_id</div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.7">
+        <strong style="color:var(--text);display:block;margin-bottom:4px">Passos para ativar:</strong>
+        supabase.com → Table Editor → user_data → Enable RLS → New Policy → "own rows"<br>
+        Authentication → Settings → Email confirmations: ON
       </div>
     </div>
   </div>
 
   <!-- AÇÕES ARQUIVADAS -->
   <div class="cfg-panel cfg-panel-blue" id="cfg-panel-arquivadas">
-    <div class="cfg-panel-head">
+    <div class="cfg-panel-head" onclick="cfgTogglePanel('cfg-body-arquivadas')">
       <div class="cfg-panel-icon">📁</div>
-      <div>
+      <div style="flex:1">
         <div class="cfg-panel-label">AÇÕES ARQUIVADAS</div>
-        <div class="cfg-panel-desc">Ações ocultas da barra lateral — clique para restaurar</div>
+        <div class="cfg-panel-desc">Páginas ocultas da barra lateral</div>
       </div>
+      <span class="cfg-panel-arrow" id="cfg-arrow-arquivadas">›</span>
     </div>
-    <div class="cfg-panel-body">
+    <div class="cfg-panel-body" id="cfg-body-arquivadas" style="display:none">
       <div id="cfg-arquivadas-body"></div>
     </div>
   </div>
 
-  <!-- DADOS -->
-  <div class="cfg-panel cfg-panel-green" style="margin-bottom:18px">
-    <div class="cfg-panel-head">
+  <!-- TELEGRAM -->
+  <div class="cfg-panel cfg-panel-green">
+    <div class="cfg-panel-head" onclick="cfgTogglePanel('cfg-body-telegram')">
       <div class="cfg-panel-icon">📱</div>
-      <div>
+      <div style="flex:1">
         <div class="cfg-panel-label">TELEGRAM — BOT BY FINANCE</div>
-        <div class="cfg-panel-desc">Vincule seu Telegram para lançar gastos por mensagem, áudio ou foto</div>
+        <div class="cfg-panel-desc">Lançamentos por mensagem, áudio ou foto</div>
       </div>
+      <span class="cfg-panel-arrow" id="cfg-arrow-telegram">›</span>
     </div>
-    <div class="cfg-panel-body">
+    <div class="cfg-panel-body" id="cfg-body-telegram" style="display:none">
       <div id="cfg-tg-status-wrap" style="margin-bottom:16px">
-        <div id="cfg-tg-status" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);font-size:13px;color:var(--text3);text-align:center">
-          Carregando status...
-        </div>
+        <div id="cfg-tg-status" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);font-size:13px;color:var(--text3);text-align:center">Carregando status...</div>
       </div>
       <div id="cfg-tg-nao-vinculado">
-        <div style="margin-bottom:12px;font-size:12px;color:var(--text3);line-height:1.6">
-          Gere um código de acesso abaixo, acesse o bot <strong style="color:var(--neon-green)">@byfinance_br_bot</strong> no Telegram e envie o código.
-        </div>
-        <button class="cfg-btn cfg-btn-primary" onclick="cfgTgGerarToken()" id="cfg-tg-btn-gerar" style="background:rgba(0,255,157,0.12);border-color:rgba(0,255,157,0.4);color:var(--neon-green);width:100%">
-          📲 GERAR CÓDIGO DE ACESSO
-        </button>
+        <button class="cfg-btn cfg-btn-primary" onclick="cfgTgGerarToken()" id="cfg-tg-btn-gerar" style="background:rgba(0,255,157,0.12);border-color:rgba(0,255,157,0.4);color:var(--neon-green);width:100%">📲 GERAR CÓDIGO DE ACESSO</button>
         <div id="cfg-tg-token-wrap" style="display:none;margin-top:14px">
-          <div style="text-align:center;margin-bottom:8px;font-size:11px;color:var(--text3)">Envie este código no bot do Telegram:</div>
+          <div style="text-align:center;margin-bottom:8px;font-size:11px;color:var(--text3)">Envie este código no bot <strong style="color:var(--neon-green)">@byfinance_br_bot</strong>:</div>
           <div style="display:flex;align-items:center;gap:10px;justify-content:center">
             <div id="cfg-tg-token-display" style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:900;color:var(--neon-green);letter-spacing:6px;padding:12px 24px;border-radius:12px;background:rgba(0,255,157,0.08);border:2px solid rgba(0,255,157,0.3)"></div>
             <button onclick="cfgTgCopiarToken()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px">📋</button>
           </div>
           <div id="cfg-tg-timer" style="text-align:center;margin-top:8px;font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace"></div>
-          <div style="text-align:center;margin-top:10px">
-            <a id="cfg-tg-link" href="https://t.me/byfinance_br_bot" target="_blank" style="font-size:12px;color:var(--neon-blue);text-decoration:none">→ Abrir @byfinance_br_bot no Telegram</a>
-          </div>
+          <div style="text-align:center;margin-top:8px"><a id="cfg-tg-link" href="https://t.me/byfinance_br_bot" target="_blank" style="font-size:12px;color:var(--neon-blue);text-decoration:none">→ Abrir @byfinance_br_bot</a></div>
         </div>
       </div>
       <div id="cfg-tg-vinculado" style="display:none">
@@ -6273,32 +6230,32 @@
           <div style="font-size:13px;font-weight:700;color:var(--neon-green);margin-bottom:4px">✅ Telegram vinculado</div>
           <div id="cfg-tg-info" style="font-size:12px;color:var(--text3)"></div>
         </div>
-        <button onclick="cfgTgDesvincular()" class="cfg-btn cfg-btn-danger" style="width:100%;font-size:12px">
-          🔗 DESVINCULAR TELEGRAM
-        </button>
+        <button onclick="cfgTgDesvincular()" class="cfg-btn cfg-btn-danger" style="width:100%;font-size:12px">🔗 DESVINCULAR TELEGRAM</button>
       </div>
       <div class="cfg-msg" id="cfg-tg-msg"></div>
     </div>
   </div>
 
+  <!-- DADOS DA CONTA -->
   <div class="cfg-panel cfg-panel-red">
-    <div class="cfg-panel-head">
+    <div class="cfg-panel-head" onclick="cfgTogglePanel('cfg-body-dados')">
       <div class="cfg-panel-icon">🗄</div>
-      <div>
+      <div style="flex:1">
         <div class="cfg-panel-label">DADOS DA CONTA</div>
-        <div class="cfg-panel-desc">Exportar, apagar ou excluir sua conta</div>
+        <div class="cfg-panel-desc">Exportar, importar, apagar ou excluir conta</div>
       </div>
+      <span class="cfg-panel-arrow" id="cfg-arrow-dados">›</span>
     </div>
-    <div class="cfg-panel-body">
+    <div class="cfg-panel-body" id="cfg-body-dados" style="display:none">
       <div class="cfg-btn-row" style="margin-bottom:12px;gap:10px">
         <button class="cfg-btn cfg-btn-primary" onclick="cfgExportarDados()">📤 EXPORTAR (legado)</button>
         <button class="cfg-btn cfg-btn-primary" onclick="cfgExportarDadosV2()" style="background:rgba(0,200,255,0.15);border-color:rgba(0,200,255,0.4);color:var(--neon-blue)">📤 EXPORTAR v2.0</button>
-        <button class="cfg-btn cfg-btn-primary" onclick="cfgImportarDados()" style="background:rgba(0,255,157,0.1);border-color:rgba(0,255,157,0.35);color:var(--neon-green)">📥 IMPORTAR DADOS</button>
+        <button class="cfg-btn cfg-btn-primary" onclick="cfgImportarDados()" style="background:rgba(0,255,157,0.1);border-color:rgba(0,255,157,0.35);color:var(--neon-green)">📥 IMPORTAR</button>
       </div>
-      <div class="cfg-danger-warn">⚠ As ações abaixo são irreversíveis e afetam apenas os seus dados.</div>
+      <div class="cfg-danger-warn">⚠ As ações abaixo são irreversíveis.</div>
       <div class="cfg-btn-row">
-        <button class="cfg-btn cfg-btn-danger" onclick="cfgLimparDados()">🗑 APAGAR TODOS OS DADOS</button>
-        <button class="cfg-btn cfg-btn-danger" onclick="cfgExcluirConta()">✕ EXCLUIR MINHA CONTA</button>
+        <button class="cfg-btn cfg-btn-danger" onclick="cfgLimparDados()">🗑 APAGAR DADOS</button>
+        <button class="cfg-btn cfg-btn-danger" onclick="cfgExcluirConta()">✕ EXCLUIR CONTA</button>
       </div>
       <div class="cfg-msg" id="cfg-dados-msg"></div>
     </div>
@@ -20847,11 +20804,17 @@ function _mktRenderCatalogo(){
   }
   el.style.display='flex';
   el.innerHTML=cat.map(it=>`
-    <div draggable="true"
-      ondragstart="event.dataTransfer.setData('mkt_cat_item_id','${it.id}');this.style.opacity='.5'"
-      ondragend="this.style.opacity='1'"
-      style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,opacity .15s;flex-shrink:0;width:162px;cursor:grab" onmouseover="this.style.borderColor='rgba(0,200,255,0.35)'" onmouseout="this.style.borderColor='var(--border)'"
-      title="Arraste para uma lista pendente abaixo">
+    <div class="mkt-card-wrap">
+      <!-- Alça de drag — só esta área ativa o drag para a lista -->
+      <div class="mkt-card-drag-handle"
+        draggable="true"
+        ondragstart="event.dataTransfer.setData('mkt_cat_item_id','${it.id}');this.closest('.mkt-card-wrap').style.opacity='.5'"
+        ondragend="this.closest('.mkt-card-wrap').style.opacity='1'"
+        title="Arraste para uma lista pendente">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <em>ARRASTAR</em>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
       <div style="height:90px;background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative">
         ${it.foto?`<img src="${it.foto}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:36px">${_MKT_EMOJI[it.cat]||'📦'}</span>`}
       </div>
@@ -21048,9 +21011,73 @@ function _mktRenderListas(){
     </div>`;}).join('');}}
   const elH=document.getElementById('mkt-listas-hist');
   if(elH){if(!concluidas.length){elH.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:12px">Nenhuma lista concluída.</div>';}
-  else{elH.innerHTML=concluidas.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);return`<div onclick="mktAbrirMes(${l.id})" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;margin-bottom:6px;opacity:.8;transition:all .15s" onmouseover="this.style.opacity='1';this.style.borderColor='rgba(0,255,157,0.3)'" onmouseout="this.style.opacity='.8';this.style.borderColor='var(--border)'"><span style="font-size:20px">✅</span><div style="flex:1"><div style="font-size:13px;font-weight:600">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${_mktFmt(total)}</div></div><span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(0,255,157,0.1);color:var(--neon-green);border:1px solid rgba(0,255,157,0.25)">CONCLUÍDO</span><span style="color:var(--text3);font-size:16px">›</span></div>`;}).join('');}}
+  else{elH.innerHTML=concluidas.map(l=>{const total=l.itens.reduce((a,i)=>a+(i.qtd*(i.precoReal||i.precoPrev||0)),0);return`<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);margin-bottom:6px;opacity:.8;transition:all .15s" onmouseover="this.style.opacity='1';this.style.borderColor='rgba(0,255,157,0.3)'" onmouseout="this.style.opacity='.8';this.style.borderColor='var(--border)'">
+    <span style="font-size:20px;cursor:pointer" onclick="mktAbrirMes(${l.id})">✅</span>
+    <div style="flex:1;cursor:pointer" onclick="mktAbrirMes(${l.id})"><div style="font-size:13px;font-weight:600">MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.itens.length} item${l.itens.length!==1?'s':''} · ${_mktFmt(total)}</div></div>
+    <button onclick="event.stopPropagation();mktEspelharLista(${l.id})" title="Copiar itens para nova lista pendente" style="font-size:10px;padding:3px 8px;border-radius:6px;border:1px solid rgba(0,255,157,0.3);background:transparent;color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace;flex-shrink:0">📋 ESPELHAR</button>
+    <span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(0,255,157,0.1);color:var(--neon-green);border:1px solid rgba(0,255,157,0.25);cursor:pointer" onclick="mktAbrirMes(${l.id})">CONCLUÍDO</span>
+    <span style="color:var(--text3);font-size:16px;cursor:pointer" onclick="mktAbrirMes(${l.id})">›</span>
+  </div>`;}).join('');}}
   _mktRenderAnalise();
 }
+function mktEspelharLista(listaId){
+  const listas=_mktGetListas();
+  const origem=listas.find(l=>l.id===listaId);
+  if(!origem||!origem.itens.length){_showToast('Lista vazia — nada para espelhar.');return;}
+  const mesAtual=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const jaExiste=listas.find(l=>l.mes===mesAtual&&l.status==='pendente');
+  if(jaExiste){
+    showConfirm('Espelhar Lista',
+      `Já existe uma lista pendente para este mês (${_mktMesLabel(mesAtual)}).\nDeseja adicionar os itens à lista existente?`,
+      ()=>_mktEspelharParaLista(origem,jaExiste.id),
+      {icon:'📋',btnLabel:'ADICIONAR',btnBg:'rgba(0,255,157,0.18)',btnColor:'var(--neon-green)',warn:false}
+    );
+    return;
+  }
+  const novaLista={
+    id:Date.now(),
+    mes:mesAtual,
+    status:'pendente',
+    criadoEm:new Date().toISOString(),
+    itens:origem.itens.map(item=>({
+      ...item,
+      id:Date.now()+Math.floor(Math.random()*100000),
+      comprado:false,
+      precoReal:0,
+      precoPrev:item.precoReal>0?item.precoReal:item.precoPrev
+    }))
+  };
+  listas.push(novaLista);
+  _mktSetListas(listas);
+  _mktRenderListas();
+  _showToast('✓ Lista espelhada! '+novaLista.itens.length+' item(s) copiado(s) para '+_mktMesLabel(mesAtual)+'.');
+}
+
+function _mktEspelharParaLista(origem,listaDestinoId){
+  const listas=_mktGetListas();
+  const destino=listas.find(l=>l.id===listaDestinoId);
+  if(!destino) return;
+  let adicionados=0;
+  origem.itens.forEach(item=>{
+    const jatem=destino.itens.find(i=>i.refId&&i.refId===item.refId);
+    if(!jatem){
+      destino.itens.push({
+        ...item,
+        id:Date.now()+Math.floor(Math.random()*100000),
+        comprado:false,
+        precoReal:0,
+        precoPrev:item.precoReal>0?item.precoReal:item.precoPrev
+      });
+      adicionados++;
+    }
+  });
+  _mktSetListas(listas);
+  _mktRenderListas();
+  _showToast(adicionados>0
+    ?`✓ ${adicionados} item(s) adicionado(s) à lista pendente.`
+    :'Todos os itens já estavam na lista pendente.');
+}
+
 function mktImprimirLista(listaId){
   const lista=_mktGetListas().find(l=>l.id===listaId);
   if(!lista||!lista.itens.length){_showToast('Lista vazia — nada para imprimir.');return;}
@@ -21062,15 +21089,20 @@ function mktImprimirLista(listaId){
   const ordemCats=['Hortifruti','Carnes','Laticinios','Padaria','Higiene','Limpeza','Mercearia','Frios','Bebidas','Outros'];
   const catsOrdenadas=[...new Set([...ordemCats,...Object.keys(cats)])].filter(c=>cats[c]);
   const fmtPreco=v=>v>0?'R$ '+parseFloat(v).toFixed(2).replace('.',','):'—';
+  const _catPrint=_mktGetCatalogo();
   const linhasHTML=catsOrdenadas.map(cat=>{
     const itens=cats[cat];
-    const linhas=itens.map(i=>`
+    const linhas=itens.map(i=>{
+      const catItem=i.refId?_catPrint.find(c=>c.id===i.refId):null;
+      const sku=catItem?.sku||i.sku||null;
+      const skuStr=sku?`[${sku}] `:'';
+      return`
       <tr>
         <td style="width:22px;font-size:16px">☐</td>
-        <td style="padding:4px 8px">${i.nome}</td>
+        <td style="padding:4px 8px">${skuStr}${i.nome}</td>
         <td style="text-align:center;padding:4px 8px;color:#555">${i.qtd} ${i.unidade||'un'}</td>
         <td style="text-align:right;padding:4px 8px;font-family:monospace">${fmtPreco(i.precoPrev)}</td>
-      </tr>`).join('');
+      </tr>`;}).join('');
     return`<tr><td colspan="4" style="padding:10px 0 4px;font-weight:700;font-size:13px;border-bottom:2px solid #333;letter-spacing:1px">${cat.toUpperCase()}</td></tr>${linhas}`;
   }).join('');
   const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Lista de Compras — ${mesLabel}</title>
@@ -21238,7 +21270,8 @@ function _mktRenderMes(){
   const el=document.getElementById('mkt-mes-itens');if(!el)return;
   if(!lista.itens.length){el.innerHTML=`<div style="text-align:center;color:var(--text3);padding:32px;font-size:12px">Nenhum item.${isConcluido?'':'<br><br><button class="btn btn-sm" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ Adicionar item</button>'}</div>`;return;}
   const cats={};lista.itens.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
-  el.innerHTML=Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join('');
+  const _catalogo=_mktGetCatalogo();
+  el.innerHTML=Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);const catItem=it.refId?_catalogo.find(c=>c.id===it.refId):null;const sku=catItem?.sku||it.sku||null;const skuBadge=sku?`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px">#${sku}</span>`:'';return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}${skuBadge}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join('');
 }
 function mktAbrirFecharCompra(){
   if(!_mktMesId) return;

@@ -772,17 +772,20 @@ export default async function handler(req, res) {
         } else {
           lista[idx].concluida = true;
           dados.tarefas = lista;
-          await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': SUPABASE_KEY,
-              'Authorization': `Bearer ${SUPABASE_KEY}`,
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ data: dados, updated_at: new Date().toISOString() })
+          await supabaseQuery(`/user_data?user_id=eq.${user_id}`, 'PATCH', {
+            data: dados,
+            updated_at: new Date().toISOString()
           });
-          await sendTelegram(chat_id, `✅ Tarefa concluída: *${lista[idx].titulo}*`);
+          const dadosAtualizados = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+          const tarefasAtualizadas = dadosAtualizados?.[0]?.data?.tarefas || [];
+          const pendentes = tarefasAtualizadas.filter(t => !t.concluida);
+          await sendTelegram(chat_id,
+            `✅ Tarefa concluída: *${lista[idx].titulo || lista[idx].desc}*\n\n` +
+            (pendentes.length > 0
+              ? `📋 *${pendentes.length} tarefa(s) ainda pendente(s):*\n` +
+                pendentes.map(t => `• ${t.titulo || t.desc}`).join('\n')
+              : `🎉 Todas as tarefas concluídas!`)
+          );
         }
         return res.status(200).json({ ok: true });
       }

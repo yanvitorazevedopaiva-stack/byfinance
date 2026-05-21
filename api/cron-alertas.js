@@ -61,12 +61,11 @@ export default async function handler(req, res) {
         `/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&select=id,descricao,valor`
       );
       if (pendentes && pendentes.length > 0) {
-        const lista = pendentes.slice(0, 5).map(p =>
+        const lista = pendentes.map(p =>
           `• ${p.descricao} — ${fmtValor(p.valor)}`
         ).join('\n');
-        const extra = pendentes.length > 5 ? `\n_...e mais ${pendentes.length - 5} pendente(s)_` : '';
         alertas.push(
-          `📋 *${pendentes.length} lançamento(s) aguardando autorização:*\n\n${lista}${extra}\n\n` +
+          `📋 *${pendentes.length} lançamento(s) aguardando autorização:*\n\n${lista}\n\n` +
           `→ Acesse o BY Finance para autorizar ou rejeitar.`
         );
       }

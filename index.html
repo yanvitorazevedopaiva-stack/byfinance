@@ -22336,7 +22336,7 @@ async function tgAuthRenderLanc(){
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(0,255,157,0.1)">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(p.descricao)}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}${p.remetente?` · <span style="color:var(--neon-blue)">👤 ${esc(p.remetente)}</span>`:''}</div>
       </div>
       <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
       <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;flex-shrink:0">✓ AUTORIZAR</button>
@@ -22358,7 +22358,7 @@ function _tgRenderPendentes(lista){
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">${esc(p.descricao)}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}${p.remetente?` · <span style="color:var(--neon-blue)">👤 ${esc(p.remetente)}</span>`:''}</div>
       </div>
       <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
       <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">✓</button>
@@ -22392,7 +22392,7 @@ async function tgAuthRenderModal(){
         <div>
           <div style="font-size:14px;font-weight:700">${esc(p.descricao)}</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">📅 ${p.data_lancamento} · 🏷 ${esc(p.categoria)} · 💳 ${esc(p.cartao)}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">via ${p.tipo_midia||'texto'} · ${new Date(p.created_at).toLocaleString('pt-BR')}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">via ${p.tipo_midia||'texto'} · ${new Date(p.created_at).toLocaleString('pt-BR')}${p.remetente?` · <span style="color:var(--neon-blue);font-weight:700">👤 ${esc(p.remetente)}</span>`:''}</div>
         </div>
         <div style="font-size:18px;font-weight:700;color:var(--neon-red)">${tgAuthFmtValor(p.valor)}</div>
       </div>
@@ -22636,9 +22636,10 @@ async function cfgTgCarregarStatus(){
         lista.innerHTML=data.map(v=>`
           <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
             <div style="flex:1">
-              <div style="font-size:13px;font-weight:700">${esc(v.nome||'Usuário')}${v.principal?'<span style="font-size:9px;color:var(--neon-green);border:1px solid rgba(0,255,157,0.3);border-radius:4px;padding:1px 5px;margin-left:6px">PRINCIPAL</span>':''}</div>
+              <div id="cfg-tg-nome-${v.id}" style="font-size:13px;font-weight:700">${esc(v.nome||'Usuário')}${v.principal?'<span style="font-size:9px;color:var(--neon-green);border:1px solid rgba(0,255,157,0.3);border-radius:4px;padding:1px 5px;margin-left:6px">PRINCIPAL</span>':''}</div>
               <div style="font-size:11px;color:var(--text3);margin-top:2px">Vinculado em ${new Date(v.vinculado_em).toLocaleDateString('pt-BR')}</div>
             </div>
+            <button onclick="cfgTgEditarNome('${v.id}','${esc(v.nome||'Usuário')}')" title="Editar nome" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:7px;padding:4px 9px;font-size:11px;cursor:pointer;flex-shrink:0">✎</button>
             ${!v.principal?`<button onclick="cfgTgRemoverVinculo('${v.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>`:''}
           </div>`).join('');
       }
@@ -22724,6 +22725,23 @@ async function cfgTgDesvincular(){
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Telegram desvinculado.');
   }catch(e){
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'err','Erro ao desvincular.');
+  }
+}
+
+async function cfgTgEditarNome(vinculoId, nomeAtual){
+  const novoNome=(prompt('Nome para este número:',nomeAtual)||'').trim();
+  if(!novoNome||novoNome===nomeAtual) return;
+  if(!_supabase) return;
+  try{
+    await _supabase.from('telegram_vinculos').update({nome:novoNome}).eq('id',vinculoId);
+    // Atualiza o nome no DOM sem recarregar tudo
+    const el=document.getElementById('cfg-tg-nome-'+vinculoId);
+    if(el) el.firstChild.textContent=novoNome;
+    // Atualiza também o status
+    cfgTgCarregarStatus();
+    cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Nome atualizado!');
+  }catch(e){
+    cfgMsgShow(document.getElementById('cfg-tg-msg'),'err','Erro ao atualizar nome.');
   }
 }
 

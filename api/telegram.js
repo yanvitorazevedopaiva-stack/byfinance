@@ -427,7 +427,7 @@ export default async function handler(req, res) {
       const tokenLimpo = texto.trim().replace(/\s/g, '');
 
       const tokenRes = await supabaseQuery(
-        `/telegram_tokens?token=eq.${tokenLimpo}&usado=eq.false&select=user_id,token,expires_at`
+        `/telegram_tokens?token=eq.${tokenLimpo}&usado=eq.false&select=user_id,token,expires_at,nome`
       );
       const tokenData = tokenRes?.[0];
 

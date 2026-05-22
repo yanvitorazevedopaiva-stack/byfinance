@@ -22490,17 +22490,47 @@ async function tgAuthAprovar(id){
   if(estab) estab.value=data.descricao||'';
 
   const isReceita=data.tipo==='receita';
-  // Mostra/oculta campos que não fazem sentido para receita
-  const formasLabel=document.querySelector('#tg-aprovar-formas')?.closest('div[style]');
-  if(formasLabel) formasLabel.style.display=isReceita?'none':'block';
-  const parcelasWrap=document.getElementById('tg-aprovar-parcelas-wrap');
-  if(parcelasWrap) parcelasWrap.style.display='none';
-  const cartaoWrap=document.getElementById('tg-aprovar-cartao-wrap');
-  if(cartaoWrap) cartaoWrap.style.display='none';
-  // Atualiza título do modal
-  const tituloModal=document.querySelector('#tg-aprovar-modal div[style*="neon-green"][style*="font-weight:700"]');
-  if(tituloModal) tituloModal.textContent=isReceita?'💰 AUTORIZAR RECEITA':'✅ AUTORIZAR LANÇAMENTO';
-  if(!isReceita) tgSetForma('pix',document.querySelector('#tg-aprovar-formas .lanc-forma-btn'),data.cartao);
+
+  if(isReceita){
+    // Receita: oculta forma de pagamento, BEM; adapta labels
+    const formasWrap=document.querySelector('#tg-aprovar-formas')?.closest('div');
+    if(formasWrap) formasWrap.style.display='none';
+    const parcelasWrap=document.getElementById('tg-aprovar-parcelas-wrap');
+    if(parcelasWrap) parcelasWrap.style.display='none';
+    const cartaoWrap=document.getElementById('tg-aprovar-cartao-wrap');
+    if(cartaoWrap) cartaoWrap.style.display='none';
+    const bemWrap=document.getElementById('tg-aprovar-bem-wrap');
+    if(bemWrap) bemWrap.style.display='none';
+    // Adapta campo "estabelecimento" para "de quem recebeu"
+    const estabLabel=document.getElementById('tg-aprovar-estab-label');
+    if(estabLabel) estabLabel.textContent='DE QUEM RECEBEU (opcional)';
+    const estabInput=document.getElementById('tg-aprovar-estab');
+    if(estabInput){estabInput.placeholder='Nome do pagador, empresa, cliente...';estabInput.value='';}
+    // Título e botão
+    const tituloModal=document.getElementById('tg-aprovar-titulo');
+    if(tituloModal) tituloModal.textContent='💰 AUTORIZAR RECEITA';
+    const btnConf=document.getElementById('tg-aprovar-btn-confirmar');
+    if(btnConf) btnConf.textContent='✓ CONFIRMAR RECEITA';
+  }else{
+    // Despesa: restaura campos normais
+    const formasWrap=document.querySelector('#tg-aprovar-formas')?.closest('div');
+    if(formasWrap) formasWrap.style.display='block';
+    const bemWrap=document.getElementById('tg-aprovar-bem-wrap');
+    if(bemWrap) bemWrap.style.display='block';
+    const estabLabel=document.getElementById('tg-aprovar-estab-label');
+    if(estabLabel) estabLabel.textContent='ESTABELECIMENTO (opcional)';
+    const estabInput=document.getElementById('tg-aprovar-estab');
+    if(estabInput) estabInput.placeholder='Nome do estabelecimento...';
+    const tituloModal=document.getElementById('tg-aprovar-titulo');
+    if(tituloModal) tituloModal.textContent='✅ AUTORIZAR LANÇAMENTO';
+    const btnConf=document.getElementById('tg-aprovar-btn-confirmar');
+    if(btnConf) btnConf.textContent='⚡ CONFIRMAR LANÇAMENTO';
+    const parcelasWrap=document.getElementById('tg-aprovar-parcelas-wrap');
+    if(parcelasWrap) parcelasWrap.style.display='none';
+    const cartaoWrap=document.getElementById('tg-aprovar-cartao-wrap');
+    if(cartaoWrap) cartaoWrap.style.display='none';
+    tgSetForma('pix',document.querySelector('#tg-aprovar-formas .lanc-forma-btn'),data.cartao);
+  }
 
   const modal=document.getElementById('tg-aprovar-modal');
   if(modal) modal.style.display='flex';
@@ -22524,7 +22554,7 @@ async function tgConfirmarAutorizacao(){
   // Guarda e zera o ID imediatamente — previne duplo clique
   const pendId=_tgAprovarId;
   _tgAprovarId=null;
-  const btnConfirmar=document.querySelector('#tg-aprovar-modal .btn-green');
+  const btnConfirmar=document.getElementById('tg-aprovar-btn-confirmar');
   if(btnConfirmar){btnConfirmar.disabled=true;btnConfirmar.textContent='⏳ Processando...';}
   const {data}=await _supabase.from('telegram_pendentes').select('*').eq('id',pendId).single();
   if(!data){if(btnConfirmar){btnConfirmar.disabled=false;btnConfirmar.textContent='⚡ CONFIRMAR LANÇAMENTO';}return;}
@@ -22540,7 +22570,7 @@ async function tgConfirmarAutorizacao(){
 
   // Receita: lança em receitas, não em lançamentos
   if(data.tipo==='receita'){
-    const recs=getReceitas?.()??getData('receitas')??{};
+    const recs=(typeof getReceitas==='function'?getReceitas():getData('receitas'))||{};
     const mesKey=data.data_lancamento.substring(0,7);
     if(!recs[mesKey]) recs[mesKey]=[];
     recs[mesKey].push({
@@ -22965,7 +22995,7 @@ async function cfgTgRemoverVinculo(vinculoId){
 <div id="tg-aprovar-modal" style="display:none;position:fixed;inset:0;z-index:5300;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
   <div style="background:var(--card);border:1px solid rgba(0,255,157,0.2);border-radius:18px;padding:26px;width:min(520px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 56px rgba(0,0,0,0.6)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green)">✅ AUTORIZAR LANÇAMENTO</div>
+      <div id="tg-aprovar-titulo" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green)">✅ AUTORIZAR LANÇAMENTO</div>
       <button onclick="document.getElementById('tg-aprovar-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
     </div>
     <div id="tg-aprovar-resumo" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15);margin-bottom:18px;font-size:13px"></div>
@@ -22991,11 +23021,11 @@ async function cfgTgRemoverVinculo(vinculoId){
         <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">Nº DE PARCELAS</label>
         <input id="tg-aprovar-nparc" type="number" min="2" max="48" value="2" style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
       </div>
-      <div>
-        <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">ESTABELECIMENTO (opcional)</label>
+      <div id="tg-aprovar-estab-wrap">
+        <label id="tg-aprovar-estab-label" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">ESTABELECIMENTO (opcional)</label>
         <input id="tg-aprovar-estab" type="text" placeholder="Nome do estabelecimento..." style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
       </div>
-      <div>
+      <div id="tg-aprovar-bem-wrap">
         <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">VINCULAR A BEM (opcional)</label>
         <select id="tg-aprovar-bem" style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
           <option value="">— nenhum —</option>
@@ -23003,7 +23033,7 @@ async function cfgTgRemoverVinculo(vinculoId){
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
-      <button onclick="tgConfirmarAutorizacao()" class="btn btn-green" style="flex:1;font-size:13px;padding:12px">⚡ CONFIRMAR LANÇAMENTO</button>
+      <button id="tg-aprovar-btn-confirmar" onclick="tgConfirmarAutorizacao()" class="btn btn-green" style="flex:1;font-size:13px;padding:12px">⚡ CONFIRMAR LANÇAMENTO</button>
       <button onclick="document.getElementById('tg-aprovar-modal').style.display='none'" class="btn" style="border-color:rgba(255,68,68,0.3);color:var(--neon-red);padding:12px 16px">✕</button>
     </div>
   </div>

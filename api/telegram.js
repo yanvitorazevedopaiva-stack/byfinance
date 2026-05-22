@@ -283,10 +283,18 @@ Se não informada → ${new Date().toISOString().split('T')[0]}
 
 ━━━ RECEITAS ━━━
 
-GATILHOS DE RECEITA:
-"recebi", "entrou", "caiu na conta", "depósito", "salário", "renda", "freelance", "pagamento recebido"
-"transferência recebida", "Pix recebido", "rendimento", "dividendo", "aluguel recebido"
-"me pagaram", "recebi de", "entrou X", "caiu X"
+GATILHOS DE RECEITA — qualquer uma dessas expressões indica uma entrada de dinheiro:
+"recebi", "recebi X", "recebi de", "recebi do", "recebi da"
+"entrou", "entrou X", "entrou na conta", "entrou no banco", "caiu", "caiu na conta", "caiu X"
+"pintou X", "pintou uma grana", "chegou o pagamento", "chegou X"
+"me pagaram", "me transferiram", "mandaram X", "depositaram"
+"depósito", "deposito", "ted recebido", "pix recebido", "transferência recebida"
+"salário", "salario", "vale", "adiantamento", "13º", "décimo terceiro"
+"freelance", "freela", "bico", "trabalho extra", "trampo extra"
+"aluguel recebido", "recebi aluguel", "inquilino pagou"
+"rendimento", "dividendo", "juros recebido", "cdb venceu", "resgate"
+"renda", "renda extra", "pagamento recebido", "honorários", "comissão"
+"bonus", "bônus", "participação nos lucros", "PLR", "reembolso", "devolução"
 
 CATEGORIAS DE RECEITA:
 Salário, Freelance, Aluguel, Investimento, Presente, Reembolso, Outros
@@ -559,7 +567,43 @@ export default async function handler(req, res) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
 
-      if (campo === 'prazo_tarefa_atribuida') {
+      if (campo === 'descricao_receita') {
+        // Valida que a descrição não é genérica
+        const _descGen2 = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','entrada','dinheiro','valor'];
+        if (!texto.trim() || _descGen2.includes(texto.toLowerCase().trim()) || texto.trim().length < 4) {
+          await sendTelegram(chat_id, `📝 Descrição muito vaga. Seja mais específico:\nEx: *Salário maio*, *Freelance logo cliente*, *Aluguel apartamento João*`);
+          return res.status(200).json({ ok: true });
+        }
+        gasto.descricao = texto.trim();
+        gasto.tipo = 'receita';
+        // Salva a receita com a descrição correta
+        await supabaseQuery('/telegram_pendentes', 'POST', {
+          user_id,
+          descricao: gasto.descricao,
+          valor: gasto.valor,
+          categoria: gasto.categoria || 'Outros',
+          cartao: gasto.conta || 'Não informado',
+          data_lancamento: gasto.data_lancamento || new Date().toISOString().split('T')[0],
+          origem: 'telegram',
+          tipo_midia,
+          mensagem_original,
+          chat_id,
+          status: 'pendente',
+          tipo: 'receita',
+          remetente: nomeRemetente,
+          observacao: null,
+          parcelas: null,
+          valor_parcela: null,
+          modalidade: null
+        });
+        await limparContexto(chat_id);
+        const valorR = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        await sendTelegram(chat_id,
+          `✅ *Receita registrada!*\n\n📝 ${gasto.descricao}\n💰 ${valorR}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.`
+        );
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'prazo_tarefa_atribuida') {
         // Parse da data (igual ao prazo_tarefa)
         const hojeA = new Date(); hojeA.setHours(0,0,0,0);
         const tA = texto.toLowerCase().trim();
@@ -580,16 +624,17 @@ export default async function handler(req, res) {
           }
           if(!prazoA){const mA=tA.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);if(mA){const yA=mA[3]?parseInt(mA[3])+(mA[3].length===2?2000:0):hojeA.getFullYear();prazoA=`${yA}-${String(mA[2]).padStart(2,'0')}-${String(mA[1]).padStart(2,'0')}`;}}
         }
-        gasto.prazo = prazoA;
+        console.log('Prazo calculado:', prazoA, 'Texto recebido:', texto);
+        gasto.prazo = prazoA;  // atualiza o gasto_parcial com o prazo recém calculado
         gasto.pedir_prazo = false;
-        // Cria a tarefa com atribuição
+        // Cria a tarefa com atribuição usando prazoA (não gasto_parcial original)
         const tarefasAtrib = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dadosAtrib = tarefasAtrib?.[0]?.data || {};
         const listaAtrib = dadosAtrib.tarefas || [];
         let novaAtrib = {
           id: Date.now(),
           titulo: gasto.titulo,
-          prazo: gasto.prazo || null,
+          prazo: prazoA,  // usa prazoA diretamente, não gasto.prazo que pode ser null do parcial
           prio: gasto.prioridade || 'Media',
           concluida: false,
           origem: 'telegram',
@@ -603,6 +648,11 @@ export default async function handler(req, res) {
         await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify({data:dadosAtrib,updated_at:new Date().toISOString()})});
         await limparContexto(chat_id);
         // Notifica o destinatário
+        if (!gasto.atribuir_para) {
+          await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}\n📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}`);
+          await limparContexto(chat_id);
+          return res.status(200).json({ ok: true });
+        }
         const nomeAtribCtx = gasto.atribuir_para.toLowerCase().trim();
         const todosVinculosCtx = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&select=chat_id,nome`);
         const vinculoAtribCtx = (todosVinculosCtx || []).find(v => v.nome && v.nome.toLowerCase().includes(nomeAtribCtx));
@@ -638,7 +688,7 @@ export default async function handler(req, res) {
           const d = new Date(hoje); const diff=(6-d.getDay()+7)%7||7; d.setDate(d.getDate()+diff);
           prazo = d.toISOString().split('T')[0];
         } else {
-          const dias = {segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,domingo:0};
+          const dias = {segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,'sábado':6,sabado:6,domingo:0};
           for(const [nome,num] of Object.entries(dias)){
             if(t.includes(nome)){const d=new Date(hoje);const diff=(num-d.getDay()+7)%7||7;d.setDate(d.getDate()+diff);prazo=d.toISOString().split('T')[0];break;}
           }
@@ -660,7 +710,13 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'descricao') {
-        gasto.descricao = texto;
+        // Valida que a descrição de despesa não é genérica
+        const _descGastoGen = ['gasto','compra','pagamento','despesa','transferencia','transferência','coisa','algo','item','produto','serviço','servico'];
+        if (!texto.trim() || _descGastoGen.includes(texto.toLowerCase().trim()) || texto.trim().length < 3) {
+          await sendTelegram(chat_id, `📝 Descrição muito vaga. Seja mais específico:\nEx: *iFood pizza*, *Uber aeroporto*, *Farmácia remédio*, *Supermercado Extra*`);
+          return res.status(200).json({ ok: true });
+        }
+        gasto.descricao = texto.trim();
         gasto.tipo = 'lancamento';
         // Continua para verificar campos restantes abaixo
       } else if (campo === 'modalidade') {
@@ -978,6 +1034,23 @@ export default async function handler(req, res) {
     }
 
     if (gasto.tipo === 'receita') {
+      // Descrições genéricas não aceitas — obriga detalhamento
+      const _descGenericas = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','pix recebido','entrada','dinheiro','valor','receita','renda'];
+      const _descReceitaRaw = (gasto.descricao || '').toLowerCase().trim();
+      const _descGenerica = !_descReceitaRaw || _descGenericas.includes(_descReceitaRaw) || _descReceitaRaw.length < 4;
+      if (_descGenerica) {
+        await setContexto(chat_id, { aguardando: 'descricao_receita', gasto_parcial: { ...gasto, tipo: 'receita' } });
+        await sendTelegram(chat_id,
+          `💰 Receita de *${parseFloat(gasto.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}* registrada!\n\n` +
+          `📝 *O que foi essa entrada de dinheiro?*\n` +
+          `Ex: Salário maio, Freelance site, Aluguel apartamento, Pagamento cliente João...`
+        );
+        return res.status(200).json({ ok: true });
+      }
+      // Sem data — usa hoje mas avisa
+      if (!gasto.data_lancamento) {
+        gasto.data_lancamento = new Date().toISOString().split('T')[0];
+      }
       await supabaseQuery('/telegram_pendentes', 'POST', {
         user_id,
         descricao: gasto.descricao,

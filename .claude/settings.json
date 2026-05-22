@@ -6,7 +6,9 @@
       "PowerShell(npm --version)",
       "PowerShell(Get-Command npx -ErrorAction SilentlyContinue)",
       "PowerShell(Get-Command supabase -ErrorAction SilentlyContinue)",
-      "Bash(powershell -Command ' *)"
+      "Bash(powershell -Command ' *)",
+      "Bash(grep -rn \"function getLancamentos\\\\|function setLancamentos\" \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\\" 2>/dev/null || echo \"Not found\")",
+      "Read(//c/Users/Usuario/Desktop/TEST\" 2>/dev/**)"
     ]
   }
 }

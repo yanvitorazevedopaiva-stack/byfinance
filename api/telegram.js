@@ -323,9 +323,13 @@ GATILHOS DE CONCLUIR TAREFA:
 "marca como feito", "marca como concluído", "risca da lista"
 "já fiz", "já resolvi", "já paguei", "já liguei"
 
-ATRIBUIÇÃO DE TAREFA:
-- "cria tarefa X para Bruna", "atribui tarefa X para Yan", "tarefa X é para Bruna"
-- Quando identificar "para [nome]" → adicione campo "atribuir_para": "Bruna"
+ATRIBUIÇÃO DE TAREFA — qualquer uma dessas expressões:
+"atribui tarefa X para Bruna", "cria tarefa X para Bruna"
+"tarefa X é para Bruna", "passa tarefa X para Bruna"
+"delega tarefa X para Bruna", "tarefa X fica com Bruna"
+"Bruna tem que fazer X", "X é tarefa da Bruna"
+"atribui para Bruna: X", "para Bruna: X"
+Quando identificar nome de pessoa após "para", "à", "ao", "pra" → campo "atribuir_para": "nome"
 
 FORMATO TAREFA COMPLETA:
 {
@@ -772,7 +776,7 @@ export default async function handler(req, res) {
         const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dados = tarefas?.[0]?.data || {};
         const lista = dados.tarefas || [];
-        const nova = {
+        let nova = {
           id: Date.now(),
           titulo: gasto.titulo,
           prazo: gasto.prazo || null,
@@ -781,6 +785,14 @@ export default async function handler(req, res) {
           origem: 'telegram',
           origem_nome: nomeRemetente
         };
+        if (gasto.atribuir_para) {
+          nova = {
+            ...nova,
+            atribuidor_chat_id: chat_id,
+            atribuidor_nome: nomeRemetente,
+            atribuido_para: gasto.atribuir_para
+          };
+        }
         lista.push(nova);
         dados.tarefas = lista;
         await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`, {

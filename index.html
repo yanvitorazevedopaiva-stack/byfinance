@@ -22056,6 +22056,18 @@ function trfToggle(id){
     }
     _trfSet(lista);
     _trfSyncParaSupabase();
+    // Notifica quem atribuiu a tarefa via Telegram
+    if(t.atribuidor_chat_id){
+      const nomeConclui=localStorage.getItem('tg_nome_usuario')||_authUser||'Usuário';
+      fetch('/api/notify',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          chat_id:t.atribuidor_chat_id,
+          text:`✅ *${nomeConclui} concluiu uma tarefa!*\n\n📝 ${t.titulo||t.desc}`
+        })
+      }).catch(()=>{});
+    }
     _trfRenderLista();_trfRenderKpis();
     trfRenderDailyLista();
   }

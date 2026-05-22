@@ -567,7 +567,80 @@ export default async function handler(req, res) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
 
-      if (campo === 'descricao_receita') {
+      if (campo === 'resposta_tarefa') {
+        const resposta = texto.toLowerCase().trim();
+        const tarefaCtx = gasto;
+
+        if (resposta.includes('aceitar') || resposta.includes('aceito') || resposta === 'sim' || resposta === 's' || resposta.includes('ok')) {
+          await limparContexto(chat_id);
+          await sendTelegram(tarefaCtx.atribuidor_chat_id,
+            `✅ *${nomeRemetente} aceitou a tarefa!*\n\n📝 ${tarefaCtx.titulo}\n📅 ${tarefaCtx.prazo ? fmtData(tarefaCtx.prazo) : 'Sem prazo'}`
+          );
+          await sendTelegram(chat_id, `✅ Tarefa aceita! Está no seu quadro de tarefas no BY Finance.`);
+          return res.status(200).json({ ok: true });
+        }
+
+        if (resposta.includes('negar') || resposta.includes('nego') || resposta.includes('não') || resposta.includes('nao') || resposta === 'n' || resposta.includes('recusar')) {
+          await limparContexto(chat_id);
+          await sendTelegram(tarefaCtx.atribuidor_chat_id,
+            `❌ *${nomeRemetente} negou a tarefa*\n\n📝 ${tarefaCtx.titulo}`
+          );
+          const dadosU = await supabaseQuery(`/user_data?user_id=eq.${tarefaCtx.atribuidor_user_id}&select=data`);
+          const dadosNeg = dadosU?.[0]?.data || {};
+          dadosNeg.tarefas = (dadosNeg.tarefas || []).filter(t => t.id !== tarefaCtx.tarefa_id);
+          await supabaseQuery(`/user_data?user_id=eq.${tarefaCtx.atribuidor_user_id}`, 'PATCH', {
+            data: dadosNeg,
+            updated_at: new Date().toISOString()
+          });
+          await sendTelegram(chat_id, `❌ Tarefa negada e removida.`);
+          return res.status(200).json({ ok: true });
+        }
+
+        if (resposta.includes('reagendar') || resposta.includes('remarcar') || resposta.includes('outro dia') || resposta.includes('mudar')) {
+          await setContexto(chat_id, { aguardando: 'reagendar_tarefa', gasto_parcial: tarefaCtx });
+          await sendTelegram(chat_id, `📅 Para quando você quer reagendar?\n\nEx: amanhã, sexta, 25/05`);
+          return res.status(200).json({ ok: true });
+        }
+
+        await sendTelegram(chat_id, `Não entendi. Responda:\n✅ *aceitar*\n📅 *reagendar*\n❌ *negar*`);
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'reagendar_tarefa') {
+        let novoPrazo = null;
+        const txtR = texto.toLowerCase().trim();
+        const hojeR = new Date(); hojeR.setHours(0,0,0,0);
+        if (txtR === 'hoje') novoPrazo = new Date().toISOString().split('T')[0];
+        else if (txtR.includes('amanhã') || txtR.includes('amanha')) novoPrazo = new Date(Date.now()+86400000).toISOString().split('T')[0];
+        else if (txtR.includes('depois de amanhã') || txtR.includes('depois de amanha')) novoPrazo = new Date(Date.now()+172800000).toISOString().split('T')[0];
+        else {
+          const diasR = {segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,'sábado':6,sabado:6,domingo:0};
+          for (const [nome,num] of Object.entries(diasR)) {
+            if (txtR.includes(nome)) { const d=new Date(hojeR); const diff=(num-d.getDay()+7)%7||7; d.setDate(d.getDate()+diff); novoPrazo=d.toISOString().split('T')[0]; break; }
+          }
+          if (!novoPrazo) {
+            const mR = txtR.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+            if (mR) { const yR=mR[3]?parseInt(mR[3])+(mR[3].length===2?2000:0):hojeR.getFullYear(); novoPrazo=`${yR}-${String(mR[2]).padStart(2,'0')}-${String(mR[1]).padStart(2,'0')}`; }
+          }
+        }
+        if (!novoPrazo) {
+          await sendTelegram(chat_id, `❌ Não entendi a data. Tente: *25/05* ou *amanhã*`);
+          return res.status(200).json({ ok: true });
+        }
+        const tarefaRg = gasto;
+        await limparContexto(chat_id);
+        const dadosRg = (await supabaseQuery(`/user_data?user_id=eq.${tarefaRg.atribuidor_user_id}&select=data`))?.[0]?.data || {};
+        const tarefaRgObj = (dadosRg.tarefas || []).find(t => t.id === tarefaRg.tarefa_id);
+        if (tarefaRgObj) {
+          tarefaRgObj.prazo = novoPrazo;
+          await supabaseQuery(`/user_data?user_id=eq.${tarefaRg.atribuidor_user_id}`, 'PATCH', { data: dadosRg, updated_at: new Date().toISOString() });
+        }
+        await sendTelegram(tarefaRg.atribuidor_chat_id,
+          `📅 *${nomeRemetente} reagendou a tarefa!*\n\n📝 ${tarefaRg.titulo}\n📅 Novo prazo: *${fmtData(novoPrazo)}*`
+        );
+        await sendTelegram(chat_id, `✅ Tarefa reagendada para *${fmtData(novoPrazo)}*!`);
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'descricao_receita') {
         // Valida que a descrição não é genérica
         const _descGen2 = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','entrada','dinheiro','valor'];
         if (!texto.trim() || _descGen2.includes(texto.toLowerCase().trim()) || texto.trim().length < 4) {
@@ -660,15 +733,28 @@ export default async function handler(req, res) {
           await sendTelegram(vinculoAtribCtx.chat_id,
             `📋 *${nomeRemetente} atribuiu uma tarefa para você!*\n\n` +
             `📝 ${gasto.titulo}\n` +
-            `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo definido'}\n` +
+            `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n` +
             `🎯 Prioridade: ${gasto.prioridade || 'Média'}\n\n` +
-            `_Acesse o BY Finance para ver suas tarefas._`
+            `Responda:\n✅ *aceitar*\n📅 *reagendar*\n❌ *negar*`
           );
+          await setContexto(vinculoAtribCtx.chat_id, {
+            aguardando: 'resposta_tarefa',
+            gasto_parcial: {
+              titulo: gasto.titulo,
+              prazo: gasto.prazo,
+              prioridade: gasto.prioridade,
+              atribuidor_chat_id: chat_id,
+              atribuidor_nome: nomeRemetente,
+              atribuidor_user_id: user_id,
+              tarefa_id: novaAtrib.id
+            }
+          });
         }
         await sendTelegram(chat_id,
           `✅ *Tarefa criada e atribuída para ${gasto.atribuir_para}!*\n\n` +
           `📝 ${gasto.titulo}\n` +
-          `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}`
+          `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n\n` +
+          `_Aguardando resposta de ${gasto.atribuir_para}._`
         );
         return res.status(200).json({ ok: true });
 
@@ -951,14 +1037,27 @@ export default async function handler(req, res) {
             await sendTelegram(vinculoAtrib.chat_id,
               `📋 *${nomeRemetente} atribuiu uma tarefa para você!*\n\n` +
               `📝 ${gasto.titulo}\n` +
-              `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo definido'}\n` +
+              `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n` +
               `🎯 Prioridade: ${gasto.prioridade || 'Média'}\n\n` +
-              `_Acesse o BY Finance para ver suas tarefas._`
+              `Responda:\n✅ *aceitar*\n📅 *reagendar*\n❌ *negar*`
             );
+            await setContexto(vinculoAtrib.chat_id, {
+              aguardando: 'resposta_tarefa',
+              gasto_parcial: {
+                titulo: gasto.titulo,
+                prazo: gasto.prazo,
+                prioridade: gasto.prioridade,
+                atribuidor_chat_id: chat_id,
+                atribuidor_nome: nomeRemetente,
+                atribuidor_user_id: user_id,
+                tarefa_id: nova.id
+              }
+            });
             await sendTelegram(chat_id,
               `✅ *Tarefa criada e atribuída para ${gasto.atribuir_para}!*\n\n` +
               `📝 ${gasto.titulo}\n` +
-              `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}`
+              `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n\n` +
+              `_Aguardando resposta de ${gasto.atribuir_para}._`
             );
           } else if (!vinculoAtrib) {
             await sendTelegram(chat_id,

@@ -22338,7 +22338,7 @@ async function tgAuthRenderLanc(){
         <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(p.descricao)}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px">${esc(p.categoria)} · ${esc(p.cartao)} · ${p.data_lancamento}${p.remetente?` · <span style="color:var(--neon-blue)">👤 ${esc(p.remetente)}</span>`:''}</div>
       </div>
-      <div style="font-size:14px;font-weight:700;color:var(--neon-red);flex-shrink:0">${tgAuthFmtValor(p.valor)}</div>
+      <div style="font-size:14px;font-weight:700;color:${p.tipo==='receita'?'var(--neon-green)':'var(--neon-red)'};flex-shrink:0">${p.tipo==='receita'?'💰 ':'💸 '}${tgAuthFmtValor(p.valor)}</div>
       <button onclick="tgAuthAprovar('${p.id}')" style="background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;flex-shrink:0">✓ AUTORIZAR</button>
       <button onclick="tgAuthRejeitar('${p.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">✕</button>
     </div>`).join('');
@@ -22387,14 +22387,15 @@ async function tgAuthRenderModal(){
   if(sub) sub.textContent=lista.length?`${lista.length} lançamento(s) aguardando aprovação`:'Nenhum pendente';
   if(!lista.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:13px">✓ Nenhum lançamento pendente!</div>';return;}
   el.innerHTML=lista.map(p=>`
-    <div style="padding:12px;border-radius:10px;margin-bottom:8px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
+    <div style="padding:12px;border-radius:10px;margin-bottom:8px;background:var(--bg2);border:1px solid ${p.tipo==='receita'?'rgba(0,255,157,0.2)':'rgba(0,255,157,0.15)'}">
+      ${p.tipo==='receita'?'<div style="font-size:10px;color:var(--neon-green);font-family:\'JetBrains Mono\',monospace;margin-bottom:6px;letter-spacing:1px">💰 RECEITA</div>':'<div style="font-size:10px;color:var(--neon-red);font-family:\'JetBrains Mono\',monospace;margin-bottom:6px;letter-spacing:1px">💸 DESPESA</div>'}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
           <div style="font-size:14px;font-weight:700">${esc(p.descricao)}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">📅 ${p.data_lancamento} · 🏷 ${esc(p.categoria)} · 💳 ${esc(p.cartao)}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">📅 ${p.data_lancamento} · 🏷 ${esc(p.categoria)} · ${p.tipo==='receita'?'🏦':'💳'} ${esc(p.cartao)}</div>
           <div style="font-size:10px;color:var(--text3);margin-top:2px">via ${p.tipo_midia||'texto'} · ${new Date(p.created_at).toLocaleString('pt-BR')}${p.remetente?` · <span style="color:var(--neon-blue);font-weight:700">👤 ${esc(p.remetente)}</span>`:''}</div>
         </div>
-        <div style="font-size:18px;font-weight:700;color:var(--neon-red)">${tgAuthFmtValor(p.valor)}</div>
+        <div style="font-size:18px;font-weight:700;color:${p.tipo==='receita'?'var(--neon-green)':'var(--neon-red)'}">${tgAuthFmtValor(p.valor)}</div>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="tgAuthAprovar('${p.id}')" class="btn btn-green" style="flex:1;font-size:12px">✓ AUTORIZAR</button>
@@ -22455,7 +22456,18 @@ async function tgAuthAprovar(id){
   const estab=document.getElementById('tg-aprovar-estab');
   if(estab) estab.value=data.descricao||'';
 
-  tgSetForma('pix',document.querySelector('#tg-aprovar-formas .lanc-forma-btn'),data.cartao);
+  const isReceita=data.tipo==='receita';
+  // Mostra/oculta campos que não fazem sentido para receita
+  const formasLabel=document.querySelector('#tg-aprovar-formas')?.closest('div[style]');
+  if(formasLabel) formasLabel.style.display=isReceita?'none':'block';
+  const parcelasWrap=document.getElementById('tg-aprovar-parcelas-wrap');
+  if(parcelasWrap) parcelasWrap.style.display='none';
+  const cartaoWrap=document.getElementById('tg-aprovar-cartao-wrap');
+  if(cartaoWrap) cartaoWrap.style.display='none';
+  // Atualiza título do modal
+  const tituloModal=document.querySelector('#tg-aprovar-modal div[style*="neon-green"][style*="font-weight:700"]');
+  if(tituloModal) tituloModal.textContent=isReceita?'💰 AUTORIZAR RECEITA':'✅ AUTORIZAR LANÇAMENTO';
+  if(!isReceita) tgSetForma('pix',document.querySelector('#tg-aprovar-formas .lanc-forma-btn'),data.cartao);
 
   const modal=document.getElementById('tg-aprovar-modal');
   if(modal) modal.style.display='flex';
@@ -22492,6 +22504,38 @@ async function tgConfirmarAutorizacao(){
   const id=Date.now();
   const val=parseFloat(data.valor);
   const desc=estab||data.descricao;
+
+  // Receita: lança em receitas, não em lançamentos
+  if(data.tipo==='receita'){
+    const recs=getReceitas?.()??getData('receitas')??{};
+    const mesKey=data.data_lancamento.substring(0,7);
+    if(!recs[mesKey]) recs[mesKey]=[];
+    recs[mesKey].push({
+      id,
+      desc,
+      val,
+      cat:data.categoria||'Outros',
+      descOutros:'',
+      conta:data.cartao||'',
+      dataPrev:data.data_lancamento,
+      recebido:true,
+      anexo:null
+    });
+    if(typeof setReceitas==='function') setReceitas(recs); else setData('receitas',recs);
+    await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
+    if(data.chat_id){
+      const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        chat_id:data.chat_id,
+        text:`✅ *Receita autorizada!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria}\n📅 ${data.data_lancamento}\n\n_Registrada com sucesso em Receitas._`
+      })});
+    }
+    document.getElementById('tg-aprovar-modal').style.display='none';
+    if(btnConfirmar){btnConfirmar.disabled=false;btnConfirmar.textContent='⚡ CONFIRMAR LANÇAMENTO';}
+    setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();},500);
+    _showToast('✓ Receita autorizada!');
+    return;
+  }
 
   if(forma==='cred-parc'||forma==='cred-vista'){
     const cartao=document.getElementById('tg-aprovar-cartao')?.value||data.cartao||'Nubank';

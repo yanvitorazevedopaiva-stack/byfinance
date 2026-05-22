@@ -161,6 +161,7 @@ REGRAS FUNDAMENTAIS:
 - Responda SOMENTE com JSON válido, sem markdown, sem explicação, sem texto extra
 - NUNCA retorne erro se conseguir extrair alguma informação útil
 - Prefira retornar lancamento_parcial a retornar erro
+- Se for uma RECEITA (salário, renda, entrada de dinheiro), use o tipo "receita"
 - Se não entender NADA, retorne {"tipo":"erro","motivo":"..."}
 
 ━━━ LANÇAMENTOS FINANCEIROS ━━━
@@ -280,6 +281,26 @@ Se não informado → "Não informado"
 Dias da semana: calcule o próximo dia a partir de hoje (${new Date().toISOString().split('T')[0]})
 Se não informada → ${new Date().toISOString().split('T')[0]}
 
+━━━ RECEITAS ━━━
+
+GATILHOS DE RECEITA:
+"recebi", "entrou", "caiu na conta", "depósito", "salário", "renda", "freelance", "pagamento recebido"
+"transferência recebida", "Pix recebido", "rendimento", "dividendo", "aluguel recebido"
+"me pagaram", "recebi de", "entrou X", "caiu X"
+
+CATEGORIAS DE RECEITA:
+Salário, Freelance, Aluguel, Investimento, Presente, Reembolso, Outros
+
+FORMATO PARA RECEITA:
+{
+  "tipo": "receita",
+  "descricao": "Salário",
+  "valor": 3000.00,
+  "categoria": "Salário",
+  "conta": "Nubank",
+  "data_lancamento": "${new Date().toISOString().split('T')[0]}"
+}
+
 ━━━ TAREFAS ━━━
 
 GATILHOS DE TAREFA — qualquer uma dessas expressões indica uma tarefa:
@@ -302,6 +323,10 @@ GATILHOS DE CONCLUIR TAREFA:
 "marca como feito", "marca como concluído", "risca da lista"
 "já fiz", "já resolvi", "já paguei", "já liguei"
 
+ATRIBUIÇÃO DE TAREFA:
+- "cria tarefa X para Bruna", "atribui tarefa X para Yan", "tarefa X é para Bruna"
+- Quando identificar "para [nome]" → adicione campo "atribuir_para": "Bruna"
+
 FORMATO TAREFA COMPLETA:
 {
   "tipo": "tarefa",
@@ -309,7 +334,19 @@ FORMATO TAREFA COMPLETA:
   "titulo": "Nome da tarefa",
   "prazo": "${new Date(Date.now()+86400000).toISOString().split('T')[0]}",
   "prioridade": "Alta",
-  "pedir_prazo": false
+  "pedir_prazo": false,
+  "atribuir_para": null
+}
+
+FORMATO TAREFA COM ATRIBUIÇÃO:
+{
+  "tipo": "tarefa",
+  "acao": "criar",
+  "titulo": "Nome da tarefa",
+  "prazo": null,
+  "prioridade": "Media",
+  "pedir_prazo": false,
+  "atribuir_para": "Bruna"
 }
 
 FORMATO TAREFA SEM PRAZO:
@@ -319,7 +356,8 @@ FORMATO TAREFA SEM PRAZO:
   "titulo": "Nome da tarefa",
   "prazo": null,
   "prioridade": "Media",
-  "pedir_prazo": true
+  "pedir_prazo": true,
+  "atribuir_para": null
 }
 
 FORMATO LISTAR:
@@ -756,8 +794,42 @@ export default async function handler(req, res) {
           body: JSON.stringify({ data: dados, updated_at: new Date().toISOString() })
         });
         const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
+
+        // Atribuição para pessoa específica
+        if (gasto.atribuir_para) {
+          const nomeAtrib = gasto.atribuir_para.toLowerCase().trim();
+          const todosVinculos = await supabaseQuery(
+            `/telegram_vinculos?user_id=eq.${user_id}&select=chat_id,nome`
+          );
+          const vinculoAtrib = (todosVinculos || []).find(v =>
+            v.nome && v.nome.toLowerCase().includes(nomeAtrib)
+          );
+          if (vinculoAtrib && vinculoAtrib.chat_id !== chat_id) {
+            await sendTelegram(vinculoAtrib.chat_id,
+              `📋 *${nomeRemetente} atribuiu uma tarefa para você!*\n\n` +
+              `📝 ${gasto.titulo}\n` +
+              `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo definido'}\n` +
+              `🎯 Prioridade: ${gasto.prioridade || 'Média'}\n\n` +
+              `_Acesse o BY Finance para ver suas tarefas._`
+            );
+            await sendTelegram(chat_id,
+              `✅ *Tarefa criada e atribuída para ${gasto.atribuir_para}!*\n\n` +
+              `📝 ${gasto.titulo}\n` +
+              `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}`
+            );
+          } else if (!vinculoAtrib) {
+            await sendTelegram(chat_id,
+              `✅ Tarefa criada!\n\n⚠ Não encontrei "${gasto.atribuir_para}" nos números vinculados desta conta.`
+            );
+          } else {
+            // Atribuiu para si mesmo
+            await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade || 'Média'}`);
+          }
+          return res.status(200).json({ ok: true });
+        }
+
+        // Sem atribuição — notifica criação e avisa outros
         await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade || 'Média'}`);
-        // Notifica outros números vinculados da mesma conta
         const outrosVinculos = await supabaseQuery(
           `/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`
         );
@@ -804,9 +876,52 @@ export default async function handler(req, res) {
                 pendentes.map(t => `• ${t.titulo || t.desc}`).join('\n')
               : `🎉 Todas as tarefas concluídas!`)
           );
+          // Notifica outros vínculos sobre a conclusão
+          const outrosConcluir = await supabaseQuery(
+            `/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`
+          );
+          for (const outro of (outrosConcluir || [])) {
+            await sendTelegram(outro.chat_id,
+              `✅ *${nomeRemetente} concluiu uma tarefa!*\n\n📝 ${lista[idx].titulo || lista[idx].desc}`
+            );
+          }
         }
         return res.status(200).json({ ok: true });
       }
+    }
+
+    if (gasto.tipo === 'receita') {
+      await supabaseQuery('/telegram_pendentes', 'POST', {
+        user_id,
+        descricao: gasto.descricao,
+        valor: gasto.valor,
+        categoria: gasto.categoria || 'Outros',
+        cartao: gasto.conta || 'Não informado',
+        data_lancamento: gasto.data_lancamento,
+        origem: 'telegram',
+        tipo_midia,
+        mensagem_original,
+        chat_id,
+        status: 'pendente',
+        tipo: 'receita',
+        remetente: nomeRemetente,
+        observacao: null,
+        parcelas: null,
+        valor_parcela: null,
+        modalidade: null
+      });
+      const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      await sendTelegram(chat_id,
+        `✅ *Receita registrada!*\n\n` +
+        `📝 ${gasto.descricao}\n` +
+        `💰 ${valor}\n` +
+        `🏷 ${gasto.categoria}\n` +
+        `🏦 ${gasto.conta || 'Não informado'}\n` +
+        `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+        `⏳ Aguardando sua autorização no BY Finance.\n` +
+        `Você tem *7 dias* para aprovar ou rejeitar.`
+      );
+      return res.status(200).json({ ok: true });
     }
 
     if (gasto.tipo === 'comando' && gasto.acao === 'cancelar_ultimo') {

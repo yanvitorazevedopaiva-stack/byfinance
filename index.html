@@ -21935,6 +21935,24 @@ function renderMercado(){
 function _trfGet(){return load('tarefas')||[];}
 function _trfSet(d){save('tarefas',d);}
 
+async function _trfSyncParaSupabase(){
+  try{
+    const uid=_authUID||sessionStorage.getItem('byf_supabase_uid');
+    if(!_supabase||!uid) return;
+    const tarefas=_trfGet();
+    const {data:atual}=await _supabase.from('user_data').select('data').eq('user_id',uid).single();
+    const dadosAtuais=atual?.data||{};
+    dadosAtuais.tarefas=tarefas;
+    await _supabase.from('user_data').upsert({
+      user_id:uid,
+      data:dadosAtuais,
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id'});
+  }catch(e){
+    console.error('Erro sync tarefas:',e);
+  }
+}
+
 async function _trfSyncSupabase(){
   if(!_supabase||!_authUser) return;
   try{
@@ -21997,6 +22015,7 @@ function trfAddTarefa(){
   const lista=_trfGet();
   lista.push({id:Date.now(),titulo,desc,cat,prio,prazo,diaria,recorrencia,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString(),remarcacoes:0});
   _trfSet(lista);
+  _trfSyncParaSupabase();
   ['trf-titulo','trf-desc','trf-prazo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const diEl=document.getElementById('trf-diaria');if(diEl)diEl.checked=false;
   const recEl=document.getElementById('trf-recorrencia');if(recEl)recEl.value='0';
@@ -22036,6 +22055,7 @@ function trfToggle(id){
       lista.push({...t,id:Date.now(),concluida:false,concluidaEm:null,prazo:amanha.toISOString().split('T')[0],criadaEm:new Date().toISOString(),remarcacoes:0});
     }
     _trfSet(lista);
+    _trfSyncParaSupabase();
     _trfRenderLista();_trfRenderKpis();
     trfRenderDailyLista();
   }
@@ -22059,6 +22079,7 @@ function trfMotivoConfirmar(){
     t.historicoRemarcacoes.push({motivo,novaData,em:new Date().toISOString()});
   }
   _trfSet(lista);
+  _trfSyncParaSupabase();
   document.getElementById('trf-motivo-modal').style.display='none';
   _trfMotivoId=null;
   _trfRenderLista();_trfRenderKpis();
@@ -22678,13 +22699,21 @@ async function cfgTgCarregarStatus(){
       const lista=document.getElementById('cfg-tg-vinculos-lista');
       if(lista){
         lista.innerHTML=data.map(v=>`
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15)">
-            <div style="flex:1">
-              <div id="cfg-tg-nome-${v.id}" style="font-size:13px;font-weight:700">${esc(v.nome||'Usuário')}${v.principal?'<span style="font-size:9px;color:var(--neon-green);border:1px solid rgba(0,255,157,0.3);border-radius:4px;padding:1px 5px;margin-left:6px">PRINCIPAL</span>':''}</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">Vinculado em ${new Date(v.vinculado_em).toLocaleDateString('pt-BR')}</div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);transition:border-color .15s"
+            onmouseover="this.style.borderColor='rgba(0,200,255,0.3)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+              ${v.principal?'👑':'👤'}
             </div>
-            <button onclick="cfgTgEditarNome('${v.id}','${esc(v.nome||'Usuário')}')" title="Editar nome" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:7px;padding:4px 9px;font-size:11px;cursor:pointer;flex-shrink:0">✎</button>
-            ${!v.principal?`<button onclick="cfgTgRemoverVinculo('${v.id}')" style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);color:var(--neon-red);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace">✕</button>`:''}
+            <div style="flex:1;min-width:0">
+              <div id="cfg-tg-nome-${v.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px">
+                ${esc(v.nome||'Usuário')}
+                ${v.principal?'<span style="font-size:9px;font-weight:700;color:var(--neon-green);background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.25);border-radius:4px;padding:1px 6px;letter-spacing:.5px">PRINCIPAL</span>':''}
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;font-family:'Inter',sans-serif">Vinculado em ${new Date(v.vinculado_em).toLocaleDateString('pt-BR')}</div>
+            </div>
+            <button onclick="cfgTgEditarNome('${v.id}','${esc(v.nome||'Usuário')}')" title="Editar nome"
+              class="cfg-btn" style="padding:5px 10px;font-size:11px;border-color:rgba(0,200,255,0.3);color:var(--neon-blue)">✎ EDITAR</button>
+            ${!v.principal?`<button onclick="cfgTgRemoverVinculo('${v.id}')" class="cfg-btn cfg-btn-danger" style="padding:5px 10px;font-size:11px">✕</button>`:''}
           </div>`).join('');
       }
     }else{

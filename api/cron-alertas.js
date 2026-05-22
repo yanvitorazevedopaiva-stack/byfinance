@@ -62,11 +62,12 @@ export default async function handler(req, res) {
       );
       if (pendentes && pendentes.length > 0) {
         const lista = pendentes.map(p =>
-          `• ${p.descricao} — ${fmtValor(p.valor)}`
+          `▸ ${p.descricao}\n   💰 ${fmtValor(p.valor)}`
         ).join('\n');
         alertas.push(
-          `📋 *${pendentes.length} lançamento(s) aguardando autorização:*\n\n${lista}\n\n` +
-          `→ Acesse o BY Finance para autorizar ou rejeitar.`
+          `🔔 *${pendentes.length} lançamento${pendentes.length > 1 ? 's' : ''} aguardando autorização*\n` +
+          `_Acesse o BY Finance para aprovar ou rejeitar_\n\n` +
+          `${lista}`
         );
       }
 
@@ -79,12 +80,17 @@ export default async function handler(req, res) {
       // Envia resumo de lançamentos pendentes
       if (alertas.length > 0) {
         const horaBrasilia = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours();
-        const saudacao = horaBrasilia >= 5 && horaBrasilia < 12
-          ? '🌅 *Bom dia! Resumo BY Finance*'
+        const [emoji, periodo] = horaBrasilia >= 5 && horaBrasilia < 12
+          ? ['🌅', 'Bom dia']
           : horaBrasilia >= 12 && horaBrasilia < 18
-          ? '☀️ *Boa tarde! Resumo BY Finance*'
-          : '🌙 *Boa noite! Resumo BY Finance*';
-        const msg = `${saudacao}\n\n` + alertas.join('\n\n---\n\n');
+          ? ['☀️', 'Boa tarde']
+          : ['🌙', 'Boa noite'];
+        const dataHoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+        const cabecalho =
+          `${emoji} *${periodo}!*\n` +
+          `📊 *BY Finance — Resumo do dia*\n` +
+          `_${dataHoje}_`;
+        const msg = `${cabecalho}\n\n` + alertas.join('\n\n') + `\n\n━━━━━━━━━━━━━━\n_BY Persona Finance_`;
         await sendTelegram(chat_id, msg);
         enviados++;
         console.log(`Alerta enviado para chat_id ${chat_id} (user_id ${user_id})`);
@@ -97,7 +103,7 @@ export default async function handler(req, res) {
           return `• ${t.titulo || t.desc} — ${atrasada}`;
         }).join('\n');
         await sendTelegram(chat_id,
-          `📋 *Tarefas que precisam de atenção:*\n\n${txt}\n\nAcesse o BY Finance para atualizar.`
+          `⚠️ *Tarefas que precisam de atenção*\n_Acesse o BY Finance para atualizar_\n\n${txt}\n\n━━━━━━━━━━━━━━\n_BY Persona Finance_`
         );
         console.log(`Tarefas urgentes enviadas para chat_id ${chat_id}: ${urgentes.length}`);
       }

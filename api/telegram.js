@@ -559,7 +559,70 @@ export default async function handler(req, res) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
 
-      if (campo === 'prazo_tarefa') {
+      if (campo === 'prazo_tarefa_atribuida') {
+        // Parse da data (igual ao prazo_tarefa)
+        const hojeA = new Date(); hojeA.setHours(0,0,0,0);
+        const tA = texto.toLowerCase().trim();
+        let prazoA = null;
+        if (tA === 'sem prazo' || tA === 'nenhum' || tA === 'sem') {
+          prazoA = null;
+        } else if (tA.includes('amanhã') || tA.includes('amanha')) {
+          prazoA = new Date(hojeA.getTime()+86400000).toISOString().split('T')[0];
+        } else if (tA.includes('depois de amanhã') || tA.includes('depois de amanha')) {
+          prazoA = new Date(hojeA.getTime()+172800000).toISOString().split('T')[0];
+        } else if (tA.includes('semana que vem')) {
+          const d = new Date(hojeA); d.setDate(d.getDate()+(8-d.getDay())%7||7);
+          prazoA = d.toISOString().split('T')[0];
+        } else {
+          const diasA = {segunda:1,'terça':2,terca:2,quarta:3,quinta:4,sexta:5,sabado:6,'sábado':6,domingo:0};
+          for(const [nome,num] of Object.entries(diasA)){
+            if(tA.includes(nome)){const d=new Date(hojeA);const diff=(num-d.getDay()+7)%7||7;d.setDate(d.getDate()+diff);prazoA=d.toISOString().split('T')[0];break;}
+          }
+          if(!prazoA){const mA=tA.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);if(mA){const yA=mA[3]?parseInt(mA[3])+(mA[3].length===2?2000:0):hojeA.getFullYear();prazoA=`${yA}-${String(mA[2]).padStart(2,'0')}-${String(mA[1]).padStart(2,'0')}`;}}
+        }
+        gasto.prazo = prazoA;
+        gasto.pedir_prazo = false;
+        // Cria a tarefa com atribuição
+        const tarefasAtrib = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+        const dadosAtrib = tarefasAtrib?.[0]?.data || {};
+        const listaAtrib = dadosAtrib.tarefas || [];
+        let novaAtrib = {
+          id: Date.now(),
+          titulo: gasto.titulo,
+          prazo: gasto.prazo || null,
+          prio: gasto.prioridade || 'Media',
+          concluida: false,
+          origem: 'telegram',
+          origem_nome: nomeRemetente,
+          atribuidor_chat_id: chat_id,
+          atribuidor_nome: nomeRemetente,
+          atribuido_para: gasto.atribuir_para
+        };
+        listaAtrib.push(novaAtrib);
+        dadosAtrib.tarefas = listaAtrib;
+        await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify({data:dadosAtrib,updated_at:new Date().toISOString()})});
+        await limparContexto(chat_id);
+        // Notifica o destinatário
+        const nomeAtribCtx = gasto.atribuir_para.toLowerCase().trim();
+        const todosVinculosCtx = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&select=chat_id,nome`);
+        const vinculoAtribCtx = (todosVinculosCtx || []).find(v => v.nome && v.nome.toLowerCase().includes(nomeAtribCtx));
+        if (vinculoAtribCtx && vinculoAtribCtx.chat_id !== chat_id) {
+          await sendTelegram(vinculoAtribCtx.chat_id,
+            `📋 *${nomeRemetente} atribuiu uma tarefa para você!*\n\n` +
+            `📝 ${gasto.titulo}\n` +
+            `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo definido'}\n` +
+            `🎯 Prioridade: ${gasto.prioridade || 'Média'}\n\n` +
+            `_Acesse o BY Finance para ver suas tarefas._`
+          );
+        }
+        await sendTelegram(chat_id,
+          `✅ *Tarefa criada e atribuída para ${gasto.atribuir_para}!*\n\n` +
+          `📝 ${gasto.titulo}\n` +
+          `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}`
+        );
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'prazo_tarefa') {
         // Parse simples de data da resposta do usuário
         const hoje = new Date(); hoje.setHours(0,0,0,0);
         const t = texto.toLowerCase().trim();
@@ -806,6 +869,18 @@ export default async function handler(req, res) {
           body: JSON.stringify({ data: dados, updated_at: new Date().toISOString() })
         });
         const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
+
+        // Se tem atribuição mas não tem prazo, pergunta antes de criar
+        if (gasto.atribuir_para && (gasto.pedir_prazo || !gasto.prazo)) {
+          await setContexto(chat_id, {
+            aguardando: 'prazo_tarefa_atribuida',
+            gasto_parcial: { ...gasto, tipo: 'tarefa', acao: 'criar' }
+          });
+          await sendTelegram(chat_id,
+            `📅 Para quando é a tarefa *"${gasto.titulo}"* para ${gasto.atribuir_para}?\n\nEx: amanhã, sexta, 25/05, sem prazo`
+          );
+          return res.status(200).json({ ok: true });
+        }
 
         // Atribuição para pessoa específica
         if (gasto.atribuir_para) {

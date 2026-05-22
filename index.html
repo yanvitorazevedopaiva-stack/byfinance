@@ -4454,16 +4454,8 @@
 
   <div style="margin-bottom:20px">
     <div class="sec-title">ORDEM DE PAGAMENTO</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px">
-      <span class="badge badge-purple">Paula · dia 5</span>
-      <span class="badge badge-blue">Inter · dia 5</span>
-      <span class="badge badge-green">C6 · dia 10</span>
-      <span class="badge badge-yellow">Santander · dia 10</span>
-      <span class="badge badge-red">BRB · dia 16</span>
-      <span class="badge badge-purple">Will · dia 13</span>
-      <span class="badge badge-blue">Pag. Altos · —</span>
-      <span class="badge badge-green">PicPay · dia 10</span>
-      <span class="badge badge-yellow">Rener · —</span>
+    <div id="fat-ordem-pagamento" style="display:flex;flex-wrap:wrap;gap:8px">
+      <span style="font-size:12px;color:var(--text3)">Carregando...</span>
     </div>
   </div>
 
@@ -5461,6 +5453,12 @@
             <option value="">— Sem vínculo —</option>
           </select>
         </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">ATRIBUIR PARA (opcional)</div>
+          <select id="trf-atribuir" style="width:100%;padding:9px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option value="">— Tarefa para mim —</option>
+          </select>
+        </div>
         <div id="trf-add-msg" style="font-size:11px;min-height:16px"></div>
         <button class="btn btn-green" onclick="trfAddTarefa()" style="width:100%">+ ADICIONAR TAREFA</button>
       </div>
@@ -5476,6 +5474,7 @@
         <button class="plan-tab" onclick="trfSetFiltro('metas',this)" style="padding:7px 14px;font-size:11px">COM META</button>
         <button class="plan-tab" onclick="trfSetFiltro('diarias',this)" style="padding:7px 14px;font-size:11px">DIÁRIAS</button>
         <button class="plan-tab" onclick="trfSetFiltro('concluidas',this)" style="padding:7px 14px;font-size:11px">CONCLUÍDAS</button>
+        <button class="plan-tab" onclick="trfSetFiltro('atribuidas',this)" style="padding:7px 14px;font-size:11px">👥 ATRIBUÍDAS <span id="trf-badge-atrib" style="display:none;background:var(--neon-red);color:#fff;border-radius:50%;padding:1px 5px;font-size:9px;margin-left:3px"></span></button>
       </div>
       <div id="trf-lista">
         <div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">Nenhuma tarefa encontrada.</div>
@@ -10991,6 +10990,24 @@ function renderFaturas(){
   const pagas=getFatPagas();
   const lista=getCartoesNomes(); // usa cartões registrados pelo usuário
   lista.forEach(c=>{if(!fat[c])fat[c]=Array(12).fill(0);});
+
+  // Ordem de pagamento — dinâmica, só cartões cadastrados, ordenada por vencimento
+  const ordemEl=document.getElementById('fat-ordem-pagamento');
+  if(ordemEl){
+    const cartoes=getData('cartoes')||[];
+    if(!cartoes.length){
+      ordemEl.innerHTML='<span style="font-size:12px;color:var(--text3)">Nenhum cartão cadastrado em Cartões.</span>';
+    }else{
+      const cores=['badge-blue','badge-green','badge-yellow','badge-red','badge-purple'];
+      const ordenados=[...cartoes].sort((a,b)=>(a.vencimento||99)-(b.vencimento||99));
+      ordemEl.innerHTML=ordenados.map((c,i)=>{
+        const venc=c.vencimento?`dia ${c.vencimento}`:'—';
+        const fech=c.fechamento?` · fecha ${c.fechamento}`:'';
+        const cor=cores[i%cores.length];
+        return`<span class="badge ${cor}" title="Fechamento: ${c.fechamento||'—'} · Vencimento: ${c.vencimento||'—'}">${esc(c.nome)} · ${venc}${fech}</span>`;
+      }).join('');
+    }
+  }
 
   // Atualiza select de cartão
   const fatCartaoSel=document.getElementById('fat-cartao');
@@ -21065,19 +21082,77 @@ function mktEspelharLista(listaId){
   const listas=_mktGetListas();
   const origem=listas.find(l=>l.id===listaId);
   if(!origem||!origem.itens.length){_showToast('Lista vazia — nada para espelhar.');return;}
-  const mesAtual=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-  const jaExiste=listas.find(l=>l.mes===mesAtual&&l.status==='pendente');
-  if(jaExiste){
-    showConfirm('Espelhar Lista',
-      `Já existe uma lista pendente para este mês (${_mktMesLabel(mesAtual)}).\nDeseja adicionar os itens à lista existente?`,
-      ()=>_mktEspelharParaLista(origem,jaExiste.id),
-      {icon:'📋',btnLabel:'ADICIONAR',btnBg:'rgba(0,255,157,0.18)',btnColor:'var(--neon-green)',warn:false}
-    );
+
+  const pendentes=listas.filter(l=>l.status==='pendente').sort((a,b)=>b.mes.localeCompare(a.mes));
+
+  // ── Tem listas pendentes → deixa o usuário escolher ──
+  if(pendentes.length>0){
+    const opts=pendentes.map(l=>`
+      <button onclick="document.getElementById('mkt-espelhar-picker').remove();_mktEspelharParaLista(window._mktEspelharOrigem,${l.id})"
+        style="width:100%;padding:11px 14px;text-align:left;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:9px;cursor:pointer;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:12px;transition:all .15s"
+        onmouseover="this.style.borderColor='rgba(0,255,157,0.4)';this.style.background='rgba(0,255,157,0.04)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg2)'">
+        <span>🛒 MERCADO · ${_mktMesLabel(l.mes).toUpperCase()}</span>
+        <span style="font-size:11px;color:var(--neon-yellow)">${l.itens.length} item${l.itens.length!==1?'s':''}</span>
+      </button>`).join('');
+    const el=document.createElement('div');
+    el.id='mkt-espelhar-picker';
+    el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+    el.innerHTML=`
+      <div style="background:var(--card);border:1px solid rgba(0,255,157,0.2);border-radius:16px;padding:24px;width:min(420px,94vw);max-height:80vh;display:flex;flex-direction:column">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green);margin-bottom:4px">📋 ESPELHAR LISTA</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Escolha qual lista pendente receberá os ${origem.itens.length} itens de <strong style="color:var(--text)">${_mktMesLabel(origem.mes)}</strong>:</div>
+        <div style="overflow-y:auto;flex:1">${opts}</div>
+        <button onclick="document.getElementById('mkt-espelhar-picker').remove()"
+          style="width:100%;padding:10px;margin-top:12px;background:none;border:1px solid var(--border);color:var(--text3);border-radius:9px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace">
+          CANCELAR
+        </button>
+      </div>`;
+    window._mktEspelharOrigem=origem;
+    document.body.appendChild(el);
     return;
+  }
+
+  // ── Sem listas pendentes → cria nova e deixa editar o mês ──
+  const el=document.createElement('div');
+  el.id='mkt-espelhar-picker';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  const mesAtual=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  el.innerHTML=`
+    <div style="background:var(--card);border:1px solid rgba(0,255,157,0.2);border-radius:16px;padding:24px;width:min(380px,94vw)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green);margin-bottom:4px">📋 ESPELHAR LISTA</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Nenhuma lista pendente. Escolha o mês para criar uma nova:</div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:6px">MÊS DE DESTINO</div>
+        <input id="mkt-espelhar-mes" type="month" value="${mesAtual}"
+          style="width:100%;padding:10px 12px;background:var(--bg2);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:8px;font-size:14px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('mkt-espelhar-picker').remove()"
+          style="flex:1;padding:10px;background:none;border:1px solid var(--border);color:var(--text3);border-radius:9px;cursor:pointer;font-size:12px">CANCELAR</button>
+        <button onclick="_mktEspelharNovo(${listaId})"
+          style="flex:2;padding:10px;background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:9px;cursor:pointer;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace">
+          ✓ CRIAR E ESPELHAR
+        </button>
+      </div>
+    </div>`;
+  window._mktEspelharOrigem=origem;
+  document.body.appendChild(el);
+}
+
+function _mktEspelharNovo(listaId){
+  const mes=document.getElementById('mkt-espelhar-mes')?.value;
+  if(!mes){_showToast('Selecione o mês.');return;}
+  const listas=_mktGetListas();
+  const origem=window._mktEspelharOrigem||listas.find(l=>l.id===listaId);
+  if(!origem) return;
+  if(listas.find(l=>l.mes===mes&&l.status==='pendente')){
+    document.getElementById('mkt-espelhar-picker')?.remove();
+    _showToast('Já existe lista pendente para este mês.');return;
   }
   const novaLista={
     id:Date.now(),
-    mes:mesAtual,
+    mes,
     status:'pendente',
     criadoEm:new Date().toISOString(),
     itens:origem.itens.map(item=>({
@@ -21090,8 +21165,9 @@ function mktEspelharLista(listaId){
   };
   listas.push(novaLista);
   _mktSetListas(listas);
+  document.getElementById('mkt-espelhar-picker')?.remove();
   _mktRenderListas();
-  _showToast('✓ Lista espelhada! '+novaLista.itens.length+' item(s) copiado(s) para '+_mktMesLabel(mesAtual)+'.');
+  _showToast('✓ Lista espelhada! '+novaLista.itens.length+' item(s) copiado(s) para '+_mktMesLabel(mes)+'.');
 }
 
 function _mktEspelharParaLista(origem,listaDestinoId){
@@ -22013,9 +22089,32 @@ function trfAddTarefa(){
     metaNome=m?(m.titulo||m.nome||''):'';
   }
   const lista=_trfGet();
-  lista.push({id:Date.now(),titulo,desc,cat,prio,prazo,diaria,recorrencia,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString(),remarcacoes:0});
+  // Atribuição
+  const atribuirVal=(document.getElementById('trf-atribuir')?.value||'').trim();
+  const [atribuirNome,atribuirChatId]=atribuirVal?atribuirVal.split('|'):['',''];
+  const meuNome=load('perfilNome')||_authUser||'Usuário';
+  const novaTarefa={id:Date.now(),titulo,desc,cat,prio,prazo,diaria,recorrencia,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString(),remarcacoes:0};
+  if(atribuirNome){
+    novaTarefa.atribuido_para=atribuirNome;
+    novaTarefa.atribuidor_chat_id=''; // quem criou no app não tem chat_id fixo
+    novaTarefa.atribuidor_nome=meuNome;
+    novaTarefa.aceito=false;
+  }
+  lista.push(novaTarefa);
   _trfSet(lista);
   _trfSyncParaSupabase();
+  // Notifica o destinatário via Telegram se tiver chat_id
+  if(atribuirChatId){
+    const prazoTxt=prazo?` · 📅 ${new Date(prazo+'T12:00:00').toLocaleDateString('pt-BR')}`:'';
+    fetch('/api/notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        chat_id:parseInt(atribuirChatId),
+        text:`📋 *${meuNome} atribuiu uma tarefa para você!*\n\n📝 ${titulo}${prazoTxt}\n🎯 Prioridade: ${prio}\n\n_Acesse o BY Finance → Tarefas → Atribuídas para aceitar._`
+      })
+    }).catch(()=>{});
+  }
   ['trf-titulo','trf-desc','trf-prazo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const diEl=document.getElementById('trf-diaria');if(diEl)diEl.checked=false;
   const recEl=document.getElementById('trf-recorrencia');if(recEl)recEl.value='0';
@@ -22071,6 +22170,88 @@ function trfToggle(id){
     _trfRenderLista();_trfRenderKpis();
     trfRenderDailyLista();
   }
+}
+
+// ── Vista de tarefas atribuídas ──
+function _trfRenderAtribuidas(todasLista,el,hoje){
+  const paraAceitarLista=todasLista.filter(t=>t.atribuidor_nome&&!t.aceito&&!t.concluida);
+  const porMimLista=todasLista.filter(t=>t.atribuido_para&&!t.atribuidor_nome);
+  const prioClr={Alta:'var(--neon-red)',Media:'var(--neon-yellow)',Baixa:'var(--neon-blue)'};
+  const _card=(t,modo)=>{
+    const atrasada=!t.concluida&&t.prazo&&t.prazo<hoje;
+    const prazoFmt=t.prazo?new Date(t.prazo+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}):'Sem prazo';
+    return`<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:8px;background:var(--card);border:1px solid ${modo==='aceitar'?'rgba(0,200,255,0.25)':'rgba(168,85,247,0.2)'};${t.concluida?'opacity:.5':''}">
+      <input type="checkbox" ${t.concluida?'checked':''} onchange="trfToggle(${t.id})" style="accent-color:var(--neon-green);width:18px;height:18px;flex-shrink:0;margin-top:2px;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;margin-bottom:3px;${t.concluida?'text-decoration:line-through':''}">${esc(t.titulo)}</div>
+        ${t.desc?`<div style="font-size:11px;color:var(--text3);margin-bottom:3px">${esc(t.desc)}</div>`:''}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--text3);align-items:center">
+          <span style="color:${atrasada?'var(--neon-red)':'var(--text3)'};font-weight:${atrasada?700:400}">📅 ${prazoFmt}${atrasada?' ⚠':''}</span>
+          <span style="padding:1px 6px;border-radius:5px;font-size:10px;font-weight:700;color:${prioClr[t.prio]||'var(--text3)'};background:${(prioClr[t.prio]||'var(--text3)').replace(')',',0.12)')}">${t.prio}</span>
+          ${modo==='aceitar'?`<span style="color:var(--neon-blue)">De: <strong>${esc(t.atribuidor_nome)}</strong></span>`:''}
+          ${modo==='por_mim'?`<span style="color:var(--neon-purple)">Para: <strong>${esc(t.atribuido_para)}</strong></span>`:''}
+          ${t.aceito?'<span style="color:var(--neon-green);font-size:9px">✓ aceito</span>':''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        ${modo==='aceitar'&&!t.aceito&&!t.concluida?`<button onclick="trfAceitarTarefa(${t.id})" style="padding:5px 10px;background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap">✓ ACEITAR</button>`:''}
+        <button onclick="trfDel(${t.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:2px">✕</button>
+      </div>
+    </div>`;
+  };
+  let html='';
+  if(paraAceitarLista.length){
+    html+=`<div style="font-size:11px;font-weight:700;color:var(--neon-blue);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+      📥 PARA VOCÊ ACEITAR <span style="background:var(--neon-red);color:#fff;border-radius:50%;padding:1px 6px;font-size:10px">${paraAceitarLista.length}</span></div>`;
+    html+=paraAceitarLista.map(t=>_card(t,'aceitar')).join('');
+    html+='<div style="height:1px;background:var(--border);margin:16px 0"></div>';
+  }
+  if(porMimLista.length){
+    html+=`<div style="font-size:11px;font-weight:700;color:var(--neon-purple,#a855f7);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;margin-bottom:8px">📤 ATRIBUÍDAS POR VOCÊ</div>`;
+    html+=porMimLista.map(t=>_card(t,'por_mim')).join('');
+  }
+  if(!html) html='<div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">Nenhuma tarefa atribuída.</div>';
+  el.innerHTML=html;
+}
+
+// ── Aceitar tarefa atribuída ──
+async function trfAceitarTarefa(id){
+  const lista=_trfGet();
+  const t=lista.find(x=>x.id===id);
+  if(!t) return;
+  t.aceito=true;
+  t.aceitoEm=new Date().toISOString();
+  _trfSet(lista);
+  _trfSyncParaSupabase();
+  _trfRenderLista();
+  _showToast('✓ Tarefa aceita!');
+  // Notifica quem atribuiu
+  if(t.atribuidor_chat_id){
+    const nomeAceitante=load('perfilNome')||_authUser||'Usuário';
+    const prazoTxt=t.prazo?` · 📅 ${new Date(t.prazo+'T12:00:00').toLocaleDateString('pt-BR')}`:'';
+    fetch('/api/notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        chat_id:t.atribuidor_chat_id,
+        text:`✅ *${nomeAceitante} aceitou a tarefa!*\n\n📝 ${t.titulo}${prazoTxt}\n\n_A tarefa foi aceita e está na lista de tarefas._`
+      })
+    }).catch(()=>{});
+  }
+}
+
+// ── Popula select de atribuição com vínculos Telegram ──
+async function _trfPopulaAtribuirSel(){
+  const sel=document.getElementById('trf-atribuir');
+  if(!sel) return;
+  const uid=_authUID||sessionStorage.getItem('byf_supabase_uid');
+  if(!_supabase||!uid){sel.innerHTML='<option value="">— Tarefa para mim —</option>';return;}
+  try{
+    const {data}=await _supabase.from('telegram_vinculos').select('nome,chat_id').eq('user_id',uid);
+    if(!data||!data.length){sel.innerHTML='<option value="">— Tarefa para mim —</option>';return;}
+    sel.innerHTML='<option value="">— Tarefa para mim —</option>'+
+      data.map(v=>`<option value="${esc(v.nome)}|${v.chat_id}">${esc(v.nome)}</option>`).join('');
+  }catch(e){}
 }
 
 // ── Modal motivo: confirmar ──
@@ -22140,13 +22321,20 @@ function _trfRenderLista(){
   const semFimStr=semFim.toISOString().split('T')[0];
   const el=document.getElementById('trf-lista');if(!el) return;
   let lista=_trfGet();
+  // Badge de pendentes para aceitar
+  const paraAceitar=lista.filter(t=>t.atribuidor_nome&&!t.aceito&&!t.concluida);
+  const badge=document.getElementById('trf-badge-atrib');
+  if(badge){if(paraAceitar.length){badge.style.display='inline';badge.textContent=paraAceitar.length;}else badge.style.display='none';}
+  if(_trfFiltro==='atribuidas'){
+    _trfRenderAtribuidas(lista,el,hoje);return;
+  }
   if(_trfFiltro==='hoje') lista=lista.filter(t=>!t.concluida&&t.prazo===hoje);
   else if(_trfFiltro==='semana') lista=lista.filter(t=>!t.concluida&&t.prazo&&t.prazo<=semFimStr);
   else if(_trfFiltro==='atrasadas') lista=lista.filter(t=>!t.concluida&&t.prazo&&t.prazo<hoje);
   else if(_trfFiltro==='metas') lista=lista.filter(t=>t.metaId>0);
   else if(_trfFiltro==='diarias') lista=lista.filter(t=>t.diaria);
   else if(_trfFiltro==='concluidas') lista=lista.filter(t=>t.concluida);
-  else lista=lista.filter(t=>!t.concluida);
+  else lista=lista.filter(t=>!t.concluida&&!t.atribuidor_nome&&!t.atribuido_para); // exclui atribuídas da lista principal
   if(!lista.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">Nenhuma tarefa encontrada.</div>';return;}
   const prioClr={Alta:'var(--neon-red)',Media:'var(--neon-yellow)',Baixa:'var(--neon-blue)'};
   const catIco={Estudo:'📚',Casa:'🏠',Trabalho:'💼',Compromisso:'📅',Pessoal:'⭐'};
@@ -22170,6 +22358,9 @@ function _trfRenderLista(){
           <span style="font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,0.15);color:var(--text2)">${catIco[t.cat]||'📌'} ${t.cat}</span>
           <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;color:${prioClr[t.prio]||'var(--text3)'};background:${(prioClr[t.prio]||'var(--text3)').replace(')',',0.12)')}">${t.prio}</span>
           ${atrasada?`<span style="font-size:10px;font-weight:700;color:var(--neon-red)">⚠ ATRASADA</span>`:''}
+          ${t.atribuido_para?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(168,85,247,0.12);color:var(--neon-purple)">📤 Para ${esc(t.atribuido_para)}</span>`:''}
+          ${t.atribuidor_nome?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(0,200,255,0.1);color:var(--neon-blue)">📥 De ${esc(t.atribuidor_nome)}</span>`:''}
+          ${t.atribuidor_nome&&!t.aceito&&!t.concluida?`<span style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(255,215,0,0.12);color:var(--neon-yellow)">⏳ Aguardando aceite</span>`:''}
           ${diariaBadge}${recBadge}${metaBadge}${remBadge}
         </div>
         ${t.desc?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px">${esc(t.desc)}</div>`:''}
@@ -22283,6 +22474,7 @@ function renderTarefas(){
   _trfPopulaMetasSel();
   _trfRenderKpis();
   _trfRenderLista();
+  _trfPopulaAtribuirSel();
   // Regenera tarefas de metas semanais para a semana vigente
   _trfAtualizarTarefasSemanais();
   // Sincroniza tarefas do Supabase (ex: criadas via Telegram) e re-renderiza se houver novas
@@ -22843,16 +23035,41 @@ async function cfgTgDesvincular(){
   }
 }
 
-async function cfgTgEditarNome(vinculoId, nomeAtual){
-  const novoNome=(prompt('Nome para este número:',nomeAtual)||'').trim();
+function cfgTgEditarNome(vinculoId, nomeAtual){
+  // Remove modal anterior se existir
+  document.getElementById('cfg-tg-editar-modal')?.remove();
+  const el=document.createElement('div');
+  el.id='cfg-tg-editar-modal';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  el.innerHTML=`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;width:min(380px,94vw);box-shadow:0 8px 40px rgba(0,0,0,.5)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:18px">✎ EDITAR NOME DO DISPOSITIVO</div>
+      <div class="cfg-field" style="margin-bottom:18px">
+        <label>NOME DO DISPOSITIVO</label>
+        <input id="cfg-tg-editar-input" type="text" value="${esc(nomeAtual)}" placeholder="Ex: Bruna, Celular do Yan, Trabalho..."
+          style="width:100%;padding:10px 12px;background:var(--bg2);border:1px solid rgba(0,200,255,0.3);color:var(--text);border-radius:8px;font-size:14px;font-family:'JetBrains Mono',monospace;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')cfgTgSalvarNome('${vinculoId}','${esc(nomeAtual)}')">
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('cfg-tg-editar-modal').remove()"
+          class="cfg-btn" style="flex:1">CANCELAR</button>
+        <button onclick="cfgTgSalvarNome('${vinculoId}','${esc(nomeAtual)}')"
+          class="cfg-btn cfg-btn-primary" style="flex:2;background:rgba(0,200,255,0.12);border-color:rgba(0,200,255,0.4);color:var(--neon-blue)">
+          ✓ SALVAR NOME
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>document.getElementById('cfg-tg-editar-input')?.select(),50);
+}
+
+async function cfgTgSalvarNome(vinculoId, nomeAtual){
+  const novoNome=(document.getElementById('cfg-tg-editar-input')?.value||'').trim();
+  document.getElementById('cfg-tg-editar-modal')?.remove();
   if(!novoNome||novoNome===nomeAtual) return;
   if(!_supabase) return;
   try{
     await _supabase.from('telegram_vinculos').update({nome:novoNome}).eq('id',vinculoId);
-    // Atualiza o nome no DOM sem recarregar tudo
-    const el=document.getElementById('cfg-tg-nome-'+vinculoId);
-    if(el) el.firstChild.textContent=novoNome;
-    // Atualiza também o status
     cfgTgCarregarStatus();
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Nome atualizado!');
   }catch(e){

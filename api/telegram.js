@@ -935,7 +935,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *aceitar*\n2️⃣ *reagendar*\n3️⃣ *negar*`);
+        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *Aceitar*\n2️⃣ *Reagendar*\n3️⃣ *Negar*`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'reagendar_tarefa') {
@@ -1028,7 +1028,7 @@ export default async function handler(req, res) {
             `📝 ${gasto.titulo}\n` +
             `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n` +
             `🎯 Prioridade: ${gasto.prioridade || 'Média'}\n\n` +
-            `Responda:\n1️⃣ *aceitar*\n2️⃣ *reagendar*\n3️⃣ *negar*`
+            `Responda:\n1️⃣ *Aceitar*\n2️⃣ *Reagendar*\n3️⃣ *Negar*`
           );
           await setContexto(vinculoAtribCtx.chat_id, {
             aguardando: 'resposta_tarefa',
@@ -1429,7 +1429,7 @@ export default async function handler(req, res) {
               `📝 ${gasto.titulo}\n` +
               `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n` +
               `🎯 Prioridade: ${gasto.prioridade || 'Média'}\n\n` +
-              `Responda:\n1️⃣ *aceitar*\n2️⃣ *reagendar*\n3️⃣ *negar*`
+              `Responda:\n1️⃣ *Aceitar*\n2️⃣ *Reagendar*\n3️⃣ *Negar*`
             );
             await setContexto(vinculoAtrib.chat_id, {
               aguardando: 'resposta_tarefa',

@@ -396,11 +396,27 @@ O campo "cartao" deve ser normalizado igual aos bancos (Nubank, Inter, Itaú, et
 "lista pendentes", "pendentes", "o que está pendente para autorizar" → {"tipo":"comando","acao":"listar_pendentes"}
 
 ━━━ FOTOS E COMPROVANTES ━━━
-- Prints de notificação bancária: extrair valor, banco e estabelecimento
-- Comprovantes de pagamento: extrair valor, destinatário e banco
-- Notas fiscais: extrair itens, valor total e estabelecimento
-- Múltiplos itens numa nota → tipo "multiplos"
-- PDFs de fatura → listar principais lançamentos como "multiplos"
+
+REGRA PRINCIPAL: Se há uma foto, SEMPRE tente extrair pelo menos o valor. Nunca retorne erro para fotos — use lancamento_parcial se faltar informação.
+
+COMPROVANTES FÍSICOS (papel fotografado, recibo, cupom):
+- Procure o campo "Total", "Valor", "R$", "TOTAL A PAGAR", "VALOR TOTAL"
+- Identifique o estabelecimento pelo cabeçalho ou logotipo
+- Mercado Pago, PagBank, InfinitePay, SumUp = máquina de cartão → usar como banco/cartão
+- Se texto parcialmente ilegível → tente pelo contexto visual
+
+COMPROVANTES DIGITAIS (prints de tela):
+- Notificação de banco: "Você pagou R$ X para Y" → lancamento com descricao=Y, valor=X
+- Comprovante Pix recebido → receita, não despesa
+- Comprovante Pix enviado → despesa
+
+EXEMPLOS DE EXTRAÇÃO:
+- Comprovante Mercado Pago R$ 11,00 → {"tipo":"lancamento","descricao":"Mercado Pago","valor":11.00,"categoria":"Serviços","cartao":"Mercado Pago","data_lancamento":"hoje"}
+- Nota fiscal supermercado → tipo "multiplos" com os itens
+- Print notificação Nubank "Compra aprovada R$ 47,00 iFood" → {"tipo":"lancamento","descricao":"iFood","valor":47.00,"categoria":"Alimentação","cartao":"Nubank",...}
+- Se só conseguir ver o valor → {"tipo":"lancamento_parcial","campo_faltando":"descricao","valor":11.00,...}
+
+NUNCA retorne erro para fotos. Se não conseguir nada → {"tipo":"lancamento_parcial","campo_faltando":"descricao","valor":0}
 
 Data de hoje: ${new Date().toISOString().split('T')[0]}
 Mensagem: `;
@@ -409,23 +425,28 @@ Mensagem: `;
 
   if (fotoUrl) {
     const b64 = await urlToBase64(fotoUrl);
+    // Para fotos: completa o prompt com instrução explícita de analisar a imagem
+    const textoFoto = texto
+      ? `${texto}\n\nAnalise também a imagem acima e extraia o gasto conforme as instruções.`
+      : `Analise a imagem acima. Extraia o valor, estabelecimento e tipo de gasto. Retorne o JSON conforme as instruções.`;
     contents = [{
       parts: [
         { inline_data: { mime_type: mimeType || 'image/jpeg', data: b64 } },
-        { text: prompt }
+        { text: `${prompt}${textoFoto}` }
       ]
     }];
   } else if (audioUrl) {
     const b64 = await urlToBase64(audioUrl);
+    // Para áudio: instrução explícita de transcrever e interpretar
     contents = [{
       parts: [
         { inline_data: { mime_type: mimeType || 'audio/ogg', data: b64 } },
-        { text: prompt }
+        { text: `${prompt}Transcreva o áudio acima e interprete como mensagem financeira conforme as instruções.` }
       ]
     }];
   } else {
     contents = [{
-      parts: [{ text: `${prompt}\n\nMensagem: ${texto}` }]
+      parts: [{ text: `${prompt}${texto}` }]
     }];
   }
 
@@ -567,7 +588,33 @@ export default async function handler(req, res) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
 
-      if (campo === 'resposta_tarefa') {
+      if (campo === 'descricao_foto') {
+        // Usuário respondeu após foto não reconhecida — interpreta com Gemini
+        const gastoFoto = await interpretarComGemini({ texto, audioUrl: null, fotoUrl: null, mimeType: null });
+        if (gastoFoto.tipo === 'lancamento' || gastoFoto.tipo === 'lancamento_parcial') {
+          // Mescla com o gasto parcial (preserva data)
+          const merged = { ...gasto, ...gastoFoto };
+          if (!merged.descricao || merged.descricao === '(sem descrição)') {
+            merged.descricao = texto.trim();
+          }
+          // Continua fluxo normal
+          if (!merged.modalidade) {
+            await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: merged });
+            await sendTelegram(chat_id, `💳 Como foi o pagamento?\n\n🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`);
+          } else {
+            await limparContexto(chat_id);
+            await salvarPendente(chat_id, user_id, merged, tipo_midia, mensagem_original, nomeRemetente);
+            const vFoto = (parseFloat(merged.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+            await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${merged.descricao||'(sem descrição)'}\n💰 ${vFoto}\n\n⏳ Aguardando autorização no BY Finance.`);
+          }
+        } else {
+          // Ainda não entendeu — pede valor e descrição separados
+          await setContexto(chat_id, { aguardando: 'valor', gasto_parcial: { tipo: 'lancamento', descricao: texto.trim(), data_lancamento: new Date().toISOString().split('T')[0] } });
+          await sendTelegram(chat_id, `💰 Qual o valor?`);
+        }
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'resposta_tarefa') {
         const resposta = texto.toLowerCase().trim();
         const tarefaCtx = gasto;
 
@@ -873,10 +920,22 @@ export default async function handler(req, res) {
     const gasto = await interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType });
 
     if (gasto.tipo === 'erro' || gasto.erro) {
-      await sendTelegram(chat_id,
-        `❌ Não consegui identificar um gasto.\n\n` +
-        `Tente assim: _"gastei 47 reais no iFood cartão Nubank"_`
-      );
+      // Se era foto/PDF, tenta salvar como parcial pedindo o valor
+      if (tipo_midia === 'foto' || tipo_midia === 'pdf') {
+        await setContexto(chat_id, {
+          aguardando: 'descricao_foto',
+          gasto_parcial: { tipo: 'lancamento', valor: 0, data_lancamento: new Date().toISOString().split('T')[0] }
+        });
+        await sendTelegram(chat_id,
+          `📸 Recebi a imagem mas não consegui ler os dados com clareza.\n\n` +
+          `Me diga:\n*Qual o valor?* (ex: 11 ou 11,00)\n*O que foi?* (ex: Mercado Pago, lanche, farmácia...)`
+        );
+      } else {
+        await sendTelegram(chat_id,
+          `❌ Não consegui identificar um gasto.\n\n` +
+          `Tente assim: _"gastei 47 reais no iFood cartão Nubank"_`
+        );
+      }
       return res.status(200).json({ ok: true });
     }
 

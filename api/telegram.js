@@ -672,7 +672,7 @@ export default async function handler(req, res) {
     // ── Detecção de nova intenção: evita que contexto antigo capture mensagem nova ──
     // Se o usuário estiver num fluxo (modalidade, cartão, etc.) e enviar uma mensagem
     // com intenção claramente diferente, limpa o contexto e processa do zero.
-    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas','mercado_multiplos','menu_ajuda'];
+    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas','mercado_multiplos','menu_ajuda','resposta_reagendamento','contraproposta_prazo','resposta_contraproposta'];
     const _novosIntentosKw = [
       'atribui','atribuir','criar tarefa','nova tarefa','tarefa para','tarefa:',
       'recebi','recebi de','entrou na conta','salário','salario','freelance',
@@ -1076,16 +1076,122 @@ export default async function handler(req, res) {
         }
         const tarefaRg = gasto;
         await limparContexto(chat_id);
-        const dadosRg = (await supabaseQuery(`/user_data?user_id=eq.${tarefaRg.atribuidor_user_id}&select=data`))?.[0]?.data || {};
-        const tarefaRgObj = (dadosRg.tarefas || []).find(t => t.id === tarefaRg.tarefa_id);
-        if (tarefaRgObj) {
-          tarefaRgObj.prazo = novoPrazo;
-          await supabaseQuery(`/user_data?user_id=eq.${tarefaRg.atribuidor_user_id}`, 'PATCH', { data: dadosRg, updated_at: new Date().toISOString() });
-        }
+        // Não atualiza prazo ainda — envia proposta ao criador para confirmar
+        await setContexto(tarefaRg.atribuidor_chat_id, {
+          aguardando: 'resposta_reagendamento',
+          gasto_parcial: {
+            titulo: tarefaRg.titulo,
+            tarefa_id: tarefaRg.tarefa_id,
+            atribuidor_user_id: tarefaRg.atribuidor_user_id,
+            atribuido_chat_id: chat_id,
+            atribuido_user_id: user_id,
+            novo_prazo: novoPrazo
+          }
+        });
         await sendTelegram(tarefaRg.atribuidor_chat_id,
-          `📅 *${nomeRemetente} reagendou a tarefa!*\n\n📝 ${tarefaRg.titulo}\n📅 Novo prazo: *${fmtData(novoPrazo)}*`
+          `📅 *${nomeRemetente} propôs reagendar a tarefa!*\n\n` +
+          `📝 ${tarefaRg.titulo}\n` +
+          `📅 Prazo proposto: *${fmtData(novoPrazo)}*\n\n` +
+          `1️⃣ *Aceitar* a proposta\n` +
+          `2️⃣ *Propor* outro dia`
         );
-        await sendTelegram(chat_id, `✅ Tarefa reagendada para *${fmtData(novoPrazo)}*!`);
+        await sendTelegram(chat_id, `📤 Proposta enviada! Aguardando resposta.`);
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'resposta_reagendamento') {
+        const respRg = texto.toLowerCase().trim();
+        const ctxRg = gasto;
+        const _matchRg = (words, r) => words.some(p => p.length <= 2 ? r === p : (r === p || r.includes(p)));
+        const _aceitarRg = _matchRg(['1','aceitar','aceito','sim','s','ok','pode','beleza','blz','top','show','bora','combinado','fechado'], respRg);
+        const _proporRg  = _matchRg(['2','propor','proposta','outro dia','outra data','outro prazo','mudar','diferente','contraproposta'], respRg);
+
+        if (_aceitarRg) {
+          const dadosAc = (await supabaseQuery(`/user_data?user_id=eq.${ctxRg.atribuidor_user_id}&select=data`))?.[0]?.data || {};
+          const tarefaAc = (dadosAc.tarefas || []).find(t => t.id === ctxRg.tarefa_id);
+          if (tarefaAc) {
+            tarefaAc.prazo = ctxRg.novo_prazo;
+            await supabaseQuery(`/user_data?user_id=eq.${ctxRg.atribuidor_user_id}`, 'PATCH', { data: dadosAc, updated_at: new Date().toISOString() });
+          }
+          await limparContexto(chat_id);
+          await sendTelegram(ctxRg.atribuido_chat_id,
+            `✅ *Proposta aceita!*\n\n📝 ${ctxRg.titulo}\n📅 Novo prazo: *${fmtData(ctxRg.novo_prazo)}*`
+          );
+          await sendTelegram(chat_id, `✅ Prazo atualizado para *${fmtData(ctxRg.novo_prazo)}*.`);
+          return res.status(200).json({ ok: true });
+        }
+
+        if (_proporRg) {
+          await setContexto(chat_id, { aguardando: 'contraproposta_prazo', gasto_parcial: ctxRg });
+          await sendTelegram(chat_id, `📅 Para quando você quer propor?\n\nEx: amanhã, sexta, 25/05`);
+          return res.status(200).json({ ok: true });
+        }
+
+        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *Aceitar* a proposta\n2️⃣ *Propor* outro dia`);
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'contraproposta_prazo') {
+        const contraData = parsePrazo(texto);
+        if (!contraData) {
+          await sendTelegram(chat_id, `❌ Não entendi a data. Tente: *25/05* ou *amanhã*`);
+          return res.status(200).json({ ok: true });
+        }
+        const ctxContra = gasto;
+        await setContexto(ctxContra.atribuido_chat_id, {
+          aguardando: 'resposta_contraproposta',
+          gasto_parcial: {
+            titulo: ctxContra.titulo,
+            tarefa_id: ctxContra.tarefa_id,
+            atribuidor_user_id: ctxContra.atribuidor_user_id,
+            atribuidor_chat_id: chat_id,
+            contraproposta_prazo: contraData
+          }
+        });
+        await limparContexto(chat_id);
+        await sendTelegram(ctxContra.atribuido_chat_id,
+          `📅 *${nomeRemetente} propõe outro prazo!*\n\n` +
+          `📝 ${ctxContra.titulo}\n` +
+          `📅 Prazo proposto: *${fmtData(contraData)}*\n\n` +
+          `1️⃣ *Aceitar*\n` +
+          `2️⃣ *Negar* (cancelar tarefa)`
+        );
+        await sendTelegram(chat_id, `📤 Contraproposta enviada!`);
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'resposta_contraproposta') {
+        const respCP = texto.toLowerCase().trim();
+        const ctxCP = gasto;
+        const _matchCP = (words, r) => words.some(p => p.length <= 2 ? r === p : (r === p || r.includes(p)));
+        const _aceitarCP = _matchCP(['1','aceitar','aceito','sim','s','ok','pode','beleza','blz','top','show','bora','combinado','fechado'], respCP);
+        const _negarCP   = _matchCP(['2','negar','nego','nega','não','nao','n','no','recusar','cancelar','cancela'], respCP);
+
+        if (_aceitarCP) {
+          const dadosCP = (await supabaseQuery(`/user_data?user_id=eq.${ctxCP.atribuidor_user_id}&select=data`))?.[0]?.data || {};
+          const tarefaCP = (dadosCP.tarefas || []).find(t => t.id === ctxCP.tarefa_id);
+          if (tarefaCP) {
+            tarefaCP.prazo = ctxCP.contraproposta_prazo;
+            await supabaseQuery(`/user_data?user_id=eq.${ctxCP.atribuidor_user_id}`, 'PATCH', { data: dadosCP, updated_at: new Date().toISOString() });
+          }
+          await limparContexto(chat_id);
+          await sendTelegram(ctxCP.atribuidor_chat_id,
+            `✅ *${nomeRemetente} aceitou o novo prazo!*\n\n📝 ${ctxCP.titulo}\n📅 Prazo: *${fmtData(ctxCP.contraproposta_prazo)}*`
+          );
+          await sendTelegram(chat_id, `✅ Prazo aceito! Tarefa atualizada para *${fmtData(ctxCP.contraproposta_prazo)}*.`);
+          return res.status(200).json({ ok: true });
+        }
+
+        if (_negarCP) {
+          const dadosNCP = (await supabaseQuery(`/user_data?user_id=eq.${ctxCP.atribuidor_user_id}&select=data`))?.[0]?.data || {};
+          dadosNCP.tarefas = (dadosNCP.tarefas || []).filter(t => t.id !== ctxCP.tarefa_id);
+          await supabaseQuery(`/user_data?user_id=eq.${ctxCP.atribuidor_user_id}`, 'PATCH', { data: dadosNCP, updated_at: new Date().toISOString() });
+          await limparContexto(chat_id);
+          await sendTelegram(ctxCP.atribuidor_chat_id,
+            `❌ *${nomeRemetente} negou a contraproposta.*\n\n📝 ${ctxCP.titulo}\n_Tarefa removida._`
+          );
+          await sendTelegram(chat_id, `❌ Tarefa cancelada.`);
+          return res.status(200).json({ ok: true });
+        }
+
+        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *Aceitar*\n2️⃣ *Negar*`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'descricao_receita') {

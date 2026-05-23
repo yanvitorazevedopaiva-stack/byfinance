@@ -549,8 +549,6 @@ export default async function handler(req, res) {
   let texto = msg.text || msg.caption || '';
 
   console.log('Chat ID:', chat_id, 'Texto:', texto);
-  const ctxDebug = await getContexto(chat_id);
-  console.log('Contexto carregado:', JSON.stringify(ctxDebug));
 
   try {
     // 1. Verifica se o chat_id já está vinculado
@@ -810,7 +808,7 @@ export default async function handler(req, res) {
         } else if (campoEditar === 'categoria') {
           gasto.categoria = texto.trim();
         } else if (campoEditar === 'cartao') {
-          gasto.cartao = texto.trim();
+          gasto.cartao = fmtCartao(texto.trim());
         } else if (campoEditar === 'modalidade') {
           const normMod = normalizeModalidade(texto);
           gasto.modalidade = normMod;
@@ -1177,7 +1175,7 @@ export default async function handler(req, res) {
 
       } else if (campo === 'num_parcelas') {
         const _mNP = texto.trim().match(/(\d+)/);
-        if (!_mNP || parseInt(_mNP[1]) < 1) {
+        if (!_mNP || parseInt(_mNP[1]) < 2) {
           await sendTelegram(chat_id, `❓ Número inválido. Digite quantas parcelas:\n\nEx: 2, 3, 6, 12`);
           return res.status(200).json({ ok: true });
         }
@@ -1314,7 +1312,7 @@ export default async function handler(req, res) {
           await sendTelegram(chat_id, `✅ Nenhuma tarefa pendente!`);
         } else {
           const txt = lista.map(t => {
-            const prazo = t.prazo ? ` · 📅 ${new Date(t.prazo).toLocaleDateString('pt-BR')}` : '';
+            const prazo = t.prazo ? ` · 📅 ${new Date(t.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
             const prio = t.prio === 'Alta' ? ' 🔴' : t.prio === 'Media' ? ' 🟡' : ' 🟢';
             return `• ${t.titulo}${prio}${prazo}`;
           }).join('\n');
@@ -1332,6 +1330,18 @@ export default async function handler(req, res) {
       }
 
       if (gasto.acao === 'criar' && gasto.titulo) {
+        // Ask for prazo BEFORE saving to avoid double-save when prazo_tarefa_atribuida handler runs later
+        if (gasto.atribuir_para && (gasto.pedir_prazo || !gasto.prazo)) {
+          await setContexto(chat_id, {
+            aguardando: 'prazo_tarefa_atribuida',
+            gasto_parcial: { ...gasto, tipo: 'tarefa', acao: 'criar' }
+          });
+          await sendTelegram(chat_id,
+            `📅 Para quando é a tarefa *"${gasto.titulo}"* para ${gasto.atribuir_para}?\n\nEx: amanhã, sexta, 25/05, sem prazo`
+          );
+          return res.status(200).json({ ok: true });
+        }
+
         const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dados = tarefas?.[0]?.data || {};
         const lista = dados.tarefas || [];
@@ -1365,18 +1375,6 @@ export default async function handler(req, res) {
           body: JSON.stringify({ data: dados, updated_at: new Date().toISOString() })
         });
         const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
-
-        // Se tem atribuição mas não tem prazo, pergunta antes de criar
-        if (gasto.atribuir_para && (gasto.pedir_prazo || !gasto.prazo)) {
-          await setContexto(chat_id, {
-            aguardando: 'prazo_tarefa_atribuida',
-            gasto_parcial: { ...gasto, tipo: 'tarefa', acao: 'criar' }
-          });
-          await sendTelegram(chat_id,
-            `📅 Para quando é a tarefa *"${gasto.titulo}"* para ${gasto.atribuir_para}?\n\nEx: amanhã, sexta, 25/05, sem prazo`
-          );
-          return res.status(200).json({ ok: true });
-        }
 
         // Atribuição para pessoa específica
         if (gasto.atribuir_para) {
@@ -1616,12 +1614,30 @@ export default async function handler(req, res) {
       gasto.cartao = gasto.modalidade;
     }
 
+    // B4: Text multiplos without modalidade — ask before saving all items
+    if (gasto.tipo === 'multiplos' && !gasto.modalidade) {
+      await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
+      await sendTelegram(chat_id,
+        `Entendi! ${iconeModalidade('')} Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`
+      );
+      return res.status(200).json({ ok: true });
+    }
+
+    // B3: Crédito with full Gemini data but no parcelamento decision yet — ask before saving
+    if (gasto.tipo === 'lancamento') {
+      const _modB3 = (gasto.modalidade || '').toLowerCase();
+      if ((_modB3.includes('créd') || _modB3.includes('cred')) && !gasto.parcelas) {
+        await setContexto(chat_id, { aguardando: 'parcelamento', gasto_parcial: gasto });
+        await sendTelegram(chat_id, `💳 Foi à vista ou parcelado?\n\n1️⃣ À vista\n2️⃣ Parcelado`);
+        return res.status(200).json({ ok: true });
+      }
+    }
+
     for (const l of lancamentos) {
       await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original, nomeRemetente);
     }
 
-    if (false) { // multiplos agora tratado pelo fluxo de esboço acima
-    } else {
+    {
       const valorNum = parseFloat(gasto.valor) || 0;
       const valor = valorNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       const parcelaInfo = gasto.parcelas ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';

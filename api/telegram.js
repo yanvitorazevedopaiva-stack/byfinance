@@ -55,6 +55,23 @@ function normalizeModalidade(texto) {
   return texto.trim();
 }
 
+function parsePrazo(texto) {
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const t = (texto || '').toLowerCase().trim();
+  if (!t || t === 'sem prazo' || t === 'nenhum' || t === 'sem' || t === 'sem data') return null;
+  if (t === 'hoje' || t.startsWith('hoje')) return hoje.toISOString().split('T')[0];
+  if (t.includes('depois de amanhã') || t.includes('depois de amanha')) return new Date(hoje.getTime()+172800000).toISOString().split('T')[0];
+  if (t.includes('amanhã') || t.includes('amanha')) return new Date(hoje.getTime()+86400000).toISOString().split('T')[0];
+  if (t.includes('semana que vem')) { const d=new Date(hoje); d.setDate(d.getDate()+(8-d.getDay())%7||7); return d.toISOString().split('T')[0]; }
+  const dias = {segunda:1,'terça':2,terca:2,quarta:3,quinta:4,sexta:5,'sábado':6,sabado:6,domingo:0};
+  for (const [nome,num] of Object.entries(dias)) {
+    if (t.includes(nome)) { const d=new Date(hoje); const diff=(num-d.getDay()+7)%7||7; d.setDate(d.getDate()+diff); return d.toISOString().split('T')[0]; }
+  }
+  const m = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if (m) { const y=m[3]?parseInt(m[3])+(m[3].length===2?2000:0):hoje.getFullYear(); return `${y}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`; }
+  return null;
+}
+
 async function getContexto(chat_id) {
   try {
     const data = await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}&select=contexto,id`);
@@ -359,11 +376,23 @@ IMPORTANTE: Se a mensagem diz "Já conclui/concluí/terminei/fiz [algo]" → tip
 
 ATRIBUIÇÃO DE TAREFA — qualquer uma dessas expressões:
 "atribui tarefa X para Bruna", "cria tarefa X para Bruna"
+"atribuir tarefa para [nome] hoje de [fazer algo]" → titulo=[fazer algo], atribuir_para=[nome]
+"atribuir [nome] de [tarefa]", "atribuir [tarefa] para [nome]"
 "tarefa X é para Bruna", "passa tarefa X para Bruna"
 "delega tarefa X para Bruna", "tarefa X fica com Bruna"
 "Bruna tem que fazer X", "X é tarefa da Bruna"
 "atribui para Bruna: X", "para Bruna: X"
-Quando identificar nome de pessoa após "para", "à", "ao", "pra" → campo "atribuir_para": "nome"
+"passa pra Yan lavar o carro", "diz pra Bruna fazer X"
+Quando identificar nome de pessoa após "para", "à", "ao", "pra" e houver uma ação/tarefa → campo "atribuir_para": "nome"
+Se o prazo estiver na mensagem (hoje, amanhã, sexta, 25/05) → "prazo": "[data calculada]", "pedir_prazo": false
+Se NÃO houver prazo → "prazo": null, "pedir_prazo": true
+
+EXEMPLOS DE ATRIBUIÇÃO (MUITO IMPORTANTES):
+"Atribuir tarefa para Yan hoje de lavar o carro" → {"tipo":"tarefa","acao":"criar","titulo":"Lavar o carro","prazo":"${new Date().toISOString().split('T')[0]}","pedir_prazo":false,"atribuir_para":"Yan"}
+"Cria tarefa para Bruna amanhã de limpar a casa" → {"tipo":"tarefa","acao":"criar","titulo":"Limpar a casa","prazo":"${new Date(Date.now()+86400000).toISOString().split('T')[0]}","pedir_prazo":false,"atribuir_para":"Bruna"}
+"Passa pra Bruna fazer as compras" → {"tipo":"tarefa","acao":"criar","titulo":"Fazer as compras","prazo":null,"pedir_prazo":true,"atribuir_para":"Bruna"}
+"Atribuir Yan de ir ao banco sexta" → {"tipo":"tarefa","acao":"criar","titulo":"Ir ao banco","pedir_prazo":false,"atribuir_para":"Yan"}
+"Tarefa lavar o carro pra Yan" → {"tipo":"tarefa","acao":"criar","titulo":"Lavar o carro","pedir_prazo":true,"atribuir_para":"Yan"}
 
 FORMATO TAREFA COMPLETA:
 {
@@ -376,18 +405,29 @@ FORMATO TAREFA COMPLETA:
   "atribuir_para": null
 }
 
-FORMATO TAREFA COM ATRIBUIÇÃO:
+FORMATO TAREFA COM ATRIBUIÇÃO (prazo informado):
+{
+  "tipo": "tarefa",
+  "acao": "criar",
+  "titulo": "Nome da tarefa",
+  "prazo": "${new Date().toISOString().split('T')[0]}",
+  "prioridade": "Media",
+  "pedir_prazo": false,
+  "atribuir_para": "Bruna"
+}
+
+FORMATO TAREFA COM ATRIBUIÇÃO (sem prazo):
 {
   "tipo": "tarefa",
   "acao": "criar",
   "titulo": "Nome da tarefa",
   "prazo": null,
   "prioridade": "Media",
-  "pedir_prazo": false,
+  "pedir_prazo": true,
   "atribuir_para": "Bruna"
 }
 
-FORMATO TAREFA SEM PRAZO:
+FORMATO TAREFA SEM PRAZO (própria):
 {
   "tipo": "tarefa",
   "acao": "criar",
@@ -506,7 +546,7 @@ export default async function handler(req, res) {
   if (!msg) return res.status(200).json({ ok: true });
 
   const chat_id = msg.chat.id;
-  const texto = msg.text || msg.caption || '';
+  let texto = msg.text || msg.caption || '';
 
   console.log('Chat ID:', chat_id, 'Texto:', texto);
   const ctxDebug = await getContexto(chat_id);
@@ -599,14 +639,43 @@ export default async function handler(req, res) {
       mimeType = 'image/jpeg';
       fotoUrl = await getTelegramFileUrl(file_id);
       mensagem_original = msg.caption ? `[Foto] ${msg.caption}` : '[Foto]';
-      if (msg.caption) texto = msg.caption;
     } else if (msg.document && msg.document.mime_type === 'application/pdf') {
       tipo_midia = 'pdf';
       const file_id = msg.document.file_id;
       mimeType = 'application/pdf';
       fotoUrl = await getTelegramFileUrl(file_id);
       mensagem_original = msg.caption ? `[PDF] ${msg.caption}` : '[PDF]';
-      if (msg.caption) texto = msg.caption;
+    }
+
+    // ── Comandos explícitos de cancelamento/reset ────────────────────────────
+    const _cancelCmds = ['cancela','cancelar','cancela tudo','esquece','esqueça','esquecer','recomeça','recomeçar','cancela gasto','cancela lançamento','cancela isso','apaga isso','descarta','voltar','começa de novo'];
+    if (_cancelCmds.some(cw => texto.toLowerCase().trim() === cw || texto.toLowerCase().trim().startsWith(cw+' '))) {
+      if (ctx.aguardando) {
+        await limparContexto(chat_id);
+        await sendTelegram(chat_id, `✅ Cancelado! Me envie um novo gasto, tarefa ou comando quando quiser.`);
+      } else {
+        await sendTelegram(chat_id, `Nenhuma ação em andamento para cancelar.`);
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── Detecção de nova intenção: evita que contexto antigo capture mensagem nova ──
+    // Se o usuário estiver num fluxo (modalidade, cartão, etc.) e enviar uma mensagem
+    // com intenção claramente diferente, limpa o contexto e processa do zero.
+    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas'];
+    const _novosIntentosKw = [
+      'atribui','atribuir','criar tarefa','nova tarefa','tarefa para','tarefa:',
+      'recebi','recebi de','entrou na conta','salário','salario','freelance',
+      'gastei','gasto ','comprei','paguei','transferi',
+      'minhas tarefas','lista tarefas','ver tarefas','pendências',
+      'concluí','conclui','terminei','finalizei','já fiz'
+    ];
+    if (ctx.aguardando && _estadosMidFlow.includes(ctx.aguardando)) {
+      const _tl = texto.toLowerCase();
+      if (_novosIntentosKw.some(kw => _tl.includes(kw))) {
+        await limparContexto(chat_id);
+        ctx.aguardando = null; // limpa localmente para não entrar no bloco abaixo
+      }
     }
 
     // ── Fluxo de contexto: resposta a pergunta anterior ──────────────────────
@@ -620,22 +689,31 @@ export default async function handler(req, res) {
         const nao = ['não','nao','n','errado','errada','editar','edita','mudar','muda','corrigir','corrige','incorreto','incorreta','errou','wrong','no','negativo','negativo','tá errado','ta errado','não está','nao esta','incorreto','muda','alterar','altera','ajustar','ajusta'].some(p=>_t.startsWith(p)||_t===p);
 
         if (sim) {
-          // Confirma → pede modalidade se não tiver, senão salva direto
+          const _modConf = (gasto.modalidade || '').toLowerCase();
+          const _isCDConf = _modConf.includes('créd') || _modConf.includes('cred') || _modConf.includes('déb') || _modConf.includes('deb');
+          const _isCredConf = _modConf.includes('créd') || _modConf.includes('cred');
           if (!gasto.modalidade) {
             await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
-            await sendTelegram(chat_id, `${iconeModalidade('')} Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`);
+            await sendTelegram(chat_id, `💳 Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`);
+          } else if (_isCDConf && (!gasto.cartao || gasto.cartao === 'Não informado')) {
+            await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
+            await sendTelegram(chat_id, `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`);
+          } else if (_isCredConf && !gasto.parcelas) {
+            await setContexto(chat_id, { aguardando: 'parcelamento', gasto_parcial: gasto });
+            await sendTelegram(chat_id, `💳 Foi à vista ou parcelado?\n\n1️⃣ À vista\n2️⃣ Parcelado`);
           } else {
             await limparContexto(chat_id);
             await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
             const vConf = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+            const _parcelaConf = gasto.parcelas && gasto.parcelas > 1 ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
             await sendTelegram(chat_id,
               `✅ *Lançamento registrado!*\n\n` +
               `📝 ${gasto.descricao||'(sem descrição)'}\n` +
-              `💰 ${vConf}\n` +
+              `💰 ${vConf}${_parcelaConf}\n` +
               `🏷 ${gasto.categoria||'Outros'}\n` +
               `💳 ${fmtCartao(gasto.cartao||'Não informado')}\n` +
               `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n` +
-              `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+              `📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n` +
               `⏳ Aguardando sua autorização no BY Finance.\n` +
               `Você tem *7 dias* para aprovar ou rejeitar.`
             );
@@ -644,11 +722,11 @@ export default async function handler(req, res) {
               await sendTelegram(o.chat_id,
                 `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n` +
                 `📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n` +
-                `💰 ${vConf}\n` +
+                `💰 ${vConf}${_parcelaConf}\n` +
                 `🏷 ${escapeMd(gasto.categoria||'Outros')}\n` +
                 `💳 ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n` +
                 `${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade||'Não informado')}\n` +
-                `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+                `📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n` +
                 `_Acesse o BY Finance para autorizar\\._`
               );
             }
@@ -739,9 +817,8 @@ export default async function handler(req, res) {
           const modLow2 = normMod.toLowerCase();
           if (modLow2 === 'pix' || modLow2 === 'dinheiro') gasto.cartao = normMod;
         } else if (campoEditar === 'data') {
-          const mD = texto.trim().match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
-          if (mD) { const yD=mD[3]?parseInt(mD[3])+(mD[3].length===2?2000:0):new Date().getFullYear(); gasto.data_lancamento=`${yD}-${String(mD[2]).padStart(2,'0')}-${String(mD[1]).padStart(2,'0')}`; }
-          else if (texto.toLowerCase().includes('hoje')) gasto.data_lancamento = new Date().toISOString().split('T')[0];
+          const _novaData = parsePrazo(texto);
+          if (_novaData) gasto.data_lancamento = _novaData;
         }
         // Mostra resumo atualizado e volta para confirmar
         const vFinal = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -775,7 +852,9 @@ export default async function handler(req, res) {
             await limparContexto(chat_id);
             await salvarPendente(chat_id, user_id, merged, tipo_midia, mensagem_original, nomeRemetente);
             const vFoto = (parseFloat(merged.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-            await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${merged.descricao||'(sem descrição)'}\n💰 ${vFoto}\n\n⏳ Aguardando autorização no BY Finance.`);
+            await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${escapeMd(merged.descricao||'(sem descrição)')}\n💰 ${vFoto}\n🏷 ${merged.categoria||'Outros'}\n${iconeModalidade(merged.modalidade)} ${merged.modalidade}\n📅 ${fmtData(merged.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando autorização no BY Finance.`);
+            const _outrosFoto = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+            for (const o of (_outrosFoto||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n📝 ${escapeMd(merged.descricao||'(sem descrição)')}\n💰 ${vFoto}\n${iconeModalidade(merged.modalidade)} ${escapeMd(merged.modalidade)}\n\n_Acesse o BY Finance para autorizar\\._`); }
           }
         } else {
           // Ainda não entendeu — pede valor e descrição separados
@@ -829,22 +908,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'reagendar_tarefa') {
-        let novoPrazo = null;
-        const txtR = texto.toLowerCase().trim();
-        const hojeR = new Date(); hojeR.setHours(0,0,0,0);
-        if (txtR === 'hoje') novoPrazo = new Date().toISOString().split('T')[0];
-        else if (txtR.includes('amanhã') || txtR.includes('amanha')) novoPrazo = new Date(Date.now()+86400000).toISOString().split('T')[0];
-        else if (txtR.includes('depois de amanhã') || txtR.includes('depois de amanha')) novoPrazo = new Date(Date.now()+172800000).toISOString().split('T')[0];
-        else {
-          const diasR = {segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,'sábado':6,sabado:6,domingo:0};
-          for (const [nome,num] of Object.entries(diasR)) {
-            if (txtR.includes(nome)) { const d=new Date(hojeR); const diff=(num-d.getDay()+7)%7||7; d.setDate(d.getDate()+diff); novoPrazo=d.toISOString().split('T')[0]; break; }
-          }
-          if (!novoPrazo) {
-            const mR = txtR.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
-            if (mR) { const yR=mR[3]?parseInt(mR[3])+(mR[3].length===2?2000:0):hojeR.getFullYear(); novoPrazo=`${yR}-${String(mR[2]).padStart(2,'0')}-${String(mR[1]).padStart(2,'0')}`; }
-          }
-        }
+        const novoPrazo = parsePrazo(texto);
         if (!novoPrazo) {
           await sendTelegram(chat_id, `❌ Não entendi a data. Tente: *25/05* ou *amanhã*`);
           return res.status(200).json({ ok: true });
@@ -866,7 +930,7 @@ export default async function handler(req, res) {
       } else if (campo === 'descricao_receita') {
         // Valida que a descrição não é genérica
         const _descGen2 = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','entrada','dinheiro','valor'];
-        if (!texto.trim() || _descGen2.includes(texto.toLowerCase().trim()) || texto.trim().length < 4) {
+        if (!texto.trim() || _descGen2.includes(texto.toLowerCase().trim()) || texto.trim().length < 3) {
           await sendTelegram(chat_id, `📝 Descrição muito vaga. Seja mais específico:\nEx: *Salário maio*, *Freelance logo cliente*, *Aluguel apartamento João*`);
           return res.status(200).json({ ok: true });
         }
@@ -900,26 +964,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'prazo_tarefa_atribuida') {
-        // Parse da data (igual ao prazo_tarefa)
-        const hojeA = new Date(); hojeA.setHours(0,0,0,0);
-        const tA = texto.toLowerCase().trim();
-        let prazoA = null;
-        if (tA === 'sem prazo' || tA === 'nenhum' || tA === 'sem') {
-          prazoA = null;
-        } else if (tA.includes('amanhã') || tA.includes('amanha')) {
-          prazoA = new Date(hojeA.getTime()+86400000).toISOString().split('T')[0];
-        } else if (tA.includes('depois de amanhã') || tA.includes('depois de amanha')) {
-          prazoA = new Date(hojeA.getTime()+172800000).toISOString().split('T')[0];
-        } else if (tA.includes('semana que vem')) {
-          const d = new Date(hojeA); d.setDate(d.getDate()+(8-d.getDay())%7||7);
-          prazoA = d.toISOString().split('T')[0];
-        } else {
-          const diasA = {segunda:1,'terça':2,terca:2,quarta:3,quinta:4,sexta:5,sabado:6,'sábado':6,domingo:0};
-          for(const [nome,num] of Object.entries(diasA)){
-            if(tA.includes(nome)){const d=new Date(hojeA);const diff=(num-d.getDay()+7)%7||7;d.setDate(d.getDate()+diff);prazoA=d.toISOString().split('T')[0];break;}
-          }
-          if(!prazoA){const mA=tA.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);if(mA){const yA=mA[3]?parseInt(mA[3])+(mA[3].length===2?2000:0):hojeA.getFullYear();prazoA=`${yA}-${String(mA[2]).padStart(2,'0')}-${String(mA[1]).padStart(2,'0')}`;}}
-        }
+        const prazoA = parsePrazo(texto);
         console.log('Prazo calculado:', prazoA, 'Texto recebido:', texto);
         gasto.prazo = prazoA;  // atualiza o gasto_parcial com o prazo recém calculado
         gasto.pedir_prazo = false;
@@ -982,28 +1027,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'prazo_tarefa') {
-        // Parse simples de data da resposta do usuário
-        const hoje = new Date(); hoje.setHours(0,0,0,0);
-        const t = texto.toLowerCase().trim();
-        let prazo = null;
-        if (t.includes('amanhã') || t.includes('amanha')) {
-          prazo = new Date(hoje.getTime()+86400000).toISOString().split('T')[0];
-        } else if (t.includes('depois de amanhã') || t.includes('depois de amanha')) {
-          prazo = new Date(hoje.getTime()+172800000).toISOString().split('T')[0];
-        } else if (t.includes('semana que vem')) {
-          const d = new Date(hoje); d.setDate(d.getDate()+(8-d.getDay())%7||7);
-          prazo = d.toISOString().split('T')[0];
-        } else if (t.includes('sábado') || t.includes('sabado') || t.includes('final de semana')) {
-          const d = new Date(hoje); const diff=(6-d.getDay()+7)%7||7; d.setDate(d.getDate()+diff);
-          prazo = d.toISOString().split('T')[0];
-        } else {
-          const dias = {segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,'sábado':6,sabado:6,domingo:0};
-          for(const [nome,num] of Object.entries(dias)){
-            if(t.includes(nome)){const d=new Date(hoje);const diff=(num-d.getDay()+7)%7||7;d.setDate(d.getDate()+diff);prazo=d.toISOString().split('T')[0];break;}
-          }
-          // Tenta parse de data no formato DD/MM ou DD/MM/YYYY
-          if(!prazo){const m=t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);if(m){const y=m[3]?parseInt(m[3])+(m[3].length===2?2000:0):hoje.getFullYear();prazo=`${y}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;}}
-        }
+        const prazo = parsePrazo(texto);
         gasto.prazo = prazo;
         gasto.pedir_prazo = false;
         // Cria a tarefa diretamente
@@ -1039,7 +1063,14 @@ export default async function handler(req, res) {
         // Continua para verificar campos restantes abaixo
       } else if (campo === 'modalidade') {
         // Usuário respondeu a modalidade (aceita número 1-4 ou texto)
-        gasto.modalidade = normalizeModalidade(texto);
+        const _normMod = normalizeModalidade(texto);
+        const _validMods = ['PIX', 'Crédito', 'Débito', 'Dinheiro'];
+        if (!_validMods.includes(_normMod)) {
+          // Resposta inválida — repergunta sem consumir o contexto
+          await sendTelegram(chat_id, `Não entendi. Escolha uma das opções:\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`);
+          return res.status(200).json({ ok: true });
+        }
+        gasto.modalidade = _normMod;
         // preserva tipo (pode ser 'multiplos')
         if (gasto.tipo !== 'multiplos') gasto.tipo = 'lancamento';
         const modLow = gasto.modalidade.toLowerCase();
@@ -1052,7 +1083,7 @@ export default async function handler(req, res) {
           if (gasto.tipo === 'multiplos') {
             // Salva todos os itens do cupom
             const _lans = gasto.lancamentos || [];
-            _lans.forEach(l => { l.modalidade = gasto.modalidade; l.cartao = gasto.modalidade; if (!l.mktTipo) l.mktTipo = 'variavel'; });
+            _lans.forEach(l => { l.modalidade = gasto.modalidade; l.cartao = gasto.modalidade; if (!l.mktTipo) l.mktTipo = 'variavel'; if (!l.categoria) l.categoria = 'Outros'; if (!l.data_lancamento) l.data_lancamento = new Date().toISOString().split('T')[0]; });
             for (const l of _lans) await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original, nomeRemetente);
             const _listaM = _lans.map(l=>`• ${l.descricao} — ${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
             await sendTelegram(chat_id, `✅ *${_lans.length} lançamentos registrados!*\n\n${_listaM}\n\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
@@ -1076,27 +1107,91 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'cartao') {
-        // Usuário respondeu o cartão — tem tudo, salva
-        gasto.cartao = texto.trim();
+        gasto.cartao = fmtCartao(texto.trim());
         if (gasto.tipo !== 'multiplos') gasto.tipo = 'lancamento';
-        await limparContexto(chat_id);
         if (gasto.tipo === 'multiplos') {
-          // Salva todos os itens do cupom com cartão e modalidade
+          await limparContexto(chat_id);
           const _lansC = gasto.lancamentos || [];
-          _lansC.forEach(l => { l.modalidade = gasto.modalidade; l.cartao = gasto.cartao; if (!l.mktTipo) l.mktTipo = 'variavel'; });
+          _lansC.forEach(l => { l.modalidade = gasto.modalidade; l.cartao = gasto.cartao; if (!l.mktTipo) l.mktTipo = 'variavel'; if (!l.categoria) l.categoria = 'Outros'; if (!l.data_lancamento) l.data_lancamento = new Date().toISOString().split('T')[0]; });
           for (const l of _lansC) await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original, nomeRemetente);
           const _listaC = _lansC.map(l=>`• ${l.descricao} — ${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
           await sendTelegram(chat_id, `✅ *${_lansC.length} lançamentos registrados!*\n\n${_listaC}\n\n💳 ${fmtCartao(gasto.cartao)}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
           const _outrosC = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
           for (const o of (_outrosC||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou ${_lansC.length} gastos pendentes*\n\n${_listaC}\n\n💳 ${escapeMd(fmtCartao(gasto.cartao))}\n${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade)}\n📅 ${fmtData(_lansC[0]?.data_lancamento||new Date().toISOString().split('T')[0])}\n\n_Acesse o BY Finance para autorizar\\._`); }
         } else {
+          // Crédito sem parcelas → perguntar antes de salvar
+          const _isCredCartao = (gasto.modalidade || '').toLowerCase().includes('cred');
+          if (_isCredCartao && !gasto.parcelas) {
+            await setContexto(chat_id, { aguardando: 'parcelamento', gasto_parcial: gasto });
+            await sendTelegram(chat_id, `💳 Foi à vista ou parcelado?\n\n1️⃣ À vista\n2️⃣ Parcelado`);
+            return res.status(200).json({ ok: true });
+          }
+          await limparContexto(chat_id);
           await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
           const valorCtx2 = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-          const msgCtx2 = `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx2}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao)}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||gasto.cartao||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`;
+          const _parcelaCtx2 = gasto.parcelas && gasto.parcelas > 1 ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
+          const msgCtx2 = `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx2}${_parcelaCtx2}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao)}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||gasto.cartao||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`;
           await sendTelegram(chat_id, msgCtx2);
           const outrosCtx2 = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
-          for (const o of (outrosCtx2||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n💰 ${valorCtx2}\n🏷 ${escapeMd(gasto.categoria||'Outros')}\n💳 ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade||'Não informado')}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n_Acesse o BY Finance para autorizar\\._`); }
+          for (const o of (outrosCtx2||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n💰 ${valorCtx2}${_parcelaCtx2}\n🏷 ${escapeMd(gasto.categoria||'Outros')}\n💳 ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade||'Não informado')}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n_Acesse o BY Finance para autorizar\\._`); }
         }
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'parcelamento') {
+        const _tP = texto.toLowerCase().trim();
+        const _mParc = _tP.match(/^(\d+)\s*x?$/);
+        if (_mParc && parseInt(_mParc[1]) > 1) {
+          // Usuário digitou número de parcelas direto (ex: "12" ou "12x")
+          const np = parseInt(_mParc[1]);
+          gasto.parcelas = np;
+          gasto.valor_parcela = parseFloat((parseFloat(gasto.valor||0) / np).toFixed(2));
+          gasto.observacao = `Parcelado em ${np}x`;
+          await limparContexto(chat_id);
+          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+          const _vP = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+          const _vpP = parseFloat(gasto.valor_parcela).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+          await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${_vP}\n🔄 ${np}x de ${_vpP}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao||'Não informado')}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+          const _outrosP = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+          for (const o of (_outrosP||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto parcelado*\n\n📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n💰 ${_vP}\n🔄 ${np}x de ${_vpP}\n💳 ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n\n_Acesse o BY Finance para autorizar\\._`); }
+          return res.status(200).json({ ok: true });
+        }
+        const _isVista = ['1','vista','à vista','a vista','avista','não','nao','inteiro','integral'].some(p => _tP === p || _tP.startsWith(p+' '));
+        const _isParcPerg = ['2','parcelado','parcelada','sim','parcela','parcelas'].some(p => _tP === p || _tP.startsWith(p+' '));
+        if (_isVista) {
+          gasto.parcelas = null; gasto.valor_parcela = null;
+          await limparContexto(chat_id);
+          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+          const _vV = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+          await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${_vV}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao||'Não informado')}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+          const _outrosV = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+          for (const o of (_outrosV||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n💰 ${_vV}\n💳 ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade)}\n\n_Acesse o BY Finance para autorizar\\._`); }
+          return res.status(200).json({ ok: true });
+        }
+        if (_isParcPerg) {
+          await setContexto(chat_id, { aguardando: 'num_parcelas', gasto_parcial: gasto });
+          await sendTelegram(chat_id, `🔢 Em quantas parcelas?\n\nEx: 2, 3, 6, 12`);
+          return res.status(200).json({ ok: true });
+        }
+        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *À vista*\n2️⃣ *Parcelado*`);
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'num_parcelas') {
+        const _mNP = texto.trim().match(/(\d+)/);
+        if (!_mNP || parseInt(_mNP[1]) < 1) {
+          await sendTelegram(chat_id, `❓ Número inválido. Digite quantas parcelas:\n\nEx: 2, 3, 6, 12`);
+          return res.status(200).json({ ok: true });
+        }
+        const _np = parseInt(_mNP[1]);
+        gasto.parcelas = _np;
+        gasto.valor_parcela = parseFloat((parseFloat(gasto.valor||0) / _np).toFixed(2));
+        gasto.observacao = (gasto.observacao ? gasto.observacao + ' · ' : '') + `Parcelado em ${_np}x`;
+        await limparContexto(chat_id);
+        await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+        const _vNP = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const _vpNP = parseFloat(gasto.valor_parcela).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${_vNP}\n🔄 ${_np}x de ${_vpNP}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao||'Não informado')}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+        const _outrosNP = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+        for (const o of (_outrosNP||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto parcelado*\n\n📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n💰 ${_vNP}\n🔄 ${_np}x de ${_vpNP}\n💳 ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n\n_Acesse o BY Finance para autorizar\\._`); }
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'valor') {
@@ -1326,6 +1421,7 @@ export default async function handler(req, res) {
             // Atribuiu para si mesmo
             await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade || 'Média'}`);
           }
+          await limparContexto(chat_id);
           return res.status(200).json({ ok: true });
         }
 
@@ -1342,6 +1438,7 @@ export default async function handler(req, res) {
             `🎯 Prioridade: ${gasto.prioridade || 'Média'}`
           );
         }
+        await limparContexto(chat_id);
         return res.status(200).json({ ok: true });
       }
 
@@ -1387,6 +1484,7 @@ export default async function handler(req, res) {
             );
           }
         }
+        await limparContexto(chat_id);
         return res.status(200).json({ ok: true });
       }
     }
@@ -1405,7 +1503,7 @@ export default async function handler(req, res) {
       // Descrições genéricas não aceitas — obriga detalhamento
       const _descGenericas = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','pix recebido','entrada','dinheiro','valor','receita','renda'];
       const _descReceitaRaw = (gasto.descricao || '').toLowerCase().trim();
-      const _descGenerica = !_descReceitaRaw || _descGenericas.includes(_descReceitaRaw) || _descReceitaRaw.length < 4;
+      const _descGenerica = !_descReceitaRaw || _descGenericas.includes(_descReceitaRaw) || _descReceitaRaw.length < 3;
       if (_descGenerica) {
         await setContexto(chat_id, { aguardando: 'descricao_receita', gasto_parcial: { ...gasto, tipo: 'receita' } });
         await sendTelegram(chat_id,
@@ -1462,6 +1560,7 @@ export default async function handler(req, res) {
       } else {
         await sendTelegram(chat_id, `⚠ Nenhum lançamento pendente para cancelar.`);
       }
+      await limparContexto(chat_id);
       return res.status(200).json({ ok: true });
     }
 

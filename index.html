@@ -9585,10 +9585,49 @@ function salvarEdicaoParcela(){
   const cartao=document.getElementById('ep-cartao').value;
   if(!desc){_showError('Informe a descrição.');return;}
   if(!val||val<=0){_showError('Informe um valor válido.');return;}
+
+  // Guarda valores antigos antes de sobrescrever (para desfazer faturas)
+  const _oldVal=parcelas[idx].val;
+  const _oldTotal=parcelas[idx].total;
+  const _oldCartao=parcelas[idx].cartao;
+  const _oldInicio=parcelas[idx].inicio||inicio;
+
   parcelas[idx]={...parcelas[idx],desc,val,total,paga,inicio,cartao};
   setData('parcelas',parcelas);
+
+  // ── Sincroniza lancamentos ─────────────────────────────────────────────────
+  const _allLanc=getData('lancamentos');
+  let _lancSynced=false;
+  for(const sem of Object.keys(_allLanc)){
+    const _lIdx=(_allLanc[sem]||[]).findIndex(l=>l.parcId===_epId);
+    if(_lIdx>=0){
+      const _l=_allLanc[sem][_lIdx];
+      _allLanc[sem][_lIdx]={..._l,desc,val,valTotal:parseFloat((val*total).toFixed(2)),nParc:total,cartao,forma:cartao+(total===1?' (à vista)':` (${total}x)`)};
+      _lancSynced=true;
+      break;
+    }
+  }
+  if(_lancSynced) setData('lancamentos',_allLanc);
+
+  // ── Sincroniza faturas (desfaz contribuição antiga, aplica nova) ──────────
+  const _fat=getData('faturas');
+  const _oldMes=parseInt((_oldInicio||'').split('-')[1])-1;
+  const _newMes=parseInt((inicio||'').split('-')[1])-1;
+  if(!isNaN(_oldMes)&&_fat[_oldCartao]){
+    for(let i=0;i<_oldTotal;i++){const m=(_oldMes+i)%12;_fat[_oldCartao][m]=parseFloat((((_fat[_oldCartao][m]||0)-_oldVal)).toFixed(2));}
+  }
+  if(!isNaN(_newMes)){
+    if(!_fat[cartao]) _fat[cartao]=Array(12).fill(0);
+    for(let i=0;i<total;i++){const m=(_newMes+i)%12;_fat[cartao][m]=parseFloat(((_fat[cartao][m]||0)+val).toFixed(2));}
+  }
+  setData('faturas',_fat);
+
   document.getElementById('edit-parcela-modal').style.display='none';
   renderParcelas();
+  if(typeof renderUltimosLancs==='function') renderUltimosLancs();
+  if(typeof renderSemanal==='function') renderSemanal();
+  if(typeof renderCartoes==='function') renderCartoes();
+  _showToast('✓ Parcela, lançamento e fatura atualizados!');
 }
 
 // ===================== LANÇAMENTOS =====================

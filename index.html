@@ -22907,6 +22907,9 @@ async function tgConfirmarAutorizacao(){
 
   await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
 
+  const autorizador=load('perfilNome')||_authUser||'Usuário';
+  const _remetenteInfo=data.remetente&&data.remetente!==autorizador?`\n👤 Registrado por: *${esc(data.remetente)}*\n✅ Autorizado por: *${esc(autorizador)}*`:`\n✅ Autorizado por: *${esc(autorizador)}*`;
+
   if(data.chat_id){
     const valor=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
     await fetch('/api/notify',{
@@ -22914,7 +22917,7 @@ async function tgConfirmarAutorizacao(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         chat_id:data.chat_id,
-        text:`✅ *Lançamento autorizado!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria}\n💳 ${data.cartao}\n📅 ${data.data_lancamento}\n\n_Registrado com sucesso no BY Finance._`
+        text:`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria}\n📅 ${data.data_lancamento}${_remetenteInfo}\n\n_Registrado com sucesso no BY Finance._`
       })
     });
   }
@@ -22924,7 +22927,6 @@ async function tgConfirmarAutorizacao(){
     _supabase.from('telegram_vinculos').select('chat_id,nome').eq('user_id',_authUID)
       .neq('chat_id',data.chat_id||0)
       .then(({data:vinculos})=>{
-        const autorizador=load('perfilNome')||_authUser||'Usuário';
         const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
         (vinculos||[]).forEach(v=>{
           fetch('/api/notify',{
@@ -22932,7 +22934,7 @@ async function tgConfirmarAutorizacao(){
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({
               chat_id:v.chat_id,
-              text:`✅ *${autorizador} autorizou um lançamento!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria||'Outros'}\n📅 ${data.data_lancamento}\n\n_Registrado no sistema._`
+              text:`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria||'Outros'}\n📅 ${data.data_lancamento}${_remetenteInfo}\n\n_Registrado no sistema._`
             })
           }).catch(()=>{});
         });

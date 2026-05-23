@@ -118,7 +118,7 @@ async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_orig
     categoria: gasto.categoria || 'Outros',
     cartao: gasto.cartao || 'Não informado',
     modalidade: gasto.modalidade || gasto.cartao || 'Não informado',
-    data_lancamento: gasto.data_lancamento,
+    data_lancamento: gasto.data_lancamento || new Date().toISOString().split('T')[0],
     origem: 'telegram',
     tipo_midia,
     mensagem_original,
@@ -630,18 +630,30 @@ export default async function handler(req, res) {
       const file_id = (msg.voice || msg.audio).file_id;
       mimeType = msg.voice ? 'audio/ogg' : 'audio/mpeg';
       audioUrl = await getTelegramFileUrl(file_id);
+      if (!audioUrl) {
+        await sendTelegram(chat_id, '❌ Não consegui baixar o áudio. Tente novamente.');
+        return res.status(200).json({ ok: true });
+      }
       mensagem_original = '[Áudio]';
     } else if (msg.photo) {
       tipo_midia = 'foto';
       const file_id = msg.photo[msg.photo.length - 1].file_id;
       mimeType = 'image/jpeg';
       fotoUrl = await getTelegramFileUrl(file_id);
+      if (!fotoUrl) {
+        await sendTelegram(chat_id, '❌ Não consegui baixar a imagem. Tente novamente.');
+        return res.status(200).json({ ok: true });
+      }
       mensagem_original = msg.caption ? `[Foto] ${msg.caption}` : '[Foto]';
     } else if (msg.document && msg.document.mime_type === 'application/pdf') {
       tipo_midia = 'pdf';
       const file_id = msg.document.file_id;
       mimeType = 'application/pdf';
       fotoUrl = await getTelegramFileUrl(file_id);
+      if (!fotoUrl) {
+        await sendTelegram(chat_id, '❌ Não consegui baixar o PDF. Tente novamente.');
+        return res.status(200).json({ ok: true });
+      }
       mensagem_original = msg.caption ? `[PDF] ${msg.caption}` : '[PDF]';
     }
 
@@ -752,11 +764,11 @@ export default async function handler(req, res) {
           await setContexto(chat_id, { aguardando: 'editar_menu_foto', gasto_parcial: gasto });
           await sendTelegram(chat_id,
             `✏️ *Qual campo deseja editar?*\n\n` +
-            `1️⃣ ${gasto.descricao||'(sem descrição)'}\n` +
+            `1️⃣ ${escapeMd(gasto.descricao||'(sem descrição)')}\n` +
             `2️⃣ ${_vMenu}\n` +
-            `3️⃣ ${gasto.categoria||'Outros'}\n` +
-            `4️⃣ ${fmtCartao(gasto.cartao||'Não informado')}\n` +
-            `5️⃣ ${gasto.modalidade||'Não informado'}\n` +
+            `3️⃣ ${escapeMd(gasto.categoria||'Outros')}\n` +
+            `4️⃣ ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n` +
+            `5️⃣ ${escapeMd(gasto.modalidade||'Não informado')}\n` +
             `6️⃣ ${fmtData(gasto.data_lancamento)}\n\n` +
             `Digite o número do campo.`
           );
@@ -785,11 +797,11 @@ export default async function handler(req, res) {
           const _vM=(parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
           await sendTelegram(chat_id,
             `✏️ *Qual campo deseja editar?*\n\n` +
-            `1️⃣ ${gasto.descricao||'(sem descrição)'}\n` +
+            `1️⃣ ${escapeMd(gasto.descricao||'(sem descrição)')}\n` +
             `2️⃣ ${_vM}\n` +
-            `3️⃣ ${gasto.categoria||'Outros'}\n` +
-            `4️⃣ ${fmtCartao(gasto.cartao||'Não informado')}\n` +
-            `5️⃣ ${gasto.modalidade||'Não informado'}\n` +
+            `3️⃣ ${escapeMd(gasto.categoria||'Outros')}\n` +
+            `4️⃣ ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n` +
+            `5️⃣ ${escapeMd(gasto.modalidade||'Não informado')}\n` +
             `6️⃣ ${fmtData(gasto.data_lancamento)}\n\n` +
             `Digite o número do campo.`
           );

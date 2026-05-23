@@ -22746,6 +22746,7 @@ async function tgAuthAprovar(id){
       💰 ${valor} &nbsp;·&nbsp; 🏷 ${esc(data.categoria)} &nbsp;·&nbsp; 📅 ${data.data_lancamento}
     </div>
     ${data.cartao&&data.cartao!=='Não informado'?`<div style="margin-top:6px;font-size:11px;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">💳 Sugerido pelo bot: <strong>${esc(data.cartao)}</strong></div>`:''}
+    ${data.parcelas&&data.parcelas>1?`<div style="margin-top:6px;font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">🔄 ${data.parcelas}x de ${parseFloat(data.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`:''}
   `;
 
   const bemSel=document.getElementById('tg-aprovar-bem');
@@ -23092,6 +23093,7 @@ function tgAuthAbrirModal(){
 function tgAuthFecharModal(){
   const m=document.getElementById('tg-auth-modal');
   if(m) m.style.display='none';
+  _tgFormaAtual='pix';
 }
 
 async function tgAuthVerificarEAbrir(){

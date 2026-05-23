@@ -100,7 +100,7 @@ async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_orig
     status: 'pendente',
     parcelas: gasto.parcelas || null,
     valor_parcela: gasto.valor_parcela || null,
-    observacao: gasto.observacao || null,
+    observacao: gasto.mktTipo === 'variavel' ? ('[mkt:variavel]'+(gasto.observacao?' '+gasto.observacao:'')) : (gasto.observacao||null),
     remetente: remetente || null
   };
   console.log('Salvando pendente:', JSON.stringify(registro));
@@ -602,7 +602,7 @@ export default async function handler(req, res) {
         const nao = ['não','nao','n','errado','errada','editar','edita','mudar','muda','corrigir','corrige','incorreto','incorreta','errou','wrong','no','negativo','negativo','tá errado','ta errado','não está','nao esta','incorreto','muda','alterar','altera','ajustar','ajusta'].some(p=>_t.startsWith(p)||_t===p);
 
         if (sim) {
-          // Confirma → segue fluxo normal (pede modalidade)
+          // Confirma → pede modalidade se não tiver, senão salva direto
           if (!gasto.modalidade) {
             await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
             await sendTelegram(chat_id, `${iconeModalidade('')} Como foi o pagamento?\n\n🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`);
@@ -610,7 +610,17 @@ export default async function handler(req, res) {
             await limparContexto(chat_id);
             await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
             const vConf = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-            await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${vConf}\n📅 ${fmtData(gasto.data_lancamento)}\n\n⏳ Aguardando autorização no BY Finance.`);
+            await sendTelegram(chat_id,
+              `✅ *Lançamento registrado!*\n\n` +
+              `📝 ${gasto.descricao||'(sem descrição)'}\n` +
+              `💰 ${vConf}\n` +
+              `🏷 ${gasto.categoria||'Outros'}\n` +
+              `💳 ${fmtCartao(gasto.cartao||'Não informado')}\n` +
+              `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n` +
+              `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+              `⏳ Aguardando sua autorização no BY Finance.\n` +
+              `Você tem *7 dias* para aprovar ou rejeitar.`
+            );
           }
           return res.status(200).json({ ok: true });
         }
@@ -631,10 +641,8 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'editar_campo_foto') {
-        // Sequência de campos: descricao → valor → categoria → data → confirmar
+        // Sequência: descricao → valor → categoria → data → modalidade → cartao(se crédito/débito) → confirmar
         const campoAtual = ctx.campo_editar || 'descricao';
-        const proximosCampos = { descricao: 'valor', valor: 'categoria', categoria: 'data', data: 'finalizar' };
-        const proximo = proximosCampos[campoAtual] || 'finalizar';
         const manter = ['ok','manter','sim','s','certo','correto','mesmo'].includes(texto.toLowerCase().trim());
 
         // Atualiza campo atual se não for "ok/manter"
@@ -650,11 +658,35 @@ export default async function handler(req, res) {
             const mD = texto.trim().match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
             if (mD) { const yD=mD[3]?parseInt(mD[3])+(mD[3].length===2?2000:0):new Date().getFullYear(); gasto.data_lancamento=`${yD}-${String(mD[2]).padStart(2,'0')}-${String(mD[1]).padStart(2,'0')}`; }
             else if (texto.toLowerCase().includes('hoje')) gasto.data_lancamento=new Date().toISOString().split('T')[0];
+          } else if (campoAtual === 'modalidade') {
+            gasto.modalidade = texto.trim();
+          } else if (campoAtual === 'cartao') {
+            gasto.cartao = texto.trim();
           }
         }
 
+        // Determina próximo campo com lógica condicional para modalidade
+        let proximo;
+        if (campoAtual === 'descricao') proximo = 'valor';
+        else if (campoAtual === 'valor') proximo = 'categoria';
+        else if (campoAtual === 'categoria') proximo = 'data';
+        else if (campoAtual === 'data') proximo = 'modalidade';
+        else if (campoAtual === 'modalidade') {
+          const modLow = (gasto.modalidade || '').toLowerCase();
+          const isPix = modLow.includes('pix') || modLow.includes('transferencia') || modLow.includes('transferência');
+          const isDinheiro = modLow.includes('dinheiro') || modLow.includes('especie') || modLow.includes('espécie');
+          if (isPix || isDinheiro) {
+            gasto.cartao = gasto.modalidade;
+            proximo = 'finalizar';
+          } else {
+            proximo = 'cartao';
+          }
+        } else {
+          proximo = 'finalizar';
+        }
+
         if (proximo === 'finalizar') {
-          // Mostra resumo final e pede confirmação
+          // Mostra resumo final com todos os campos e pede confirmação
           const vFinal = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
           await setContexto(chat_id, { aguardando: 'confirmar_lancamento_foto', gasto_parcial: gasto });
           await sendTelegram(chat_id,
@@ -662,6 +694,8 @@ export default async function handler(req, res) {
             `📝 ${gasto.descricao || '(sem descrição)'}\n` +
             `💰 ${vFinal}\n` +
             `🏷 ${gasto.categoria || 'Outros'}\n` +
+            `💳 ${fmtCartao(gasto.cartao || 'Não informado')}\n` +
+            `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade || 'Não informado'}\n` +
             `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
             `Confirma? *sim* para enviar ou *não* para editar novamente.`
           );
@@ -670,7 +704,9 @@ export default async function handler(req, res) {
           const labels = {
             valor: `💰 *Valor* (atual: _${(parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}_)`,
             categoria: `🏷 *Categoria* (atual: _${gasto.categoria||'Outros'}_)\n\nEx: Alimentação, Transporte, Mercado, Saúde, Lazer`,
-            data: `📅 *Data* (atual: _${fmtData(gasto.data_lancamento)}_)\n\nEx: 22/05 ou hoje`
+            data: `📅 *Data* (atual: _${fmtData(gasto.data_lancamento)}_)\n\nEx: 22/05 ou hoje`,
+            modalidade: `${iconeModalidade('')} *Forma de pagamento* (atual: _${gasto.modalidade||'Não informado'}_)\n\n🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`,
+            cartao: `💳 *Cartão ou banco* (atual: _${fmtCartao(gasto.cartao||'Não informado')}_)\n\nEx: Nubank, Inter, Itaú, Bradesco...`
           };
           await setContexto(chat_id, { aguardando: 'editar_campo_foto', gasto_parcial: gasto, campo_editar: proximo });
           await sendTelegram(chat_id, `${labels[proximo]}\n\nDigite o novo valor ou *ok* para manter.`);
@@ -938,10 +974,19 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'descricao') {
+        // Se usuário mandou um número (ex: "60"), é o valor — atualiza e repergunta descrição
+        const _numDescricao = parseFloat(texto.trim().replace(',','.').replace(/[^\d.]/g,''));
+        if (!isNaN(_numDescricao) && _numDescricao > 0 && /^[\d.,\sR$]+$/.test(texto.trim())) {
+          gasto.valor = _numDescricao;
+          await setContexto(chat_id, { aguardando: 'descricao', gasto_parcial: gasto });
+          const _vDesc = _numDescricao.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+          await sendTelegram(chat_id, `📝 O que foi essa compra de ${_vDesc}?\n\nEx: iFood, mercado, farmácia, uber...`);
+          return res.status(200).json({ ok: true });
+        }
         // Valida que a descrição de despesa não é genérica
         const _descGastoGen = ['gasto','compra','pagamento','despesa','transferencia','transferência','coisa','algo','item','produto','serviço','servico'];
         if (!texto.trim() || _descGastoGen.includes(texto.toLowerCase().trim()) || texto.trim().length < 3) {
-          await sendTelegram(chat_id, `📝 Descrição muito vaga. Seja mais específico:\nEx: *iFood pizza*, *Uber aeroporto*, *Farmácia remédio*, *Supermercado Extra*`);
+          await sendTelegram(chat_id, `📝 O que foi essa compra? Seja mais específico:\n\nEx: iFood, mercado, farmácia, uber...`);
           return res.status(200).json({ ok: true });
         }
         gasto.descricao = texto.trim();
@@ -964,7 +1009,7 @@ export default async function handler(req, res) {
           const msgCtx1 = `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx1}\n🏷 ${gasto.categoria||'Outros'}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`;
           await sendTelegram(chat_id, msgCtx1);
           const outrosCtx1 = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
-          for (const o of (outrosCtx1||[])) { await sendTelegram(o.chat_id, `📱 *${nomeRemetente} registrou um gasto pendente*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx1}\n🏷 ${gasto.categoria||'Outros'}\n\n_Acesse o BY Finance para autorizar._`); }
+          for (const o of (outrosCtx1||[])) { await sendTelegram(o.chat_id, `📱 *${nomeRemetente} registrou um gasto pendente*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx1}\n🏷 ${gasto.categoria||'Outros'}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n_Acesse o BY Finance para autorizar._`); }
         } else {
           // Crédito/Débito → precisa saber o cartão/banco
           await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
@@ -984,7 +1029,7 @@ export default async function handler(req, res) {
         const msgCtx2 = `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx2}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao)}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||gasto.cartao||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`;
         await sendTelegram(chat_id, msgCtx2);
         const outrosCtx2 = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
-        for (const o of (outrosCtx2||[])) { await sendTelegram(o.chat_id, `📱 *${nomeRemetente} registrou um gasto pendente*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx2}\n🏷 ${gasto.categoria||'Outros'}\n\n_Acesse o BY Finance para autorizar._`); }
+        for (const o of (outrosCtx2||[])) { await sendTelegram(o.chat_id, `📱 *${nomeRemetente} registrou um gasto pendente*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx2}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao||'Não informado')}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n_Acesse o BY Finance para autorizar._`); }
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'valor') {
@@ -1038,7 +1083,7 @@ export default async function handler(req, res) {
       const campo = gasto.campo_faltando;
       if (campo === 'descricao') {
         await setContexto(chat_id, { aguardando: 'descricao', gasto_parcial: gasto });
-        await sendTelegram(chat_id, `📝 O que foi essa compra?\nEx: iFood, mercado, farmácia, uber...`);
+        await sendTelegram(chat_id, `📝 O que foi essa compra? Seja mais específico:\n\nEx: iFood, mercado, farmácia, uber...`);
         return res.status(200).json({ ok: true });
       }
       if (campo === 'valor') {
@@ -1355,8 +1400,8 @@ export default async function handler(req, res) {
 
     const lancamentos = gasto.tipo === 'multiplos' ? gasto.lancamentos : [gasto];
 
-    // ── Para fotos: mostra esboço e pede confirmação antes de prosseguir ──
-    if (tipo_midia === 'foto' && gasto.tipo === 'lancamento') {
+    // ── Para fotos e PDFs: mostra esboço e pede confirmação antes de prosseguir ──
+    if ((tipo_midia === 'foto' || tipo_midia === 'pdf') && gasto.tipo === 'lancamento') {
       const vEsb = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
       await setContexto(chat_id, { aguardando: 'confirmar_lancamento_foto', gasto_parcial: gasto });
       await sendTelegram(chat_id,
@@ -1391,6 +1436,10 @@ export default async function handler(req, res) {
       gasto.cartao = gasto.modalidade;
     }
 
+    // Cupom fiscal via foto/pdf com múltiplos itens → cada item é compra variável
+    if (gasto.tipo === 'multiplos' && (tipo_midia === 'foto' || tipo_midia === 'pdf')) {
+      lancamentos.forEach(l => { if (!l.mktTipo) l.mktTipo = 'variavel'; });
+    }
     for (const l of lancamentos) {
       await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original, nomeRemetente);
     }
@@ -1430,9 +1479,14 @@ export default async function handler(req, res) {
       );
       for (const outro of (outrosNotif || [])) {
         await sendTelegram(outro.chat_id,
-          `📱 *${nomeRemetente} registrou um gasto pendente de autorização*\n\n` +
-          `📝 ${descricao}\n💰 ${valor}\n🏷 ${categoria}\n📅 ${dataFmt}\n\n` +
-          `_Acesse o BY Finance para autorizar ou rejeitar._`
+          `📱 *${nomeRemetente} registrou um gasto pendente*\n\n` +
+          `📝 ${descricao}\n` +
+          `💰 ${valor}\n` +
+          `🏷 ${categoria}\n` +
+          `💳 ${cartaoFmt}\n` +
+          `${iconeModalidade(modalidadeFmt)} ${modalidadeFmt}\n` +
+          `📅 ${dataFmt}\n\n` +
+          `_Acesse o BY Finance para autorizar._`
         );
       }
     }

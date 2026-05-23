@@ -5120,7 +5120,10 @@
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div class="sec-title" style="margin:0">ITENS DA LISTA</div>
-          <button class="btn btn-sm" id="mkt-btn-add-item" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ ITEM</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" id="mkt-btn-add-item" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ ITEM</button>
+            <button class="btn btn-sm" id="mkt-btn-add-var" onclick="document.getElementById('mkt-add-var-modal').style.display='flex'" style="border-color:rgba(255,215,0,0.4);color:var(--neon-yellow);background:rgba(255,215,0,0.06)">🛒 VARIÁVEL</button>
+          </div>
         </div>
         <div id="mkt-mes-itens"></div>
       </div>
@@ -5146,6 +5149,51 @@
             <button onclick="mktExcluirLista()" class="btn" style="width:100%;border-color:rgba(255,68,68,0.3);color:var(--neon-red)">🗑 EXCLUIR LISTA</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Cadastro rápido de item no catálogo (via autorização de compra variável) -->
+  <div id="mkt-cad-rapido-modal" style="display:none;position:fixed;inset:0;z-index:5200;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid rgba(255,215,0,0.25);border-radius:16px;padding:24px;width:min(420px,94vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.6)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-yellow)">📦 CADASTRO RÁPIDO</div>
+        <button onclick="document.getElementById('mkt-cad-rapido-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Item não encontrado no catálogo. Cadastre-o para facilitar próximas compras.</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div><label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px">NOME DO ITEM</label><input id="mkt-cad-rapido-nome" type="text" placeholder="Ex: Arroz Camil 5kg" style="width:100%;padding:9px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box"></div>
+        <div><label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px">CATEGORIA</label><select id="mkt-cad-rapido-cat" style="width:100%;padding:9px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"><option value="Mercearia">🛒 Mercearia</option><option value="Hortifruti">🥦 Hortifruti</option><option value="Carnes">🥩 Carnes</option><option value="Laticinios">🥛 Laticinios</option><option value="Frios">🧀 Frios</option><option value="Padaria">🍞 Padaria</option><option value="Higiene">🧴 Higiene</option><option value="Limpeza">🧹 Limpeza</option><option value="Outros">📦 Outros</option></select></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px">PREÇO (R$)</label><input id="mkt-cad-rapido-preco" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;padding:9px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box"></div>
+          <div><label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px">UNIDADE</label><select id="mkt-cad-rapido-unidade" style="width:100%;padding:9px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"><option value="un">un</option><option value="kg">kg</option><option value="g">g</option><option value="L">L</option><option value="mL">mL</option><option value="cx">cx</option><option value="pct">pct</option></select></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button onclick="_mktSalvarCadastroRapido()" class="btn btn-green" style="flex:1;font-size:13px;padding:11px">✓ CADASTRAR</button>
+        <button onclick="document.getElementById('mkt-cad-rapido-modal').style.display='none'" class="btn" style="border-color:rgba(255,68,68,0.3);color:var(--neon-red);padding:11px 16px">Pular</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Adicionar compra variável manualmente -->
+  <div id="mkt-add-var-modal" style="display:none;position:fixed;inset:0;z-index:5200;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+    <div style="background:var(--card);border:1px solid rgba(255,215,0,0.25);border-radius:16px;padding:24px;width:min(380px,94vw);box-shadow:0 8px 40px rgba(0,0,0,.6)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-yellow)">🛒 ADD COMPRA VARIÁVEL</div>
+        <button onclick="document.getElementById('mkt-add-var-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div><label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px">ITEM</label><input id="mkt-var-manual-nome" type="text" placeholder="Ex: Biscoito, Refrigerante..." style="width:100%;padding:9px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
+          <div><label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px">QTD</label><input id="mkt-var-manual-qtd" type="number" value="1" min="0.1" step="0.1" style="width:100%;padding:9px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box"></div>
+          <div><label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px">UN</label><select id="mkt-var-manual-unidade" style="width:100%;padding:9px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px"><option value="un">un</option><option value="kg">kg</option><option value="g">g</option><option value="L">L</option><option value="mL">mL</option><option value="cx">cx</option></select></div>
+          <div><label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px">PREÇO</label><input id="mkt-var-manual-preco" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;padding:9px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button onclick="mktAdicionarVariavelManual()" class="btn" style="flex:1;font-size:13px;padding:11px;border-color:rgba(255,215,0,0.4);color:var(--neon-yellow);background:rgba(255,215,0,0.08)">+ ADICIONAR</button>
+        <button onclick="document.getElementById('mkt-add-var-modal').style.display='none'" class="btn" style="border-color:var(--border);color:var(--text3);padding:11px 14px">✕</button>
       </div>
     </div>
   </div>
@@ -10474,6 +10522,13 @@ function addLancamento(){
       } else {
         _showToast('⚠ Crie uma lista de mercado para este mês em Mercado.');
       }
+    } else if(_lancMktTipo==='variado'){
+      // Compra variável: adiciona à lista do mês como item variavel (cria a lista se não existir)
+      const _listasVar=_mktGetListas();
+      let _listaVar=_listasVar.find(l=>l.mes===_mesKey);
+      if(!_listaVar){_listaVar={id:Date.now(),mes:_mesKey,status:'pendente',criadoEm:new Date().toISOString(),itens:[]};_listasVar.push(_listaVar);}
+      _listaVar.itens.push({id:Date.now()+1,refId:_lancMktItemSelecionado?.id||null,nome:_lancMktItemSelecionado?.nome||desc,cat:_lancMktItemSelecionado?.cat||_mktGuessCategoriaMkt(desc),qtd:1,unidade:'un',precoPrev:val,precoReal:val,comprado:true,variavel:true,origem:'manual'});
+      _mktSetListas(_listasVar);
     }
     gfRenderMercadoCard();
     _lancMktTipo='lista';
@@ -21127,6 +21182,10 @@ function mktEspelharLista(listaId){
         <input id="mkt-espelhar-mes" type="month" value="${mesAtual}"
           style="width:100%;padding:10px 12px;background:var(--bg2);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:8px;font-size:14px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
       </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text2);padding:8px 0;margin-bottom:6px">
+        <input type="checkbox" id="mkt-espelhar-variaveis" style="accent-color:var(--neon-yellow);width:15px;height:15px">
+        <span>Incluir <strong style="color:var(--neon-yellow)">compras variáveis</strong> (itens fora da lista)</span>
+      </label>
       <div style="display:flex;gap:10px">
         <button onclick="document.getElementById('mkt-espelhar-picker').remove()"
           style="flex:1;padding:10px;background:none;border:1px solid var(--border);color:var(--text3);border-radius:9px;cursor:pointer;font-size:12px">CANCELAR</button>
@@ -21143,6 +21202,7 @@ function mktEspelharLista(listaId){
 function _mktEspelharNovo(listaId){
   const mes=document.getElementById('mkt-espelhar-mes')?.value;
   if(!mes){_showToast('Selecione o mês.');return;}
+  const incluirVar=document.getElementById('mkt-espelhar-variaveis')?.checked||false;
   const listas=_mktGetListas();
   const origem=window._mktEspelharOrigem||listas.find(l=>l.id===listaId);
   if(!origem) return;
@@ -21150,12 +21210,13 @@ function _mktEspelharNovo(listaId){
     document.getElementById('mkt-espelhar-picker')?.remove();
     _showToast('Já existe lista pendente para este mês.');return;
   }
+  const itensFiltrados=(incluirVar?origem.itens:origem.itens.filter(i=>!i.variavel));
   const novaLista={
     id:Date.now(),
     mes,
     status:'pendente',
     criadoEm:new Date().toISOString(),
-    itens:origem.itens.map(item=>({
+    itens:itensFiltrados.map(item=>({
       ...item,
       id:Date.now()+Math.floor(Math.random()*100000),
       comprado:false,
@@ -21372,12 +21433,13 @@ function _mktRenderMes(){
   if(sub)sub.textContent='Mercado · '+_mktMesLabel(lista.mes);
   if(badge){badge.textContent=isConcluido?'CONCLUÍDO':'PENDENTE';badge.style.background=isConcluido?'rgba(0,255,157,0.12)':'rgba(255,215,0,0.12)';badge.style.color=isConcluido?'var(--neon-green)':'var(--neon-yellow)';badge.style.border=isConcluido?'1px solid rgba(0,255,157,0.25)':'1px solid rgba(255,215,0,0.25)';}
   const btnC=document.getElementById('mkt-btn-concluir');const btnR=document.getElementById('mkt-btn-reabrir');const btnA=document.getElementById('mkt-btn-add-item');
-  const btnF=document.getElementById('mkt-btn-fechar-compra');
+  const btnF=document.getElementById('mkt-btn-fechar-compra');const btnV=document.getElementById('mkt-btn-add-var');
   const temComprados=lista.itens.some(i=>i.comprado);
   if(btnC)btnC.style.display=isConcluido?'none':'block';
   if(btnF)btnF.style.display=(!isConcluido&&temComprados)?'block':'none';
   if(btnR)btnR.style.display=isConcluido?'block':'none';
   if(btnA)btnA.style.display=isConcluido?'none':'flex';
+  if(btnV)btnV.style.display=isConcluido?'none':'flex';
   const totalPrev=lista.itens.reduce((a,i)=>a+i.qtd*(i.precoPrev||0),0);
   const totalReal=lista.itens.reduce((a,i)=>a+i.qtd*(i.precoReal||i.precoPrev||0),0);
   const comp=lista.itens.filter(i=>i.comprado).length;
@@ -21386,9 +21448,10 @@ function _mktRenderMes(){
   _mktRenderNF(lista);
   const el=document.getElementById('mkt-mes-itens');if(!el)return;
   if(!lista.itens.length){el.innerHTML=`<div style="text-align:center;color:var(--text3);padding:32px;font-size:12px">Nenhum item.${isConcluido?'':'<br><br><button class="btn btn-sm" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ Adicionar item</button>'}</div>`;return;}
-  const cats={};lista.itens.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
+  const _planejados=lista.itens.filter(i=>!i.variavel);const _variaveis=lista.itens.filter(i=>i.variavel);const cats={};_planejados.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
   const _catalogo=_mktGetCatalogo();
-  el.innerHTML=Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);const catItem=it.refId?_catalogo.find(c=>c.id===it.refId):null;const sku=catItem?.sku||it.sku||null;const skuBadge=sku?`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px">#${sku}</span>`:'';return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}${skuBadge}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join('');
+  el.innerHTML=Object.entries(cats).length?Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);const catItem=it.refId?_catalogo.find(c=>c.id===it.refId):null;const sku=catItem?.sku||it.sku||null;const skuBadge=sku?`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px">#${sku}</span>`:'';return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}${skuBadge}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join(''):'';
+  _mktRenderVariaveis(el,_variaveis,isConcluido);
 }
 function mktAbrirFecharCompra(){
   if(!_mktMesId) return;
@@ -22772,6 +22835,7 @@ async function tgConfirmarAutorizacao(){
   const id=Date.now();
   const val=parseFloat(data.valor);
   const desc=estab||data.descricao;
+  const isMktVariavel=data.observacao?.includes('[mkt:variavel]');
 
   // Receita: lança em receitas, não em lançamentos
   if(data.tipo==='receita'){
@@ -22822,7 +22886,7 @@ async function tgConfirmarAutorizacao(){
     setData('faturas',fat);
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
-    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram'});
+    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram',...(isMktVariavel?{mktTipo:'variado'}:{})});
     setData('lancamentos',all);
   }else{
     const cartaoSel=document.getElementById('tg-aprovar-cartao')?.value||'';
@@ -22830,8 +22894,14 @@ async function tgConfirmarAutorizacao(){
     const formaStr=forma==='debito'?(cartaoSel?`${cartaoSel} (débito)`:'Débito'):(formaLabel[forma]||'Pix');
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
-    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val,cartao:cartaoSel||undefined,bemId:bemId||undefined,origem:'telegram'});
+    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val,cartao:cartaoSel||undefined,bemId:bemId||undefined,origem:'telegram',...(isMktVariavel?{mktTipo:'variado'}:{})});
     setData('lancamentos',all);
+  }
+
+  // Compra variável de mercado: adiciona à lista do mês e abre cadastro rápido se item não está no catálogo
+  if(isMktVariavel){
+    _mktAdicionarVariavelAoMes(desc, val, data.data_lancamento);
+    setTimeout(()=>_mktAbrirCadastroRapido(desc, val, data.categoria||'Mercado'), 700);
   }
 
   await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
@@ -22893,6 +22963,90 @@ async function tgAuthRejeitar(id){
 
   const modal=document.getElementById('tg-rejeitar-modal');
   if(modal) modal.style.display='flex';
+}
+
+// ── Compras Variáveis ─────────────────────────────────────────────────────────
+
+function _mktAdicionarVariavelAoMes(nome, val, dataLanc) {
+  const mesKey=(dataLanc||new Date().toISOString().split('T')[0]).substring(0,7);
+  const listas=_mktGetListas();
+  let lista=listas.find(l=>l.mes===mesKey);
+  if(!lista){lista={id:Date.now(),mes:mesKey,status:'pendente',criadoEm:new Date().toISOString(),itens:[]};listas.push(lista);}
+  lista.itens.push({id:Date.now()+Math.floor(Math.random()*100000),nome:nome||'Item variável',cat:_mktGuessCategoriaMkt(nome||''),qtd:1,unidade:'un',precoPrev:val||0,precoReal:val||0,comprado:true,variavel:true,origem:'telegram'});
+  _mktSetListas(listas);
+}
+
+function _mktGuessCategoriaMkt(nome) {
+  const n=(nome||'').toLowerCase();
+  if(/carne|frango|boi|porco|peixe|camar|salsicha|linguiça|peito|costela|patinho|alcatra|file/.test(n)) return 'Carnes';
+  if(/leite|queijo|iogurte|manteiga|creme|requeijão|nata|mussarela|ricota/.test(n)) return 'Laticinios';
+  if(/pão|bolo|torta|biscoito|bolacha|rosca|croissant/.test(n)) return 'Padaria';
+  if(/sabonete|shampoo|condicionador|pasta|escova|desodorante|absorv|fralda|papel hig/.test(n)) return 'Higiene';
+  if(/deterg|sabão|amaciante|desinfetante|esponja|multiuso|cloro/.test(n)) return 'Limpeza';
+  if(/presunto|salame|mortadela|bacon|peito de peru|hamburguer/.test(n)) return 'Frios';
+  if(/fruta|legume|verdura|alface|tomate|cenoura|batata|cebola|banana|maçã|laranja|uva|manga|abacate|pimentão|abobrinha|pepino/.test(n)) return 'Hortifruti';
+  return 'Mercearia';
+}
+
+function _mktAbrirCadastroRapido(nome, preco, cat) {
+  const catalogo=_mktGetCatalogo();
+  const nomeLower=(nome||'').toLowerCase().trim();
+  const jaExiste=catalogo.some(c=>c.nome.toLowerCase().trim()===nomeLower||(nomeLower.includes(c.nome.toLowerCase().trim())&&c.nome.length>3));
+  if(jaExiste) return;
+  const el=document.getElementById('mkt-cad-rapido-modal');
+  if(!el) return;
+  document.getElementById('mkt-cad-rapido-nome').value=nome||'';
+  document.getElementById('mkt-cad-rapido-cat').value=_mktGuessCategoriaMkt(nome||'');
+  document.getElementById('mkt-cad-rapido-preco').value=preco?(+preco).toFixed(2):'';
+  document.getElementById('mkt-cad-rapido-unidade').value='un';
+  el.style.display='flex';
+}
+
+function _mktSalvarCadastroRapido() {
+  const nome=document.getElementById('mkt-cad-rapido-nome')?.value.trim();
+  const cat=document.getElementById('mkt-cad-rapido-cat')?.value||'Mercearia';
+  const unidade=document.getElementById('mkt-cad-rapido-unidade')?.value||'un';
+  const preco=parseFloat(document.getElementById('mkt-cad-rapido-preco')?.value)||0;
+  if(!nome){_showToast('Nome obrigatório.');return;}
+  const catalogo=_mktGetCatalogo();
+  catalogo.push({id:Date.now(),nome,cat,unidade,preco,qtd:1});
+  _mktSetCatalogo(catalogo);
+  document.getElementById('mkt-cad-rapido-modal').style.display='none';
+  _showToast('✓ "'+nome+'" cadastrado no catálogo!');
+}
+
+function mktAdicionarVariavelManual() {
+  if(!_mktMesId) return;
+  const nome=document.getElementById('mkt-var-manual-nome')?.value.trim();
+  const val=parseFloat(document.getElementById('mkt-var-manual-preco')?.value)||0;
+  const qtd=parseFloat(document.getElementById('mkt-var-manual-qtd')?.value)||1;
+  const unidade=document.getElementById('mkt-var-manual-unidade')?.value||'un';
+  if(!nome){_showToast('Informe o nome do item.');return;}
+  const listas=_mktGetListas();
+  const lista=listas.find(l=>l.id===_mktMesId);
+  if(!lista) return;
+  lista.itens.push({id:Date.now()+Math.floor(Math.random()*100000),nome,cat:_mktGuessCategoriaMkt(nome),qtd,unidade,precoPrev:val,precoReal:val,comprado:false,variavel:true,origem:'manual'});
+  _mktSetListas(listas);
+  document.getElementById('mkt-add-var-modal').style.display='none';
+  document.getElementById('mkt-var-manual-nome').value='';
+  document.getElementById('mkt-var-manual-preco').value='';
+  document.getElementById('mkt-var-manual-qtd').value='1';
+  _mktRenderMes();
+  _showToast('✓ Compra variável adicionada!');
+}
+
+function _mktRenderVariaveis(el, variaveis, isConcluido) {
+  if(!variaveis||!variaveis.length) return;
+  const totalVar=variaveis.reduce((a,i)=>a+i.qtd*(i.precoReal||i.precoPrev||0),0);
+  const rows=variaveis.map(it=>{
+    const total=it.qtd*(it.precoReal||it.precoPrev||0);
+    const removeBtn=isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`;
+    const precoEl=isConcluido
+      ?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-yellow)">${total>0?_mktFmt(total):'—'}</span>`
+      :`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`;
+    return `<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.18);margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-yellow);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · ${it.origem==='telegram'?'📱 Telegram':'✏ manual'}</div></div>${precoEl}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-yellow)':'var(--text3)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${removeBtn}</div>`;
+  }).join('');
+  el.innerHTML+=`<div style="margin-top:20px;padding-top:14px;border-top:2px dashed rgba(255,215,0,0.25)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--neon-yellow);letter-spacing:1px">🛒 COMPRAS VARIÁVEIS <span style="font-weight:400;font-size:10px;color:var(--text3)">(fora da lista planejada)</span></div><div style="font-size:13px;font-weight:700;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">${_mktFmt(totalVar)}</div></div>${rows}</div>`;
 }
 
 async function tgConfirmarRejeicao(){

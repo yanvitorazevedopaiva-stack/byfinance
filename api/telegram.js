@@ -126,7 +126,7 @@ async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_orig
     status: 'pendente',
     parcelas: gasto.parcelas || null,
     valor_parcela: gasto.valor_parcela || null,
-    observacao: gasto.mktTipo === 'variavel' ? ('[mkt:variavel]'+(gasto.observacao?' '+gasto.observacao:'')) : (gasto.observacao||null),
+    observacao: gasto.mktTipo === 'variavel' ? ('[mkt:variavel]'+(gasto.observacao?' '+gasto.observacao:'')) : gasto.mktTipo === 'mes' ? ('[mkt:mes]'+(gasto.observacao?' '+gasto.observacao:'')) : (gasto.observacao||null),
     remetente: remetente || null
   };
   console.log('Salvando pendente:', JSON.stringify(registro));
@@ -844,7 +844,7 @@ export default async function handler(req, res) {
           } else {
             if (gasto.tipo === 'multiplos') {
               await setContexto(chat_id, { aguardando: 'mercado_multiplos', gasto_parcial: gasto });
-              await sendTelegram(chat_id, `🛒 Essa compra foi em supermercado ou mercado?\n\n1️⃣ Sim\n2️⃣ Não`);
+              await sendTelegram(chat_id, `🛒 Essa compra foi no mercado/supermercado?\n\n1️⃣ Compra do mês\n2️⃣ Compra variável (semana)\n3️⃣ Não é mercado`);
               return res.status(200).json({ ok: true });
             }
             await limparContexto(chat_id);
@@ -1345,7 +1345,7 @@ export default async function handler(req, res) {
           gasto.cartao = gasto.modalidade;
           if (gasto.tipo === 'multiplos') {
             await setContexto(chat_id, { aguardando: 'mercado_multiplos', gasto_parcial: gasto });
-            await sendTelegram(chat_id, `🛒 Essa compra foi em supermercado ou mercado?\n\n1️⃣ Sim\n2️⃣ Não`);
+            await sendTelegram(chat_id, `🛒 Essa compra foi no mercado/supermercado?\n\n1️⃣ Compra do mês\n2️⃣ Compra variável (semana)\n3️⃣ Não é mercado`);
             return res.status(200).json({ ok: true });
           }
           await limparContexto(chat_id);
@@ -1369,7 +1369,7 @@ export default async function handler(req, res) {
         if (gasto.tipo !== 'multiplos') gasto.tipo = 'lancamento';
         if (gasto.tipo === 'multiplos') {
           await setContexto(chat_id, { aguardando: 'mercado_multiplos', gasto_parcial: gasto });
-          await sendTelegram(chat_id, `🛒 Essa compra foi em supermercado ou mercado?\n\n1️⃣ Sim\n2️⃣ Não`);
+          await sendTelegram(chat_id, `🛒 Essa compra foi no mercado/supermercado?\n\n1️⃣ Compra do mês\n2️⃣ Compra variável (semana)\n3️⃣ Não é mercado`);
           return res.status(200).json({ ok: true });
         } else {
           // Crédito sem parcelas → perguntar antes de salvar
@@ -1391,12 +1391,23 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'mercado_multiplos') {
-        const _isMkt = texto.trim() === '1' || /^sim$/i.test(texto.trim());
+        const _tMkt = texto.trim().toLowerCase();
+        const _isMes = _tMkt === '1'
+          || /^(compra\s*do\s*m[eê]s|m[eê]s|mensal|lista|lista\s*do\s*m[eê]s|b[aá]sico|b[aá]sicos|compra\s*grande|grande|fixo|fixos|essencial|essenciais)$/i.test(_tMkt);
+        const _isVariavel = _tMkt === '2'
+          || /^(vari[aá]vel|vari[aá]veis|semana|semanal|semanais|extra|extras|avulso|avulsa|avulsos|r[aá]pida|r[aá]pido|pontual|pontuais|eventual|eventuais)$/i.test(_tMkt);
+        const _isNao = _tMkt === '3'
+          || /^(n[aã]o|nao|n|negar|outro|outros|nenhum|nenhuma|cancel|cancelar|nope|no|negativo)$/i.test(_tMkt);
+        if (!_isMes && !_isVariavel && !_isNao) {
+          await sendTelegram(chat_id, `Não entendi 🤔\n\nResponda:\n1️⃣ Compra do mês\n2️⃣ Compra variável (semana)\n3️⃣ Não é mercado`);
+          return res.status(200).json({ ok: true });
+        }
         const _lansM = gasto.lancamentos || [];
         _lansM.forEach(l => {
           l.modalidade = gasto.modalidade;
           l.cartao = gasto.cartao;
-          if (_isMkt) { if (!l.mktTipo) l.mktTipo = 'variavel'; if (!l.categoria) l.categoria = 'Mercado'; }
+          if (_isMes) { l.mktTipo = 'mes'; if (!l.categoria) l.categoria = 'Mercado'; }
+          else if (_isVariavel) { l.mktTipo = 'variavel'; if (!l.categoria) l.categoria = 'Mercado'; }
           else { l.mktTipo = null; if (!l.categoria) l.categoria = 'Outros'; }
           if (!l.data_lancamento) l.data_lancamento = new Date().toISOString().split('T')[0];
         });

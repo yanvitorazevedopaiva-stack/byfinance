@@ -22749,6 +22749,41 @@ async function tgAuthAprovar(id){
     ${data.parcelas&&data.parcelas>1?`<div style="margin-top:6px;font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">🔄 ${data.parcelas}x de ${parseFloat(data.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`:''}
   `;
 
+  // ── Painel de mercado: catálogo + lista destino ──────────────────────────────
+  const _mktInfoDiv=document.getElementById('tg-aprovar-mkt-info');
+  if(_mktInfoDiv){
+    const _isMktItem=data.observacao?.includes('[mkt:');
+    if(_isMktItem){
+      const _mktTipoTag=data.observacao?.includes('[mkt:mes]')?'mes':'variavel';
+      const _mktTipoLabel=_mktTipoTag==='mes'?'📋 Compra do mês':'🛒 Compra variável (semana)';
+      const _cat=typeof _mktGetCatalogo==='function'?_mktGetCatalogo():(JSON.parse(localStorage.getItem('mkt_catalogo')||'[]'));
+      const _listas=typeof _mktGetListas==='function'?_mktGetListas():(JSON.parse(localStorage.getItem('mkt_listas')||'[]'));
+      const _mesAtual=new Date().toISOString().substring(0,7);
+      const _listaAtiva=_listas.find(l=>l.mes===_mesAtual)||null;
+      const _listaInfo=_listaAtiva?`Lista de ${_mesAtual} — ${_listaAtiva.status==='pendente'?'🟡 pendente':'✅ concluída'} (${_listaAtiva.itens?.length||0} itens)`:`Nenhuma lista para ${_mesAtual} — será criada automaticamente`;
+      const _nomeLower=(data.descricao||'').toLowerCase().trim();
+      const _match=_cat.find(c=>_nomeLower===c.nome.toLowerCase().trim()||(c.nome.length>3&&_nomeLower.includes(c.nome.toLowerCase().trim())));
+      let _html=`<div style="font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace;margin-bottom:6px;font-weight:700">${_mktTipoLabel}</div>`;
+      _html+=`<div style="color:var(--text3);font-size:11px;margin-bottom:8px">📁 ${esc(_listaInfo)}</div>`;
+      if(_match){
+        const _precoCat=parseFloat(_match.preco||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const _precoNota=parseFloat(data.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const _precoDiff=parseFloat((_match.preco||0).toFixed(2))!==parseFloat((data.valor||0).toFixed(2));
+        _html+=`<div style="color:var(--neon-green);font-size:12px">📦 Encontrado no catálogo: <strong>${esc(_match.nome)}</strong> — ${esc(_match.cat)}</div>`;
+        _html+=`<div style="color:var(--text3);font-size:11px;margin-top:3px">Preço cadastrado: ${_precoCat}</div>`;
+        if(_precoDiff){
+          _html+=`<label style="display:flex;align-items:center;gap:7px;margin-top:8px;font-size:11px;color:var(--text2);cursor:pointer"><input type="checkbox" id="tg-mkt-atualizar-preco" style="accent-color:var(--neon-green)"> Atualizar preço no catálogo para <strong>${_precoNota}</strong></label>`;
+        }
+      }else{
+        _html+=`<div style="color:var(--text3);font-size:11px">⚠️ Item não cadastrado — será solicitado cadastro rápido após autorização</div>`;
+      }
+      _mktInfoDiv.innerHTML=_html;
+      _mktInfoDiv.style.display='block';
+    }else{
+      _mktInfoDiv.style.display='none';
+    }
+  }
+
   const bemSel=document.getElementById('tg-aprovar-bem');
   if(bemSel){
     const bens=typeof getBens==='function'?getBens():[];
@@ -22837,6 +22872,8 @@ async function tgConfirmarAutorizacao(){
   const val=parseFloat(data.valor);
   const desc=estab||data.descricao;
   const isMktVariavel=data.observacao?.includes('[mkt:variavel]');
+  const isMktMes=data.observacao?.includes('[mkt:mes]');
+  const isMkt=isMktVariavel||isMktMes;
 
   // Receita: lança em receitas, não em lançamentos
   if(data.tipo==='receita'){
@@ -22887,7 +22924,7 @@ async function tgConfirmarAutorizacao(){
     setData('faturas',fat);
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
-    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram',...(isMktVariavel?{mktTipo:'variado'}:{})});
+    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram',...(isMkt?{mktTipo:isMktMes?'mes':'variado'}:{})});
     setData('lancamentos',all);
   }else{
     const cartaoSel=document.getElementById('tg-aprovar-cartao')?.value||'';
@@ -22895,13 +22932,24 @@ async function tgConfirmarAutorizacao(){
     const formaStr=forma==='debito'?(cartaoSel?`${cartaoSel} (débito)`:'Débito'):(formaLabel[forma]||'Pix');
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
-    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val,cartao:cartaoSel||undefined,bemId:bemId||undefined,origem:'telegram',...(isMktVariavel?{mktTipo:'variado'}:{})});
+    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val,cartao:cartaoSel||undefined,bemId:bemId||undefined,origem:'telegram',...(isMkt?{mktTipo:isMktMes?'mes':'variado'}:{})});
     setData('lancamentos',all);
   }
 
-  // Compra variável de mercado: adiciona à lista do mês e abre cadastro rápido se item não está no catálogo
-  if(isMktVariavel){
-    _mktAdicionarVariavelAoMes(desc, val, data.data_lancamento);
+  // Compra de mercado: adiciona à lista do mês e gerencia catálogo
+  if(isMkt){
+    if(isMktMes){
+      _mktAdicionarMesCompra(desc, val, data.data_lancamento);
+    }else{
+      _mktAdicionarVariavelAoMes(desc, val, data.data_lancamento);
+    }
+    const _cbPreco=document.getElementById('tg-mkt-atualizar-preco');
+    if(_cbPreco?.checked){
+      const _catUpd=typeof _mktGetCatalogo==='function'?_mktGetCatalogo():(JSON.parse(localStorage.getItem('mkt_catalogo')||'[]'));
+      const _nLow=desc.toLowerCase().trim();
+      const _idx=_catUpd.findIndex(c=>_nLow===c.nome.toLowerCase().trim()||(c.nome.length>3&&_nLow.includes(c.nome.toLowerCase().trim())));
+      if(_idx>=0){_catUpd[_idx].preco=val;if(typeof _mktSetCatalogo==='function')_mktSetCatalogo(_catUpd);else localStorage.setItem('mkt_catalogo',JSON.stringify(_catUpd));_showToast('✓ Preço atualizado no catálogo!');}
+    }
     setTimeout(()=>_mktAbrirCadastroRapido(desc, val, data.categoria||'Mercado'), 700);
   }
 
@@ -22969,6 +23017,15 @@ async function tgAuthRejeitar(id){
 }
 
 // ── Compras Variáveis ─────────────────────────────────────────────────────────
+
+function _mktAdicionarMesCompra(nome, val, dataLanc) {
+  const mesKey=(dataLanc||new Date().toISOString().split('T')[0]).substring(0,7);
+  const listas=_mktGetListas();
+  let lista=listas.find(l=>l.mes===mesKey);
+  if(!lista){lista={id:Date.now(),mes:mesKey,status:'pendente',criadoEm:new Date().toISOString(),itens:[]};listas.push(lista);}
+  lista.itens.push({id:Date.now()+Math.floor(Math.random()*100000),nome:nome||'Item',cat:_mktGuessCategoriaMkt(nome||''),qtd:1,unidade:'un',precoPrev:val||0,precoReal:val||0,comprado:true,variavel:false,origem:'telegram'});
+  _mktSetListas(listas);
+}
 
 function _mktAdicionarVariavelAoMes(nome, val, dataLanc) {
   const mesKey=(dataLanc||new Date().toISOString().split('T')[0]).substring(0,7);
@@ -23405,7 +23462,8 @@ async function cfgTgRemoverVinculo(vinculoId){
       <div id="tg-aprovar-titulo" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-green)">✅ AUTORIZAR LANÇAMENTO</div>
       <button onclick="document.getElementById('tg-aprovar-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
     </div>
-    <div id="tg-aprovar-resumo" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15);margin-bottom:18px;font-size:13px"></div>
+    <div id="tg-aprovar-resumo" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15);margin-bottom:12px;font-size:13px"></div>
+    <div id="tg-aprovar-mkt-info" style="display:none;padding:10px 12px;border-radius:10px;background:rgba(0,200,100,0.07);border:1px solid rgba(0,200,100,0.22);margin-bottom:14px;font-size:12px"></div>
     <div style="display:flex;flex-direction:column;gap:14px">
       <div>
         <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">FORMA DE PAGAMENTO</label>

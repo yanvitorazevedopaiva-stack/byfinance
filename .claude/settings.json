@@ -9,7 +9,11 @@
       "Bash(powershell -Command ' *)",
       "Bash(grep -rn \"function getLancamentos\\\\|function setLancamentos\" \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\\" 2>/dev/null || echo \"Not found\")",
       "Read(//c/Users/Usuario/Desktop/TEST\" 2>/dev/**)",
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\" -Recurse -Force)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\" -Recurse -Force)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "PowerShell(\\(Get-Content \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\" | Measure-Object -Line\\).Lines; \\(Get-Content \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\api\\\\telegram.js\" | Measure-Object -Line\\).Lines)"
     ]
   }
 }

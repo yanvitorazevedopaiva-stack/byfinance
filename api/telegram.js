@@ -696,37 +696,47 @@ export default async function handler(req, res) {
           } else if (_isCDConf && (!gasto.cartao || gasto.cartao === 'Não informado')) {
             await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
             await sendTelegram(chat_id, `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`);
-          } else if (_isCredConf && !gasto.parcelas) {
+          } else if (_isCredConf && !gasto.parcelas && gasto.tipo !== 'multiplos') {
             await setContexto(chat_id, { aguardando: 'parcelamento', gasto_parcial: gasto });
             await sendTelegram(chat_id, `💳 Foi à vista ou parcelado?\n\n1️⃣ À vista\n2️⃣ Parcelado`);
           } else {
             await limparContexto(chat_id);
-            await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
-            const vConf = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-            const _parcelaConf = gasto.parcelas && gasto.parcelas > 1 ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
-            await sendTelegram(chat_id,
-              `✅ *Lançamento registrado!*\n\n` +
-              `📝 ${gasto.descricao||'(sem descrição)'}\n` +
-              `💰 ${vConf}${_parcelaConf}\n` +
-              `🏷 ${gasto.categoria||'Outros'}\n` +
-              `💳 ${fmtCartao(gasto.cartao||'Não informado')}\n` +
-              `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n` +
-              `📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n` +
-              `⏳ Aguardando sua autorização no BY Finance.\n` +
-              `Você tem *7 dias* para aprovar ou rejeitar.`
-            );
-            const outrosConf = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
-            for (const o of (outrosConf||[])) {
-              await sendTelegram(o.chat_id,
-                `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n` +
-                `📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n` +
+            if (gasto.tipo === 'multiplos') {
+              const _lans = gasto.lancamentos || [];
+              _lans.forEach(l => { l.modalidade = gasto.modalidade; l.cartao = gasto.cartao || gasto.modalidade; if (!l.categoria) l.categoria = 'Outros'; if (!l.data_lancamento) l.data_lancamento = new Date().toISOString().split('T')[0]; });
+              for (const l of _lans) await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original, nomeRemetente);
+              const _listaConf = _lans.map(l=>`• ${l.descricao} — ${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
+              await sendTelegram(chat_id, `✅ *${_lans.length} lançamentos registrados!*\n\n${_listaConf}\n\n💳 ${fmtCartao(gasto.cartao||'Não informado')}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+              const _outrosMultiConf = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+              for (const o of (_outrosMultiConf||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou ${_lans.length} gastos pendentes*\n\n${_listaConf}\n\n${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade)}\n\n_Acesse o BY Finance para autorizar\\._`); }
+            } else {
+              await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+              const vConf = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+              const _parcelaConf = gasto.parcelas && gasto.parcelas > 1 ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
+              await sendTelegram(chat_id,
+                `✅ *Lançamento registrado!*\n\n` +
+                `📝 ${gasto.descricao||'(sem descrição)'}\n` +
                 `💰 ${vConf}${_parcelaConf}\n` +
-                `🏷 ${escapeMd(gasto.categoria||'Outros')}\n` +
-                `💳 ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n` +
-                `${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade||'Não informado')}\n` +
+                `🏷 ${gasto.categoria||'Outros'}\n` +
+                `💳 ${fmtCartao(gasto.cartao||'Não informado')}\n` +
+                `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n` +
                 `📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n` +
-                `_Acesse o BY Finance para autorizar\\._`
+                `⏳ Aguardando sua autorização no BY Finance.\n` +
+                `Você tem *7 dias* para aprovar ou rejeitar.`
               );
+              const outrosConf = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+              for (const o of (outrosConf||[])) {
+                await sendTelegram(o.chat_id,
+                  `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n` +
+                  `📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n` +
+                  `💰 ${vConf}${_parcelaConf}\n` +
+                  `🏷 ${escapeMd(gasto.categoria||'Outros')}\n` +
+                  `💳 ${escapeMd(fmtCartao(gasto.cartao||'Não informado'))}\n` +
+                  `${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade||'Não informado')}\n` +
+                  `📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n` +
+                  `_Acesse o BY Finance para autorizar\\._`
+                );
+              }
             }
           }
           return res.status(200).json({ ok: true });
@@ -842,17 +852,27 @@ export default async function handler(req, res) {
           if (!merged.descricao || merged.descricao === '(sem descrição)') {
             merged.descricao = texto.trim();
           }
-          // Continua fluxo normal
+          // Continua fluxo normal com verificações completas
+          const _modDF = (merged.modalidade||'').toLowerCase();
+          const _isCDDF = _modDF.includes('créd')||_modDF.includes('cred')||_modDF.includes('déb')||_modDF.includes('deb');
+          const _isCredDF = _modDF.includes('créd')||_modDF.includes('cred');
           if (!merged.modalidade) {
             await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: merged });
             await sendTelegram(chat_id, `💳 Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`);
+          } else if (_isCDDF && (!merged.cartao || merged.cartao === 'Não informado')) {
+            await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: merged });
+            await sendTelegram(chat_id, `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`);
+          } else if (_isCredDF && !merged.parcelas) {
+            await setContexto(chat_id, { aguardando: 'parcelamento', gasto_parcial: merged });
+            await sendTelegram(chat_id, `💳 Foi à vista ou parcelado?\n\n1️⃣ À vista\n2️⃣ Parcelado`);
           } else {
             await limparContexto(chat_id);
             await salvarPendente(chat_id, user_id, merged, tipo_midia, mensagem_original, nomeRemetente);
             const vFoto = (parseFloat(merged.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-            await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${escapeMd(merged.descricao||'(sem descrição)')}\n💰 ${vFoto}\n🏷 ${merged.categoria||'Outros'}\n${iconeModalidade(merged.modalidade)} ${merged.modalidade}\n📅 ${fmtData(merged.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando autorização no BY Finance.`);
+            const _parcelaFoto = merged.parcelas && merged.parcelas > 1 ? `\n🔄 ${merged.parcelas}x de ${parseFloat(merged.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
+            await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${escapeMd(merged.descricao||'(sem descrição)')}\n💰 ${vFoto}${_parcelaFoto}\n🏷 ${merged.categoria||'Outros'}\n💳 ${fmtCartao(merged.cartao||'Não informado')}\n${iconeModalidade(merged.modalidade)} ${merged.modalidade}\n📅 ${fmtData(merged.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando autorização no BY Finance.`);
             const _outrosFoto = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
-            for (const o of (_outrosFoto||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n📝 ${escapeMd(merged.descricao||'(sem descrição)')}\n💰 ${vFoto}\n${iconeModalidade(merged.modalidade)} ${escapeMd(merged.modalidade)}\n\n_Acesse o BY Finance para autorizar\\._`); }
+            for (const o of (_outrosFoto||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n📝 ${escapeMd(merged.descricao||'(sem descrição)')}\n💰 ${vFoto}${_parcelaFoto}\n💳 ${escapeMd(fmtCartao(merged.cartao||'Não informado'))}\n${iconeModalidade(merged.modalidade)} ${escapeMd(merged.modalidade)}\n\n_Acesse o BY Finance para autorizar\\._`); }
           }
         } else {
           // Ainda não entendeu — pede valor e descrição separados
@@ -986,12 +1006,6 @@ export default async function handler(req, res) {
         dadosAtrib.tarefas = listaAtrib;
         await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify({data:dadosAtrib,updated_at:new Date().toISOString()})});
         await limparContexto(chat_id);
-        // Notifica o destinatário
-        if (!gasto.atribuir_para) {
-          await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}\n📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}`);
-          await limparContexto(chat_id);
-          return res.status(200).json({ ok: true });
-        }
         const nomeAtribCtx = gasto.atribuir_para.toLowerCase().trim();
         const todosVinculosCtx = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&select=chat_id,nome`);
         const vinculoAtribCtx = (todosVinculosCtx || []).find(v => v.nome && v.nome.toLowerCase().includes(nomeAtribCtx));
@@ -1028,16 +1042,19 @@ export default async function handler(req, res) {
         const prazo = parsePrazo(texto);
         gasto.prazo = prazo;
         gasto.pedir_prazo = false;
-        // Cria a tarefa diretamente
         const tarefasD = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dadosD = tarefasD?.[0]?.data || {};
         const listaD = dadosD.tarefas || [];
-        listaD.push({id:Date.now(),titulo:gasto.titulo,prazo:gasto.prazo||null,prio:gasto.prioridade||'Media',concluida:false,origem:'telegram'});
+        listaD.push({id:Date.now(),titulo:gasto.titulo,prazo:gasto.prazo||null,prio:gasto.prioridade||'Media',concluida:false,origem:'telegram',origem_nome:nomeRemetente});
         dadosD.tarefas = listaD;
         await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify({data:dadosD,updated_at:new Date().toISOString()})});
         await limparContexto(chat_id);
         const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
         await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade||'Média'}`);
+        const _outrosPT = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+        for (const o of (_outrosPT||[])) {
+          await sendTelegram(o.chat_id, `📋 *${nomeRemetente} criou uma tarefa!*\n\n📝 ${gasto.titulo}\n📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n🎯 Prioridade: ${gasto.prioridade||'Média'}`);
+        }
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'descricao') {
@@ -1321,7 +1338,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
       }
 
-      if (gasto.acao === 'criar' && gasto.titulo && gasto.pedir_prazo) {
+      if (gasto.acao === 'criar' && gasto.titulo && gasto.pedir_prazo && !gasto.atribuir_para) {
         await setContexto(chat_id, { aguardando: 'prazo_tarefa', gasto_parcial: gasto });
         await sendTelegram(chat_id,
           `📅 Para quando é essa tarefa?\nEx: amanhã, sexta, 25/05, semana que vem`
@@ -1505,7 +1522,7 @@ export default async function handler(req, res) {
       if (_descGenerica) {
         await setContexto(chat_id, { aguardando: 'descricao_receita', gasto_parcial: { ...gasto, tipo: 'receita' } });
         await sendTelegram(chat_id,
-          `💰 Receita de *${parseFloat(gasto.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}* registrada!\n\n` +
+          `💰 Receita de *${parseFloat(gasto.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}* identificada!\n\n` +
           `📝 *O que foi essa entrada de dinheiro?*\n` +
           `Ex: Salário maio, Freelance site, Aluguel apartamento, Pagamento cliente João...`
         );
@@ -1545,6 +1562,10 @@ export default async function handler(req, res) {
         `⏳ Aguardando sua autorização no BY Finance.\n` +
         `Você tem *7 dias* para aprovar ou rejeitar.`
       );
+      const _outrosReceita = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+      for (const o of (_outrosReceita||[])) {
+        await sendTelegram(o.chat_id, `💰 *${escapeMd(nomeRemetente)} registrou uma receita*\n\n📝 ${escapeMd(gasto.descricao)}\n💰 ${valor}\n📅 ${fmtData(gasto.data_lancamento)}\n\n_Acesse o BY Finance para autorizar\\._`);
+      }
       return res.status(200).json({ ok: true });
     }
 
@@ -1559,6 +1580,12 @@ export default async function handler(req, res) {
         await sendTelegram(chat_id, `⚠ Nenhum lançamento pendente para cancelar.`);
       }
       await limparContexto(chat_id);
+      return res.status(200).json({ ok: true });
+    }
+
+    // Tipos reconhecidos para lançamento — qualquer outro tipo cai no erro abaixo
+    if (!['lancamento','multiplos'].includes(gasto.tipo)) {
+      await sendTelegram(chat_id, `❓ Não consegui identificar o que você quis dizer.\n\nTente: _"gastei 50 no mercado"_ ou _"cria tarefa X"_`);
       return res.status(200).json({ ok: true });
     }
 

@@ -818,14 +818,11 @@ export default async function handler(req, res) {
           gasto.cartao = gasto.modalidade;
           await limparContexto(chat_id);
           await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
-          const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-          await sendTelegram(chat_id,
-            `✅ *Lançamento registrado!*\n\n` +
-            `📝 ${gasto.descricao}\n💰 ${valor}\n🏷 ${gasto.categoria}\n` +
-            `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n` +
-            `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
-            `⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`
-          );
+          const valorCtx1 = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+          const msgCtx1 = `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx1}\n🏷 ${gasto.categoria||'Outros'}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`;
+          await sendTelegram(chat_id, msgCtx1);
+          const outrosCtx1 = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+          for (const o of (outrosCtx1||[])) { await sendTelegram(o.chat_id, `📱 *${nomeRemetente} registrou um gasto pendente*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx1}\n🏷 ${gasto.categoria||'Outros'}\n\n_Acesse o BY Finance para autorizar._`); }
         } else {
           // Crédito/Débito → precisa saber o cartão/banco
           await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
@@ -841,15 +838,11 @@ export default async function handler(req, res) {
         gasto.tipo = 'lancamento';
         await limparContexto(chat_id);
         await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
-        const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        await sendTelegram(chat_id,
-          `✅ *Lançamento registrado!*\n\n` +
-          `📝 ${gasto.descricao}\n💰 ${valor}\n🏷 ${gasto.categoria}\n` +
-          `💳 ${fmtCartao(gasto.cartao)}\n` +
-          `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade || gasto.cartao}\n` +
-          `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
-          `⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`
-        );
+        const valorCtx2 = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const msgCtx2 = `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx2}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao)}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||gasto.cartao||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`;
+        await sendTelegram(chat_id, msgCtx2);
+        const outrosCtx2 = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+        for (const o of (outrosCtx2||[])) { await sendTelegram(o.chat_id, `📱 *${nomeRemetente} registrou um gasto pendente*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx2}\n🏷 ${gasto.categoria||'Outros'}\n\n_Acesse o BY Finance para autorizar._`); }
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'valor') {
@@ -1231,20 +1224,37 @@ export default async function handler(req, res) {
         `⏳ Aguardando autorização no BY Finance.`
       );
     } else {
-      const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      const parcelaInfo = gasto.parcelas ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
+      const valorNum = parseFloat(gasto.valor) || 0;
+      const valor = valorNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const parcelaInfo = gasto.parcelas ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
       const remetenteInfo = !isPrincipal ? `\n👤 Enviado por: *${nomeRemetente}*` : '';
-      await sendTelegram(chat_id,
+      const descricao = gasto.descricao || '(sem descrição)';
+      const categoria = gasto.categoria || 'Outros';
+      const cartaoFmt = fmtCartao(gasto.cartao || 'Não informado');
+      const modalidadeFmt = gasto.modalidade || gasto.cartao || 'Não informado';
+      const dataFmt = fmtData(gasto.data_lancamento || new Date().toISOString().split('T')[0]);
+      const msgConfirm =
         `✅ *Lançamento registrado!*\n\n` +
-        `📝 ${gasto.descricao}\n` +
+        `📝 ${descricao}\n` +
         `💰 ${valor}${parcelaInfo}\n` +
-        `🏷 ${gasto.categoria}\n` +
-        `💳 ${fmtCartao(gasto.cartao)}\n` +
-        `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade || 'Não informado'}\n` +
-        `📅 ${fmtData(gasto.data_lancamento)}${remetenteInfo}\n\n` +
+        `🏷 ${categoria}\n` +
+        `💳 ${cartaoFmt}\n` +
+        `${iconeModalidade(modalidadeFmt)} ${modalidadeFmt}\n` +
+        `📅 ${dataFmt}${remetenteInfo}\n\n` +
         `⏳ Aguardando sua autorização no BY Finance.\n` +
-        `Você tem *7 dias* para aprovar ou rejeitar.`
+        `Você tem *7 dias* para aprovar ou rejeitar.`;
+      await sendTelegram(chat_id, msgConfirm);
+      // Notifica outros vínculos da conta sobre o novo pendente
+      const outrosNotif = await supabaseQuery(
+        `/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`
       );
+      for (const outro of (outrosNotif || [])) {
+        await sendTelegram(outro.chat_id,
+          `📱 *${nomeRemetente} registrou um gasto pendente de autorização*\n\n` +
+          `📝 ${descricao}\n💰 ${valor}\n🏷 ${categoria}\n📅 ${dataFmt}\n\n` +
+          `_Acesse o BY Finance para autorizar ou rejeitar._`
+        );
+      }
     }
 
   } catch (err) {

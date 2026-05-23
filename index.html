@@ -22091,27 +22091,30 @@ function trfAddTarefa(){
   const lista=_trfGet();
   // Atribuição
   const atribuirVal=(document.getElementById('trf-atribuir')?.value||'').trim();
-  const [atribuirNome,atribuirChatId]=atribuirVal?atribuirVal.split('|'):['',''];
+  const partes=atribuirVal?atribuirVal.split('|'):['',''];
+  const atribuirNome=partes[0]||'';
+  const atribuirChatId=(partes[1]&&partes[1]!=='self')?partes[1]:'';
+  const isSelf=partes[1]==='self';
   const meuNome=load('perfilNome')||_authUser||'Usuário';
   const novaTarefa={id:Date.now(),titulo,desc,cat,prio,prazo,diaria,recorrencia,metaId,metaNome,concluida:false,criadaEm:new Date().toISOString(),remarcacoes:0};
-  if(atribuirNome){
+  if(atribuirNome&&!isSelf){
+    // Atribuindo para outra pessoa
     novaTarefa.atribuido_para=atribuirNome;
-    novaTarefa.atribuidor_chat_id=''; // quem criou no app não tem chat_id fixo
     novaTarefa.atribuidor_nome=meuNome;
     novaTarefa.aceito=false;
   }
   lista.push(novaTarefa);
   _trfSet(lista);
   _trfSyncParaSupabase();
-  // Notifica o destinatário via Telegram se tiver chat_id
-  if(atribuirChatId){
+  // Notifica destinatário via Telegram (apenas se for outra pessoa com chat_id)
+  if(atribuirNome&&!isSelf&&atribuirChatId){
     const prazoTxt=prazo?` · 📅 ${new Date(prazo+'T12:00:00').toLocaleDateString('pt-BR')}`:'';
     fetch('/api/notify',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         chat_id:parseInt(atribuirChatId),
-        text:`📋 *${meuNome} atribuiu uma tarefa para você!*\n\n📝 ${titulo}${prazoTxt}\n🎯 Prioridade: ${prio}\n\n_Acesse o BY Finance → Tarefas → Atribuídas para aceitar._`
+        text:`📋 *${meuNome} atribuiu uma tarefa para você!*\n\n📝 ${titulo}${prazoTxt}\n🎯 Prioridade: ${prio}\n\nResponda:\n✅ *aceitar*\n📅 *reagendar*\n❌ *negar*`
       })
     }).catch(()=>{});
   }
@@ -22245,13 +22248,23 @@ async function _trfPopulaAtribuirSel(){
   const sel=document.getElementById('trf-atribuir');
   if(!sel) return;
   const uid=_authUID||sessionStorage.getItem('byf_supabase_uid');
-  if(!_supabase||!uid){sel.innerHTML='<option value="">— Tarefa para mim —</option>';return;}
+  const meuNome=load('perfilNome')||_authUser||'Eu';
+  // Opção padrão: para mim
+  let opcoesBase=`<option value="">— Tarefa para mim (${esc(meuNome)}) —</option>`;
+  if(!_supabase||!uid){sel.innerHTML=opcoesBase;return;}
   try{
     const {data}=await _supabase.from('telegram_vinculos').select('nome,chat_id').eq('user_id',uid);
-    if(!data||!data.length){sel.innerHTML='<option value="">— Tarefa para mim —</option>';return;}
-    sel.innerHTML='<option value="">— Tarefa para mim —</option>'+
-      data.map(v=>`<option value="${esc(v.nome)}|${v.chat_id}">${esc(v.nome)}</option>`).join('');
-  }catch(e){}
+    if(!data||!data.length){sel.innerHTML=opcoesBase;return;}
+    // Inclui o próprio usuário como opção explícita (com chat_id se tiver)
+    const euVinculo=data.find(v=>v.nome&&v.nome.toLowerCase()===meuNome.toLowerCase());
+    const euOpt=euVinculo
+      ?`<option value="${esc(euVinculo.nome)}|${euVinculo.chat_id}">👤 ${esc(euVinculo.nome)} (eu)</option>`
+      :`<option value="${esc(meuNome)}|self">👤 ${esc(meuNome)} (eu)</option>`;
+    // Outros vínculos
+    const outrosOpts=data.filter(v=>!euVinculo||v.chat_id!==euVinculo.chat_id)
+      .map(v=>`<option value="${esc(v.nome)}|${v.chat_id}">👥 ${esc(v.nome)}</option>`).join('');
+    sel.innerHTML=opcoesBase+euOpt+outrosOpts;
+  }catch(e){sel.innerHTML=opcoesBase;}
 }
 
 // ── Modal motivo: confirmar ──
@@ -22334,7 +22347,7 @@ function _trfRenderLista(){
   else if(_trfFiltro==='metas') lista=lista.filter(t=>t.metaId>0);
   else if(_trfFiltro==='diarias') lista=lista.filter(t=>t.diaria);
   else if(_trfFiltro==='concluidas') lista=lista.filter(t=>t.concluida);
-  else lista=lista.filter(t=>!t.concluida&&!t.atribuidor_nome&&!t.atribuido_para); // exclui atribuídas da lista principal
+  else lista=lista.filter(t=>!t.concluida); // TODAS inclui atribuídas
   if(!lista.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">Nenhuma tarefa encontrada.</div>';return;}
   const prioClr={Alta:'var(--neon-red)',Media:'var(--neon-yellow)',Baixa:'var(--neon-blue)'};
   const catIco={Estudo:'📚',Casa:'🏠',Trabalho:'💼',Compromisso:'📅',Pessoal:'⭐'};
@@ -22835,10 +22848,29 @@ async function tgConfirmarAutorizacao(){
     });
   }
 
+  // Notifica outros vínculos que o lançamento foi autorizado
+  if(_supabase&&_authUID){
+    _supabase.from('telegram_vinculos').select('chat_id,nome').eq('user_id',_authUID)
+      .neq('chat_id',data.chat_id||0)
+      .then(({data:vinculos})=>{
+        const autorizador=load('perfilNome')||_authUser||'Usuário';
+        const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        (vinculos||[]).forEach(v=>{
+          fetch('/api/notify',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              chat_id:v.chat_id,
+              text:`✅ *${autorizador} autorizou um lançamento!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria||'Outros'}\n📅 ${data.data_lancamento}\n\n_Registrado no sistema._`
+            })
+          }).catch(()=>{});
+        });
+      }).catch(()=>{});
+  }
+
   document.getElementById('tg-aprovar-modal').style.display='none';
   document.getElementById('tg-auth-modal').style.display='none';
   if(btnConfirmar){btnConfirmar.disabled=false;btnConfirmar.textContent='⚡ CONFIRMAR LANÇAMENTO';}
-  // Aguarda 500ms para o Supabase refletir o update antes de re-renderizar
   setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();tgAuthRenderLanc();},500);
   _showToast('✓ Lançamento autorizado!');
 }

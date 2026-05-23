@@ -630,6 +630,19 @@ export default async function handler(req, res) {
               `⏳ Aguardando sua autorização no BY Finance.\n` +
               `Você tem *7 dias* para aprovar ou rejeitar.`
             );
+            const outrosConf = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+            for (const o of (outrosConf||[])) {
+              await sendTelegram(o.chat_id,
+                `📱 *${nomeRemetente} registrou um gasto pendente*\n\n` +
+                `📝 ${gasto.descricao||'(sem descrição)'}\n` +
+                `💰 ${vConf}\n` +
+                `🏷 ${gasto.categoria||'Outros'}\n` +
+                `💳 ${fmtCartao(gasto.cartao||'Não informado')}\n` +
+                `${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n` +
+                `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+                `_Acesse o BY Finance para autorizar._`
+              );
+            }
           }
           return res.status(200).json({ ok: true });
         }

@@ -326,10 +326,18 @@ GATILHOS DE LISTAR TAREFAS:
 "lista tarefas", "ver tarefas", "mostrar tarefas", "tarefas do dia"
 "o que está pendente", "o que falta fazer", "minha lista"
 
-GATILHOS DE CONCLUIR TAREFA:
-"concluí", "terminei", "fiz", "resolvi", "pronto", "feito", "ok a tarefa"
-"marca como feito", "marca como concluído", "risca da lista"
-"já fiz", "já resolvi", "já paguei", "já liguei"
+GATILHOS DE CONCLUIR TAREFA — qualquer variação abaixo indica conclusão:
+"concluí", "conclui", "já conclui", "já concluí", "concluído", "concluída"
+"terminei", "terminou", "já terminei", "já terminou"
+"fiz", "já fiz", "fiz a tarefa", "já fiz a tarefa", "foi feito"
+"resolvi", "já resolvi", "resolvido", "resolvida"
+"pronto", "pronta", "tá pronto", "ta pronto", "tá feito", "ta feito"
+"feito", "feita", "ok a tarefa", "ok feito", "missão cumprida"
+"marca como feito", "marca como concluído", "marca como concluída", "risca da lista"
+"já paguei", "já liguei", "já fui", "já comprei"
+"finalizado", "finalizada", "finalizei", "acabei", "já acabei"
+"cumpri", "já cumpri", "cumprido", "executei", "já executei"
+IMPORTANTE: Se a mensagem diz "Já conclui/concluí/terminei/fiz [algo]" → tipo tarefa acao concluir
 
 ATRIBUIÇÃO DE TAREFA — qualquer uma dessas expressões:
 "atribui tarefa X para Bruna", "cria tarefa X para Bruna"
@@ -588,7 +596,88 @@ export default async function handler(req, res) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
 
-      if (campo === 'descricao_foto') {
+      if (campo === 'confirmar_lancamento_foto') {
+        const _t=texto.toLowerCase().trim();
+        const sim = ['sim','s','ok','certo','correto','pode','confirma','confirmar','yes','y','continua','continuar','envia','enviar','tá bom','ta bom','exato','isso','perfeito','👍','beleza','blz','combinado','fechado','claro','pode ser','bora','top','show','tudo certo','tudo bem','correto','positivo','afirmativo'].some(p=>_t.startsWith(p)||_t===p);
+        const nao = ['não','nao','n','errado','errada','editar','edita','mudar','muda','corrigir','corrige','incorreto','incorreta','errou','wrong','no','negativo','negativo','tá errado','ta errado','não está','nao esta','incorreto','muda','alterar','altera','ajustar','ajusta'].some(p=>_t.startsWith(p)||_t===p);
+
+        if (sim) {
+          // Confirma → segue fluxo normal (pede modalidade)
+          if (!gasto.modalidade) {
+            await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
+            await sendTelegram(chat_id, `${iconeModalidade('')} Como foi o pagamento?\n\n🔄 PIX\n💳 Crédito\n💳 Débito\n💵 Dinheiro`);
+          } else {
+            await limparContexto(chat_id);
+            await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+            const vConf = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+            await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${vConf}\n📅 ${fmtData(gasto.data_lancamento)}\n\n⏳ Aguardando autorização no BY Finance.`);
+          }
+          return res.status(200).json({ ok: true });
+        }
+
+        if (nao) {
+          // Começa edição campo a campo
+          await setContexto(chat_id, { aguardando: 'editar_campo_foto', gasto_parcial: gasto, campo_editar: 'descricao' });
+          await sendTelegram(chat_id,
+            `✏️ Vamos corrigir campo a campo.\n\n` +
+            `📝 *Descrição* (atual: _${gasto.descricao || 'não identificado'}_)\n\n` +
+            `Digite o novo valor ou *ok* para manter.`
+          );
+          return res.status(200).json({ ok: true });
+        }
+
+        // Não entendeu
+        await sendTelegram(chat_id, `Responda *sim* para confirmar ou *não* para editar.`);
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'editar_campo_foto') {
+        // Sequência de campos: descricao → valor → categoria → data → confirmar
+        const campoAtual = ctx.campo_editar || 'descricao';
+        const proximosCampos = { descricao: 'valor', valor: 'categoria', categoria: 'data', data: 'finalizar' };
+        const proximo = proximosCampos[campoAtual] || 'finalizar';
+        const manter = ['ok','manter','sim','s','certo','correto','mesmo'].includes(texto.toLowerCase().trim());
+
+        // Atualiza campo atual se não for "ok/manter"
+        if (!manter) {
+          if (campoAtual === 'descricao') {
+            gasto.descricao = texto.trim();
+          } else if (campoAtual === 'valor') {
+            const v = parseFloat(texto.replace(',','.').replace(/[^\d.]/g,''));
+            if (!isNaN(v) && v > 0) gasto.valor = v;
+          } else if (campoAtual === 'categoria') {
+            gasto.categoria = texto.trim();
+          } else if (campoAtual === 'data') {
+            const mD = texto.trim().match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+            if (mD) { const yD=mD[3]?parseInt(mD[3])+(mD[3].length===2?2000:0):new Date().getFullYear(); gasto.data_lancamento=`${yD}-${String(mD[2]).padStart(2,'0')}-${String(mD[1]).padStart(2,'0')}`; }
+            else if (texto.toLowerCase().includes('hoje')) gasto.data_lancamento=new Date().toISOString().split('T')[0];
+          }
+        }
+
+        if (proximo === 'finalizar') {
+          // Mostra resumo final e pede confirmação
+          const vFinal = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+          await setContexto(chat_id, { aguardando: 'confirmar_lancamento_foto', gasto_parcial: gasto });
+          await sendTelegram(chat_id,
+            `📋 *Dados revisados:*\n\n` +
+            `📝 ${gasto.descricao || '(sem descrição)'}\n` +
+            `💰 ${vFinal}\n` +
+            `🏷 ${gasto.categoria || 'Outros'}\n` +
+            `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
+            `Confirma? *sim* para enviar ou *não* para editar novamente.`
+          );
+        } else {
+          // Pergunta próximo campo
+          const labels = {
+            valor: `💰 *Valor* (atual: _${(parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}_)`,
+            categoria: `🏷 *Categoria* (atual: _${gasto.categoria||'Outros'}_)\n\nEx: Alimentação, Transporte, Mercado, Saúde, Lazer`,
+            data: `📅 *Data* (atual: _${fmtData(gasto.data_lancamento)}_)\n\nEx: 22/05 ou hoje`
+          };
+          await setContexto(chat_id, { aguardando: 'editar_campo_foto', gasto_parcial: gasto, campo_editar: proximo });
+          await sendTelegram(chat_id, `${labels[proximo]}\n\nDigite o novo valor ou *ok* para manter.`);
+        }
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'descricao_foto') {
         // Usuário respondeu após foto não reconhecida — interpreta com Gemini
         const gastoFoto = await interpretarComGemini({ texto, audioUrl: null, fotoUrl: null, mimeType: null });
         if (gastoFoto.tipo === 'lancamento' || gastoFoto.tipo === 'lancamento_parcial') {
@@ -618,7 +707,13 @@ export default async function handler(req, res) {
         const resposta = texto.toLowerCase().trim();
         const tarefaCtx = gasto;
 
-        if (resposta.includes('aceitar') || resposta.includes('aceito') || resposta === 'sim' || resposta === 's' || resposta.includes('ok')) {
+        const _aceitarWords = ['aceitar','aceito','aceita','sim','s','ok','pode','beleza','blz','combinado','fechado','claro','topo','top','show','bora','certo','correto','afirmativo','positivo','yes','y','farei','faço','vou fazer','tá bom','ta bom','pode ser','tranquilo','com prazer','com certeza'];
+        const _negarWords = ['negar','nego','nega','não','nao','n','no','recusar','recuso','recusa','impossível','impossivel','não posso','nao posso','não dá','nao da','não consigo','nao consigo','não quero','nao quero','negativo','sem condições'];
+        const _reagendarWords = ['reagendar','reagenda','remarcar','remarca','outro dia','mudar data','adiar','adia','mais tarde','não agora','nao agora','depois','outra data','outra hora'];
+        const _isAceitar = _aceitarWords.some(p=>resposta===p||resposta.startsWith(p+' ')||resposta.includes(p));
+        const _isNegar = _negarWords.some(p=>resposta===p||resposta.startsWith(p+' ')||resposta.includes(p));
+        const _isReagendar = _reagendarWords.some(p=>resposta===p||resposta.startsWith(p+' ')||resposta.includes(p));
+        if (_isAceitar && !_isNegar) {
           await limparContexto(chat_id);
           await sendTelegram(tarefaCtx.atribuidor_chat_id,
             `✅ *${nomeRemetente} aceitou a tarefa!*\n\n📝 ${tarefaCtx.titulo}\n📅 ${tarefaCtx.prazo ? fmtData(tarefaCtx.prazo) : 'Sem prazo'}`
@@ -627,7 +722,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        if (resposta.includes('negar') || resposta.includes('nego') || resposta.includes('não') || resposta.includes('nao') || resposta === 'n' || resposta.includes('recusar')) {
+        if (_isNegar && !_isAceitar) {
           await limparContexto(chat_id);
           await sendTelegram(tarefaCtx.atribuidor_chat_id,
             `❌ *${nomeRemetente} negou a tarefa*\n\n📝 ${tarefaCtx.titulo}`
@@ -643,7 +738,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        if (resposta.includes('reagendar') || resposta.includes('remarcar') || resposta.includes('outro dia') || resposta.includes('mudar')) {
+        if (_isReagendar) {
           await setContexto(chat_id, { aguardando: 'reagendar_tarefa', gasto_parcial: tarefaCtx });
           await sendTelegram(chat_id, `📅 Para quando você quer reagendar?\n\nEx: amanhã, sexta, 25/05`);
           return res.status(200).json({ ok: true });
@@ -1184,6 +1279,16 @@ export default async function handler(req, res) {
       }
     }
 
+    // Bloqueia lançamento completamente vazio (sem descrição E sem valor real)
+    if (gasto.tipo === 'lancamento' && (!gasto.valor || parseFloat(gasto.valor) <= 0) && !gasto.descricao) {
+      await sendTelegram(chat_id,
+        `❓ Não entendi o que você quis dizer.\n\n` +
+        `Se for um *gasto*, me diga: _"gastei 50 no mercado"_\n` +
+        `Se for uma *tarefa*, tente: _"conclui a tarefa X"_ ou _"cria tarefa Y"_`
+      );
+      return res.status(200).json({ ok: true });
+    }
+
     if (gasto.tipo === 'receita') {
       // Descrições genéricas não aceitas — obriga detalhamento
       const _descGenericas = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','pix recebido','entrada','dinheiro','valor','receita','renda'];
@@ -1249,6 +1354,22 @@ export default async function handler(req, res) {
     }
 
     const lancamentos = gasto.tipo === 'multiplos' ? gasto.lancamentos : [gasto];
+
+    // ── Para fotos: mostra esboço e pede confirmação antes de prosseguir ──
+    if (tipo_midia === 'foto' && gasto.tipo === 'lancamento') {
+      const vEsb = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      await setContexto(chat_id, { aguardando: 'confirmar_lancamento_foto', gasto_parcial: gasto });
+      await sendTelegram(chat_id,
+        `📋 *Esboço do lançamento identificado:*\n\n` +
+        `📝 ${gasto.descricao || '(sem descrição)'}\n` +
+        `💰 ${vEsb}\n` +
+        `🏷 ${gasto.categoria || 'Outros'}\n` +
+        `💳 ${fmtCartao(gasto.cartao || 'Não informado')}\n` +
+        `📅 ${fmtData(gasto.data_lancamento || new Date().toISOString().split('T')[0])}\n\n` +
+        `Está correto? Responda *sim* para confirmar ou *não* para editar.`
+      );
+      return res.status(200).json({ ok: true });
+    }
 
     // Pós-Gemini: perguntar modalidade PRIMEIRO, depois cartão se necessário
     if (gasto.tipo === 'lancamento' && !gasto.modalidade) {

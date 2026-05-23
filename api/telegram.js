@@ -690,8 +690,8 @@ export default async function handler(req, res) {
 
     // ── Central de Ajuda ─────────────────────────────────────────────────────
     const _textoAjuda = texto.toLowerCase().trim();
-    const _ajudaExato = ['ajuda','help','socorro','/help','/start','/menu','menu','guia','funcoes','funções','funcionalidades','funcionalidade','o que voce faz','o que vc faz','o que você faz','oque voce faz'];
-    const _ajudaContem = ['como funciona','como usar','sobre o sistema','sobre o bot','sobre o by finance','o que pode','quais funcoes','quais funções','me explica','tudo sobre','o que e isso','o que é isso','o que e o by','o que é o by','o que sou','o que faz','me conta sobre','ver funcoes','ver funções','me mostra','todas as funções','todas as funcoes','explorar','conhecer o sistema'];
+    const _ajudaExato = ['ajuda','help','socorro','/help','/start','/menu','menu','guia','funcoes','funções','funcionalidades','funcionalidade','o que voce faz','o que vc faz','o que você faz','oque voce faz','sobre','inicio','início','oi','ola','olá','eai','eaí','ei','opa','hey','hi','hello','bom dia','boa tarde','boa noite'];
+    const _ajudaContem = ['como funciona','como usar','sobre o sistema','sobre o bot','sobre o by finance','o que pode','quais funcoes','quais funções','me explica','tudo sobre','o que e isso','o que é isso','o que e o by','o que é o by','o que sou','o que faz','me conta sobre','ver funcoes','ver funções','me mostra','todas as funções','todas as funcoes','explorar','conhecer o sistema','sobre o'];
     const _isAjuda = !audioUrl && !fotoUrl && (_ajudaExato.includes(_textoAjuda) || _ajudaContem.some(kw => _textoAjuda.includes(kw)));
     if (_isAjuda) {
       if (ctx.aguardando) await limparContexto(chat_id);

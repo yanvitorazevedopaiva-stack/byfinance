@@ -892,13 +892,25 @@ export default async function handler(req, res) {
         const resposta = texto.toLowerCase().trim();
         const tarefaCtx = gasto;
 
-        const _aceitarWords = ['aceitar','aceito','aceita','sim','s','ok','pode','beleza','blz','combinado','fechado','claro','topo','top','show','bora','certo','correto','afirmativo','positivo','yes','y','farei','faço','vou fazer','tá bom','ta bom','pode ser','tranquilo','com prazer','com certeza'];
-        const _negarWords = ['negar','nego','nega','não','nao','n','no','recusar','recuso','recusa','impossível','impossivel','não posso','nao posso','não dá','nao da','não consigo','nao consigo','não quero','nao quero','negativo','sem condições'];
-        const _reagendarWords = ['reagendar','reagenda','remarcar','remarca','outro dia','mudar data','adiar','adia','mais tarde','não agora','nao agora','depois','outra data','outra hora'];
-        const _isAceitar = _aceitarWords.some(p=>resposta===p||resposta.startsWith(p+' ')||resposta.includes(p));
-        const _isNegar = _negarWords.some(p=>resposta===p||resposta.startsWith(p+' ')||resposta.includes(p));
-        const _isReagendar = _reagendarWords.some(p=>resposta===p||resposta.startsWith(p+' ')||resposta.includes(p));
-        if (_isAceitar && !_isNegar) {
+        const _aceitarWords = ['1','aceitar','aceito','aceita','sim','s','ok','pode','beleza','blz','combinado','fechado','claro','topo','top','show','bora','certo','correto','afirmativo','positivo','yes','y','farei','faço','vou fazer','tá bom','ta bom','pode ser','tranquilo','com prazer','com certeza'];
+        const _negarWords = ['3','negar','nego','nega','não','nao','n','no','recusar','recuso','recusa','impossível','impossivel','não posso','nao posso','não dá','nao da','não consigo','nao consigo','não quero','nao quero','negativo','sem condições'];
+        const _reagendarWords = ['2','reagendar','reagenda','remarcar','remarca','outro dia','mudar data','adiar','adia','mais tarde','não agora','nao agora','depois','outra data','outra hora'];
+        // Entradas curtas (<=2 chars) usam match exato para evitar falso positivo (ex: 'n' em 'reagendar')
+        const _matchTarefa = (words, resp) => words.some(p =>
+          p.length <= 2 ? resp === p : (resp === p || resp.startsWith(p + ' ') || resp.includes(p))
+        );
+        const _isReagendar = _matchTarefa(_reagendarWords, resposta);
+        const _isAceitar = _matchTarefa(_aceitarWords, resposta);
+        const _isNegar = _matchTarefa(_negarWords, resposta);
+
+        // Reagendar tem prioridade — verifica primeiro para evitar conflito com palavras curtas
+        if (_isReagendar) {
+          await setContexto(chat_id, { aguardando: 'reagendar_tarefa', gasto_parcial: tarefaCtx });
+          await sendTelegram(chat_id, `📅 Para quando você quer reagendar?\n\nEx: amanhã, sexta, 25/05`);
+          return res.status(200).json({ ok: true });
+        }
+
+        if (_isAceitar) {
           await limparContexto(chat_id);
           await sendTelegram(tarefaCtx.atribuidor_chat_id,
             `✅ *${nomeRemetente} aceitou a tarefa!*\n\n📝 ${tarefaCtx.titulo}\n📅 ${tarefaCtx.prazo ? fmtData(tarefaCtx.prazo) : 'Sem prazo'}`
@@ -907,7 +919,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        if (_isNegar && !_isAceitar) {
+        if (_isNegar) {
           await limparContexto(chat_id);
           await sendTelegram(tarefaCtx.atribuidor_chat_id,
             `❌ *${nomeRemetente} negou a tarefa*\n\n📝 ${tarefaCtx.titulo}`
@@ -923,13 +935,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        if (_isReagendar) {
-          await setContexto(chat_id, { aguardando: 'reagendar_tarefa', gasto_parcial: tarefaCtx });
-          await sendTelegram(chat_id, `📅 Para quando você quer reagendar?\n\nEx: amanhã, sexta, 25/05`);
-          return res.status(200).json({ ok: true });
-        }
-
-        await sendTelegram(chat_id, `Não entendi. Responda:\n✅ *aceitar*\n📅 *reagendar*\n❌ *negar*`);
+        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *aceitar*\n2️⃣ *reagendar*\n3️⃣ *negar*`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'reagendar_tarefa') {
@@ -1022,7 +1028,7 @@ export default async function handler(req, res) {
             `📝 ${gasto.titulo}\n` +
             `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n` +
             `🎯 Prioridade: ${gasto.prioridade || 'Média'}\n\n` +
-            `Responda:\n✅ *aceitar*\n📅 *reagendar*\n❌ *negar*`
+            `Responda:\n1️⃣ *aceitar*\n2️⃣ *reagendar*\n3️⃣ *negar*`
           );
           await setContexto(vinculoAtribCtx.chat_id, {
             aguardando: 'resposta_tarefa',
@@ -1423,7 +1429,7 @@ export default async function handler(req, res) {
               `📝 ${gasto.titulo}\n` +
               `📅 ${gasto.prazo ? fmtData(gasto.prazo) : 'Sem prazo'}\n` +
               `🎯 Prioridade: ${gasto.prioridade || 'Média'}\n\n` +
-              `Responda:\n✅ *aceitar*\n📅 *reagendar*\n❌ *negar*`
+              `Responda:\n1️⃣ *aceitar*\n2️⃣ *reagendar*\n3️⃣ *negar*`
             );
             await setContexto(vinculoAtrib.chat_id, {
               aguardando: 'resposta_tarefa',

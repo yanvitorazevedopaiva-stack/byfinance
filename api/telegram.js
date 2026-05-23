@@ -672,7 +672,7 @@ export default async function handler(req, res) {
     // ── Detecção de nova intenção: evita que contexto antigo capture mensagem nova ──
     // Se o usuário estiver num fluxo (modalidade, cartão, etc.) e enviar uma mensagem
     // com intenção claramente diferente, limpa o contexto e processa do zero.
-    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas','mercado_multiplos'];
+    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas','mercado_multiplos','menu_ajuda'];
     const _novosIntentosKw = [
       'atribui','atribuir','criar tarefa','nova tarefa','tarefa para','tarefa:',
       'recebi','recebi de','entrou na conta','salário','salario','freelance',
@@ -688,10 +688,140 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Central de Ajuda ─────────────────────────────────────────────────────
+    const _textoAjuda = texto.toLowerCase().trim();
+    const _ajudaExato = ['ajuda','help','socorro','/help','/start','/menu','menu','guia','funcoes','funções','funcionalidades','funcionalidade','o que voce faz','o que vc faz','o que você faz','oque voce faz'];
+    const _ajudaContem = ['como funciona','como usar','sobre o sistema','sobre o bot','sobre o by finance','o que pode','quais funcoes','quais funções','me explica','tudo sobre','o que e isso','o que é isso','o que e o by','o que é o by','o que sou','o que faz','me conta sobre','ver funcoes','ver funções','me mostra','todas as funções','todas as funcoes','explorar','conhecer o sistema'];
+    const _isAjuda = !audioUrl && !fotoUrl && (_ajudaExato.includes(_textoAjuda) || _ajudaContem.some(kw => _textoAjuda.includes(kw)));
+    if (_isAjuda) {
+      if (ctx.aguardando) await limparContexto(chat_id);
+      await setContexto(chat_id, { aguardando: 'menu_ajuda' });
+      await sendTelegram(chat_id,
+        `📋 *BY Finance — Central de Ajuda*\n\n` +
+        `Sou o assistente do *BY Finance*. Escolha uma área:\n\n` +
+        `1️⃣ Lançar gastos e despesas\n` +
+        `2️⃣ Registrar receitas\n` +
+        `3️⃣ Tarefas — criar, atribuir e responder\n` +
+        `4️⃣ Autorizar lançamentos pendentes\n` +
+        `5️⃣ Compras de mercado\n` +
+        `6️⃣ Fotos, áudios e PDFs\n` +
+        `7️⃣ Dispositivos vinculados\n\n` +
+        `Digite o número para saber mais, ou *0* para fechar.`
+      );
+      return res.status(200).json({ ok: true });
+    }
+
     // ── Fluxo de contexto: resposta a pergunta anterior ──────────────────────
     if (ctx.aguardando && texto) {
       const campo = ctx.aguardando;
       const gasto = ctx.gasto_parcial || {};
+
+      if (campo === 'menu_ajuda') {
+        const _op = texto.trim();
+        const _menuPrincipal =
+          `📋 *BY Finance — Central de Ajuda*\n\n` +
+          `1️⃣ Lançar gastos e despesas\n` +
+          `2️⃣ Registrar receitas\n` +
+          `3️⃣ Tarefas — criar, atribuir e responder\n` +
+          `4️⃣ Autorizar lançamentos pendentes\n` +
+          `5️⃣ Compras de mercado\n` +
+          `6️⃣ Fotos, áudios e PDFs\n` +
+          `7️⃣ Dispositivos vinculados\n\n` +
+          `Digite o número para saber mais, ou *0* para fechar.`;
+        if (_op === '0' || /^(fechar|fecha|sair|voltar|cancelar)$/i.test(_op)) {
+          await limparContexto(chat_id);
+          await sendTelegram(chat_id, `✅ Menu fechado. Me envie um gasto, receita ou tarefa quando quiser!`);
+          return res.status(200).json({ ok: true });
+        }
+        const _detalhes = {
+          '1':
+            `💸 *Lançar gastos e despesas*\n\n` +
+            `Registre qualquer despesa pelo chat.\n\n` +
+            `📝 *Por texto:*\n` +
+            `• "Gastei 50 no iFood"\n` +
+            `• "Uber 23 reais no débito Nubank"\n` +
+            `• "Netflix 45 crédito"\n` +
+            `• "200 em 3x no cartão Nubank"\n\n` +
+            `🎤 *Por áudio:* grave falando o gasto normalmente\n\n` +
+            `📸 *Por foto ou PDF:* foto de cupom, nota ou comprovante\n\n` +
+            `O bot pergunta forma de pagamento, cartão e parcelas quando necessário. O lançamento fica *pendente* no BY Finance aguardando autorização.\n\n` +
+            `_Digite outro número ou 0 para fechar._`,
+          '2':
+            `💰 *Registrar receitas*\n\n` +
+            `Registre entradas de dinheiro da mesma forma que gastos.\n\n` +
+            `Exemplos:\n` +
+            `• "Recebi 2000 de salário"\n` +
+            `• "Entrou 500 de freelance"\n` +
+            `• "Cliente pagou 800"\n` +
+            `• Foto de comprovante Pix recebido\n\n` +
+            `O bot identifica como receita automaticamente e aguarda autorização no BY Finance.\n\n` +
+            `_Digite outro número ou 0 para fechar._`,
+          '3':
+            `📝 *Tarefas*\n\n` +
+            `*Criar tarefa própria:*\n` +
+            `• "Criar tarefa pagar contas"\n` +
+            `• "Lembrar de ligar pro banco sexta"\n\n` +
+            `*Atribuir para alguém vinculado:*\n` +
+            `• "Criar tarefa lavar o carro para Bruna"\n` +
+            `• A pessoa recebe notificação e responde:\n` +
+            `  1️⃣ Aceitar   2️⃣ Reagendar   3️⃣ Negar\n\n` +
+            `*Concluir tarefa:*\n` +
+            `• "Conclui a tarefa pagar contas"\n` +
+            `• "Terminei de lavar o carro"\n\n` +
+            `As tarefas aparecem no quadro do BY Finance em tempo real.\n\n` +
+            `_Digite outro número ou 0 para fechar._`,
+          '4':
+            `✅ *Autorizar lançamentos pendentes*\n\n` +
+            `Todo lançamento registrado fica *pendente por 7 dias*.\n\n` +
+            `Para autorizar: abra o BY Finance, clique no ícone do Telegram no topo e escolha Autorizar ou Rejeitar.\n\n` +
+            `Na tela de autorização você define:\n` +
+            `• Forma de pagamento real\n` +
+            `• Cartão utilizado\n` +
+            `• Estabelecimento (opcional)\n` +
+            `• Bem vinculado (opcional)\n\n` +
+            `Com 2+ dispositivos vinculados: qualquer pessoa pode autorizar e todos recebem notificação de confirmação.\n\n` +
+            `_Digite outro número ou 0 para fechar._`,
+          '5':
+            `🛒 *Compras de mercado*\n\n` +
+            `Ao fotografar um cupom fiscal, o bot pergunta se é supermercado/mercado.\n\n` +
+            `Se *Sim*: cada item entra na lista de compras variáveis do mês no BY Finance, com rastreio de preço por item ao longo do tempo.\n\n` +
+            `Se *Não*: os itens são salvos normalmente sem vínculo com a lista de mercado.\n\n` +
+            `Ideal para controlar quanto você gasta em cada produto e comparar preços mês a mês.\n\n` +
+            `_Digite outro número ou 0 para fechar._`,
+          '6':
+            `📸 *Fotos, áudios e PDFs*\n\n` +
+            `*Foto ou PDF:*\n` +
+            `• Cupom com vários itens → extrai cada produto separado\n` +
+            `• Comprovante Pix recebido → registra como receita\n` +
+            `• Comprovante Pix enviado → registra como despesa\n` +
+            `• Comprovante de cartão → registra valor e estabelecimento\n\n` +
+            `*Áudio:*\n` +
+            `• Fale o gasto: _"cinquenta reais no mercado"_\n` +
+            `• O bot transcreve e interpreta igual ao texto\n\n` +
+            `Dica: para cupons com muitos itens o bot pergunta se é mercado antes de salvar.\n\n` +
+            `_Digite outro número ou 0 para fechar._`,
+          '7':
+            `📱 *Dispositivos vinculados*\n\n` +
+            `Conecte múltiplos Telegrams ao mesmo BY Finance.\n\n` +
+            `*Como vincular:*\n` +
+            `Acesse BY Finance → Configurações → Vincular Telegram e use o código gerado.\n\n` +
+            `*Com 2+ dispositivos:*\n` +
+            `• Um registra o gasto, o outro recebe notificação\n` +
+            `• Tarefas podem ser criadas e atribuídas entre vinculados\n` +
+            `• Qualquer vinculado pode autorizar lançamentos\n` +
+            `• Confirmações e notificações chegam para todos\n\n` +
+            `*Casos de uso:*\n` +
+            `• Casal controlando finanças juntos\n` +
+            `• Sócios gerindo gastos do negócio\n\n` +
+            `_Digite outro número ou 0 para fechar._`
+        };
+        if (_detalhes[_op]) {
+          await sendTelegram(chat_id, _detalhes[_op]);
+        } else {
+          await sendTelegram(chat_id, `Opção inválida.\n\n` + _menuPrincipal);
+        }
+        return res.status(200).json({ ok: true });
+      }
 
       if (campo === 'confirmar_lancamento_foto') {
         const _t=texto.toLowerCase().trim();

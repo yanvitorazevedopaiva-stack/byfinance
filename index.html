@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BY Persona Finance</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   /* ===== VARIÁVEIS — MODO NOTURNO (padrão) ===== */
@@ -12319,7 +12320,7 @@ function addReceita(){
     setReceitas(recs);
   }
 
-  // Reset form
+  // Reset form (mantém formulário aberto para lançar múltiplas receitas)
   ['rec-desc','rec-outros'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('rec-val').value='';
   document.getElementById('rec-data').value='';
@@ -12328,8 +12329,10 @@ function addReceita(){
   document.getElementById('rec-cat').selectedIndex=0;
   document.getElementById('rec-conta').value='';
   recAnxClear();
-  recFecharForm();
+  recSetTipo('variavel');
   renderReceita();
+  _showToast('✓ Receita adicionada!');
+  setTimeout(()=>{const el=document.getElementById('rec-desc');if(el)el.focus();},80);
 }
 
 // ── Render lista de receitas fixas ──
@@ -20561,17 +20564,46 @@ function abrirDocModal(){
 }
 function fecharDocModal(){document.getElementById('bem-doc-modal').style.display='none';}
 
-async function _uploadDocFileToStorage(file,docId){
-  if(!_supabase||!_authUID) return null;
+// Salva arquivo como base64 em linha separada da tabela user_data
+// Não depende de Supabase Storage nem de _authUID — só precisa de _authUser
+async function _saveDocToSupabase(file,docId){
+  if(!_supabase||!_authUser) return false;
+  return new Promise(resolve=>{
+    const r=new FileReader();
+    r.onload=async e=>{
+      const base64=e.target.result;
+      const rowId='__doc__'+_authUser+'_'+docId;
+      try{
+        const{error}=await _supabase.from('user_data').upsert(
+          {user_id:rowId,data:{fileData:base64,fileName:file.name,fileType:file.type},updated_at:new Date().toISOString()},
+          {onConflict:'user_id'}
+        );
+        if(error){console.warn('[BYF Doc] erro ao salvar:',error);resolve(false);}
+        else{
+          if(!window._docCache) window._docCache={};
+          window._docCache[docId]={src:base64,name:file.name};
+          resolve(true);
+        }
+      }catch(ex){console.warn('[BYF Doc] exceção:',ex);resolve(false);}
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+// Carrega base64 do arquivo a partir da tabela user_data
+async function _loadDocFromSupabase(docId){
+  if(!_supabase||!_authUser) return null;
+  if(window._docCache&&window._docCache[docId]) return window._docCache[docId].src;
+  const rowId='__doc__'+_authUser+'_'+docId;
   try{
-    try{await _supabase.storage.createBucket('BYFinance',{public:true,fileSizeLimit:52428800});}catch(e){}
-    const ext=(file.name||'file').split('.').pop().toLowerCase()||'pdf';
-    const path=_authUID+'/docs/'+docId+'.'+ext;
-    const{data,error}=await _supabase.storage.from('BYFinance').upload(path,file,{upsert:true,contentType:file.type});
-    if(error){console.warn('[BYF Storage] upload error:',error.message);return null;}
-    const{data:urlData}=_supabase.storage.from('BYFinance').getPublicUrl(path);
-    return urlData?.publicUrl||null;
-  }catch(e){console.warn('[BYF Storage] exception:',e);return null;}
+    const{data,error}=await _supabase.from('user_data').select('data').eq('user_id',rowId).maybeSingle();
+    if(!error&&data?.data?.fileData){
+      if(!window._docCache) window._docCache={};
+      window._docCache[docId]={src:data.data.fileData,name:data.data.fileName};
+      return data.data.fileData;
+    }
+  }catch(ex){console.warn('[BYF Doc] erro ao carregar:',ex);}
+  return null;
 }
 
 function salvarDocumentoBem(){
@@ -20592,11 +20624,11 @@ function salvarDocumentoBem(){
   };
   if(arquivo){
     if(_supabase&&_authUser){
-      // Upload direto no Supabase Storage — sem passar por localStorage
-      _uploadDocFileToStorage(arquivo,_docId).then(url=>{
-        if(url){_save(url);}
+      // Salva base64 na tabela user_data (linha separada — não usa localStorage)
+      _saveDocToSupabase(arquivo,_docId).then(ok=>{
+        if(ok){_save('__sbrow_'+_docId);}
         else{
-          // fallback: base64 em localStorage
+          // fallback: base64 em localStorage (pode falhar se cheio)
           const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);
         }
       });
@@ -20678,6 +20710,7 @@ function _bemOkToast(msg){
 // ── VER ANEXOS — modal de mídia com navegação múltipla ──
 let _mediaViewerCtx=null; // {type, id, files:[{src,nome}], idx}
 
+let _pdfViewerDoc=null,_pdfViewerPage=1;
 function _mediaViewerRender(){
   if(!_mediaViewerCtx) return;
   const {files,idx}=_mediaViewerCtx;
@@ -20687,14 +20720,59 @@ function _mediaViewerRender(){
   const counter=document.getElementById('media-viewer-counter');
   if(title) title.textContent=file.nome||'Comprovante';
   if(counter) counter.textContent=files.length>1?`${idx+1} / ${files.length}`:'';
-  const isPdf=file.src.startsWith('data:application/pdf')||/\.pdf(\?.*)?$/i.test(file.src);
-  body.innerHTML=isPdf
-    ?`<iframe src="${file.src}" style="width:100%;height:82vh;border:none;border-radius:8px"></iframe>`
-    :`<img src="${file.src}" style="max-width:100%;max-height:84vh;border-radius:8px;display:block;margin:0 auto;object-fit:contain">`;
   const prev=document.getElementById('media-viewer-prev');
   const next=document.getElementById('media-viewer-next');
   if(prev) prev.style.visibility=idx>0?'visible':'hidden';
   if(next) next.style.visibility=idx<files.length-1?'visible':'hidden';
+  const isPdf=file.src.startsWith('data:application/pdf')||/\.pdf(\?.*)?$/i.test(file.src);
+  if(isPdf){
+    _pdfViewerDoc=null;_pdfViewerPage=1;
+    body.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">Carregando PDF...</div>`;
+    const loadingTask=(typeof pdfjsLib!=='undefined')
+      ?pdfjsLib.getDocument(file.src)
+      :null;
+    if(!loadingTask){
+      // fallback: iframe se pdf.js não carregou
+      body.innerHTML=`<iframe src="${file.src}" style="width:100%;height:82vh;border:none;border-radius:8px"></iframe>`;
+      return;
+    }
+    if(typeof pdfjsLib!=='undefined') pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    loadingTask.promise.then(pdf=>{
+      _pdfViewerDoc=pdf;
+      _renderPdfPage(body,pdf,1);
+    }).catch(()=>{
+      body.innerHTML=`<iframe src="${file.src}" style="width:100%;height:82vh;border:none;border-radius:8px"></iframe>`;
+    });
+  } else {
+    body.innerHTML=`<img src="${file.src}" style="max-width:100%;max-height:84vh;border-radius:8px;display:block;margin:0 auto;object-fit:contain">`;
+  }
+}
+function _renderPdfPage(body,pdf,pageNum){
+  _pdfViewerPage=pageNum;
+  pdf.getPage(pageNum).then(page=>{
+    const vw=body.clientWidth||800;
+    const viewport=page.getViewport({scale:1});
+    const scale=Math.min((vw-24)/viewport.width, window.innerHeight*0.82/viewport.height);
+    const vp=page.getViewport({scale});
+    const canvas=document.createElement('canvas');
+    canvas.width=vp.width;canvas.height=vp.height;
+    canvas.style.cssText='display:block;margin:0 auto;border-radius:6px;max-width:100%';
+    const navHtml=pdf.numPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3)">
+      <button onclick="_pdfNav(-1)" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 12px;cursor:pointer;font-size:14px">‹</button>
+      <span id="pdf-page-label">${pageNum} / ${pdf.numPages}</span>
+      <button onclick="_pdfNav(1)" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 12px;cursor:pointer;font-size:14px">›</button>
+    </div>`:'';
+    body.innerHTML=navHtml;
+    body.appendChild(canvas);
+    page.render({canvasContext:canvas.getContext('2d'),viewport:vp});
+  });
+}
+function _pdfNav(dir){
+  if(!_pdfViewerDoc) return;
+  const body=document.getElementById('media-viewer-body');
+  const np=_pdfViewerPage+dir;
+  if(np<1||np>_pdfViewerDoc.numPages) return;
+  _renderPdfPage(body,_pdfViewerDoc,np);
 }
 function _mvToggleOpcoes(){
   const m=document.getElementById('mv-opcoes-menu');
@@ -20754,9 +20832,26 @@ function _verAnexoBem(id){
 }
 function _verAnexoBemDoc(id){
   const d=getBensDocumentos().find(x=>x.id==id);if(!d||!d.anexo)return;
-  _mediaViewerCtx={type:'doc',id,files:[{src:d.anexo,nome:d.nome||'Documento'}],idx:0};
-  _mediaViewerRender();
-  document.getElementById('media-viewer-modal').style.display='flex';
+  if(typeof d.anexo==='string'&&d.anexo.startsWith('__sbrow_')){
+    // Arquivo armazenado no Supabase user_data — buscar de forma assíncrona
+    const docId=+d.anexo.replace('__sbrow_','');
+    const modal=document.getElementById('media-viewer-modal');
+    const body=document.getElementById('media-viewer-body');
+    modal.style.display='flex';
+    if(body) body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">☁ Carregando arquivo...</div>`;
+    _loadDocFromSupabase(docId).then(src=>{
+      if(!src){
+        if(body) body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--neon-red);font-size:12px;font-family:'JetBrains Mono',monospace">Arquivo não encontrado no servidor.<br><span style="color:var(--text3);font-size:11px">Tente cadastrar novamente.</span></div>`;
+        return;
+      }
+      _mediaViewerCtx={type:'doc',id,files:[{src,nome:d.nome||'Documento'}],idx:0};
+      _mediaViewerRender();
+    });
+  } else {
+    _mediaViewerCtx={type:'doc',id,files:[{src:d.anexo,nome:d.nome||'Documento'}],idx:0};
+    _mediaViewerRender();
+    document.getElementById('media-viewer-modal').style.display='flex';
+  }
 }
 </script>
 

@@ -8188,72 +8188,61 @@ function triggerAnexo(ctx){
 function onAnexoSelected(inp){
   const file=inp.files[0];
   if(!file||!_anxCtx) return;
-  if(file.size>6*1024*1024){
-    alert('Arquivo muito grande. Máximo 6 MB.');
-    return;
-  }
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const dados={nome:file.name,tipo:file.type,dados:e.target.result};
-    if(_anxCtx.t==='gf'){
-      const a=getGfAnexos();
-      if(!a[_anxCtx.id]) a[_anxCtx.id]={};
-      a[_anxCtx.id][_anxCtx.mes]=dados;
-      setGfAnexos(a);
-      renderGastos();
-    } else if(_anxCtx.t==='parc'){
-      const a=getParcAnexos();
-      if(!a[_anxCtx.id]) a[_anxCtx.id]={};
-      a[_anxCtx.id][_anxCtx.mes]=dados;
-      setParcAnexos(a);
-      renderParcelas();
-    } else if(_anxCtx.t==='crono'){
+  if(file.size>6*1024*1024){alert('Arquivo muito grande. Máximo 6 MB.');return;}
+  const ctx=_anxCtx;_anxCtx=null;
+  (async()=>{
+    const uid='anx_'+Date.now();
+    const dados=await _salvarArqObj(file,uid);
+    if(ctx.t==='gf'){
+      const a=getGfAnexos();if(!a[ctx.id])a[ctx.id]={};
+      a[ctx.id][ctx.mes]=dados;setGfAnexos(a);renderGastos();
+    } else if(ctx.t==='parc'){
+      const a=getParcAnexos();if(!a[ctx.id])a[ctx.id]={};
+      a[ctx.id][ctx.mes]=dados;setParcAnexos(a);renderParcelas();
+    } else if(ctx.t==='crono'){
       _cronoAnxPending=dados;
-      const lbl=document.getElementById('cf_anx_label');
-      const del=document.getElementById('cf_anx_del');
+      const lbl=document.getElementById('cf_anx_label');const del=document.getElementById('cf_anx_del');
       if(lbl){lbl.textContent=dados.nome;lbl.style.color='var(--neon-green)';}
       if(del) del.style.display='inline';
-    } else if(_anxCtx.t==='rec'){
+    } else if(ctx.t==='rec'){
       _recAnxTemp=dados;
-      const lbl=document.getElementById('rec-anx-label');
-      const del=document.getElementById('rec-anx-del');
+      const lbl=document.getElementById('rec-anx-label');const del=document.getElementById('rec-anx-del');
       if(lbl){lbl.textContent=dados.nome;lbl.style.color='var(--neon-green)';}
       if(del) del.style.display='inline';
-    } else if(_anxCtx.t==='rec-edit'){
+    } else if(ctx.t==='rec-edit'){
       _recEditAnxTemp=dados;
-      const lbl=document.getElementById('rec-edit-anx-label');
-      const del=document.getElementById('rec-edit-anx-del');
+      const lbl=document.getElementById('rec-edit-anx-label');const del=document.getElementById('rec-edit-anx-del');
       if(lbl){lbl.textContent=dados.nome;lbl.style.color='var(--neon-green)';}
       if(del) del.style.display='inline';
-    } else if(_anxCtx.t==='rec-inline'){
+    } else if(ctx.t==='rec-inline'){
       const recs=getReceitas();
-      const entry=(recs[_anxCtx.mes]||[]).find(x=>x.id===_anxCtx.id);
-      if(entry){entry.anexo=dados;setReceitas(recs);}
-      renderReceita();
-    } else if(_anxCtx.t==='rec-inline-recv'){
-      // Salva anexo e já marca como recebido em seguida
+      const entry=(recs[ctx.mes]||[]).find(x=>x.id===ctx.id);
+      if(entry){entry.anexo=dados;setReceitas(recs);}renderReceita();
+    } else if(ctx.t==='rec-inline-recv'){
       const recs=getReceitas();
-      const entry=(recs[_anxCtx.mes]||[]).find(x=>x.id===_anxCtx.id);
-      if(entry){entry.anexo=dados;entry.recebido=true;setReceitas(recs);}
-      renderReceita();
+      const entry=(recs[ctx.mes]||[]).find(x=>x.id===ctx.id);
+      if(entry){entry.anexo=dados;entry.recebido=true;setReceitas(recs);}renderReceita();
     }
-    _anxCtx=null;
-  };
-  reader.readAsDataURL(file);
+  })();
 }
 
 function verAnexo(nome,tipo,dados,sub){
   document.getElementById('anx-modal-title').textContent=nome;
   document.getElementById('anx-modal-sub').textContent=sub||'';
   const body=document.getElementById('anx-modal-body');
-  if(tipo.startsWith('image/')){
-    body.innerHTML=`<img src="${dados}" alt="${esc(nome)}">`;
-  } else {
-    body.innerHTML=`<iframe src="${dados}" title="${esc(nome)}"></iframe>`;
-  }
   const m=document.getElementById('anx-modal');
-  m.style.display=''; // remove inline para o CSS (position:fixed + display:flex) funcionar
+  m.style.display='';
   m.classList.add('open');
+  const _render=src=>{
+    if(!src){body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--neon-red);font-size:12px;font-family:'JetBrains Mono',monospace">Arquivo não encontrado no servidor.</div>`;return;}
+    body.innerHTML=tipo&&tipo.startsWith('image/')?`<img src="${src}" alt="${esc(nome)}" style="max-width:100%;height:auto">`:`<iframe src="${src}" title="${esc(nome)}" style="width:100%;height:80vh;border:none;border-radius:8px"></iframe>`;
+  };
+  if(typeof dados==='string'&&dados.startsWith('__sbrow_')){
+    body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">☁ Carregando arquivo...</div>`;
+    _loadDocFromSupabase(dados.replace('__sbrow_','')).then(_render);
+  } else {
+    _render(dados);
+  }
 }
 
 function fecharAnexo(){
@@ -11087,17 +11076,14 @@ function fecharQuitarModal(){
 
 function fatQuitarArquivo(file){
   if(!file) return;
-  if(file.size>6*1024*1024){
-    document.getElementById('fat-quitar-err').textContent='Arquivo muito grande. Máximo 6 MB.';
-    return;
-  }
+  if(file.size>6*1024*1024){document.getElementById('fat-quitar-err').textContent='Arquivo muito grande. Máximo 6 MB.';return;}
   document.getElementById('fat-quitar-err').textContent='';
-  const reader=new FileReader();
-  reader.onload=e=>{
-    _fatQuitarArquivoTemp={nome:file.name,tipo:file.type,dados:e.target.result};
-    _fatQuitarMostrarPreview(_fatQuitarArquivoTemp);
-  };
-  reader.readAsDataURL(file);
+  (async()=>{
+    const uid='fat_'+Date.now();
+    const dados=await _salvarArqObj(file,uid);
+    _fatQuitarArquivoTemp=dados;
+    _fatQuitarMostrarPreview(dados);
+  })();
 }
 
 function fatQuitarDrop(evt){
@@ -11113,7 +11099,8 @@ function _fatQuitarMostrarPreview(comp){
   if(!comp){prev.style.display='none';if(hint)hint.style.display='';return;}
   prev.style.display='block';
   if(hint) hint.style.display='none';
-  if(comp.tipo.startsWith('image/')){
+  const isCloud=comp.dados&&typeof comp.dados==='string'&&comp.dados.startsWith('__sbrow_');
+  if(!isCloud&&comp.tipo&&comp.tipo.startsWith('image/')){
     prev.innerHTML=`<img src="${comp.dados}" alt="comprovante">
       <div style="padding:8px 12px;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between">
         <span>📎 ${esc(comp.nome)}</span>
@@ -11121,7 +11108,7 @@ function _fatQuitarMostrarPreview(comp){
       </div>`;
   } else {
     prev.innerHTML=`<div class="pdf-badge">
-        <span style="font-size:24px">📄</span>
+        <span style="font-size:24px">${isCloud?'☁':'📄'}</span>
         <span>${esc(comp.nome)}</span>
         <span style="margin-left:auto;cursor:pointer;color:var(--neon-red)" onclick="_fatQuitarLimpar()">✕</span>
       </div>`;
@@ -12974,20 +12961,21 @@ function addCartao(){
       setTimeout(()=>abrirJurosModal(newId),300);
     }
   };
-  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  if(arquivo){_salvarArqStr(arquivo,'ct_'+Date.now()).then(s=>_save(s));}
   else _save(null);
 }
 
 function verContratoCartao(id){
   const c=getData('cartoes').find(x=>x.id===id);
   if(!c||!c.contrato){alert('Nenhum contrato anexado para este cartão.');return;}
-  const w=window.open('');
-  if(c.contrato.startsWith('data:application/pdf')){
-    w.document.write(`<iframe src="${c.contrato}" style="width:100%;height:100vh;border:none"></iframe>`);
-  } else {
-    w.document.write(`<img src="${c.contrato}" style="max-width:100%;height:auto">`);
-  }
-  w.document.close();
+  _resolveAnexo(c.contrato).then(src=>{
+    if(!src) return;
+    const w=window.open('');
+    w.document.write(src.startsWith('data:application/pdf')
+      ?`<iframe src="${src}" style="width:100%;height:100vh;border:none"></iframe>`
+      :`<img src="${src}" style="max-width:100%;height:auto">`);
+    w.document.close();
+  });
 }
 
 function editCartao(id){
@@ -13053,7 +13041,7 @@ function saveCartao(id){
     }
     renderCartoes();
   };
-  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  if(arquivo){_salvarArqStr(arquivo,'ct_'+Date.now()).then(s=>_save(s));}
   else _save(null);
 }
 
@@ -16286,6 +16274,7 @@ function _initFabDrag(){
 function _initApp(){
   _migrateFaturasSpread(); // corrige faturas que foram lançadas sem spread de parcelas
   _migrateEmailStorage();  // converte e-mails antigos de base64 para texto puro
+  setTimeout(_migrarArquivosParaSupabase,3000); // migra arquivos base64 existentes para Supabase em background
   _applyUserProfile(_authUser);
   renderNav('dashboard');
   document.getElementById('lanc-data').value=new Date().toISOString().split('T')[0];
@@ -17517,7 +17506,7 @@ function salvarDebito(){
       if(bar){const orig=bar.innerHTML;bar.innerHTML=`<span style="color:var(--neon-green);font-weight:700">✓ Débito salvo — ${msgs.join(' · ')}</span>`;setTimeout(()=>{bar.innerHTML=orig;},4000);}
     }
   };
-  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  if(arquivo){_salvarArqStr(arquivo,'deb_'+Date.now()).then(s=>_save(s));}
   else _save(null);
 }
 
@@ -17657,11 +17646,14 @@ function delDebito(id){
 function _verAnexoDebito(id){
   const d=getLancDebitos().find(x=>x.id===id);
   if(!d||!d.anexo) return;
-  const w=window.open('');
-  w.document.write(d.anexo.startsWith('data:application/pdf')
-    ?`<iframe src="${d.anexo}" style="width:100%;height:100vh;border:none"></iframe>`
-    :`<img src="${d.anexo}" style="max-width:100%;height:auto">`);
-  w.document.close();
+  _resolveAnexo(d.anexo).then(src=>{
+    if(!src) return;
+    const w=window.open('');
+    w.document.write(src.startsWith('data:application/pdf')
+      ?`<iframe src="${src}" style="width:100%;height:100vh;border:none"></iframe>`
+      :`<img src="${src}" style="max-width:100%;height:auto">`);
+    w.document.close();
+  });
 }
 
 // ===================== TAREFA 7 — TERCEIROS =====================
@@ -18235,12 +18227,15 @@ function editarFinanciamento(id){
 
 function _verAnexoFin(id){
   const f=getFinanciamentos().find(x=>x.id===id);
-  if(!f||!f.anexo)return;
-  const w=window.open('');
-  w.document.write(f.anexo.startsWith('data:application/pdf')
-    ?`<iframe src="${f.anexo}" style="width:100%;height:100vh;border:none"></iframe>`
-    :`<img src="${f.anexo}" style="max-width:100%;height:auto">`);
-  w.document.close();
+  if(!f||!f.anexo) return;
+  _resolveAnexo(f.anexo).then(src=>{
+    if(!src) return;
+    const w=window.open('');
+    w.document.write(src.startsWith('data:application/pdf')
+      ?`<iframe src="${src}" style="width:100%;height:100vh;border:none"></iframe>`
+      :`<img src="${src}" style="max-width:100%;height:auto">`);
+    w.document.close();
+  });
 }
 
 function _femLimparAnexo(){
@@ -18295,7 +18290,7 @@ function salvarFinEdit(){
     renderFinanciamentos();
     if(currentPage==='parcelas') renderParcelas();
   };
-  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  if(arquivo){_salvarArqStr(arquivo,'fin_'+Date.now()).then(s=>_save(s));}
   else _save(null);
 }
 
@@ -19226,7 +19221,7 @@ function salvarDocUsuario(){
     document.getElementById('docs-usuario-modal').style.display='none';
     renderDocumentosUsuario();
   };
-  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
+  if(arquivo){_salvarArqStr(arquivo,'du_'+Date.now()).then(s=>_save(s));}
   else _save(null);
 }
 
@@ -19240,12 +19235,15 @@ function delDocUsuario(id){
 
 function verDocUsuario(id){
   const d=getDocsUsuario().find(x=>x.id===id);
-  if(!d||!d.arquivo)return;
-  const w=window.open('');
-  w.document.write(d.arquivo.startsWith('data:application/pdf')
-    ?`<title>${esc(d.nome)}</title><iframe src="${d.arquivo}" style="width:100%;height:100vh;border:none"></iframe>`
-    :`<title>${esc(d.nome)}</title><img src="${d.arquivo}" style="max-width:100%;height:auto">`);
-  w.document.close();
+  if(!d||!d.arquivo) return;
+  _resolveAnexo(d.arquivo).then(src=>{
+    if(!src) return;
+    const w=window.open('');
+    w.document.write(src.startsWith('data:application/pdf')
+      ?`<title>${esc(d.nome)}</title><iframe src="${src}" style="width:100%;height:100vh;border:none"></iframe>`
+      :`<title>${esc(d.nome)}</title><img src="${src}" style="max-width:100%;height:auto">`);
+    w.document.close();
+  });
 }
 
 // ===================== TAREFA 3 — SCORE DE SAÚDE FINANCEIRA =====================
@@ -20448,8 +20446,15 @@ function salvarEventoBem(){
     _bevEditId=null;
     fecharEventoModal();_renderFichaHeader(_bemFichaId);switchBemTab('manut');
   };
-  if(anexoFile){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(anexoFile);}
-  else _save(null);
+  if(anexoFile){
+    if(_supabase&&_authUser){
+      const uid='bev_'+Date.now();
+      _saveDocToSupabase(anexoFile,uid).then(ok=>{
+        if(ok){_save('__sbrow_'+uid);}
+        else{const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(anexoFile);}
+      });
+    } else {const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(anexoFile);}
+  } else _save(null);
 }
 function bevVincularChange(){
   const chk=document.getElementById('bev-f-vincular');
@@ -20606,6 +20611,211 @@ async function _loadDocFromSupabase(docId){
   return null;
 }
 
+// ── Helpers universais de arquivo ──
+// Salva arquivo no Supabase e retorna objeto {nome,tipo,dados:'__sbrow_uid'}
+// ou fallback {nome,tipo,dados:base64} se Supabase indisponível
+async function _salvarArqObj(file,uid){
+  const _id=uid||('anx_'+Date.now());
+  if(_supabase&&_authUser){
+    const ok=await _saveDocToSupabase(file,_id);
+    if(ok) return {nome:file.name,tipo:file.type,dados:'__sbrow_'+_id};
+  }
+  return new Promise(res=>{const r=new FileReader();r.onload=e=>res({nome:file.name,tipo:file.type,dados:e.target.result});r.readAsDataURL(file);});
+}
+// Salva arquivo no Supabase e retorna string '__sbrow_uid' ou base64 direto
+async function _salvarArqStr(file,uid){
+  const _id=uid||('anx_'+Date.now());
+  if(_supabase&&_authUser){
+    const ok=await _saveDocToSupabase(file,_id);
+    if(ok) return '__sbrow_'+_id;
+  }
+  return new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(file);});
+}
+// Resolve valor de anexo: '__sbrow_uid' → busca Supabase; base64/objeto → retorna .dados
+async function _resolveAnexo(val){
+  if(!val) return null;
+  const s=typeof val==='string'?val:(val&&val.dados?val.dados:'');
+  if(s&&s.startsWith('__sbrow_')) return await _loadDocFromSupabase(s.replace('__sbrow_',''));
+  return s||null;
+}
+
+// Migração única: move TODOS os base64 do localStorage para Supabase
+// Cobre: bensEventos, bensDocumentos, gfAnexos, parcAnexos, receitas, fatComprovantes,
+//        lancDebitos, financiamentos, docsUsuario, cartoes (contrato), mkt listas (NF)
+async function _migrarArquivosParaSupabase(){
+  if(!_supabase||!_authUser) return;
+  const _migKey='_migDocs4_'+_authUser;
+  if(localStorage.getItem(_migKey)==='1') return;
+  const _sbUp=async(uid,b64,nome)=>{
+    if(!b64||!b64.startsWith('data:')) return false;
+    try{
+      const{error}=await _supabase.from('user_data').upsert(
+        {user_id:'__doc__'+_authUser+'_'+uid,data:{fileData:b64,fileName:nome||'arquivo'},updated_at:new Date().toISOString()},
+        {onConflict:'user_id'}
+      );
+      if(!error){if(!window._docCache)window._docCache={};window._docCache[uid]={src:b64,name:nome};return true;}
+    }catch(e){}
+    return false;
+  };
+
+  // bensEventos
+  let evChanged=false;
+  const evs=getBensEventos();
+  for(let i=0;i<evs.length;i++){
+    if(evs[i].anexo&&typeof evs[i].anexo==='string'&&evs[i].anexo.startsWith('data:')){
+      const uid='mig_bev_'+evs[i].id;
+      if(await _sbUp(uid,evs[i].anexo,evs[i].desc)){evs[i].anexo='__sbrow_'+uid;evChanged=true;}
+    }
+    if(Array.isArray(evs[i].anexos)){
+      for(let j=0;j<evs[i].anexos.length;j++){
+        const anx=evs[i].anexos[j];
+        if(anx&&anx.src&&anx.src.startsWith('data:')){
+          const uid='mig_bev_'+evs[i].id+'_'+j;
+          if(await _sbUp(uid,anx.src,anx.nome)){evs[i].anexos[j].src='__sbrow_'+uid;evChanged=true;}
+        }
+      }
+    }
+  }
+  if(evChanged) save('bensEventos',evs);
+
+  // bensDocumentos
+  let docChanged=false;
+  const docs=getBensDocumentos();
+  for(let i=0;i<docs.length;i++){
+    if(docs[i].anexo&&typeof docs[i].anexo==='string'&&docs[i].anexo.startsWith('data:')){
+      const uid='mig_doc_'+docs[i].id;
+      if(await _sbUp(uid,docs[i].anexo,docs[i].nome)){docs[i].anexo='__sbrow_'+uid;docChanged=true;}
+    }
+  }
+  if(docChanged) save('bensDocumentos',docs);
+
+  // gfAnexos
+  let gfChanged=false;
+  const gfa=getGfAnexos();
+  for(const id of Object.keys(gfa)){
+    for(const mes of Object.keys(gfa[id]||{})){
+      const a=gfa[id][mes];
+      if(a&&a.dados&&a.dados.startsWith('data:')){
+        const uid='mig_gf_'+id+'_'+mes;
+        if(await _sbUp(uid,a.dados,a.nome)){gfa[id][mes].dados='__sbrow_'+uid;gfChanged=true;}
+      }
+    }
+  }
+  if(gfChanged) setGfAnexos(gfa);
+
+  // parcAnexos
+  let parcChanged=false;
+  const pa=getParcAnexos();
+  for(const id of Object.keys(pa)){
+    for(const mes of Object.keys(pa[id]||{})){
+      const a=pa[id][mes];
+      if(a&&a.dados&&a.dados.startsWith('data:')){
+        const uid='mig_parc_'+id+'_'+mes;
+        if(await _sbUp(uid,a.dados,a.nome)){pa[id][mes].dados='__sbrow_'+uid;parcChanged=true;}
+      }
+    }
+  }
+  if(parcChanged) setParcAnexos(pa);
+
+  // receitas
+  let recChanged=false;
+  const recs=getReceitas();
+  for(const mes of Object.keys(recs)){
+    const arr=recs[mes]||[];
+    for(let i=0;i<arr.length;i++){
+      const a=arr[i].anexo;
+      if(a&&a.dados&&a.dados.startsWith('data:')){
+        const uid='mig_rec_'+arr[i].id;
+        if(await _sbUp(uid,a.dados,a.nome)){recs[mes][i].anexo.dados='__sbrow_'+uid;recChanged=true;}
+      }
+    }
+  }
+  if(recChanged) setReceitas(recs);
+
+  // fatComprovantes
+  let fatChanged=false;
+  const fc=getFatComprovantes();
+  for(const key of Object.keys(fc)){
+    const a=fc[key];
+    if(a&&a.dados&&a.dados.startsWith('data:')){
+      const uid='mig_fat_'+key.replace(/[^a-z0-9]/gi,'_');
+      if(await _sbUp(uid,a.dados,a.nome)){fc[key].dados='__sbrow_'+uid;fatChanged=true;}
+    }
+  }
+  if(fatChanged) setFatComprovantes(fc);
+
+  // lancDebitos
+  let debChanged=false;
+  const debs=getLancDebitos();
+  for(let i=0;i<debs.length;i++){
+    if(debs[i].anexo&&typeof debs[i].anexo==='string'&&debs[i].anexo.startsWith('data:')){
+      const uid='mig_deb_'+debs[i].id;
+      if(await _sbUp(uid,debs[i].anexo,debs[i].desc)){debs[i].anexo='__sbrow_'+uid;debChanged=true;}
+    }
+  }
+  if(debChanged) setLancDebitos(debs);
+
+  // financiamentos
+  let finChanged=false;
+  const fins=getFinanciamentos();
+  for(let i=0;i<fins.length;i++){
+    if(fins[i].anexo&&typeof fins[i].anexo==='string'&&fins[i].anexo.startsWith('data:')){
+      const uid='mig_fin_'+fins[i].id;
+      if(await _sbUp(uid,fins[i].anexo,fins[i].desc)){fins[i].anexo='__sbrow_'+uid;finChanged=true;}
+    }
+  }
+  if(finChanged) setFinanciamentos(fins);
+
+  // docsUsuario
+  let duChanged=false;
+  const dus=getDocsUsuario();
+  for(let i=0;i<dus.length;i++){
+    if(dus[i].arquivo&&typeof dus[i].arquivo==='string'&&dus[i].arquivo.startsWith('data:')){
+      const uid='mig_du_'+dus[i].id;
+      if(await _sbUp(uid,dus[i].arquivo,dus[i].nome)){dus[i].arquivo='__sbrow_'+uid;duChanged=true;}
+    }
+  }
+  if(duChanged) setDocsUsuario(dus);
+
+  // cartões (contrato)
+  let ctChanged=false;
+  const cts=getData('cartoes');
+  for(let i=0;i<cts.length;i++){
+    if(cts[i].contrato&&typeof cts[i].contrato==='string'&&cts[i].contrato.startsWith('data:')){
+      const uid='mig_ct_'+cts[i].id;
+      if(await _sbUp(uid,cts[i].contrato,cts[i].nome)){cts[i].contrato='__sbrow_'+uid;ctChanged=true;}
+    }
+  }
+  if(ctChanged) setData('cartoes',cts);
+
+  // mkt listas (NF)
+  let mktChanged=false;
+  try{
+    const listas=_mktGetListas();
+    for(let i=0;i<listas.length;i++){
+      const nfs=listas[i].nfs||[];
+      for(let j=0;j<nfs.length;j++){
+        if(nfs[j].dados&&nfs[j].dados.startsWith('data:')){
+          const uid='mig_nf_'+listas[i].id+'_'+j;
+          if(await _sbUp(uid,nfs[j].dados,nfs[j].nome)){listas[i].nfs[j].dados='__sbrow_'+uid;mktChanged=true;}
+        }
+      }
+      if(listas[i].nf&&listas[i].nf.dados&&listas[i].nf.dados.startsWith('data:')){
+        const uid='mig_nf0_'+listas[i].id;
+        if(await _sbUp(uid,listas[i].nf.dados,listas[i].nf.nome)){listas[i].nf.dados='__sbrow_'+uid;mktChanged=true;}
+      }
+    }
+    if(mktChanged) _mktSetListas(listas);
+  }catch(e){}
+
+  try{localStorage.setItem(_migKey,'1');}catch(e){}
+  const total=[evChanged,docChanged,gfChanged,parcChanged,recChanged,fatChanged,debChanged,finChanged,duChanged,ctChanged,mktChanged].filter(Boolean).length;
+  if(total>0){
+    console.log('[BYF] Migração completa: '+total+' tipo(s) de arquivo migrados para Supabase — localStorage liberado.');
+    _showToast('☁ Arquivos migrados para nuvem — espaço liberado!');
+  }
+}
+
 function salvarDocumentoBem(){
   const nome=document.getElementById('bdoc-f-nome').value.trim();
   if(!nome){_showError('Informe o nome do documento.');return;}
@@ -20662,39 +20872,38 @@ function _bemFinAnexar(id,fromModal){
   const input=document.createElement('input');
   input.type='file';input.multiple=true;
   input.accept='image/png,image/jpeg,image/jpg,application/pdf';
-  input.onchange=function(){
+  input.onchange=async function(){
     const files=Array.from(this.files);
     if(!files.length) return;
     const oversized=files.filter(f=>f.size>5*1024*1024);
     if(oversized.length){_showError('Arquivo(s) muito grande(s). Máximo 5 MB cada.');return;}
-    let loaded=0;
     const results=[];
-    files.forEach((file,i)=>{
-      const reader=new FileReader();
-      reader.onload=function(ev2){
-        results[i]={src:ev2.target.result,nome:file.name};
-        loaded++;
-        if(loaded===files.length){
-          const evs=getBensEventos();
-          const idx=evs.findIndex(e=>e.id===id);
-          if(idx===-1) return;
-          const existing=_normAnexos(evs[idx]);
-          evs[idx].anexos=[...existing,...results];
-          delete evs[idx].anexo; // migra para o array
-          save('bensEventos',evs);
-          const bem=getBens().find(b=>b.id===evs[idx].bemId);
-          if(bem) renderBemFinanceiro(bem);
-          if(fromModal){
-            // atualiza o modal aberto
-            _mediaViewerCtx.files=evs[idx].anexos;
-            _mediaViewerCtx.idx=evs[idx].anexos.length-1;
-            _mediaViewerRender();
-          }
-          _bemOkToast(files.length===1?'Comprovante anexado!':files.length+' comprovantes anexados!');
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    for(let i=0;i<files.length;i++){
+      const file=files[i];
+      const uid=''+Date.now()+'_'+i;
+      if(_supabase&&_authUser){
+        const ok=await _saveDocToSupabase(file,uid);
+        if(ok){results.push({src:'__sbrow_'+uid,nome:file.name});continue;}
+      }
+      // fallback base64
+      const b64=await new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(file);});
+      results.push({src:b64,nome:file.name});
+    }
+    const evs=getBensEventos();
+    const idx=evs.findIndex(e=>e.id===id);
+    if(idx===-1) return;
+    const existing=_normAnexos(evs[idx]);
+    evs[idx].anexos=[...existing,...results];
+    delete evs[idx].anexo;
+    save('bensEventos',evs);
+    const bem=getBens().find(b=>b.id===evs[idx].bemId);
+    if(bem) renderBemFinanceiro(bem);
+    if(fromModal){
+      _mediaViewerCtx.files=evs[idx].anexos;
+      _mediaViewerCtx.idx=evs[idx].anexos.length-1;
+      _mediaViewerRender();
+    }
+    _bemOkToast(files.length===1?'Comprovante anexado!':files.length+' comprovantes anexados!');
   };
   input.click();
 }
@@ -20724,6 +20933,17 @@ function _mediaViewerRender(){
   const next=document.getElementById('media-viewer-next');
   if(prev) prev.style.visibility=idx>0?'visible':'hidden';
   if(next) next.style.visibility=idx<files.length-1?'visible':'hidden';
+  // Arquivo armazenado no Supabase — buscar antes de renderizar
+  if(typeof file.src==='string'&&file.src.startsWith('__sbrow_')){
+    const docId=file.src.replace('__sbrow_','');
+    body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">☁ Carregando arquivo...</div>`;
+    _loadDocFromSupabase(docId).then(src=>{
+      if(!src){body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--neon-red);font-size:12px;font-family:'JetBrains Mono',monospace">Arquivo não encontrado no servidor.</div>`;return;}
+      files[idx].src=src; // cache local para navegação
+      _mediaViewerRender();
+    });
+    return;
+  }
   const isPdf=file.src.startsWith('data:application/pdf')||/\.pdf(\?.*)?$/i.test(file.src);
   if(isPdf){
     _pdfViewerDoc=null;_pdfViewerPage=1;
@@ -20834,7 +21054,7 @@ function _verAnexoBemDoc(id){
   const d=getBensDocumentos().find(x=>x.id==id);if(!d||!d.anexo)return;
   if(typeof d.anexo==='string'&&d.anexo.startsWith('__sbrow_')){
     // Arquivo armazenado no Supabase user_data — buscar de forma assíncrona
-    const docId=+d.anexo.replace('__sbrow_','');
+    const docId=d.anexo.replace('__sbrow_','');
     const modal=document.getElementById('media-viewer-modal');
     const body=document.getElementById('media-viewer-body');
     modal.style.display='flex';
@@ -22294,22 +22514,21 @@ function mktFiltrarCatalogoPicker(){
 function mktAddItemDosCatalogo(catItemId){const it=_mktGetCatalogo().find(x=>x.id===catItemId);if(!it||!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;if(lista.itens.find(i=>i.refId===catItemId)){_showError(`"${it.nome}" já está nesta lista.`);return;}lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:0,comprado:false});_mktSetListas(listas);mktFecharAddMes();_mktRenderMes();}
 function mktAddItemManual(){const nome=(document.getElementById('mkt-add-man-nome')?.value||'').trim();if(!nome){_showError('Informe onome.');return;}const cat=document.getElementById('mkt-add-man-cat')?.value||'Outros';const qtd=parseFloat(document.getElementById('mkt-add-man-qtd')?.value)||1;const unidade=document.getElementById('mkt-add-man-unidade')?.value||'un';const preco=_mktParseBRL(document.getElementById('mkt-add-man-preco')?.value);if(!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens.push({id:Date.now(),refId:null,nome,cat,qtd,unidade,precoPrev:preco,precoReal:0,comprado:false});_mktSetListas(listas);['mkt-add-man-nome','mkt-add-man-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('mkt-add-man-qtd').value='1';document.getElementById('mkt-add-man-unidade').value='un';mktFecharAddMes();_mktRenderMes();}
 function mktAnexarNF(inp){
-  if(!inp.files[0]||!_mktMesId)return;
+  if(!inp.files[0]||!_mktMesId) return;
   const f=inp.files[0];
-  const r=new FileReader();
-  r.onload=e=>{
+  (async()=>{
+    const uid='nf_'+Date.now();
+    const dadosObj=await _salvarArqObj(f,uid);
     const listas=_mktGetListas();
     const lista=listas.find(l=>l.id===_mktMesId);
-    if(!lista)return;
-    // migra NF legada (campo único) para array
+    if(!lista) return;
     if(!lista.nfs) lista.nfs=lista.nf?.dados?[{id:Date.now()-1,nome:lista.nf.nome,tipo:lista.nf.tipo,dados:lista.nf.dados}]:[];
-    lista.nfs.push({id:Date.now(),nome:f.name,tipo:f.type,dados:e.target.result});
+    lista.nfs.push({id:Date.now(),nome:dadosObj.nome,tipo:dadosObj.tipo,dados:dadosObj.dados});
     lista.nf=null;
     _mktSetListas(listas);
     inp.value='';
     _mktRenderNF(lista);
-  };
-  r.readAsDataURL(f);
+  })();
 }
 function _mktRenderNF(lista){
   // suporte a formato legado
@@ -22320,9 +22539,9 @@ function _mktRenderNF(lista){
   if(!nfs.length){container.innerHTML='';return;}
   container.innerHTML=nfs.map(nf=>`
     <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
-      ${nf.tipo?.startsWith('image/')
+      ${(nf.tipo?.startsWith('image/')&&nf.dados&&!nf.dados.startsWith('__sbrow_'))
         ?`<img src="${nf.dados}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)">`
-        :`<div style="width:48px;height:48px;background:rgba(0,200,255,0.1);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">📄</div>`}
+        :`<div style="width:48px;height:48px;background:rgba(0,200,255,0.1);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${nf.tipo?.startsWith('image/')?'🖼':'📄'}</div>`}
       <div style="flex:1;min-width:0">
         <div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(nf.nome)}</div>
         <div style="font-size:10px;color:var(--text3);margin-top:2px">${nf.tipo?.startsWith('image/')?'Imagem':'PDF'}</div>

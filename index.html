@@ -6774,7 +6774,11 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
         <label class="bem-form-label">ESTABELECIMENTO / PESSOA</label>
-        <input id="bev-f-local" type="text" class="bem-form-input" placeholder="AutoCar Serviços">
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="bev-f-local" type="text" class="bem-form-input" placeholder="AutoCar Serviços" list="bev-local-list" style="flex:1;margin:0">
+          <button type="button" class="btn btn-sm" onclick="_bemAddEstab()" title="Cadastrar novo estabelecimento" style="white-space:nowrap;color:var(--neon-blue);border-color:rgba(0,200,255,0.3);flex-shrink:0;height:38px">+ Novo</button>
+          <datalist id="bev-local-list"></datalist>
+        </div>
       </div>
       <div>
         <label class="bem-form-label">TELEFONE / CONTATO</label>
@@ -19744,7 +19748,7 @@ function renderBemTimeline(bem){
   const allLancs=getData('lancamentos');
   const lancsVinc=[];
   for(let s=1;s<=5;s++){(allLancs[s]||[]).forEach(l=>{
-    if(l._bemId===bem.id&&!evBem.find(e=>e._lancId===l.id)){
+    if((l._bemId===bem.id||l.bemId===bem.id)&&!evBem.find(e=>e._lancId===l.id)){
       lancsVinc.push({id:'lanc_'+l.id,bemId:bem.id,tipo:'Outro',
         data:l.data||'',desc:'[Lançamento] '+l.desc,local:'',contato:'',
         valor:l.val||0,proximaData:null,proximaKm:null,garantiaAte:null,anexo:null,
@@ -19858,7 +19862,7 @@ function renderBemKm(bem){
   const mesAtualStr=hoje.toISOString().slice(0,7);
   const allLancs=getData('lancamentos');
   const lancsVinc=[];
-  for(let s=1;s<=5;s++){(allLancs[s]||[]).forEach(l=>{if(l._bemId===bem.id)lancsVinc.push(l);});}
+  for(let s=1;s<=5;s++){(allLancs[s]||[]).forEach(l=>{if(l._bemId===bem.id||l.bemId===bem.id)lancsVinc.push(l);});}
   const combustMes=[...ev,...lancsVinc].filter(e=>
     _isCombustivel(_descLimpa(e.desc||''))&&(e.data||'').startsWith(mesAtualStr)
   );
@@ -20053,7 +20057,16 @@ function renderBemDocumentos(bem){
 
 // ── ABA 6: FINANCEIRO ──
 function renderBemFinanceiro(bem){
-  const ev=getBensEventos().filter(e=>e.bemId===bem.id);
+  const _evBem=getBensEventos().filter(e=>e.bemId===bem.id);
+  const _allLF=getData('lancamentos');
+  const _lancsF=[];
+  for(let _sf=1;_sf<=5;_sf++){(_allLF[_sf]||[]).forEach(l=>{
+    if((l._bemId===bem.id||l.bemId===bem.id)&&!_evBem.find(e=>e._lancId===l.id)){
+      _lancsF.push({_lancRef:true,id:'lf_'+l.id,bemId:bem.id,tipo:'Lançamento',
+        data:l.data||'',desc:l.desc,local:'',valor:l.val||0});
+    }
+  });}
+  const ev=[..._evBem,..._lancsF];
   const hoje=new Date();
   const mesAtual=hoje.toISOString().substring(0,7);
   const anoAtual=String(hoje.getFullYear());
@@ -20123,13 +20136,10 @@ function renderBemFinanceiro(bem){
     <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${_fmtData(e.data)}</td>
     <td><span class="badge badge-${_eventoBadgeCor(e.tipo)}">${esc(e.tipo)}</span></td>
     <td>${esc(_descLimpa(e.desc))}</td>
-    <td>${_isLancEvento(e)?_lancBadge():'<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">◆ Meus Bens</span>'}</td>
+    <td>${(e._lancRef||_isLancEvento(e))?_lancBadge():'<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">◆ Meus Bens</span>'}</td>
     <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
     <td style="text-align:center;white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center">
-      <button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Editar" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">✎</button>
-      ${(()=>{const n=(e.anexos&&e.anexos.length)||( e.anexo?1:0);return n>0
-        ?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovantes" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎${n>1?` <span style='font-size:10px;background:var(--neon-green);color:#000;border-radius:8px;padding:0 4px;font-weight:700'>${n}</span>`:''}</button>`
-        :`<button class="btn btn-sm" onclick="_bemFinAnexar(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.15)">📎+</button>`})()}
+      ${(()=>{if(e._lancRef)return'<button class="btn btn-sm" onclick="showPage(\'semanal\')" title="Ver em Semanal" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">⚡</button>';const n=(e.anexos&&e.anexos.length)||(e.anexo?1:0);return`<button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Editar" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">✎</button>`+(n>0?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovantes" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎${n>1?` <span style='font-size:10px;background:var(--neon-green);color:#000;border-radius:8px;padding:0 4px;font-weight:700'>${n}</span>`:''}</button>`:`<button class="btn btn-sm" onclick="_bemFinAnexar(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.15)">📎+</button>`);})()}
     </td>
   </tr>`).join('')}</tbody></table></div>`:''}`;
   const catColors=['#00ff9d','#00c8ff','#a855f7','#ffd700','#ff4444','#ff8c00','#1effe4'];
@@ -20341,6 +20351,8 @@ function abrirEventoModal(editId){
     if(saveBtn) saveBtn.textContent='✓ SALVAR EVENTO';
   }
   _initMascaraOnce(document.getElementById('bev-f-valor'));
+  const _bevDl=document.getElementById('bev-local-list');
+  if(_bevDl) _bevDl.innerHTML=getParceiros().map(p=>`<option value="${esc(p.nome)}">`).join('');
   document.getElementById('bem-evento-modal').style.display='flex';
 }
 function fecharEventoModal(){
@@ -20351,6 +20363,19 @@ function fecharEventoModal(){
   const saveBtn=document.querySelector('#bem-evento-modal .btn.btn-green');
   if(titleEl) titleEl.textContent='🔧 REGISTRAR EVENTO / MANUTENÇÃO';
   if(saveBtn) saveBtn.textContent='✓ SALVAR EVENTO';
+}
+function _bemAddEstab(){
+  const nome=(window.prompt('Nome do estabelecimento ou parceiro:','')||'').trim();
+  if(!nome) return;
+  const lista=getParceiros();
+  if(!lista.find(p=>p.nome.toLowerCase()===nome.toLowerCase())){
+    lista.push({id:Date.now(),nome,categoria:'Outros',contato:'',frequencia:0,totalGasto:0,ultimaCompra:null});
+    setParceiros(lista);
+  }
+  const el=document.getElementById('bev-f-local');
+  if(el) el.value=nome;
+  const dl=document.getElementById('bev-local-list');
+  if(dl) dl.innerHTML=getParceiros().map(p=>`<option value="${esc(p.nome)}">`).join('');
 }
 function salvarEventoBem(){
   const data=document.getElementById('bev-f-data').value;
@@ -20535,14 +20560,29 @@ function abrirDocModal(){
   document.getElementById('bem-doc-modal').style.display='flex';
 }
 function fecharDocModal(){document.getElementById('bem-doc-modal').style.display='none';}
+
+async function _uploadDocFileToStorage(file,docId){
+  if(!_supabase||!_authUser) return null;
+  try{
+    try{await _supabase.storage.createBucket('BYFinance',{public:true,fileSizeLimit:52428800});}catch(e){}
+    const ext=(file.name||'file').split('.').pop().toLowerCase()||'pdf';
+    const path=_authUser+'/'+docId+'.'+ext;
+    const{error}=await _supabase.storage.from('BYFinance').upload(path,file,{upsert:true,contentType:file.type});
+    if(error) return null;
+    const{data}=_supabase.storage.from('BYFinance').getPublicUrl(path);
+    return data?.publicUrl||null;
+  }catch(e){return null;}
+}
+
 function salvarDocumentoBem(){
   const nome=document.getElementById('bdoc-f-nome').value.trim();
-  if(!nome){_showError('Informe onome do documento.');return;}
+  if(!nome){_showError('Informe o nome do documento.');return;}
   const arquivo=document.getElementById('bdoc-f-arquivo').files[0];
   const _semVal=document.getElementById('bdoc-f-semvalidade')?.checked||false;
+  const _docId=Date.now();
   const _save=anexo=>{
     const docs=getBensDocumentos();
-    docs.push({id:Date.now(),bemId:_bemFichaId,nome,
+    docs.push({id:_docId,bemId:_bemFichaId,nome,
       emissao:document.getElementById('bdoc-f-emissao').value,
       validade:_semVal?'':document.getElementById('bdoc-f-validade').value,
       semValidade:_semVal,
@@ -20550,8 +20590,20 @@ function salvarDocumentoBem(){
       obs:document.getElementById('bdoc-f-obs').value.trim()});
     const _ok=setBensDocumentos(docs);if(_ok){fecharDocModal();}switchBemTab('docs');
   };
-  if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
-  else _save(null);
+  if(arquivo){
+    if(_supabase&&_authUser){
+      // Upload direto no Supabase Storage — sem passar por localStorage
+      _uploadDocFileToStorage(arquivo,_docId).then(url=>{
+        if(url){_save(url);}
+        else{
+          // fallback: base64 em localStorage
+          const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);
+        }
+      });
+    } else {
+      const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);
+    }
+  } else _save(null);
 }
 function excluirDocBem(id){
   showConfirm('Excluir Documento','Remover este documento?',()=>{setBensDocumentos(getBensDocumentos().filter(d=>d.id!==id));switchBemTab('docs');});
@@ -20635,7 +20687,7 @@ function _mediaViewerRender(){
   const counter=document.getElementById('media-viewer-counter');
   if(title) title.textContent=file.nome||'Comprovante';
   if(counter) counter.textContent=files.length>1?`${idx+1} / ${files.length}`:'';
-  const isPdf=file.src.startsWith('data:application/pdf');
+  const isPdf=file.src.startsWith('data:application/pdf')||/\.pdf(\?.*)?$/i.test(file.src);
   body.innerHTML=isPdf
     ?`<iframe src="${file.src}" style="width:100%;height:72vh;border:none;border-radius:8px"></iframe>`
     :`<img src="${file.src}" style="max-width:100%;max-height:72vh;border-radius:8px;display:block;margin:0 auto;object-fit:contain">`;

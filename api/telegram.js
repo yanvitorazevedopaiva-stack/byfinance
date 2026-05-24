@@ -318,26 +318,54 @@ Se não informada → ${new Date().toISOString().split('T')[0]}
 
 ━━━ RECEITAS ━━━
 
-GATILHOS DE RECEITA — qualquer uma dessas expressões indica uma entrada de dinheiro:
-"recebi", "recebi X", "recebi de", "recebi do", "recebi da"
-"entrou", "entrou X", "entrou na conta", "entrou no banco", "caiu", "caiu na conta", "caiu X"
-"pintou X", "pintou uma grana", "chegou o pagamento", "chegou X"
-"me pagaram", "me transferiram", "mandaram X", "depositaram"
-"depósito", "deposito", "ted recebido", "pix recebido", "transferência recebida"
-"salário", "salario", "vale", "adiantamento", "13º", "décimo terceiro"
-"freelance", "freela", "bico", "trabalho extra", "trampo extra"
-"aluguel recebido", "recebi aluguel", "inquilino pagou"
-"rendimento", "dividendo", "juros recebido", "cdb venceu", "resgate"
-"renda", "renda extra", "pagamento recebido", "honorários", "comissão"
-"bonus", "bônus", "participação nos lucros", "PLR", "reembolso", "devolução"
+GATILHOS DE RECEITA — qualquer expressão que indique entrada de dinheiro:
+
+Verbos/frases de recebimento:
+"recebi", "recebi X", "recebi de", "recebi do", "recebi da", "fui pago", "me pagaram"
+"entrou", "entrou X", "entrou na conta", "entrou no banco", "caiu", "caiu na conta", "caiu X", "caiu aqui"
+"pintou X", "pintou grana", "pintou uma grana", "chegou o pagamento", "chegou X", "chegou meu X"
+"me transferiram", "mandaram X", "depositaram", "transferência recebida", "ted recebido", "pix recebido"
+"ganhei X", "ganhei de", "tirei X", "tirei de", "quitaram", "liquidaram"
+"me devolveram", "devolução", "estorno recebido", "reembolso recebido"
+"tá na conta", "tá no banco", "dinheiro na conta", "veio o X", "veio o dinheiro"
+
+Fontes de renda (mesmo sem verbo, indica receita):
+"salário", "salario", "vencimento", "vale", "adiantamento", "13º", "13 salário", "décimo terceiro", "férias"
+"freelance", "freela", "freelas", "freela pago", "trampo extra", "bico", "trabalho extra", "job", "projeto pago"
+"aluguel recebido", "recebi aluguel", "inquilino pagou", "locatário pagou", "aluguei"
+"rendimento", "dividendo", "dividendos", "juros recebido", "cdb venceu", "resgate", "rendeu", "lucro"
+"renda extra", "renda passiva", "honorários", "comissão", "comissão recebida", "bonificação"
+"bonus", "bônus", "PLR", "participação nos lucros", "gratificação", "premiação", "prêmio recebido"
+"pensão recebida", "pensão alimentícia", "mesada", "aposentadoria", "INSS", "benefício recebido"
+"presente de dinheiro", "me deram X", "ganhei X de presente", "pix de familiar"
+"vendi X", "vendi meu", "venda recebida", "serviço prestado", "serviço concluído pago"
+"me mandaram X", "caiu X de", "entrou X referente a", "pagamento do X chegou"
+
+IMPORTANTE — desvio linguístico e informalidade:
+- "Chegou meu freela" → receita Freelance
+- "Pintou 500 do trampo" → receita Freelance
+- "O inquilino caiu o pix" → receita Aluguel
+- "Recebi meu salário esse mês" → receita Salário
+- "Tirei 300 do CDB" → receita Investimento
+- "Me deram 200 de presente" → receita Outros
+- "Fiz um bico hoje, 150 conto" → receita Freelance
+- "Veio o PLR da empresa" → receita Bônus
+- "Resgatei a poupança" → receita Investimento
+- "Me pagaram aquele serviço" → receita Freelance
 
 CATEGORIAS DE RECEITA:
-Salário, Freelance, Aluguel, Investimento, Presente, Reembolso, Outros
+Salário → emprego CLT/PJ, vencimento mensal
+Freelance → trabalho autônomo, bico, job, serviço prestado
+Bônus → PLR, gratificação, 13º, participação nos lucros, premiação
+Aluguel → aluguel recebido, locação
+Investimento → rendimento, dividendo, resgate, CDB, poupança, fundo
+Reembolso → devolução, estorno, ressarcimento
+Outros → presente, pensão, mesada, qualquer outro
 
 FORMATO PARA RECEITA:
 {
   "tipo": "receita",
-  "descricao": "Salário",
+  "descricao": "Salário maio",
   "valor": 3000.00,
   "categoria": "Salário",
   "conta": "Nubank",
@@ -672,7 +700,7 @@ export default async function handler(req, res) {
     // ── Detecção de nova intenção: evita que contexto antigo capture mensagem nova ──
     // Se o usuário estiver num fluxo (modalidade, cartão, etc.) e enviar uma mensagem
     // com intenção claramente diferente, limpa o contexto e processa do zero.
-    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas','mercado_multiplos','menu_ajuda','resposta_reagendamento','contraproposta_prazo','resposta_contraproposta'];
+    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas','mercado_multiplos','menu_ajuda','resposta_reagendamento','contraproposta_prazo','resposta_contraproposta','receita_tipo','receita_dia'];
     const _novosIntentosKw = [
       'atribui','atribuir','criar tarefa','nova tarefa','tarefa para','tarefa:',
       'recebi','recebi de','entrou na conta','salário','salario','freelance',
@@ -1196,38 +1224,47 @@ export default async function handler(req, res) {
 
       } else if (campo === 'descricao_receita') {
         // Valida que a descrição não é genérica
-        const _descGen2 = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','entrada','dinheiro','valor'];
+        const _descGen2 = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','entrada','dinheiro','valor','receita','renda','pix','ted','doc'];
         if (!texto.trim() || _descGen2.includes(texto.toLowerCase().trim()) || texto.trim().length < 3) {
-          await sendTelegram(chat_id, `📝 Descrição muito vaga. Seja mais específico:\nEx: *Salário maio*, *Freelance logo cliente*, *Aluguel apartamento João*`);
+          await sendTelegram(chat_id, `📝 Descrição muito vaga\\. Seja mais específico:\nEx: *Salário maio*, *Freelance logo cliente*, *Aluguel apartamento João*`);
           return res.status(200).json({ ok: true });
         }
         gasto.descricao = texto.trim();
         gasto.tipo = 'receita';
-        // Salva a receita com a descrição correta
-        await supabaseQuery('/telegram_pendentes', 'POST', {
-          user_id,
-          descricao: gasto.descricao,
-          valor: gasto.valor,
-          categoria: gasto.categoria || 'Outros',
-          cartao: gasto.conta || 'Não informado',
-          data_lancamento: gasto.data_lancamento || new Date().toISOString().split('T')[0],
-          origem: 'telegram',
-          tipo_midia,
-          mensagem_original,
-          chat_id,
-          status: 'pendente',
-          tipo: 'receita',
-          remetente: nomeRemetente,
-          observacao: null,
-          parcelas: null,
-          valor_parcela: null,
-          modalidade: null
-        });
-        await limparContexto(chat_id);
-        const valorR = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        // Pergunta se é fixa ou variável
+        await setContexto(chat_id, { aguardando: 'receita_tipo', gasto_parcial: { ...gasto } });
         await sendTelegram(chat_id,
-          `✅ *Receita registrada!*\n\n📝 ${gasto.descricao}\n💰 ${valorR}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.`
+          `💰 *${escapeMd(gasto.descricao)}* — ${parseFloat(gasto.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}\n\n` +
+          `♾ *É uma receita fixa ou variável?*\n\n` +
+          `1️⃣ *Fixa* — se repete todo mês \\(salário, aluguel, pensão\\.\\.\\.\\)\n` +
+          `2️⃣ *Variável* — só desta vez \\(freela pontual, venda, bônus\\.\\.\\.\\)`
         );
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'receita_tipo') {
+        const t = texto.toLowerCase().trim();
+        const isFix = /^(1|fix|fixa|todo mes|todo mês|mensal|sempre|recorrente|recorr|regular)/.test(t);
+        const isVar = /^(2|var|variav|variável|pontual|so essa|só essa|uma vez|esporadic|eventual)/.test(t);
+        if (!isFix && !isVar) {
+          await sendTelegram(chat_id, `Responda:\n1️⃣ *Fixa* \\(todo mês\\)\n2️⃣ *Variável* \\(só desta vez\\)`);
+          return res.status(200).json({ ok: true });
+        }
+        if (isFix) {
+          await setContexto(chat_id, { aguardando: 'receita_dia', gasto_parcial: { ...gasto, receita_tipo: 'fixa' } });
+          await sendTelegram(chat_id,
+            `📅 *Qual o dia do mês que costuma receber?*\n\nEx: dia 5, dia 15, último dia...\n_(Se variar, informe o dia mais comum)_`
+          );
+        } else {
+          await _salvarReceitaTelegram({ gasto, user_id, chat_id, tipo_midia, mensagem_original, nomeRemetente, receita_tipo: 'variavel', dia: null, res });
+        }
+        return res.status(200).json({ ok: true });
+
+      } else if (campo === 'receita_dia') {
+        let dia = 5;
+        const t = texto.toLowerCase().replace(/[^\d]/g,'');
+        if (t) dia = Math.min(31, Math.max(1, parseInt(t)));
+        else if (/[uú]ltimo|fim/i.test(texto)) dia = 31;
+        await _salvarReceitaTelegram({ gasto: { ...gasto, receita_tipo: 'fixa' }, user_id, chat_id, tipo_midia, mensagem_original, nomeRemetente, receita_tipo: 'fixa', dia, res });
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'prazo_tarefa_atribuida') {
@@ -1784,57 +1821,61 @@ export default async function handler(req, res) {
 
     if (gasto.tipo === 'receita') {
       // Descrições genéricas não aceitas — obriga detalhamento
-      const _descGenericas = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','pix recebido','entrada','dinheiro','valor','receita','renda'];
+      const _descGenericas = ['recebimento','pagamento','transferencia','transferência','deposito','depósito','pix recebido','pix','ted','doc','entrada','dinheiro','valor','receita','renda','caiu','caiu aqui'];
       const _descReceitaRaw = (gasto.descricao || '').toLowerCase().trim();
       const _descGenerica = !_descReceitaRaw || _descGenericas.includes(_descReceitaRaw) || _descReceitaRaw.length < 3;
       if (_descGenerica) {
         await setContexto(chat_id, { aguardando: 'descricao_receita', gasto_parcial: { ...gasto, tipo: 'receita' } });
         await sendTelegram(chat_id,
-          `💰 Receita de *${parseFloat(gasto.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}* identificada!\n\n` +
+          `💰 Receita de *${parseFloat(gasto.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}* identificada\\!\n\n` +
           `📝 *O que foi essa entrada de dinheiro?*\n` +
-          `Ex: Salário maio, Freelance site, Aluguel apartamento, Pagamento cliente João...`
+          `Ex: Salário maio, Freela site, Aluguel apart, Pagamento cliente João, Comissão venda\\.\\.\\.`
         );
         return res.status(200).json({ ok: true });
       }
-      // Sem data — usa hoje mas avisa
-      if (!gasto.data_lancamento) {
-        gasto.data_lancamento = new Date().toISOString().split('T')[0];
-      }
+      if (!gasto.data_lancamento) gasto.data_lancamento = new Date().toISOString().split('T')[0];
+      // Pergunta fixa/variável
+      await setContexto(chat_id, { aguardando: 'receita_tipo', gasto_parcial: { ...gasto } });
+      const _vFmt = parseFloat(gasto.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      await sendTelegram(chat_id,
+        `💰 *${escapeMd(gasto.descricao)}* — ${_vFmt}\n\n` +
+        `♾ *É uma receita fixa ou variável?*\n\n` +
+        `1️⃣ *Fixa* — se repete todo mês \\(salário, aluguel, pensão\\.\\.\\.\\)\n` +
+        `2️⃣ *Variável* — só desta vez \\(freela pontual, venda, bônus\\.\\.\\.\\)`
+      );
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── helper interno para salvar receita após coletar tipo/dia ──
+    async function _salvarReceitaTelegram({ gasto, user_id, chat_id, tipo_midia, mensagem_original, nomeRemetente, receita_tipo, dia }) {
+      await limparContexto(chat_id);
+      const _obs = receita_tipo === 'fixa' ? `[receita_fixa:dia${dia||5}]` : null;
       await supabaseQuery('/telegram_pendentes', 'POST', {
         user_id,
         descricao: gasto.descricao,
         valor: gasto.valor,
         categoria: gasto.categoria || 'Outros',
         cartao: gasto.conta || 'Não informado',
-        data_lancamento: gasto.data_lancamento,
-        origem: 'telegram',
-        tipo_midia,
-        mensagem_original,
-        chat_id,
-        status: 'pendente',
-        tipo: 'receita',
-        remetente: nomeRemetente,
-        observacao: null,
-        parcelas: null,
-        valor_parcela: null,
-        modalidade: null
+        data_lancamento: gasto.data_lancamento || new Date().toISOString().split('T')[0],
+        origem: 'telegram', tipo_midia, mensagem_original, chat_id,
+        status: 'pendente', tipo: 'receita', remetente: nomeRemetente,
+        observacao: _obs, parcelas: null, valor_parcela: null, modalidade: null
       });
       const valor = parseFloat(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const tipoLabel = receita_tipo === 'fixa' ? `♾ Fixa \\(dia ${dia||5}\\)` : `≈ Variável`;
       await sendTelegram(chat_id,
-        `✅ *Receita registrada!*\n\n` +
-        `📝 ${gasto.descricao}\n` +
+        `✅ *Receita registrada\\!*\n\n` +
+        `📝 ${escapeMd(gasto.descricao)}\n` +
         `💰 ${valor}\n` +
-        `🏷 ${gasto.categoria}\n` +
-        `🏦 ${gasto.conta || 'Não informado'}\n` +
+        `🏷 ${escapeMd(gasto.categoria || 'Outros')}\n` +
+        `📋 ${tipoLabel}\n` +
         `📅 ${fmtData(gasto.data_lancamento)}\n\n` +
-        `⏳ Aguardando sua autorização no BY Finance.\n` +
-        `Você tem *7 dias* para aprovar ou rejeitar.`
+        `⏳ Aguardando sua autorização no BY Finance\\.`
       );
-      const _outrosReceita = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
-      for (const o of (_outrosReceita||[])) {
+      const _outros = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
+      for (const o of (_outros||[])) {
         await sendTelegram(o.chat_id, `💰 *${escapeMd(nomeRemetente)} registrou uma receita*\n\n📝 ${escapeMd(gasto.descricao)}\n💰 ${valor}\n📅 ${fmtData(gasto.data_lancamento)}\n\n_Acesse o BY Finance para autorizar\\._`);
       }
-      return res.status(200).json({ ok: true });
     }
 
     if (gasto.tipo === 'comando' && gasto.acao === 'cancelar_ultimo') {

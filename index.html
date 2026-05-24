@@ -5568,15 +5568,7 @@
 <!-- ========== RECEITA ========== -->
 <div id="page-receita" class="page">
   <div class="page-title">RECEITA<span class="help-btn" onclick="showHelp('receita')">?</span></div>
-  <div class="page-sub">// LANÇAMENTOS DE RECEITA · CALCULADO AUTOMATICAMENTE NO PLANEJAMENTO</div>
-
-  <!-- Seletor de mês -->
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-    <span style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px">MÊS</span>
-    <select id="rec-mes-sel" onchange="setRecMes(this.value)" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif">
-      <option value="">-- selecione --</option>
-    </select>
-  </div>
+  <div class="page-sub">// FIXAS · VARIÁVEIS · HISTÓRICO COMPLETO</div>
 
   <!-- KPI strip -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
@@ -5585,84 +5577,125 @@
       <div class="card-value val-green" id="rec-total-mes">R$—</div>
     </div>
     <div class="card">
-      <div class="card-label">PRÓXIMO RECEBIMENTO</div>
-      <div class="card-value val-blue" id="rec-prox-data">—</div>
+      <div class="card-label">FIXAS ATIVAS</div>
+      <div class="card-value val-blue" id="rec-fixas-count">—</div>
     </div>
     <div class="card">
       <div class="card-label">TOTAL DO ANO</div>
       <div class="card-value" id="rec-total-ano">R$—</div>
     </div>
     <div class="card">
-      <div class="card-label">Nº LANÇAMENTOS</div>
-      <div class="card-value val-yellow" id="rec-qt-mes">—</div>
+      <div class="card-label">PRÓX. RECEBIMENTO</div>
+      <div class="card-value val-yellow" id="rec-prox-data">—</div>
     </div>
   </div>
 
-  <!-- Chart + breakdown -->
-  <div class="card" style="margin-bottom:20px;display:flex;gap:24px;align-items:center;flex-wrap:wrap">
-    <div style="flex:0 0 200px;height:200px;display:flex;align-items:center;justify-content:center">
-      <canvas id="rec-cat-chart" width="200" height="200"></canvas>
-    </div>
-    <div id="rec-cat-legend" style="flex:1;min-width:200px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px"></div>
-  </div>
-
+  <!-- RECEITAS DO MÊS -->
   <div class="card" style="margin-bottom:20px">
-    <div class="sec-title">ADICIONAR RECEITA</div>
-    <!-- Linha 1 -->
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-      <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO <span class="tip" data-tip="De onde vem o dinheiro. Ex: Salário empresa, Freela projeto X, Aluguel apartamento. Aparece no histórico de receitas e nos relatórios mensais.">i</span></div>
-        <input id="rec-desc" type="text" placeholder="Ex: Salário, Freelance..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">VALOR RECEBIDO (R$) <span class="tip" data-tip="Quanto entrou na sua conta. Vai para a coluna Receita no Planejamento Anual e aparece no Dashboard como Receita do Mês.">i</span></div>
-        <input id="rec-val" type="number" min="0" step="0.01" placeholder="0,00" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--neon-green);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">DATA PREVISTA <span class="tip" data-tip="Quando o dinheiro vai entrar na sua conta. Define em qual mês a receita é contabilizada no Planejamento Anual.">i</span></div>
-        <input id="rec-data" type="date" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CATEGORIA <span class="tip" data-tip="Tipo da receita. Salário, Freelance, Aluguel recebido, Investimento, etc. Usado nos gráficos de composição de renda.">i</span></div>
-        <select id="rec-cat" onchange="recOnChangeCat(this.value)" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
-          <option>Salário</option><option>Freelance</option><option>Bônus</option><option>Investimento</option><option>Aluguel</option><option>Outros</option>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div class="sec-title" style="margin:0">RECEITAS DO MÊS</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <select id="rec-mes-sel" onchange="setRecMes(this.value)" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+          <option value="">-- selecione --</option>
         </select>
+        <button class="btn btn-green" onclick="recAbrirForm()" style="font-size:11px;padding:6px 14px">+ NOVA RECEITA</button>
       </div>
     </div>
-    <!-- Campo Outros (aparece quando categoria = Outros) -->
-    <div id="rec-outros-wrap" style="display:none;margin-bottom:10px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">DESCREVA (opcional)</div>
-      <input id="rec-outros" type="text" placeholder="Especifique a origem desta receita..." style="width:100%;box-sizing:border-box;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px">
-    </div>
-    <!-- Linha 2 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end">
-      <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CONTA / CARTÃO RECEBIDO <span class="tip" data-tip="Onde caiu esse dinheiro. Conta corrente, poupança, cartão de débito, etc. Serve para controle de fluxo de caixa.">i</span></div>
-        <select id="rec-conta" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--neon-blue);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px">
-          <option value="">— Selecionar conta —</option>
-        </select>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">COMPROVANTE</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn-anx btn-anx-add" onclick="triggerAnexo({t:'rec'})" style="padding:8px 12px;font-size:12px">📎 Anexar</button>
-          <span id="rec-anx-label" style="font-size:11px;color:var(--text3)">Nenhum arquivo</span>
-          <button id="rec-anx-del" onclick="recAnxClear()" style="display:none;background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:12px">✕</button>
+
+    <!-- Formulário inline (oculto por padrão) -->
+    <div id="rec-form-wrap" style="display:none;background:rgba(0,255,157,0.04);border:1px solid rgba(0,255,157,0.15);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--neon-green);letter-spacing:1px;margin-bottom:12px;font-family:'JetBrains Mono',monospace">✎ NOVA RECEITA</div>
+      <!-- Linha 1 -->
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div>
+          <input id="rec-desc" type="text" placeholder="Ex: Salário, Freelance, Aluguel..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR (R$)</div>
+          <input id="rec-val" type="text" inputmode="decimal" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
+          <select id="rec-cat" onchange="recOnChangeCat(this.value)" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option>Salário</option><option>Freelance</option><option>Bônus</option><option>Investimento</option><option>Aluguel</option><option>Outros</option>
+          </select>
         </div>
       </div>
-      <div></div>
-      <button class="btn btn-green" onclick="addReceita()" style="white-space:nowrap">+ ADICIONAR</button>
+      <!-- Campo Outros -->
+      <div id="rec-outros-wrap" style="display:none;margin-bottom:10px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCREVA (opcional)</div>
+        <input id="rec-outros" type="text" placeholder="Especifique a origem..." style="width:100%;box-sizing:border-box;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px">
+      </div>
+      <!-- Linha 2: tipo fixa/variavel + dia + conta + data -->
+      <div style="display:grid;grid-template-columns:auto auto 1fr 1fr;gap:10px;align-items:end;margin-bottom:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px">TIPO</div>
+          <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+            <button id="rec-tipo-var" onclick="recSetTipo('variavel')" style="padding:8px 14px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(0,200,255,0.18);color:var(--neon-blue);border:none;cursor:pointer;letter-spacing:.5px">VARIÁVEL</button>
+            <button id="rec-tipo-fix" onclick="recSetTipo('fixa')" style="padding:8px 14px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;background:transparent;color:var(--text3);border:none;border-left:1px solid var(--border);cursor:pointer;letter-spacing:.5px">FIXA</button>
+          </div>
+        </div>
+        <div id="rec-dia-wrap" style="display:none">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DIA DO MÊS</div>
+          <input id="rec-dia" type="number" min="1" max="31" placeholder="Ex: 5" style="width:70px;padding:8px 10px;background:var(--bg3);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:center">
+        </div>
+        <div id="rec-data-wrap">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DATA PREVISTA</div>
+          <input id="rec-data" type="date" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CONTA / CARTÃO</div>
+          <select id="rec-conta" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--neon-blue);border-radius:8px;font-size:12px">
+            <option value="">— Selecionar conta —</option>
+          </select>
+        </div>
+      </div>
+      <!-- Comprovante + botões -->
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button class="btn-anx btn-anx-add" onclick="triggerAnexo({t:'rec'})" style="padding:7px 12px;font-size:11px">📎 Comprovante</button>
+        <span id="rec-anx-label" style="font-size:11px;color:var(--text3)">Nenhum arquivo</span>
+        <button id="rec-anx-del" onclick="recAnxClear()" style="display:none;background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:12px">✕</button>
+        <div style="flex:1"></div>
+        <button class="btn" onclick="recFecharForm()" style="font-size:11px;padding:7px 14px">Cancelar</button>
+        <button class="btn btn-green" onclick="addReceita()" style="font-size:12px;padding:8px 20px;font-weight:700">✓ SALVAR</button>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="sec-title" id="rec-table-title">LANÇAMENTOS DO MÊS</div>
+    <!-- Tabela do mês -->
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>#</th><th>DESCRIÇÃO</th><th>CATEGORIA</th><th>CONTA</th><th>DATA PREVISTA</th><th style="text-align:right">VALOR</th><th>📎</th><th>STATUS</th><th>AÇÕES</th></tr></thead>
+        <thead><tr><th>#</th><th>TIPO</th><th>DESCRIÇÃO</th><th>CATEGORIA</th><th>CONTA</th><th>DATA</th><th style="text-align:right">VALOR</th><th>📎</th><th>STATUS</th><th>AÇÕES</th></tr></thead>
         <tbody id="rec-tbody"></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- RECEITAS FIXAS CADASTRADAS -->
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="sec-title" style="margin:0">♾ RECEITAS FIXAS CADASTRADAS</div>
+      <span style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">geradas automaticamente todo mês</span>
+    </div>
+    <div id="rec-fixas-lista">
+      <div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Nenhuma receita fixa cadastrada ainda.</div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO DE RECEITAS -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="sec-title" style="margin:0">📊 HISTÓRICO DE RECEITAS</div>
+      <span id="rec-hist-ano-total" style="font-size:12px;font-weight:700;color:var(--neon-green);font-family:'JetBrains Mono',monospace"></span>
+    </div>
+    <!-- Gráfico do ano -->
+    <div style="height:140px;margin-bottom:20px">
+      <canvas id="rec-hist-chart"></canvas>
+    </div>
+    <!-- Alertas de pendentes -->
+    <div id="rec-alertas-pendentes"></div>
+    <!-- Blocos por mês -->
+    <div id="rec-hist-blocos"></div>
   </div>
 </div>
 
@@ -8042,11 +8075,17 @@ async function _loadFromSupabase(){
 // ===================== STORAGE =====================
 function load(key){try{const v=localStorage.getItem(_userPrefix()+key);return v?JSON.parse(v):null;}catch(e){return null;}}
 function save(key,val){
-  try{localStorage.setItem(_userPrefix()+key,JSON.stringify(val));}catch(e){}
+  try{localStorage.setItem(_userPrefix()+key,JSON.stringify(val));}catch(e){
+    if(e.name==='QuotaExceededError'||e.code===22||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
+      _showError('Armazenamento local cheio.\nTente cadastrar o documento sem arquivo\nou exclua arquivos antigos.');
+    }
+    return false;
+  }
   const ind=document.getElementById('sync-indicator');
   if(ind){ind.textContent='↑ Salvando...';ind.style.color='var(--neon-yellow)';ind.style.opacity='1';}
   clearTimeout(_syncTimer);
   _syncTimer=setTimeout(_syncToSupabase,2000);
+  return true;
 }
 function getData(key){return load(key)||JSON.parse(JSON.stringify(DEFAULT[key]));}
 function setData(key,val){save(key,val);}
@@ -12049,9 +12088,42 @@ const REC_CAT_COLORS={
 
 function getReceitas(){return load('receitas')||{};}
 function setReceitas(d){save('receitas',d);}
+function getReceitasFixas(){return load('receitasFixas')||[];}
+function setReceitasFixas(d){save('receitasFixas',d);}
+
+// Último dia do mês (ex: fev=28/29, outros=30/31)
+function _recLastDay(year,month){return new Date(year,month,0).getDate();}
+// Data prevista de uma fixa num dado mês (corrige fev/meses curtos)
+function _recDataFixa(year,month,dia){
+  const last=_recLastDay(year,month);
+  const d=Math.min(dia,last);
+  return year+'-'+String(month).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+
+// Gera entradas das fixas para um mesKey se ainda não existirem
+function _gerarFixasMes(mesKey){
+  const [year,month]=mesKey.split('-').map(Number);
+  const fixas=getReceitasFixas();
+  if(!fixas.length) return;
+  const recs=getReceitas();
+  if(!recs[mesKey]) recs[mesKey]=[];
+  fixas.forEach(f=>{
+    const jaExiste=recs[mesKey].some(e=>e.fixaId===f.id);
+    if(!jaExiste){
+      recs[mesKey].push({
+        id:Date.now()+Math.random(),desc:f.desc,val:f.val,cat:f.cat,
+        descOutros:f.descOutros||'',conta:f.conta||'',
+        dataPrev:_recDataFixa(year,month,f.dia||5),
+        recebido:false,anexo:null,tipo:'fixa',fixaId:f.id
+      });
+    }
+  });
+  setReceitas(recs);
+}
 
 function getReceitaMes(ano,mesIdx){
   const key=ano+'-'+String(mesIdx+1).padStart(2,'0');
+  _gerarFixasMes(key);
   return((load('receitas')||{})[key]||[]).reduce((a,e)=>a+e.val,0);
 }
 
@@ -12064,165 +12136,133 @@ function getDividasMes(mesIdx){
 
 function setRecMes(v){recMesSel=v;renderReceita();}
 
+// controle do tipo no formulário
+let _recTipoAtual='variavel';
+function recSetTipo(t){
+  _recTipoAtual=t;
+  const isFix=t==='fixa';
+  document.getElementById('rec-tipo-var').style.background=isFix?'transparent':'rgba(0,200,255,0.18)';
+  document.getElementById('rec-tipo-var').style.color=isFix?'var(--text3)':'var(--neon-blue)';
+  document.getElementById('rec-tipo-fix').style.background=isFix?'rgba(0,255,157,0.18)':'transparent';
+  document.getElementById('rec-tipo-fix').style.color=isFix?'var(--neon-green)':'var(--text3)';
+  document.getElementById('rec-dia-wrap').style.display=isFix?'block':'none';
+  document.getElementById('rec-data-wrap').style.display=isFix?'none':'block';
+}
+function recAbrirForm(){
+  document.getElementById('rec-form-wrap').style.display='block';
+  recSetTipo('variavel');
+  document.getElementById('rec-desc').focus();
+}
+function recFecharForm(){
+  document.getElementById('rec-form-wrap').style.display='none';
+  _recTipoAtual='variavel';
+}
+
 function renderReceita(){
-  // Popula select de contas/cartões
+  // gera fixas para mês atual e anterior
+  const hoje=new Date();
+  const mesAtual=hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0');
+  const mesAnterior=hoje.getFullYear()+'-'+String(hoje.getMonth()).padStart(2,'0');
+  if(mesAnterior.endsWith('-0')){/* jan, não tem anterior neste ano */}else{_gerarFixasMes(mesAnterior);}
+  _gerarFixasMes(mesAtual);
+
+  // Popula contas
   const contaSel=document.getElementById('rec-conta');
   if(contaSel){
-    const cartoes=getData('cartoes');
-    const cur=contaSel.value;
+    const cartoes=getData('cartoes');const cur=contaSel.value;
     contaSel.innerHTML='<option value="">— Selecionar conta —</option>'+
       cartoes.map(c=>`<option value="${esc(c.nome)}"${c.nome===cur?' selected':''}>${esc(c.nome)}</option>`).join('');
   }
+
+  // Popula select de meses
   const sel=document.getElementById('rec-mes-sel');
-  const hoje=new Date();
   const opts=[];
-  for(let i=-24;i<=12;i++){
+  for(let i=-24;i<=3;i++){
     const d=new Date(hoje.getFullYear(),hoje.getMonth()+i,1);
     const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    const label=MESES_FULL[d.getMonth()]+' / '+d.getFullYear();
-    opts.push(`<option value="${key}" ${key===recMesSel?'selected':''}>${label}</option>`);
+    opts.push(`<option value="${key}"${key===recMesSel?' selected':''}>${MESES_FULL[d.getMonth()]} / ${d.getFullYear()}</option>`);
   }
   sel.innerHTML=opts.join('');
+
+  // Gera fixas para mês selecionado
+  _gerarFixasMes(recMesSel);
 
   const recs=getReceitas();
   const entries=recs[recMesSel]||[];
   const [ano,mes]=recMesSel.split('-').map(Number);
+  const hojeStr=hoje.toISOString().split('T')[0];
 
-  const totalRec=entries.reduce((a,e)=>a+e.val,0);
-  const totalEsp=entries.reduce((a,e)=>a+(e.esperado||0),0);
-  const diff=totalRec-totalEsp;
+  const totalRec=entries.filter(e=>e.recebido).reduce((a,e)=>a+e.val,0);
+  const totalPrev=entries.reduce((a,e)=>a+e.val,0);
 
-  document.getElementById('rec-table-title').textContent=
-    'LANÇAMENTOS — '+MESES_FULL[mes-1].toUpperCase()+' / '+ano;
-  document.getElementById('rec-total-mes').textContent=fmt(totalRec);
-  document.getElementById('rec-qt-mes').textContent=entries.length;
+  // KPIs
+  document.getElementById('rec-total-mes').textContent=fmt(totalRec)+(totalPrev>totalRec?` / ${fmt(totalPrev)} prev.`:'');
+  const fixas=getReceitasFixas();
+  document.getElementById('rec-fixas-count').textContent=fixas.length;
 
-  // Donut chart por categoria (recebido)
-  const catTotals={};
-  entries.forEach(e=>{catTotals[e.cat]=(catTotals[e.cat]||0)+e.val;});
-  const cats=Object.keys(catTotals).filter(c=>catTotals[c]>0);
-  const canvas=document.getElementById('rec-cat-chart');
-  if(_recCatChart){_recCatChart.destroy();_recCatChart=null;}
-  if(cats.length){
-    const _recTotal=cats.reduce((a,c)=>a+catTotals[c],0);
-    _recCatChart=new Chart(canvas,{
-      type:'doughnut',
-      data:{labels:cats,datasets:[{
-        data:cats.map(c=>catTotals[c]),
-        backgroundColor:cats.map(c=>REC_CAT_COLORS[c]||'#8e8e93'),
-        borderColor:'var(--card)',borderWidth:3,
-        hoverOffset:10,borderRadius:4
-      }]},
-      options:{
-        cutout:'74%',
-        animation:{duration:600,easing:'easeOutQuart'},
-        plugins:{
-          legend:{display:false},
-          tooltip:{callbacks:{
-            label:ctx=>{
-              const pct=_recTotal>0?Math.round(ctx.raw/_recTotal*100):0;
-              return ` ${ctx.label}: ${fmt(ctx.raw)} · ${pct}%`;
-            }
-          }}
-        }
-      }
-    });
-  }
+  const anoAtualRec=hoje.getFullYear();
+  const allRecs=getReceitas();
+  const totalAno=Object.entries(allRecs)
+    .filter(([k])=>k.startsWith(anoAtualRec+''))
+    .reduce((s,[,arr])=>s+(arr||[]).filter(e=>e.recebido).reduce((a,r)=>a+r.val,0),0);
+  document.getElementById('rec-total-ano').textContent=fmt(totalAno);
 
-  // Legenda / breakdown por categoria
-  const legend=document.getElementById('rec-cat-legend');
-  if(!cats.length){
-    legend.innerHTML='<span style="color:var(--text3);font-size:12px">Sem lançamentos neste mês.</span>';
-  } else {
-    legend.innerHTML=cats.map(c=>{
-      const pct=totalRec>0?Math.round(catTotals[c]/totalRec*100):0;
-      const espCat=entries.filter(e=>e.cat===c).reduce((a,e)=>a+(e.esperado||0),0);
-      const dif=catTotals[c]-espCat;
-      const difTxt=espCat>0?(dif>=0?'<span style="color:var(--neon-green)">+'+fmt(dif)+'</span>':'<span style="color:var(--red)">'+fmt(dif)+'</span>'):'';
-      return `<div style="display:flex;flex-direction:column;gap:4px;padding:10px 12px;background:var(--bg3);border-radius:10px;border-left:3px solid ${REC_CAT_COLORS[c]||'#8e8e93'}">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:11px;font-weight:700;color:var(--text)">${esc(c)}</span>
-          <span style="font-size:10px;color:var(--text3);margin-left:auto">${pct}%</span>
-        </div>
-        <div style="font-size:13px;font-weight:700;color:${REC_CAT_COLORS[c]||'#8e8e93'};font-family:'JetBrains Mono',monospace">${fmt(catTotals[c])}</div>
-        ${espCat>0?`<div style="font-size:10px;color:var(--text3)">esp. ${fmt(espCat)} ${difTxt}</div>`:''}
-        <div style="height:3px;background:var(--bg2);border-radius:2px">
-          <div style="width:${pct}%;height:100%;background:${REC_CAT_COLORS[c]||'#8e8e93'};border-radius:2px"></div>
-        </div>
-      </div>`;
-    }).join('');
-  }
+  const proximas=entries.filter(e=>!e.recebido&&e.dataPrev&&e.dataPrev>=hojeStr).sort((a,b)=>a.dataPrev>b.dataPrev?1:-1);
+  document.getElementById('rec-prox-data').textContent=proximas.length?proximas[0].dataPrev.split('-').reverse().join('/'):'—';
 
-  // Tabela
-  // Card PRÓXIMO RECEBIMENTO
-  const hojeStr=new Date().toISOString().split('T')[0];
-  const proximas=entries.filter(e=>e.dataPrev&&e.dataPrev>=hojeStr).sort((a,b)=>a.dataPrev>b.dataPrev?1:-1);
-  const proxEl=document.getElementById('rec-prox-data');
-  if(proxEl) proxEl.textContent=proximas.length
-    ?proximas[0].dataPrev.split('-').reverse().join('/')
-    :'—';
-
-  // Card TOTAL DO ANO
-  const anoEl=document.getElementById('rec-total-ano');
-  if(anoEl){
-    const anoAtualRec=new Date().getFullYear();
-    const allRecs=getReceitas();
-    const totalAno=Object.entries(allRecs)
-      .filter(([k])=>k.startsWith(anoAtualRec+''))
-      .reduce((s,[,v])=>s+(v||[]).reduce((a,r)=>a+r.val,0),0);
-    anoEl.textContent=fmt(totalAno);
-  }
-
+  // Tabela do mês
   const tbody=document.getElementById('rec-tbody');
   if(!entries.length){
-    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:20px">Nenhum lançamento neste mês.</td></tr>';
-    return;
-  }
-  tbody.innerHTML=entries.map((e,i)=>{
-    const rec=e.recebido||false;
-    const dp=e.dataPrev?e.dataPrev.split('-').reverse().join('/'):'—';
-    const dpColor=e.dataPrev&&e.dataPrev<hojeStr?'var(--neon-red)':e.dataPrev===hojeStr?'var(--neon-yellow)':'var(--text2)';
-    const catColor=REC_CAT_COLORS[e.cat]||'#8e8e93';
-    const descFull=e.cat==='Outros'&&e.descOutros
-      ?`${esc(e.desc)} <span style="font-size:11px;color:var(--text3)">(${esc(e.descOutros)})</span>`
-      :esc(e.desc);
-    const contaHtml=e.conta
-      ?`<span style="font-size:11px;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">${esc(e.conta)}</span>`
-      :'<span style="color:var(--text3)">—</span>';
-    const rowBg=rec?'background:rgba(0,255,157,0.04);':'';
-    const recBtnStyle=rec
-      ?'padding:4px 10px;border-radius:7px;border:1px solid rgba(0,255,157,0.4);background:rgba(0,255,157,0.12);color:var(--neon-green);font-size:11px;font-weight:700;cursor:pointer;font-family:JetBrains Mono,monospace;white-space:nowrap'
-      :'padding:4px 10px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;font-family:JetBrains Mono,monospace;white-space:nowrap';
-    const recBtnLabel=rec?'✓ RECEBIDO':'⏳ PENDENTE';
-    const anxCell=e.anexo
-      ?`<button class="btn-anx btn-anx-ver" style="padding:3px 8px;font-size:10px"
-          onclick="recVerAnexo(this)" data-mes="${recMesSel}" data-id="${e.id}">📎 VER</button>`
-      :`<button style="padding:3px 8px;font-size:10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;letter-spacing:0.3px;transition:all .15s"
-          onmouseover="this.style.color='var(--neon-blue)'" onmouseout="this.style.color='var(--text3)'"
-          onclick="recAnexarInline(this)" data-mes="${recMesSel}" data-id="${e.id}" title="Adicionar comprovante">📎 Anexar</button>`;
-    return `<tr style="${rowBg}">
-      <td style="color:var(--text3)">${i+1}</td>
-      <td style="font-weight:500">${descFull}</td>
-      <td><span class="badge" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">${esc(e.cat)}</span></td>
-      <td>${contaHtml}</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${dpColor}">${dp}</td>
-      <td style="text-align:right;color:${rec?'var(--neon-green)':'var(--neon-yellow)'};font-family:'JetBrains Mono',monospace;font-weight:700">${fmt(e.val)}</td>
-      <td style="text-align:center">${anxCell}</td>
-      <td><button style="${recBtnStyle}"
-            onclick="recToggleRecebido(this)" data-mes="${recMesSel}" data-id="${e.id}">${recBtnLabel}</button></td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-sm" onclick="recEditBtn(this)" data-mes="${recMesSel}" data-id="${e.id}"
-          style="background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);margin-right:4px">✎</button>
-        <button class="btn btn-red btn-sm" onclick="recDelBtn(this)" data-mes="${recMesSel}" data-id="${e.id}">✕</button>
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:24px;font-size:12px">Nenhum lançamento neste mês.</td></tr>`;
+  } else {
+    tbody.innerHTML=entries.map((e,i)=>{
+      const rec=e.recebido||false;
+      const dp=e.dataPrev?e.dataPrev.split('-').reverse().join('/'):'—';
+      const dpColor=e.dataPrev&&e.dataPrev<hojeStr&&!rec?'var(--neon-red)':e.dataPrev===hojeStr?'var(--neon-yellow)':'var(--text2)';
+      const catColor=REC_CAT_COLORS[e.cat]||'#8e8e93';
+      const descFull=e.cat==='Outros'&&e.descOutros
+        ?`${esc(e.desc)} <span style="font-size:11px;color:var(--text3)">(${esc(e.descOutros)})</span>`
+        :esc(e.desc);
+      const contaHtml=e.conta?`<span style="font-size:11px;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">${esc(e.conta)}</span>`:'<span style="color:var(--text3)">—</span>';
+      const tipoBadge=e.tipo==='fixa'
+        ?`<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(0,255,157,0.12);color:var(--neon-green);font-family:'JetBrains Mono',monospace;border:1px solid rgba(0,255,157,0.25)">♾ FIXA</span>`
+        :`<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(0,200,255,0.1);color:var(--neon-blue);font-family:'JetBrains Mono',monospace;border:1px solid rgba(0,200,255,0.2)">≈ VAR</span>`;
+      const recBtnStyle=rec
+        ?'padding:4px 10px;border-radius:7px;border:1px solid rgba(0,255,157,0.4);background:rgba(0,255,157,0.12);color:var(--neon-green);font-size:11px;font-weight:700;cursor:pointer;font-family:JetBrains Mono,monospace;white-space:nowrap'
+        :'padding:4px 10px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;font-family:JetBrains Mono,monospace;white-space:nowrap';
+      const anxCell=e.anexo
+        ?`<button class="btn-anx btn-anx-ver" style="padding:3px 8px;font-size:10px" onclick="recVerAnexo(this)" data-mes="${recMesSel}" data-id="${e.id}">📎 VER</button>`
+        :`<button style="padding:3px 8px;font-size:10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;" onclick="recAnexarInline(this)" data-mes="${recMesSel}" data-id="${e.id}">📎+</button>`;
+      return `<tr style="${rec?'background:rgba(0,255,157,0.03)':''}">
+        <td style="color:var(--text3)">${i+1}</td>
+        <td>${tipoBadge}</td>
+        <td style="font-weight:500">${descFull}</td>
+        <td><span class="badge" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">${esc(e.cat)}</span></td>
+        <td>${contaHtml}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${dpColor}">${dp}</td>
+        <td style="text-align:right;color:${rec?'var(--neon-green)':'var(--neon-yellow)'};font-family:'JetBrains Mono',monospace;font-weight:700">${fmt(e.val)}</td>
+        <td style="text-align:center">${anxCell}</td>
+        <td><button style="${recBtnStyle}" onclick="recToggleRecebido(this)" data-mes="${recMesSel}" data-id="${e.id}">${rec?'✓ RECEBIDO':'⏳ PENDENTE'}</button></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-sm" onclick="recEditBtn(this)" data-mes="${recMesSel}" data-id="${e.id}" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3);margin-right:4px">✎</button>
+          <button class="btn btn-red btn-sm" onclick="recDelBtn(this)" data-mes="${recMesSel}" data-id="${e.id}">✕</button>
+        </td>
+      </tr>`;
+    }).join('')+
+    `<tr style="background:rgba(0,255,157,0.06)">
+      <td colspan="5" style="font-weight:700">TOTAL PREVISTO / RECEBIDO</td><td></td>
+      <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700">
+        <span style="color:var(--neon-green)">${fmt(totalRec)}</span>
+        ${totalPrev>totalRec?`<span style="color:var(--text3);font-size:10px"> / ${fmt(totalPrev)}</span>`:''}
       </td>
+      <td colspan="3"></td>
     </tr>`;
-  }).join('')+
-  `<tr style="background:rgba(0,255,157,0.06)">
-    <td colspan="4" style="font-weight:700;color:var(--text)">TOTAL</td>
-    <td></td>
-    <td style="text-align:right;color:var(--neon-green);font-family:'JetBrains Mono',monospace;font-weight:700">${fmt(totalRec)}</td>
-    <td colspan="3"></td>
-  </tr>`;
+  }
+
+  // Receitas fixas cadastradas
+  _renderReceitasFixas();
+  // Histórico
+  _renderHistoricoReceitas();
 }
 
 // Anexar diretamente na linha da tabela de receitas
@@ -12251,26 +12291,181 @@ function recOnChangeCat(val){
 
 function addReceita(){
   const desc=document.getElementById('rec-desc').value.trim();
-  const val=parseFloat(document.getElementById('rec-val').value);
-  const dataPrev=document.getElementById('rec-data').value||'';
+  const rawVal=document.getElementById('rec-val').value.replace(/[R$\s.]/g,'').replace(',','.');
+  const val=parseFloat(rawVal)||0;
   const cat=document.getElementById('rec-cat').value;
   const descOutros=cat==='Outros'?(document.getElementById('rec-outros').value.trim()||''):'';
   const conta=document.getElementById('rec-conta').value||'';
   if(!desc){_showError('Informe a descrição.');return;}
-  if(isNaN(val)||val<=0){_showError('Informe o valor recebido.');return;}
-  const recs=getReceitas();
-  if(!recs[recMesSel]) recs[recMesSel]=[];
-  recs[recMesSel].push({id:Date.now(),desc,val,cat,descOutros,conta,dataPrev,recebido:false,anexo:(_recAnxTemp&&_recAnxTemp!==false?_recAnxTemp:null)});
-  setReceitas(recs);
-  document.getElementById('rec-desc').value='';
+  if(!val||val<=0){_showError('Informe o valor recebido.');return;}
+
+  if(_recTipoAtual==='fixa'){
+    const dia=parseInt(document.getElementById('rec-dia').value)||5;
+    const novaFixa={id:Date.now(),desc,val,cat,descOutros,conta,dia};
+    const fixas=getReceitasFixas();
+    fixas.push(novaFixa);
+    setReceitasFixas(fixas);
+    // gera para mês atual já
+    _gerarFixasMes(recMesSel);
+  } else {
+    const dataPrev=document.getElementById('rec-data').value||'';
+    const recs=getReceitas();
+    if(!recs[recMesSel]) recs[recMesSel]=[];
+    recs[recMesSel].push({id:Date.now(),desc,val,cat,descOutros,conta,dataPrev,recebido:false,anexo:(_recAnxTemp&&_recAnxTemp!==false?_recAnxTemp:null),tipo:'variavel'});
+    setReceitas(recs);
+  }
+
+  // Reset form
+  ['rec-desc','rec-outros'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('rec-val').value='';
   document.getElementById('rec-data').value='';
-  document.getElementById('rec-outros').value='';
+  document.getElementById('rec-dia').value='';
   document.getElementById('rec-outros-wrap').style.display='none';
   document.getElementById('rec-cat').selectedIndex=0;
   document.getElementById('rec-conta').value='';
   recAnxClear();
+  recFecharForm();
   renderReceita();
+}
+
+// ── Render lista de receitas fixas ──
+function _renderReceitasFixas(){
+  const fixas=getReceitasFixas();
+  const el=document.getElementById('rec-fixas-lista');
+  if(!el) return;
+  if(!fixas.length){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Nenhuma receita fixa cadastrada. Adicione uma com o tipo FIXA acima.</div>';
+    return;
+  }
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+  ${fixas.map(f=>`<div style="background:var(--bg3);border:1px solid rgba(0,255,157,0.2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">${esc(f.desc)}</div>
+      <div style="font-size:10px;color:var(--text3)">Dia ${f.dia||5} · ${esc(f.cat)}</div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-green);font-size:13px;white-space:nowrap">${fmt(f.val)}</div>
+    <button class="btn btn-sm" onclick="_delReceitaFixa(${f.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2);flex-shrink:0">✕</button>
+  </div>`).join('')}
+  </div>`;
+}
+function _delReceitaFixa(id){
+  showConfirm('Remover Receita Fixa','Isso vai remover o modelo fixo. Os meses já gerados não serão afetados.',()=>{
+    setReceitasFixas(getReceitasFixas().filter(f=>f.id!==id));
+    renderReceita();
+  });
+}
+
+// ── Render histórico + gráfico do ano ──
+let _recHistChart=null;
+function _renderHistoricoReceitas(){
+  const hoje=new Date();
+  const anoAtual=hoje.getFullYear();
+  const allRecs=getReceitas();
+
+  // Dados dos últimos 12 meses para o gráfico
+  const mesesLabels=[],mesesVals=[];
+  for(let i=11;i>=0;i--){
+    const d=new Date(anoAtual,hoje.getMonth()-i,1);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    mesesLabels.push(MESES_FULL[d.getMonth()].substring(0,3)+'/'+String(d.getFullYear()).substring(2));
+    mesesVals.push((allRecs[key]||[]).filter(e=>e.recebido).reduce((a,r)=>a+r.val,0));
+  }
+
+  // Total do ano
+  const totalAno=mesesVals.reduce((a,v)=>a+v,0);
+  const histTotal=document.getElementById('rec-hist-ano-total');
+  if(histTotal) histTotal.textContent='Total '+anoAtual+': '+fmt(totalAno);
+
+  // Gráfico
+  if(_recHistChart){try{_recHistChart.destroy();}catch(e){}_recHistChart=null;}
+  const canvas=document.getElementById('rec-hist-chart');
+  if(canvas){
+    _recHistChart=new Chart(canvas,{type:'bar',
+      data:{labels:mesesLabels,datasets:[{label:'Recebido',data:mesesVals,
+        backgroundColor:'rgba(0,255,157,0.2)',borderColor:'#00ff9d',borderWidth:1.5,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},
+        plugins:{legend:{display:false}},
+        scales:_scaleOpts(v=>v===0?'R$0':'R$'+v.toLocaleString('pt-BR',{maximumFractionDigits:0}))}});
+  }
+
+  // Alertas de fixas pendentes de meses passados
+  const mesAtualKey=anoAtual+'-'+String(hoje.getMonth()+1).padStart(2,'0');
+  const alertasDiv=document.getElementById('rec-alertas-pendentes');
+  const alertas=[];
+  Object.entries(allRecs).forEach(([key,arr])=>{
+    if(key>=mesAtualKey) return;
+    const pendentes=(arr||[]).filter(e=>e.tipo==='fixa'&&!e.recebido);
+    if(pendentes.length){
+      const [y,m]=key.split('-').map(Number);
+      const nomeMes=MESES_FULL[m-1]+' / '+y;
+      pendentes.forEach(e=>alertas.push({nomeMes,desc:e.desc,val:e.val}));
+    }
+  });
+  if(alertasDiv){
+    alertasDiv.innerHTML=alertas.length
+      ?`<div style="margin-bottom:16px">${alertas.map(a=>`
+        <div class="alert alert-yellow" style="margin-bottom:6px">
+          <span class="alert-icon">⚠</span>
+          <span><b>${esc(a.desc)}</b> — ${fmt(a.val)} · <span style="color:var(--text3)">${esc(a.nomeMes)}</span> — receita fixa <b>não recebida</b></span>
+        </div>`).join('')}</div>`
+      :'';
+  }
+
+  // Blocos de meses passados (histórico)
+  const blocosDiv=document.getElementById('rec-hist-blocos');
+  if(!blocosDiv) return;
+  const mesesHist=Object.keys(allRecs)
+    .filter(k=>k<mesAtualKey)
+    .sort((a,b)=>b.localeCompare(a))
+    .slice(0,24);
+
+  if(!mesesHist.length){
+    blocosDiv.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Nenhum histórico ainda.</div>';
+    return;
+  }
+  blocosDiv.innerHTML=mesesHist.map(key=>{
+    const [y,m]=key.split('-').map(Number);
+    const arr=allRecs[key]||[];
+    const totalRec=arr.filter(e=>e.recebido).reduce((a,r)=>a+r.val,0);
+    const totalPrev=arr.reduce((a,r)=>a+r.val,0);
+    const nFixas=arr.filter(e=>e.tipo==='fixa').length;
+    const nVar=arr.filter(e=>e.tipo!=='fixa').length;
+    const hasPend=arr.some(e=>!e.recebido);
+    const nomeMes=MESES_FULL[m-1].toUpperCase()+' / '+y;
+    return `<details style="margin-bottom:8px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;background:var(--bg3);list-style:none">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text)">${nomeMes}</span>
+          ${hasPend?`<span style="font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(255,215,0,0.12);color:var(--neon-yellow);border:1px solid rgba(255,215,0,0.25);font-weight:700">PENDENTE</span>`:''}
+          <span style="font-size:10px;color:var(--text3)">${nFixas} fixa${nFixas!==1?'s':''} · ${nVar} variável${nVar!==1?'is':''}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-green);font-size:13px">${fmt(totalRec)}</span>
+          ${totalPrev>totalRec?`<span style="font-size:10px;color:var(--text3)">/ ${fmt(totalPrev)} prev</span>`:''}
+          <span style="color:var(--text3);font-size:14px">▾</span>
+        </div>
+      </summary>
+      <div style="padding:12px 16px">
+        ${arr.length===0?'<div style="color:var(--text3);font-size:12px">Sem lançamentos.</div>':
+        `<table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="color:var(--text3);font-size:10px;font-family:'JetBrains Mono',monospace">
+            <th style="text-align:left;padding:4px 6px">DESCRIÇÃO</th>
+            <th style="text-align:left;padding:4px 6px">CAT</th>
+            <th style="text-align:left;padding:4px 6px">DATA</th>
+            <th style="text-align:right;padding:4px 6px">VALOR</th>
+            <th style="text-align:center;padding:4px 6px">STATUS</th>
+          </tr></thead>
+          <tbody>${arr.map(e=>`<tr style="border-top:1px solid var(--border)">
+            <td style="padding:6px 6px;font-weight:500">${esc(e.desc)}${e.tipo==='fixa'?` <span style="font-size:9px;color:var(--neon-green)">♾</span>`:''}</td>
+            <td style="padding:6px 6px;color:var(--text3)">${esc(e.cat||'')}</td>
+            <td style="padding:6px 6px;font-family:'JetBrains Mono',monospace;font-size:11px">${e.dataPrev?e.dataPrev.split('-').reverse().join('/'):'—'}</td>
+            <td style="padding:6px 6px;text-align:right;font-family:'JetBrains Mono',monospace;color:${e.recebido?'var(--neon-green)':'var(--neon-yellow)'}">${fmt(e.val)}</td>
+            <td style="padding:6px 6px;text-align:center;font-size:10px;font-weight:700;color:${e.recebido?'var(--neon-green)':'var(--text3)'}">${e.recebido?'✓ RECEBIDO':'PENDENTE'}</td>
+          </tr>`).join('')}</tbody>
+        </table>`}
+      </div>
+    </details>`;
+  }).join('');
 }
 
 // Handlers via data-attributes (sem problemas de escaping)
@@ -19275,7 +19470,7 @@ function setBensEventos(v){save('bensEventos',v);}
 function getBensKm(){return load('bensKm')||[];}
 function setBensKm(v){save('bensKm',v);}
 function getBensDocumentos(){return load('bensDocumentos')||[];}
-function setBensDocumentos(v){save('bensDocumentos',v);}
+function setBensDocumentos(v){return save('bensDocumentos',v);}
 
 // — ícones
 // detecta se o evento veio da página de Lançamentos
@@ -19848,7 +20043,7 @@ function renderBemDocumentos(bem){
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           ${d.anexo?`<button class="btn btn-sm" onclick="_verAnexoBemDoc(${d.id})">📎 Ver arquivo</button>`:''}
-          <button class="btn btn-sm" onclick="_toggleSemValidade(${d.id})" style="color:var(--neon-yellow);border-color:rgba(255,215,0,0.2)" title="${d.semValidade?'Definir vencimento':'Marcar sem vencimento'}">${d.semValidade?'📅 Tem vencimento':'∞ Sem vencimento'}</button>
+          <button class="btn btn-sm" onclick="_toggleSemValidade(${d.id})" style="color:var(--neon-yellow);border-color:rgba(255,215,0,0.2)" title="${d.semValidade?'Definir data de vencimento':'Marcar como sem vencimento'}">${d.semValidade?'📅 Definir vencimento':'∞ Remover validade'}</button>
           <button class="btn btn-sm" onclick="excluirDocBem(${d.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕ Excluir</button>
         </div>
       </div>`;
@@ -20353,7 +20548,7 @@ function salvarDocumentoBem(){
       semValidade:_semVal,
       anexo:anexo||null,
       obs:document.getElementById('bdoc-f-obs').value.trim()});
-    setBensDocumentos(docs);fecharDocModal();switchBemTab('docs');
+    const _ok=setBensDocumentos(docs);if(_ok){fecharDocModal();}switchBemTab('docs');
   };
   if(arquivo){const r=new FileReader();r.onload=e=>_save(e.target.result);r.readAsDataURL(arquivo);}
   else _save(null);

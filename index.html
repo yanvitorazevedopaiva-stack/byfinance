@@ -19882,13 +19882,16 @@ function renderBemFinanceiro(bem){
     <div class="card"><div class="sec-title" style="margin-bottom:14px">POR CATEGORIA</div><div style="height:180px"><canvas id="chartBemPizza"></canvas></div></div>
     <div class="card"><div class="sec-title" style="margin-bottom:14px">GASTOS MENSAIS</div><div style="height:180px"><canvas id="chartBemBarras"></canvas></div></div>
   </div>
-  ${ev.length?`<div class="tbl-wrap"><table><thead><tr><th>DATA</th><th>TIPO</th><th>DESCRIÇÃO</th><th>ORIGEM</th><th style="text-align:right">VALOR</th></tr></thead>
+  ${ev.length?`<div class="tbl-wrap"><table><thead><tr><th>DATA</th><th>TIPO</th><th>DESCRIÇÃO</th><th>ORIGEM</th><th style="text-align:right">VALOR</th><th></th></tr></thead>
   <tbody>${[...ev].sort((a,b)=>b.data.localeCompare(a.data)).map(e=>`<tr>
     <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${_fmtData(e.data)}</td>
     <td><span class="badge badge-${_eventoBadgeCor(e.tipo)}">${esc(e.tipo)}</span></td>
     <td>${esc(_descLimpa(e.desc))}</td>
     <td>${_isLancEvento(e)?_lancBadge():'<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">◆ Meus Bens</span>'}</td>
     <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
+    <td style="text-align:center;white-space:nowrap">${e.anexo
+      ?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovante" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎</button>`
+      :`<button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.1)">📎+</button>`}</td>
   </tr>`).join('')}</tbody></table></div>`:''}`;
   const catColors=['#00ff9d','#00c8ff','#a855f7','#ffd700','#ff4444','#ff8c00','#1effe4'];
   setTimeout(()=>{

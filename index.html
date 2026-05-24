@@ -20350,11 +20350,13 @@ function _bemFinAnexar(id){
 }
 
 // ── VER ANEXOS — abre modal de mídia na própria página ──
-function _abrirMediaModal(src,nome){
+let _mediaViewerCtx=null; // {type:'evento'|'doc', id}
+function _abrirMediaModal(src,nome,ctx){
   const modal=document.getElementById('media-viewer-modal');
   const body=document.getElementById('media-viewer-body');
   const title=document.getElementById('media-viewer-title');
   if(!modal||!body) return;
+  _mediaViewerCtx=ctx||null;
   if(nome) title.textContent=nome;
   const isPdf=src.startsWith('data:application/pdf')||src.toLowerCase().includes('.pdf');
   body.innerHTML=isPdf
@@ -20365,14 +20367,32 @@ function _abrirMediaModal(src,nome){
 function _fecharMediaModal(){
   const modal=document.getElementById('media-viewer-modal');
   if(modal){modal.style.display='none';document.getElementById('media-viewer-body').innerHTML='';}
+  _mediaViewerCtx=null;
+}
+function _excluirAnexoMedia(){
+  if(!_mediaViewerCtx) return;
+  showConfirm('Excluir Anexo','Remover o comprovante anexado?',()=>{
+    if(_mediaViewerCtx.type==='evento'){
+      const evs=getBensEventos();
+      const idx=evs.findIndex(e=>e.id===_mediaViewerCtx.id);
+      if(idx!==-1){delete evs[idx].anexo;save('bensEventos',evs);
+        const bem=getBens().find(b=>b.id===evs[idx].bemId);
+        if(bem) renderBemFinanceiro(bem);}
+    } else if(_mediaViewerCtx.type==='doc'){
+      const docs=getBensDocumentos();
+      const idx=docs.findIndex(d=>d.id===_mediaViewerCtx.id);
+      if(idx!==-1){delete docs[idx].anexo;save('bensDocumentos',docs);}
+    }
+    _fecharMediaModal();
+  });
 }
 function _verAnexoBem(id){
   const ev=getBensEventos().find(e=>e.id==id);if(!ev||!ev.anexo)return;
-  _abrirMediaModal(ev.anexo, ev.desc||'Comprovante');
+  _abrirMediaModal(ev.anexo, ev.desc||'Comprovante', {type:'evento',id});
 }
 function _verAnexoBemDoc(id){
   const d=getBensDocumentos().find(x=>x.id==id);if(!d||!d.anexo)return;
-  _abrirMediaModal(d.anexo, d.nome||'Documento');
+  _abrirMediaModal(d.anexo, d.nome||'Documento', {type:'doc',id});
 }
 </script>
 
@@ -20385,7 +20405,8 @@ function _verAnexoBemDoc(id){
       <div id="media-viewer-title" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px">📎 COMPROVANTE</div>
       <div style="display:flex;gap:8px">
         <button onclick="(()=>{const b=document.getElementById('media-viewer-body');const src=b.querySelector('img,iframe')?.src;if(src){const a=document.createElement('a');a.href=src;a.download='comprovante';a.click();}})()" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">⬇ BAIXAR</button>
-        <button onclick="_fecharMediaModal()" style="background:none;border:1px solid rgba(255,68,68,0.3);color:var(--neon-red);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">✕</button>
+        <button onclick="_excluirAnexoMedia()" style="background:none;border:1px solid rgba(255,68,68,0.3);color:var(--neon-red);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">🗑 EXCLUIR</button>
+        <button onclick="_fecharMediaModal()" style="background:none;border:1px solid rgba(255,255,255,0.15);color:var(--text3);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">✕</button>
       </div>
     </div>
     <div id="media-viewer-body" style="overflow:auto;border-radius:8px"></div>

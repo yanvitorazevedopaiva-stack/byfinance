@@ -18403,14 +18403,14 @@ function finQuitarArquivo(file){
   if(!file) return;
   if(file.size>6*1024*1024){document.getElementById('fin-quitar-err').textContent='Arquivo muito grande. Máximo 6 MB.';return;}
   document.getElementById('fin-quitar-err').textContent='';
-  const reader=new FileReader();
-  reader.onload=e=>{
-    _finQuitarAnexoTemp={nome:file.name,tipo:file.type,dados:e.target.result};
+  (async()=>{
+    const uid='fincomp_'+Date.now();
+    const obj=await _salvarArqObj(file,uid);
+    _finQuitarAnexoTemp=obj;
     document.getElementById('fin-quitar-preview').style.display='flex';
     document.getElementById('fin-quitar-fname').textContent=file.name;
     document.getElementById('fin-quitar-drop-label').textContent='Clique para trocar o arquivo';
-  };
-  reader.readAsDataURL(file);
+  })();
 }
 
 function _finQuitarLimparAnexo(){
@@ -18462,11 +18462,15 @@ function marcarParcela(id){ abrirFinQuitarModal(id); }
 function verFinComprovante(finId,numParcela){
   const comp=getFinComprovantes()[_finCompKey(finId,numParcela)];
   if(!comp||!comp.dados){alert('Nenhum comprovante encontrado.');return;}
-  const w=window.open('');
-  w.document.write(comp.dados.startsWith('data:application/pdf')
-    ?`<iframe src="${comp.dados}" style="width:100%;height:100vh;border:none"></iframe>`
-    :`<img src="${comp.dados}" style="max-width:100%;height:auto">`);
-  w.document.close();
+  _resolveAnexo(comp).then(src=>{
+    if(!src) return;
+    const w=window.open('');
+    if(!w) return;
+    w.document.write(src.startsWith('data:application/pdf')
+      ?`<iframe src="${src}" style="width:100%;height:100vh;border:none"></iframe>`
+      :`<img src="${src}" style="max-width:100%;height:auto">`);
+    w.document.close();
+  });
 }
 
 function delFinanciamento(id){
@@ -20641,10 +20645,11 @@ async function _resolveAnexo(val){
 
 // Migração única: move TODOS os base64 do localStorage para Supabase
 // Cobre: bensEventos, bensDocumentos, gfAnexos, parcAnexos, receitas, fatComprovantes,
-//        lancDebitos, financiamentos, docsUsuario, cartoes (contrato), mkt listas (NF)
+//        lancDebitos, financiamentos, docsUsuario, cartoes (contrato), mkt listas (NF),
+//        finComprovantes (comprovantes de parcelas de financiamento)
 async function _migrarArquivosParaSupabase(){
   if(!_supabase||!_authUser) return;
-  const _migKey='_migDocs4_'+_authUser;
+  const _migKey='_migDocs5_'+_authUser;
   if(localStorage.getItem(_migKey)==='1') return;
   const _sbUp=async(uid,b64,nome)=>{
     if(!b64||!b64.startsWith('data:')) return false;
@@ -20808,8 +20813,20 @@ async function _migrarArquivosParaSupabase(){
     if(mktChanged) _mktSetListas(listas);
   }catch(e){}
 
+  // finComprovantes (comprovantes de pagamento de financiamentos)
+  let finCompChanged=false;
+  const fc2=getFinComprovantes();
+  for(const key of Object.keys(fc2)){
+    const a=fc2[key];
+    if(a&&a.dados&&typeof a.dados==='string'&&a.dados.startsWith('data:')){
+      const uid='mig_fincomp_'+key.replace(/[^a-z0-9]/gi,'_');
+      if(await _sbUp(uid,a.dados,a.nome)){fc2[key].dados='__sbrow_'+uid;finCompChanged=true;}
+    }
+  }
+  if(finCompChanged) setFinComprovantes(fc2);
+
   try{localStorage.setItem(_migKey,'1');}catch(e){}
-  const total=[evChanged,docChanged,gfChanged,parcChanged,recChanged,fatChanged,debChanged,finChanged,duChanged,ctChanged,mktChanged].filter(Boolean).length;
+  const total=[evChanged,docChanged,gfChanged,parcChanged,recChanged,fatChanged,debChanged,finChanged,duChanged,ctChanged,mktChanged,finCompChanged].filter(Boolean).length;
   if(total>0){
     console.log('[BYF] Migração completa: '+total+' tipo(s) de arquivo migrados para Supabase — localStorage liberado.');
     _showToast('☁ Arquivos migrados para nuvem — espaço liberado!');
@@ -20918,72 +20935,110 @@ function _bemOkToast(msg){
 
 // ── VER ANEXOS — modal de mídia com navegação múltipla ──
 let _mediaViewerCtx=null; // {type, id, files:[{src,nome}], idx}
-
 let _pdfViewerDoc=null,_pdfViewerPage=1;
+let _mvScale=1.0;
+
+function _mvZoomChange(d){
+  _mvScale=Math.min(5,Math.max(0.3,_mvScale+d));
+  const img=document.getElementById('mv-img-zoom');
+  if(!img) return;
+  if(_mvScale<=1){
+    img.style.width='';img.style.maxWidth='100%';img.style.maxHeight='calc(96vh - 116px)';
+  } else {
+    img.style.width=(_mvScale*100)+'%';img.style.maxWidth='none';img.style.maxHeight='none';
+  }
+  const lbl=document.getElementById('mv-zoom-label');
+  if(lbl) lbl.textContent=Math.round(_mvScale*100)+'%';
+}
+function _mvZoomReset(){_mvScale=1.0;_mvZoomChange(0);}
+
 function _mediaViewerRender(){
   if(!_mediaViewerCtx) return;
-  const {files,idx}=_mediaViewerCtx;
+  const {type,files,idx}=_mediaViewerCtx;
   const file=files[idx];
   const body=document.getElementById('media-viewer-body');
   const title=document.getElementById('media-viewer-title');
   const counter=document.getElementById('media-viewer-counter');
-  if(title) title.textContent=file.nome||'Comprovante';
-  if(counter) counter.textContent=files.length>1?`${idx+1} / ${files.length}`:'';
+  if(title) title.textContent=file.nome||'Documento';
+  if(counter) counter.textContent=files.length>1?`${idx+1} de ${files.length}`:'';
   const prev=document.getElementById('media-viewer-prev');
   const next=document.getElementById('media-viewer-next');
   if(prev) prev.style.visibility=idx>0?'visible':'hidden';
   if(next) next.style.visibility=idx<files.length-1?'visible':'hidden';
-  // Arquivo armazenado no Supabase — buscar antes de renderizar
+  // Botão adicionar: só para eventos
+  const addBtn=document.getElementById('mv-add-btn');
+  if(addBtn) addBtn.style.display=type==='evento'?'inline-flex':'none';
+  // Zoom bar: reset
+  const zb=document.getElementById('mv-zoom-bar');
+  if(zb) zb.style.display='none';
+  // Reset body layout
+  body.style.display='';body.style.alignItems='';body.style.justifyContent='';body.style.padding='';
+  // Arquivo no Supabase — buscar antes de renderizar
   if(typeof file.src==='string'&&file.src.startsWith('__sbrow_')){
     const docId=file.src.replace('__sbrow_','');
-    body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">☁ Carregando arquivo...</div>`;
+    body.style.display='flex';body.style.alignItems='center';body.style.justifyContent='center';
+    body.innerHTML=`<div style="text-align:center;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace;opacity:.7">☁ Carregando arquivo...</div>`;
     _loadDocFromSupabase(docId).then(src=>{
-      if(!src){body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--neon-red);font-size:12px;font-family:'JetBrains Mono',monospace">Arquivo não encontrado no servidor.</div>`;return;}
-      files[idx].src=src; // cache local para navegação
+      if(!src){
+        body.innerHTML=`<div style="text-align:center;color:var(--neon-red);font-size:12px;font-family:'JetBrains Mono',monospace;padding:32px">Arquivo não encontrado no servidor.</div>`;
+        return;
+      }
+      files[idx].src=src;
       _mediaViewerRender();
     });
     return;
   }
-  const isPdf=file.src.startsWith('data:application/pdf')||/\.pdf(\?.*)?$/i.test(file.src);
+  const isPdf=file.src&&(file.src.startsWith('data:application/pdf')||/\.pdf(\?.*)?$/i.test(file.src));
   if(isPdf){
     _pdfViewerDoc=null;_pdfViewerPage=1;
-    body.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">Carregando PDF...</div>`;
-    const loadingTask=(typeof pdfjsLib!=='undefined')
-      ?pdfjsLib.getDocument(file.src)
-      :null;
-    if(!loadingTask){
-      // fallback: iframe se pdf.js não carregou
-      body.innerHTML=`<iframe src="${file.src}" style="width:100%;height:82vh;border:none;border-radius:8px"></iframe>`;
+    body.style.display='flex';body.style.alignItems='center';body.style.justifyContent='center';
+    body.innerHTML=`<div style="text-align:center;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace;opacity:.7">Carregando PDF...</div>`;
+    if(typeof pdfjsLib==='undefined'){
+      body.style.display='';
+      body.innerHTML=`<iframe src="${file.src}" style="width:100%;height:100%;border:none;display:block"></iframe>`;
       return;
     }
-    if(typeof pdfjsLib!=='undefined') pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    loadingTask.promise.then(pdf=>{
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    pdfjsLib.getDocument(file.src).promise.then(pdf=>{
       _pdfViewerDoc=pdf;
+      body.style.display='';body.style.alignItems='';body.style.justifyContent='';
       _renderPdfPage(body,pdf,1);
     }).catch(()=>{
-      body.innerHTML=`<iframe src="${file.src}" style="width:100%;height:82vh;border:none;border-radius:8px"></iframe>`;
+      body.style.display='';
+      body.innerHTML=`<iframe src="${file.src}" style="width:100%;height:100%;border:none;display:block"></iframe>`;
     });
   } else {
-    body.innerHTML=`<img src="${file.src}" style="max-width:100%;max-height:84vh;border-radius:8px;display:block;margin:0 auto;object-fit:contain">`;
+    // Imagem
+    if(zb) zb.style.display='flex';
+    _mvScale=1.0;const lbl=document.getElementById('mv-zoom-label');if(lbl)lbl.textContent='100%';
+    body.style.display='flex';body.style.alignItems='center';body.style.justifyContent='center';
+    body.style.padding='20px';body.style.boxSizing='border-box';
+    body.innerHTML=`<img id="mv-img-zoom" src="${file.src}"
+      style="max-width:100%;max-height:calc(96vh - 116px);object-fit:contain;border-radius:6px;display:block;cursor:zoom-in;user-select:none;box-shadow:0 4px 24px rgba(0,0,0,0.4)"
+      ondblclick="_mvZoomChange(0.5)" title="Duplo clique para ampliar">`;
   }
 }
 function _renderPdfPage(body,pdf,pageNum){
   _pdfViewerPage=pageNum;
   pdf.getPage(pageNum).then(page=>{
-    const vw=body.clientWidth||800;
+    const vw=body.clientWidth||900;
+    const vh=body.clientHeight||700;
     const viewport=page.getViewport({scale:1});
-    const scale=Math.min((vw-24)/viewport.width, window.innerHeight*0.82/viewport.height);
+    const scale=Math.min((vw-32)/viewport.width,(vh-80)/viewport.height,3);
     const vp=page.getViewport({scale});
     const canvas=document.createElement('canvas');
     canvas.width=vp.width;canvas.height=vp.height;
-    canvas.style.cssText='display:block;margin:0 auto;border-radius:6px;max-width:100%';
-    const navHtml=pdf.numPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3)">
-      <button onclick="_pdfNav(-1)" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 12px;cursor:pointer;font-size:14px">‹</button>
-      <span id="pdf-page-label">${pageNum} / ${pdf.numPages}</span>
-      <button onclick="_pdfNav(1)" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 12px;cursor:pointer;font-size:14px">›</button>
+    canvas.style.cssText='display:block;margin:0 auto;border-radius:4px;max-width:100%;box-shadow:0 2px 16px rgba(0,0,0,0.5)';
+    const navHtml=pdf.numPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:12px;padding:12px 0 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">
+      <button onclick="_pdfNav(-1)" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 14px;cursor:pointer;font-size:15px;line-height:1">‹</button>
+      <span id="pdf-page-label" style="font-size:11px">${pageNum} / ${pdf.numPages}</span>
+      <button onclick="_pdfNav(1)" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 14px;cursor:pointer;font-size:15px;line-height:1">›</button>
     </div>`:'';
-    body.innerHTML=navHtml;
-    body.appendChild(canvas);
+    const wrap=document.createElement('div');
+    wrap.style.cssText='padding:20px 20px 16px;min-height:100%;box-sizing:border-box';
+    wrap.innerHTML=navHtml;
+    wrap.appendChild(canvas);
+    body.innerHTML='';body.appendChild(wrap);
     page.render({canvasContext:canvas.getContext('2d'),viewport:vp});
   });
 }
@@ -21012,8 +21067,12 @@ function _mediaViewerNav(dir){
 }
 function _fecharMediaModal(){
   const modal=document.getElementById('media-viewer-modal');
-  if(modal){modal.style.display='none';const b=document.getElementById('media-viewer-body');if(b)b.innerHTML='';}
-  _mediaViewerCtx=null;
+  if(modal){
+    modal.style.display='none';
+    const b=document.getElementById('media-viewer-body');
+    if(b){b.innerHTML='';b.style.display='';b.style.alignItems='';b.style.justifyContent='';b.style.padding='';}
+  }
+  _mediaViewerCtx=null;_pdfViewerDoc=null;
 }
 function _excluirAnexoMedia(){
   if(!_mediaViewerCtx) return;
@@ -21078,35 +21137,48 @@ function _verAnexoBemDoc(id){
 <!-- ══════════════════════════════════════
      MEDIA VIEWER MODAL
 ══════════════════════════════════════ -->
-<div id="media-viewer-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;box-sizing:border-box" onclick="if(event.target===this)_fecharMediaModal()">
-  <div style="background:var(--card);border:1px solid rgba(0,200,255,0.15);border-radius:16px;padding:10px 14px;width:min(940px,98vw);max-height:96vh;display:flex;flex-direction:column;gap:8px;box-shadow:0 16px 64px rgba(0,0,0,0.85)">
-    <!-- Barra compacta -->
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <!-- Esquerda: título + contador + navegação -->
-      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
-        <button id="media-viewer-prev" onclick="_mediaViewerNav(-1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:16px;flex-shrink:0">‹</button>
-        <div id="media-viewer-title" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--neon-blue);letter-spacing:.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px">📎 COMPROVANTE</div>
-        <span id="media-viewer-counter" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);background:var(--bg3);border-radius:6px;padding:1px 7px;flex-shrink:0"></span>
-        <button id="media-viewer-next" onclick="_mediaViewerNav(1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:16px;flex-shrink:0">›</button>
+<div id="media-viewer-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:10px;box-sizing:border-box" onclick="if(event.target===this)_fecharMediaModal()">
+  <div style="background:var(--card);border:1px solid rgba(0,200,255,0.15);border-radius:20px;width:min(1200px,98vw);height:min(920px,96vh);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,0.95)">
+
+    <!-- Toolbar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--card2);border-radius:20px 20px 0 0">
+      <!-- Esquerda: nav + título -->
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden">
+        <button id="media-viewer-prev" onclick="_mediaViewerNav(-1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 13px;cursor:pointer;font-size:20px;flex-shrink:0;line-height:1">‹</button>
+        <div style="min-width:0;flex:1">
+          <div id="media-viewer-title" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--neon-blue);letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase">DOCUMENTO</div>
+          <div id="media-viewer-counter" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);margin-top:1px;line-height:1.3"></div>
+        </div>
+        <button id="media-viewer-next" onclick="_mediaViewerNav(1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 13px;cursor:pointer;font-size:20px;flex-shrink:0;line-height:1">›</button>
       </div>
-      <!-- Direita: ações secundárias + fechar -->
+
+      <!-- Direita: controles -->
       <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-        <button onclick="_bemFinAnexar(_mediaViewerCtx?.id,true)" title="Adicionar comprovante" style="background:none;border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">📎+</button>
-        <!-- Opções: baixar e imprimir num menu -->
+        <!-- Zoom (só para imagens) -->
+        <div id="mv-zoom-bar" style="display:none;align-items:center;gap:3px;padding-right:8px;margin-right:3px;border-right:1px solid var(--border)">
+          <button onclick="_mvZoomChange(-0.25)" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;line-height:1">−</button>
+          <span id="mv-zoom-label" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);min-width:38px;text-align:center;display:inline-block">100%</span>
+          <button onclick="_mvZoomChange(0.25)" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;line-height:1">+</button>
+          <button onclick="_mvZoomReset()" title="Encaixar na tela" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:3px 9px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1">⊡</button>
+        </div>
+        <!-- Adicionar comprovante (só para eventos) -->
+        <button id="mv-add-btn" onclick="_bemFinAnexar(_mediaViewerCtx?.id,true)" title="Adicionar comprovante" style="display:none;align-items:center;gap:5px;background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">📎+</button>
+        <!-- Menu opções -->
         <div style="position:relative;display:inline-block">
-          <button id="mv-opcoes-btn" onclick="_mvToggleOpcoes()" title="Opções" style="background:none;border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:13px">⋯</button>
-          <div id="mv-opcoes-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:8px;padding:6px;min-width:140px;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,0.5)">
-            <button onclick="(()=>{const f=_mediaViewerCtx?.files[_mediaViewerCtx?.idx];if(f){const a=document.createElement('a');a.href=f.src;a.download=f.nome||'comprovante';a.click();}_mvToggleOpcoes();})()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:6px 10px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:5px" onmouseover="this.style.background='rgba(0,200,255,0.08)'" onmouseout="this.style.background='none'">⬇ Baixar</button>
-            <button onclick="(()=>{const f=_mediaViewerCtx?.files[_mediaViewerCtx?.idx];if(f){const w=window.open(f.src,'_blank');if(w)w.print();}_mvToggleOpcoes();})()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:6px 10px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:5px" onmouseover="this.style.background='rgba(0,200,255,0.08)'" onmouseout="this.style.background='none'">🖨 Imprimir</button>
-            <div style="border-top:1px solid var(--border);margin:4px 0"></div>
-            <button onclick="_excluirAnexoMedia();_mvToggleOpcoes()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--neon-red);padding:6px 10px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:5px" onmouseover="this.style.background='rgba(255,68,68,0.08)'" onmouseout="this.style.background='none'">🗑 Excluir</button>
+          <button id="mv-opcoes-btn" onclick="_mvToggleOpcoes()" title="Opções" style="background:rgba(0,200,255,0.07);border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:14px;line-height:1">⋯</button>
+          <div id="mv-opcoes-menu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:10px;padding:6px;min-width:150px;z-index:10;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
+            <button onclick="(()=>{const f=_mediaViewerCtx?.files[_mediaViewerCtx?.idx];if(f&&f.src&&!f.src.startsWith('__sbrow_')){const a=document.createElement('a');a.href=f.src;a.download=f.nome||'documento';a.click();}_mvToggleOpcoes();})()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:7px 12px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:6px" onmouseover="this.style.background='rgba(0,200,255,0.08)'" onmouseout="this.style.background='none'">⬇ Baixar</button>
+            <button onclick="(()=>{const f=_mediaViewerCtx?.files[_mediaViewerCtx?.idx];if(f&&f.src&&!f.src.startsWith('__sbrow_')){const w=window.open('');if(w){w.document.write(f.src.startsWith('data:image')?'<img src=\''+f.src+'\' style=\'max-width:100%;display:block;margin:auto\'>':'<iframe src=\''+f.src+'\' style=\'width:100%;height:100vh;border:none\'></iframe>');w.document.close();setTimeout(()=>w.print(),600);}}_mvToggleOpcoes();})()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:7px 12px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:6px" onmouseover="this.style.background='rgba(0,200,255,0.08)'" onmouseout="this.style.background='none'">🖨 Imprimir</button>
+            <div style="border-top:1px solid var(--border);margin:5px 0"></div>
+            <button onclick="_excluirAnexoMedia();_mvToggleOpcoes()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--neon-red);padding:7px 12px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:6px" onmouseover="this.style.background='rgba(255,68,68,0.08)'" onmouseout="this.style.background='none'">🗑 Excluir</button>
           </div>
         </div>
-        <button onclick="_fecharMediaModal()" style="background:none;border:1px solid rgba(255,255,255,0.12);color:var(--text3);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:14px">✕</button>
+        <button onclick="_fecharMediaModal()" style="background:rgba(255,68,68,0.07);border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);border-radius:7px;padding:5px 11px;cursor:pointer;font-size:15px;line-height:1">✕</button>
       </div>
     </div>
-    <!-- Viewer: ocupa todo espaço restante -->
-    <div id="media-viewer-body" style="flex:1;overflow:auto;border-radius:8px;min-height:300px"></div>
+
+    <!-- Área do documento — preenche todo o espaço restante -->
+    <div id="media-viewer-body" style="flex:1;min-height:0;overflow:auto;background:var(--bg2);position:relative"></div>
   </div>
 </div>
 

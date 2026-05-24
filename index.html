@@ -4393,6 +4393,10 @@
         <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">CARTÃO</div>
         <select id="ep-cartao" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace"></select>
       </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">VINCULAR A BEM (opcional)</div>
+        <select id="ep-bem" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid rgba(0,200,255,0.2);color:var(--text);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace"></select>
+      </div>
     </div>
     <!-- Botões -->
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-top:16px">
@@ -4428,6 +4432,10 @@
           <option>Lazer e Entretenimento</option><option>Saúde</option><option>Educação</option>
           <option>Vestuário</option><option>Despesas Pessoais</option><option>Imprevistos</option><option>Investimentos/Poupança</option>
         </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VINCULAR A BEM (opcional)</div>
+        <select id="edit-lanc-bem" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid rgba(0,200,255,0.2);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box"></select>
       </div>
       <div id="edit-lanc-credito-info" style="display:none;font-size:11px;color:var(--neon-yellow);background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.2);border-radius:8px;padding:8px 12px">
         ⚠ Lançamento de crédito — valor e data não podem ser alterados (afeta parcelas e fatura)
@@ -9592,6 +9600,12 @@ function editParcela(id){
   const sel=document.getElementById('ep-cartao');
   const carts=getData('cartoes');
   sel.innerHTML=carts.map(c=>`<option value="${esc(c.nome)}"${c.nome===p.cartao?' selected':''}>${esc(c.nome)}</option>`).join('');
+  // popula bens
+  const _bemSel=document.getElementById('ep-bem');
+  if(_bemSel){
+    const _bens=getBens();
+    _bemSel.innerHTML=`<option value="">— nenhum —</option>`+_bens.map(b=>`<option value="${b.id}"${b.id===p.bemId?' selected':''}>${esc(b.nome)}</option>`).join('');
+  }
   document.getElementById('edit-parcela-modal').style.display='flex';
   _epCalcPrev();
 }
@@ -9623,6 +9637,8 @@ function salvarEdicaoParcela(){
   const paga=Math.min(total,Math.max(0,parseInt(document.getElementById('ep-paga').value)||0));
   const inicio=document.getElementById('ep-inicio').value;
   const cartao=document.getElementById('ep-cartao').value;
+  const _bemValEp=document.getElementById('ep-bem')?.value||'';
+  const bemId=_bemValEp?parseInt(_bemValEp):undefined;
   if(!desc){_showError('Informe a descrição.');return;}
   if(!val||val<=0){_showError('Informe um valor válido.');return;}
 
@@ -9632,7 +9648,7 @@ function salvarEdicaoParcela(){
   const _oldCartao=parcelas[idx].cartao;
   const _oldInicio=parcelas[idx].inicio||inicio;
 
-  parcelas[idx]={...parcelas[idx],desc,val,total,paga,inicio,cartao};
+  parcelas[idx]={...parcelas[idx],desc,val,total,paga,inicio,cartao,...(bemId?{bemId}:{bemId:undefined})};
   setData('parcelas',parcelas);
 
   // ── Sincroniza lancamentos ─────────────────────────────────────────────────
@@ -9642,7 +9658,7 @@ function salvarEdicaoParcela(){
     const _lIdx=(_allLanc[sem]||[]).findIndex(l=>l.parcId===_epId);
     if(_lIdx>=0){
       const _l=_allLanc[sem][_lIdx];
-      _allLanc[sem][_lIdx]={..._l,desc,val,valTotal:parseFloat((val*total).toFixed(2)),nParc:total,cartao,forma:cartao+(total===1?' (à vista)':` (${total}x)`)};
+      _allLanc[sem][_lIdx]={..._l,desc,val,valTotal:parseFloat((val*total).toFixed(2)),nParc:total,cartao,forma:cartao+(total===1?' (à vista)':` (${total}x)`),...(bemId?{bemId}:{bemId:undefined})};
       _lancSynced=true;
       break;
     }
@@ -10302,6 +10318,11 @@ function editLancSemanal(id,sem){
   document.getElementById('edit-lanc-val').disabled=isCredito;
   document.getElementById('edit-lanc-data').disabled=isCredito;
   document.getElementById('edit-lanc-credito-info').style.display=isCredito?'block':'none';
+  const _elBemSel=document.getElementById('edit-lanc-bem');
+  if(_elBemSel){
+    const _elBens=getBens();
+    _elBemSel.innerHTML=`<option value="">— nenhum —</option>`+_elBens.map(b=>`<option value="${b.id}"${b.id===l.bemId?' selected':''}>${esc(b.nome)}</option>`).join('');
+  }
   const modal=document.getElementById('edit-lanc-modal');
   modal.style.display='flex';
 }
@@ -10314,6 +10335,8 @@ function salvarEditLanc(){
   const data=document.getElementById('edit-lanc-data')?.value||'';
   const val=getMoneyVal('edit-lanc-val');
   const cat=document.getElementById('edit-lanc-cat')?.value||'';
+  const _elBemVal=document.getElementById('edit-lanc-bem')?.value||'';
+  const _elBemId=_elBemVal?parseInt(_elBemVal):undefined;
   if(!desc){_showError('Informe a descrição.');return;}
   if(isNaN(val)||val<=0){_showError('Informe um valor válido.');return;}
   const all=getData('lancamentos');
@@ -10324,6 +10347,7 @@ function salvarEditLanc(){
   const isCredito=!!(entry.parcId||entry.cartao);
   entry.desc=desc;
   entry.cat=cat;
+  if(_elBemId) entry.bemId=_elBemId; else delete entry.bemId;
   if(!isCredito){
     if(!data){_showError('Informe a data.');return;}
     if(isNaN(val)||val<=0){_showError('Informe um valor válido.');return;}

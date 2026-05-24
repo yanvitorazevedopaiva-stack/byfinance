@@ -1084,7 +1084,7 @@ export default async function handler(req, res) {
           );
           const dadosU = await supabaseQuery(`/user_data?user_id=eq.${tarefaCtx.atribuidor_user_id}&select=data`);
           const dadosNeg = dadosU?.[0]?.data || {};
-          dadosNeg.tarefas = (dadosNeg.tarefas || []).filter(t => t.id !== tarefaCtx.tarefa_id);
+          dadosNeg[tarefaCtx.atribuidor_user_id + '_tarefas'] = (dadosNeg[tarefaCtx.atribuidor_user_id + '_tarefas'] || []).filter(t => t.id !== tarefaCtx.tarefa_id);
           await supabaseQuery(`/user_data?user_id=eq.${tarefaCtx.atribuidor_user_id}`, 'PATCH', {
             data: dadosNeg,
             updated_at: new Date().toISOString()
@@ -1135,7 +1135,7 @@ export default async function handler(req, res) {
 
         if (_aceitarRg) {
           const dadosAc = (await supabaseQuery(`/user_data?user_id=eq.${ctxRg.atribuidor_user_id}&select=data`))?.[0]?.data || {};
-          const tarefaAc = (dadosAc.tarefas || []).find(t => t.id === ctxRg.tarefa_id);
+          const tarefaAc = (dadosAc[ctxRg.atribuidor_user_id + '_tarefas'] || []).find(t => t.id === ctxRg.tarefa_id);
           if (tarefaAc) {
             tarefaAc.prazo = ctxRg.novo_prazo;
             await supabaseQuery(`/user_data?user_id=eq.${ctxRg.atribuidor_user_id}`, 'PATCH', { data: dadosAc, updated_at: new Date().toISOString() });
@@ -1194,7 +1194,7 @@ export default async function handler(req, res) {
 
         if (_aceitarCP) {
           const dadosCP = (await supabaseQuery(`/user_data?user_id=eq.${ctxCP.atribuidor_user_id}&select=data`))?.[0]?.data || {};
-          const tarefaCP = (dadosCP.tarefas || []).find(t => t.id === ctxCP.tarefa_id);
+          const tarefaCP = (dadosCP[ctxCP.atribuidor_user_id + '_tarefas'] || []).find(t => t.id === ctxCP.tarefa_id);
           if (tarefaCP) {
             tarefaCP.prazo = ctxCP.contraproposta_prazo;
             await supabaseQuery(`/user_data?user_id=eq.${ctxCP.atribuidor_user_id}`, 'PATCH', { data: dadosCP, updated_at: new Date().toISOString() });
@@ -1209,7 +1209,7 @@ export default async function handler(req, res) {
 
         if (_negarCP) {
           const dadosNCP = (await supabaseQuery(`/user_data?user_id=eq.${ctxCP.atribuidor_user_id}&select=data`))?.[0]?.data || {};
-          dadosNCP.tarefas = (dadosNCP.tarefas || []).filter(t => t.id !== ctxCP.tarefa_id);
+          dadosNCP[ctxCP.atribuidor_user_id + '_tarefas'] = (dadosNCP[ctxCP.atribuidor_user_id + '_tarefas'] || []).filter(t => t.id !== ctxCP.tarefa_id);
           await supabaseQuery(`/user_data?user_id=eq.${ctxCP.atribuidor_user_id}`, 'PATCH', { data: dadosNCP, updated_at: new Date().toISOString() });
           await limparContexto(chat_id);
           await sendTelegram(ctxCP.atribuidor_chat_id,
@@ -1275,7 +1275,7 @@ export default async function handler(req, res) {
         // Cria a tarefa com atribuição usando prazoA (não gasto_parcial original)
         const tarefasAtrib = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dadosAtrib = tarefasAtrib?.[0]?.data || {};
-        const listaAtrib = dadosAtrib.tarefas || [];
+        const listaAtrib = dadosAtrib[user_id + '_tarefas'] || [];
         let novaAtrib = {
           id: Date.now(),
           titulo: gasto.titulo,
@@ -1289,7 +1289,7 @@ export default async function handler(req, res) {
           atribuido_para: gasto.atribuir_para
         };
         listaAtrib.push(novaAtrib);
-        dadosAtrib.tarefas = listaAtrib;
+        dadosAtrib[user_id + '_tarefas'] = listaAtrib;
         await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify({data:dadosAtrib,updated_at:new Date().toISOString()})});
         await limparContexto(chat_id);
         const nomeAtribCtx = gasto.atribuir_para.toLowerCase().trim();
@@ -1330,9 +1330,9 @@ export default async function handler(req, res) {
         gasto.pedir_prazo = false;
         const tarefasD = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dadosD = tarefasD?.[0]?.data || {};
-        const listaD = dadosD.tarefas || [];
+        const listaD = dadosD[user_id + '_tarefas'] || [];
         listaD.push({id:Date.now(),titulo:gasto.titulo,prazo:gasto.prazo||null,prio:gasto.prioridade||'Media',concluida:false,origem:'telegram',origem_nome:nomeRemetente});
-        dadosD.tarefas = listaD;
+        dadosD[user_id + '_tarefas'] = listaD;
         await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify({data:dadosD,updated_at:new Date().toISOString()})});
         await limparContexto(chat_id);
         const prazoTxt = gasto.prazo ? ` · 📅 ${new Date(gasto.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
@@ -1578,7 +1578,7 @@ export default async function handler(req, res) {
     if (gasto.tipo === 'consulta') {
       if (gasto.pergunta === 'fatura' || gasto.pergunta === 'faturas_todas') {
         const userData = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
-        const faturas = userData?.[0]?.data?.faturas || {};
+        const faturas = userData?.[0]?.data?.[user_id + '_faturas'] || {};
         const mesIdx = gasto.mes && gasto.mes !== 'proximo'
           ? (parseInt(gasto.mes) - 1)
           : gasto.mes === 'proximo'
@@ -1629,7 +1629,7 @@ export default async function handler(req, res) {
       if (gasto.acao === 'listar') {
         const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dados = tarefas?.[0]?.data || {};
-        const lista = (dados.tarefas || []).filter(t => !t.concluida).slice(0, 8);
+        const lista = (dados[user_id + '_tarefas'] || []).filter(t => !t.concluida).slice(0, 8);
         if (!lista.length) {
           await sendTelegram(chat_id, `✅ Nenhuma tarefa pendente!`);
         } else {
@@ -1666,7 +1666,7 @@ export default async function handler(req, res) {
 
         const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dados = tarefas?.[0]?.data || {};
-        const lista = dados.tarefas || [];
+        const lista = dados[user_id + '_tarefas'] || [];
         let nova = {
           id: Date.now(),
           titulo: gasto.titulo,
@@ -1685,7 +1685,7 @@ export default async function handler(req, res) {
           };
         }
         lista.push(nova);
-        dados.tarefas = lista;
+        dados[user_id + '_tarefas'] = lista;
         await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${user_id}`, {
           method: 'PATCH',
           headers: {
@@ -1765,7 +1765,7 @@ export default async function handler(req, res) {
       if (gasto.acao === 'concluir' && gasto.titulo) {
         const tarefas = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
         const dados = tarefas?.[0]?.data || {};
-        const lista = dados.tarefas || [];
+        const lista = dados[user_id + '_tarefas'] || [];
         const idx = lista.findIndex(t => {
           const tituloTarefa = (t.titulo || t.desc || '').toLowerCase().trim();
           const tituloGasto = gasto.titulo.toLowerCase().trim();
@@ -1779,13 +1779,13 @@ export default async function handler(req, res) {
           await sendTelegram(chat_id, `❌ Tarefa não encontrada: "${gasto.titulo}"`);
         } else {
           lista[idx].concluida = true;
-          dados.tarefas = lista;
+          dados[user_id + '_tarefas'] = lista;
           await supabaseQuery(`/user_data?user_id=eq.${user_id}`, 'PATCH', {
             data: dados,
             updated_at: new Date().toISOString()
           });
           const dadosAtualizados = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
-          const tarefasAtualizadas = dadosAtualizados?.[0]?.data?.tarefas || [];
+          const tarefasAtualizadas = dadosAtualizados?.[0]?.data?.[user_id + '_tarefas'] || [];
           const pendentes = tarefasAtualizadas.filter(t => !t.concluida);
           await sendTelegram(chat_id,
             `✅ Tarefa concluída: *${lista[idx].titulo || lista[idx].desc}*\n\n` +

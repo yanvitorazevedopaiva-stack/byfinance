@@ -20942,10 +20942,14 @@ function _mvZoomChange(d){
   _mvScale=Math.min(5,Math.max(0.3,_mvScale+d));
   const img=document.getElementById('mv-img-zoom');
   if(!img) return;
+  const body=document.getElementById('media-viewer-body');
   if(_mvScale<=1){
-    img.style.width='';img.style.maxWidth='100%';img.style.maxHeight='calc(96vh - 116px)';
+    _mvScale=1.0;
+    img.style.width='100%';img.style.height='100%';img.style.objectFit='contain';img.style.cursor='zoom-in';
+    if(body){body.style.overflow='hidden';body.style.cursor='';}
   } else {
-    img.style.width=(_mvScale*100)+'%';img.style.maxWidth='none';img.style.maxHeight='none';
+    img.style.width=(_mvScale*100)+'%';img.style.height='auto';img.style.objectFit='';img.style.cursor='zoom-out';
+    if(body){body.style.overflow='auto';body.style.cursor='';}
   }
   const lbl=document.getElementById('mv-zoom-label');
   if(lbl) lbl.textContent=Math.round(_mvScale*100)+'%';
@@ -21011,10 +21015,9 @@ function _mediaViewerRender(){
     // Imagem
     if(zb) zb.style.display='flex';
     _mvScale=1.0;const lbl=document.getElementById('mv-zoom-label');if(lbl)lbl.textContent='100%';
-    body.style.display='flex';body.style.alignItems='center';body.style.justifyContent='center';
-    body.style.padding='20px';body.style.boxSizing='border-box';
+    body.style.display='block';body.style.padding='0';body.style.overflow='hidden';
     body.innerHTML=`<img id="mv-img-zoom" src="${file.src}"
-      style="max-width:100%;max-height:calc(96vh - 116px);object-fit:contain;border-radius:6px;display:block;cursor:zoom-in;user-select:none;box-shadow:0 4px 24px rgba(0,0,0,0.4)"
+      style="width:100%;height:100%;object-fit:contain;display:block;cursor:zoom-in;user-select:none;"
       ondblclick="_mvZoomChange(0.5)" title="Duplo clique para ampliar">`;
   }
 }
@@ -21070,7 +21073,7 @@ function _fecharMediaModal(){
   if(modal){
     modal.style.display='none';
     const b=document.getElementById('media-viewer-body');
-    if(b){b.innerHTML='';b.style.display='';b.style.alignItems='';b.style.justifyContent='';b.style.padding='';}
+    if(b){b.innerHTML='';b.style.display='';b.style.alignItems='';b.style.justifyContent='';b.style.padding='';b.style.overflow='';}
   }
   _mediaViewerCtx=null;_pdfViewerDoc=null;
 }

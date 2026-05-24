@@ -20562,16 +20562,16 @@ function abrirDocModal(){
 function fecharDocModal(){document.getElementById('bem-doc-modal').style.display='none';}
 
 async function _uploadDocFileToStorage(file,docId){
-  if(!_supabase||!_authUser) return null;
+  if(!_supabase||!_authUID) return null;
   try{
     try{await _supabase.storage.createBucket('BYFinance',{public:true,fileSizeLimit:52428800});}catch(e){}
     const ext=(file.name||'file').split('.').pop().toLowerCase()||'pdf';
-    const path=_authUser+'/'+docId+'.'+ext;
-    const{error}=await _supabase.storage.from('BYFinance').upload(path,file,{upsert:true,contentType:file.type});
-    if(error) return null;
-    const{data}=_supabase.storage.from('BYFinance').getPublicUrl(path);
-    return data?.publicUrl||null;
-  }catch(e){return null;}
+    const path=_authUID+'/docs/'+docId+'.'+ext;
+    const{data,error}=await _supabase.storage.from('BYFinance').upload(path,file,{upsert:true,contentType:file.type});
+    if(error){console.warn('[BYF Storage] upload error:',error.message);return null;}
+    const{data:urlData}=_supabase.storage.from('BYFinance').getPublicUrl(path);
+    return urlData?.publicUrl||null;
+  }catch(e){console.warn('[BYF Storage] exception:',e);return null;}
 }
 
 function salvarDocumentoBem(){
@@ -20689,13 +20689,22 @@ function _mediaViewerRender(){
   if(counter) counter.textContent=files.length>1?`${idx+1} / ${files.length}`:'';
   const isPdf=file.src.startsWith('data:application/pdf')||/\.pdf(\?.*)?$/i.test(file.src);
   body.innerHTML=isPdf
-    ?`<iframe src="${file.src}" style="width:100%;height:72vh;border:none;border-radius:8px"></iframe>`
-    :`<img src="${file.src}" style="max-width:100%;max-height:72vh;border-radius:8px;display:block;margin:0 auto;object-fit:contain">`;
+    ?`<iframe src="${file.src}" style="width:100%;height:82vh;border:none;border-radius:8px"></iframe>`
+    :`<img src="${file.src}" style="max-width:100%;max-height:84vh;border-radius:8px;display:block;margin:0 auto;object-fit:contain">`;
   const prev=document.getElementById('media-viewer-prev');
   const next=document.getElementById('media-viewer-next');
   if(prev) prev.style.visibility=idx>0?'visible':'hidden';
   if(next) next.style.visibility=idx<files.length-1?'visible':'hidden';
 }
+function _mvToggleOpcoes(){
+  const m=document.getElementById('mv-opcoes-menu');
+  if(m) m.style.display=m.style.display==='none'?'block':'none';
+}
+document.addEventListener('click',function(e){
+  const btn=document.getElementById('mv-opcoes-btn');
+  const menu=document.getElementById('mv-opcoes-menu');
+  if(menu&&btn&&!btn.contains(e.target)&&!menu.contains(e.target)) menu.style.display='none';
+});
 function _mediaViewerNav(dir){
   if(!_mediaViewerCtx) return;
   const ni=_mediaViewerCtx.idx+dir;
@@ -20755,26 +20764,34 @@ function _verAnexoBemDoc(id){
      MEDIA VIEWER MODAL
 ══════════════════════════════════════ -->
 <div id="media-viewer-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;box-sizing:border-box" onclick="if(event.target===this)_fecharMediaModal()">
-  <div style="background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:16px;padding:18px;width:min(860px,96vw);max-height:92vh;display:flex;flex-direction:column;gap:12px;box-shadow:0 16px 64px rgba(0,0,0,0.8)">
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0">
-        <div id="media-viewer-title" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px">📎 COMPROVANTE</div>
-        <span id="media-viewer-counter" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);background:var(--bg3);border-radius:8px;padding:2px 8px"></span>
+  <div style="background:var(--card);border:1px solid rgba(0,200,255,0.15);border-radius:16px;padding:10px 14px;width:min(940px,98vw);max-height:96vh;display:flex;flex-direction:column;gap:8px;box-shadow:0 16px 64px rgba(0,0,0,0.85)">
+    <!-- Barra compacta -->
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <!-- Esquerda: título + contador + navegação -->
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+        <button id="media-viewer-prev" onclick="_mediaViewerNav(-1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:16px;flex-shrink:0">‹</button>
+        <div id="media-viewer-title" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--neon-blue);letter-spacing:.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px">📎 COMPROVANTE</div>
+        <span id="media-viewer-counter" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);background:var(--bg3);border-radius:6px;padding:1px 7px;flex-shrink:0"></span>
+        <button id="media-viewer-next" onclick="_mediaViewerNav(1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:16px;flex-shrink:0">›</button>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button onclick="_bemFinAnexar(_mediaViewerCtx?.id,true)" style="background:none;border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">📎+ ADICIONAR</button>
-        <button onclick="(()=>{const f=_mediaViewerCtx?.files[_mediaViewerCtx?.idx];if(f){const a=document.createElement('a');a.href=f.src;a.download=f.nome||'comprovante';a.click();}})()" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">⬇ BAIXAR</button>
-        <button onclick="_excluirAnexoMedia()" style="background:none;border:1px solid rgba(255,68,68,0.3);color:var(--neon-red);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">🗑 EXCLUIR</button>
-        <button onclick="_fecharMediaModal()" style="background:none;border:1px solid rgba(255,255,255,0.15);color:var(--text3);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">✕</button>
+      <!-- Direita: ações secundárias + fechar -->
+      <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+        <button onclick="_bemFinAnexar(_mediaViewerCtx?.id,true)" title="Adicionar comprovante" style="background:none;border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">📎+</button>
+        <!-- Opções: baixar e imprimir num menu -->
+        <div style="position:relative;display:inline-block">
+          <button id="mv-opcoes-btn" onclick="_mvToggleOpcoes()" title="Opções" style="background:none;border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:13px">⋯</button>
+          <div id="mv-opcoes-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:8px;padding:6px;min-width:140px;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,0.5)">
+            <button onclick="(()=>{const f=_mediaViewerCtx?.files[_mediaViewerCtx?.idx];if(f){const a=document.createElement('a');a.href=f.src;a.download=f.nome||'comprovante';a.click();}_mvToggleOpcoes();})()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:6px 10px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:5px" onmouseover="this.style.background='rgba(0,200,255,0.08)'" onmouseout="this.style.background='none'">⬇ Baixar</button>
+            <button onclick="(()=>{const f=_mediaViewerCtx?.files[_mediaViewerCtx?.idx];if(f){const w=window.open(f.src,'_blank');if(w)w.print();}_mvToggleOpcoes();})()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:6px 10px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:5px" onmouseover="this.style.background='rgba(0,200,255,0.08)'" onmouseout="this.style.background='none'">🖨 Imprimir</button>
+            <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+            <button onclick="_excluirAnexoMedia();_mvToggleOpcoes()" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--neon-red);padding:6px 10px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;border-radius:5px" onmouseover="this.style.background='rgba(255,68,68,0.08)'" onmouseout="this.style.background='none'">🗑 Excluir</button>
+          </div>
+        </div>
+        <button onclick="_fecharMediaModal()" style="background:none;border:1px solid rgba(255,255,255,0.12);color:var(--text3);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:14px">✕</button>
       </div>
     </div>
-    <!-- Viewer com setas de navegação -->
-    <div style="display:flex;align-items:center;gap:8px">
-      <button id="media-viewer-prev" onclick="_mediaViewerNav(-1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:18px;flex-shrink:0">‹</button>
-      <div id="media-viewer-body" style="flex:1;overflow:auto;border-radius:8px;min-height:200px"></div>
-      <button id="media-viewer-next" onclick="_mediaViewerNav(1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:18px;flex-shrink:0">›</button>
-    </div>
+    <!-- Viewer: ocupa todo espaço restante -->
+    <div id="media-viewer-body" style="flex:1;overflow:auto;border-radius:8px;min-height:300px"></div>
   </div>
 </div>
 

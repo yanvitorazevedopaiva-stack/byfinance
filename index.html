@@ -4422,7 +4422,7 @@
         </div>
         <div>
           <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR (R$)</div>
-          <input id="edit-lanc-val" type="number" step="0.01" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
+          <input id="edit-lanc-val" type="text" inputmode="decimal" placeholder="R$ 0,00" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid rgba(255,215,0,0.4);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
         </div>
       </div>
       <div>
@@ -6884,6 +6884,10 @@
         <div>
           <label class="bem-form-label">DATA DE VALIDADE</label>
           <input id="bdoc-f-validade" type="date" class="bem-form-input">
+          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">
+            <input type="checkbox" id="bdoc-f-semvalidade" style="accent-color:var(--neon-green);width:14px;height:14px" onchange="document.getElementById('bdoc-f-validade').disabled=this.checked;if(this.checked)document.getElementById('bdoc-f-validade').value=''">
+            SEM VENCIMENTO
+          </label>
         </div>
       </div>
       <div>
@@ -8084,6 +8088,36 @@ function setMoneyVal(id,numericVal){
   const el=document.getElementById(id);
   if(!el)return;
   if(!el._moneyMask) installMoneyMask(el);
+  const v=parseFloat(numericVal)||0;
+  el.dataset.numeric=v.toFixed(2);
+  el.value=v>0?'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+}
+
+// Máscara para campos de EDIÇÃO: foco mostra número limpo, blur formata
+function _installEditMoneyMask(el){
+  if(!el||el._moneyMask) return;
+  el._moneyMask=true;
+  el.dataset.numeric='0';
+  el.addEventListener('focus',function(){
+    const v=parseFloat(el.dataset.numeric)||0;
+    el.value=v>0?v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+    setTimeout(()=>el.select(),10);
+  });
+  el.addEventListener('input',function(){
+    let raw=el.value.replace(/[^\d,]/g,'').replace(',','.');
+    el.dataset.numeric=(parseFloat(raw)||0).toFixed(2);
+  });
+  el.addEventListener('blur',function(){
+    let raw=el.value.replace(/[^\d,]/g,'').replace(',','.');
+    const v=parseFloat(raw)||0;
+    el.dataset.numeric=v.toFixed(2);
+    el.value=v>0?'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+  });
+}
+function _setEditMoneyVal(id,numericVal){
+  const el=document.getElementById(id);
+  if(!el) return;
+  _installEditMoneyMask(el);
   const v=parseFloat(numericVal)||0;
   el.dataset.numeric=v.toFixed(2);
   el.value=v>0?'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
@@ -9592,7 +9626,7 @@ function editParcela(id){
   if(!p) return;
   _epId=id;
   document.getElementById('ep-desc').value=p.desc||'';
-  setMoneyVal('ep-val',p.val||0);
+  _setEditMoneyVal('ep-val',p.val||0);
   document.getElementById('ep-total').value=p.total||1;
   document.getElementById('ep-paga').value=p.paga||0;
   document.getElementById('ep-inicio').value=p.inicio||'';
@@ -10313,7 +10347,7 @@ function editLancSemanal(id,sem){
   const isCredito=!!(l.parcId||l.cartao);
   document.getElementById('edit-lanc-desc').value=l.desc||'';
   document.getElementById('edit-lanc-data').value=l.data||'';
-  document.getElementById('edit-lanc-val').value=l.val||'';
+  _setEditMoneyVal('edit-lanc-val',l.val||0);
   document.getElementById('edit-lanc-cat').value=l.cat||'Alimentação';
   document.getElementById('edit-lanc-val').disabled=isCredito;
   document.getElementById('edit-lanc-data').disabled=isCredito;
@@ -10338,7 +10372,6 @@ function salvarEditLanc(){
   const _elBemVal=document.getElementById('edit-lanc-bem')?.value||'';
   const _elBemId=_elBemVal?parseInt(_elBemVal):undefined;
   if(!desc){_showError('Informe a descrição.');return;}
-  if(isNaN(val)||val<=0){_showError('Informe um valor válido.');return;}
   const all=getData('lancamentos');
   const s=_editLancSem;
   const idx=(all[s]||[]).findIndex(x=>x.id===_editLancId);
@@ -19791,12 +19824,17 @@ function renderBemDocumentos(bem){
   ${docs.length===0?`<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">Nenhum documento cadastrado.</div>`:`
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
     ${docs.map(d=>{
-      let sl='VÁLIDO',sc='bem-doc-valido',sb='rgba(0,255,157,0.08)';
-      if(d.validade){
-        const v=new Date(d.validade);v.setHours(0,0,0,0);
-        const df=Math.round((v-hoje)/(864e5));
-        if(df<0){sl='VENCIDO';sc='bem-doc-vencido';sb='rgba(255,68,68,0.08)';}
-        else if(df<=30){sl=`VENCENDO EM ${df} DIAS`;sc='bem-doc-vencendo';sb='rgba(255,215,0,0.08)';}
+      let sl,sc,sb;
+      if(d.semValidade){
+        sl='SEM VENCIMENTO';sc='bem-doc-valido';sb='rgba(0,255,157,0.08)';
+      } else {
+        sl='VÁLIDO';sc='bem-doc-valido';sb='rgba(0,255,157,0.08)';
+        if(d.validade){
+          const v=new Date(d.validade);v.setHours(0,0,0,0);
+          const df=Math.round((v-hoje)/(864e5));
+          if(df<0){sl='VENCIDO';sc='bem-doc-vencido';sb='rgba(255,68,68,0.08)';}
+          else if(df<=30){sl=`VENCE EM ${df}d`;sc='bem-doc-vencendo';sb='rgba(255,215,0,0.08)';}
+        }
       }
       return`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
@@ -19804,10 +19842,13 @@ function renderBemDocumentos(bem){
           <span class="${sc}" style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:.8px;font-weight:700;background:${sb};padding:3px 8px;border-radius:6px">${sl}</span>
         </div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:10px">
-          ${d.emissao?`Emissão: ${_fmtData(d.emissao)}<br>`:''}${d.validade?`Validade: ${_fmtData(d.validade)}`:'Sem validade'}${d.obs?`<br>${esc(d.obs)}`:''}
+          ${d.emissao?`Emissão: ${_fmtData(d.emissao)}<br>`:''}
+          ${d.semValidade?'<span style="color:var(--neon-green);font-weight:700">Sem vencimento</span>':d.validade?`Validade: ${_fmtData(d.validade)}`:''}
+          ${d.obs?`<br>${esc(d.obs)}`:''}
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           ${d.anexo?`<button class="btn btn-sm" onclick="_verAnexoBemDoc(${d.id})">📎 Ver arquivo</button>`:''}
+          <button class="btn btn-sm" onclick="_toggleSemValidade(${d.id})" style="color:var(--neon-yellow);border-color:rgba(255,215,0,0.2)" title="${d.semValidade?'Definir vencimento':'Marcar sem vencimento'}">${d.semValidade?'📅 Tem vencimento':'∞ Sem vencimento'}</button>
           <button class="btn btn-sm" onclick="excluirDocBem(${d.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕ Excluir</button>
         </div>
       </div>`;
@@ -19891,9 +19932,9 @@ function renderBemFinanceiro(bem){
     <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
     <td style="text-align:center;white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center">
       <button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Editar" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">✎</button>
-      ${e.anexo
-        ?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovante" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎</button>`
-        :`<button class="btn btn-sm" onclick="_bemFinAnexar(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.15)">📎+</button>`}
+      ${(()=>{const n=(e.anexos&&e.anexos.length)||( e.anexo?1:0);return n>0
+        ?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovantes" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎${n>1?` <span style='font-size:10px;background:var(--neon-green);color:#000;border-radius:8px;padding:0 4px;font-weight:700'>${n}</span>`:''}</button>`
+        :`<button class="btn btn-sm" onclick="_bemFinAnexar(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.15)">📎+</button>`})()}
     </td>
   </tr>`).join('')}</tbody></table></div>`:''}`;
   const catColors=['#00ff9d','#00c8ff','#a855f7','#ffd700','#ff4444','#ff8c00','#1effe4'];
@@ -20294,6 +20335,8 @@ function excluirKmBem(id){
 function abrirDocModal(){
   ['nome','emissao','validade','obs'].forEach(c=>{const el=document.getElementById('bdoc-f-'+c);if(el)el.value='';});
   document.getElementById('bdoc-f-arquivo').value='';
+  const cbSV=document.getElementById('bdoc-f-semvalidade');
+  if(cbSV){cbSV.checked=false;document.getElementById('bdoc-f-validade').disabled=false;}
   document.getElementById('bem-doc-modal').style.display='flex';
 }
 function fecharDocModal(){document.getElementById('bem-doc-modal').style.display='none';}
@@ -20301,11 +20344,13 @@ function salvarDocumentoBem(){
   const nome=document.getElementById('bdoc-f-nome').value.trim();
   if(!nome){_showError('Informe onome do documento.');return;}
   const arquivo=document.getElementById('bdoc-f-arquivo').files[0];
+  const _semVal=document.getElementById('bdoc-f-semvalidade')?.checked||false;
   const _save=anexo=>{
     const docs=getBensDocumentos();
     docs.push({id:Date.now(),bemId:_bemFichaId,nome,
       emissao:document.getElementById('bdoc-f-emissao').value,
-      validade:document.getElementById('bdoc-f-validade').value,
+      validade:_semVal?'':document.getElementById('bdoc-f-validade').value,
+      semValidade:_semVal,
       anexo:anexo||null,
       obs:document.getElementById('bdoc-f-obs').value.trim()});
     setBensDocumentos(docs);fecharDocModal();switchBemTab('docs');
@@ -20316,83 +20361,146 @@ function salvarDocumentoBem(){
 function excluirDocBem(id){
   showConfirm('Excluir Documento','Remover este documento?',()=>{setBensDocumentos(getBensDocumentos().filter(d=>d.id!==id));switchBemTab('docs');});
 }
+function _toggleSemValidade(id){
+  const docs=getBensDocumentos();
+  const idx=docs.findIndex(d=>d.id===id);
+  if(idx===-1) return;
+  docs[idx].semValidade=!docs[idx].semValidade;
+  if(docs[idx].semValidade) docs[idx].validade='';
+  setBensDocumentos(docs);
+  switchBemTab('docs');
+}
+
+// ── helper: normaliza anexos para array [{src,nome}] ──
+function _normAnexos(ev){
+  if(ev.anexos&&ev.anexos.length) return ev.anexos;
+  if(ev.anexo) return [{src:ev.anexo,nome:ev.desc||'Comprovante'}];
+  return [];
+}
 
 // ── ANEXAR COMPROVANTE DIRETO (sem abrir modal de edição) ──
-function _bemFinAnexar(id){
+function _bemFinAnexar(id,fromModal){
   const input=document.createElement('input');
-  input.type='file';
+  input.type='file';input.multiple=true;
   input.accept='image/png,image/jpeg,image/jpg,application/pdf';
   input.onchange=function(){
-    const file=this.files[0];
-    if(!file) return;
-    if(file.size>5*1024*1024){_showError('Arquivo muito grande. Máximo 5 MB.');return;}
-    const reader=new FileReader();
-    reader.onload=function(ev2){
-      const evs=getBensEventos();
-      const idx=evs.findIndex(e=>e.id===id);
-      if(idx===-1) return;
-      evs[idx].anexo=ev2.target.result;
-      save('bensEventos',evs);
-      // re-render financeiro com o bem atual
-      const bem=getBens().find(b=>b.id===evs[idx].bemId);
-      if(bem) renderBemFinanceiro(bem);
-      // toast verde de confirmação
-      let _t=document.getElementById('_ok-toast');
-      if(!_t){_t=document.createElement('div');_t.id='_ok-toast';
-        _t.style.cssText="position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:20001;background:var(--card);border:1px solid rgba(0,255,157,0.5);color:var(--neon-green);padding:10px 22px;border-radius:10px;font-size:12px;font-family:'JetBrains Mono',monospace;box-shadow:0 4px 24px rgba(0,255,157,0.15);transition:opacity .3s;opacity:0;pointer-events:none;text-align:center";
-        document.body.appendChild(_t);}
-      _t.textContent='✓ Comprovante anexado!';_t.style.opacity='1';
-      clearTimeout(_t._tt);_t._tt=setTimeout(()=>{_t.style.opacity='0';},3000);
-    };
-    reader.readAsDataURL(file);
+    const files=Array.from(this.files);
+    if(!files.length) return;
+    const oversized=files.filter(f=>f.size>5*1024*1024);
+    if(oversized.length){_showError('Arquivo(s) muito grande(s). Máximo 5 MB cada.');return;}
+    let loaded=0;
+    const results=[];
+    files.forEach((file,i)=>{
+      const reader=new FileReader();
+      reader.onload=function(ev2){
+        results[i]={src:ev2.target.result,nome:file.name};
+        loaded++;
+        if(loaded===files.length){
+          const evs=getBensEventos();
+          const idx=evs.findIndex(e=>e.id===id);
+          if(idx===-1) return;
+          const existing=_normAnexos(evs[idx]);
+          evs[idx].anexos=[...existing,...results];
+          delete evs[idx].anexo; // migra para o array
+          save('bensEventos',evs);
+          const bem=getBens().find(b=>b.id===evs[idx].bemId);
+          if(bem) renderBemFinanceiro(bem);
+          if(fromModal){
+            // atualiza o modal aberto
+            _mediaViewerCtx.files=evs[idx].anexos;
+            _mediaViewerCtx.idx=evs[idx].anexos.length-1;
+            _mediaViewerRender();
+          }
+          _bemOkToast(files.length===1?'Comprovante anexado!':files.length+' comprovantes anexados!');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   };
   input.click();
 }
+function _bemOkToast(msg){
+  let t=document.getElementById('_ok-toast');
+  if(!t){t=document.createElement('div');t.id='_ok-toast';
+    t.style.cssText="position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:20001;background:var(--card);border:1px solid rgba(0,255,157,0.5);color:var(--neon-green);padding:10px 22px;border-radius:10px;font-size:12px;font-family:'JetBrains Mono',monospace;box-shadow:0 4px 24px rgba(0,255,157,0.15);transition:opacity .3s;opacity:0;pointer-events:none;text-align:center";
+    document.body.appendChild(t);}
+  t.textContent='✓ '+msg;t.style.opacity='1';
+  clearTimeout(t._tt);t._tt=setTimeout(()=>{t.style.opacity='0';},3000);
+}
 
-// ── VER ANEXOS — abre modal de mídia na própria página ──
-let _mediaViewerCtx=null; // {type:'evento'|'doc', id}
-function _abrirMediaModal(src,nome,ctx){
-  const modal=document.getElementById('media-viewer-modal');
+// ── VER ANEXOS — modal de mídia com navegação múltipla ──
+let _mediaViewerCtx=null; // {type, id, files:[{src,nome}], idx}
+
+function _mediaViewerRender(){
+  if(!_mediaViewerCtx) return;
+  const {files,idx}=_mediaViewerCtx;
+  const file=files[idx];
   const body=document.getElementById('media-viewer-body');
   const title=document.getElementById('media-viewer-title');
-  if(!modal||!body) return;
-  _mediaViewerCtx=ctx||null;
-  if(nome) title.textContent=nome;
-  const isPdf=src.startsWith('data:application/pdf')||src.toLowerCase().includes('.pdf');
+  const counter=document.getElementById('media-viewer-counter');
+  if(title) title.textContent=file.nome||'Comprovante';
+  if(counter) counter.textContent=files.length>1?`${idx+1} / ${files.length}`:'';
+  const isPdf=file.src.startsWith('data:application/pdf');
   body.innerHTML=isPdf
-    ?`<iframe src="${src}" style="width:100%;height:75vh;border:none;border-radius:8px"></iframe>`
-    :`<img src="${src}" style="max-width:100%;max-height:75vh;border-radius:8px;display:block;margin:0 auto;object-fit:contain">`;
-  modal.style.display='flex';
+    ?`<iframe src="${file.src}" style="width:100%;height:72vh;border:none;border-radius:8px"></iframe>`
+    :`<img src="${file.src}" style="max-width:100%;max-height:72vh;border-radius:8px;display:block;margin:0 auto;object-fit:contain">`;
+  const prev=document.getElementById('media-viewer-prev');
+  const next=document.getElementById('media-viewer-next');
+  if(prev) prev.style.visibility=idx>0?'visible':'hidden';
+  if(next) next.style.visibility=idx<files.length-1?'visible':'hidden';
+}
+function _mediaViewerNav(dir){
+  if(!_mediaViewerCtx) return;
+  const ni=_mediaViewerCtx.idx+dir;
+  if(ni<0||ni>=_mediaViewerCtx.files.length) return;
+  _mediaViewerCtx.idx=ni;
+  _mediaViewerRender();
 }
 function _fecharMediaModal(){
   const modal=document.getElementById('media-viewer-modal');
-  if(modal){modal.style.display='none';document.getElementById('media-viewer-body').innerHTML='';}
+  if(modal){modal.style.display='none';const b=document.getElementById('media-viewer-body');if(b)b.innerHTML='';}
   _mediaViewerCtx=null;
 }
 function _excluirAnexoMedia(){
   if(!_mediaViewerCtx) return;
-  showConfirm('Excluir Anexo','Remover o comprovante anexado?',()=>{
-    if(_mediaViewerCtx.type==='evento'){
+  const {type,id,files,idx}=_mediaViewerCtx;
+  showConfirm('Excluir Comprovante',`Remover "${files[idx].nome||'este comprovante'}"?`,()=>{
+    if(type==='evento'){
       const evs=getBensEventos();
-      const idx=evs.findIndex(e=>e.id===_mediaViewerCtx.id);
-      if(idx!==-1){delete evs[idx].anexo;save('bensEventos',evs);
-        const bem=getBens().find(b=>b.id===evs[idx].bemId);
-        if(bem) renderBemFinanceiro(bem);}
-    } else if(_mediaViewerCtx.type==='doc'){
+      const ei=evs.findIndex(e=>e.id===id);
+      if(ei!==-1){
+        const arr=_normAnexos(evs[ei]);
+        arr.splice(idx,1);
+        evs[ei].anexos=arr;
+        delete evs[ei].anexo;
+        save('bensEventos',evs);
+        const bem=getBens().find(b=>b.id===evs[ei].bemId);
+        if(bem) renderBemFinanceiro(bem);
+        if(arr.length===0){_fecharMediaModal();return;}
+        _mediaViewerCtx.files=arr;
+        _mediaViewerCtx.idx=Math.min(idx,arr.length-1);
+        _mediaViewerRender();
+      }
+    } else if(type==='doc'){
       const docs=getBensDocumentos();
-      const idx=docs.findIndex(d=>d.id===_mediaViewerCtx.id);
-      if(idx!==-1){delete docs[idx].anexo;save('bensDocumentos',docs);}
+      const di=docs.findIndex(d=>d.id===id);
+      if(di!==-1){delete docs[di].anexo;save('bensDocumentos',docs);}
+      _fecharMediaModal();
     }
-    _fecharMediaModal();
   });
 }
 function _verAnexoBem(id){
-  const ev=getBensEventos().find(e=>e.id==id);if(!ev||!ev.anexo)return;
-  _abrirMediaModal(ev.anexo, ev.desc||'Comprovante', {type:'evento',id});
+  const ev=getBensEventos().find(e=>e.id==id);if(!ev) return;
+  const files=_normAnexos(ev);if(!files.length) return;
+  _mediaViewerCtx={type:'evento',id,files,idx:0};
+  _mediaViewerRender();
+  document.getElementById('media-viewer-modal').style.display='flex';
 }
 function _verAnexoBemDoc(id){
   const d=getBensDocumentos().find(x=>x.id==id);if(!d||!d.anexo)return;
-  _abrirMediaModal(d.anexo, d.nome||'Documento', {type:'doc',id});
+  _mediaViewerCtx={type:'doc',id,files:[{src:d.anexo,nome:d.nome||'Documento'}],idx:0};
+  _mediaViewerRender();
+  document.getElementById('media-viewer-modal').style.display='flex';
 }
 </script>
 
@@ -20401,15 +20509,25 @@ function _verAnexoBemDoc(id){
 ══════════════════════════════════════ -->
 <div id="media-viewer-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;box-sizing:border-box" onclick="if(event.target===this)_fecharMediaModal()">
   <div style="background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:16px;padding:18px;width:min(860px,96vw);max-height:92vh;display:flex;flex-direction:column;gap:12px;box-shadow:0 16px 64px rgba(0,0,0,0.8)">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div id="media-viewer-title" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px">📎 COMPROVANTE</div>
-      <div style="display:flex;gap:8px">
-        <button onclick="(()=>{const b=document.getElementById('media-viewer-body');const src=b.querySelector('img,iframe')?.src;if(src){const a=document.createElement('a');a.href=src;a.download='comprovante';a.click();}})()" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">⬇ BAIXAR</button>
-        <button onclick="_excluirAnexoMedia()" style="background:none;border:1px solid rgba(255,68,68,0.3);color:var(--neon-red);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">🗑 EXCLUIR</button>
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div id="media-viewer-title" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px">📎 COMPROVANTE</div>
+        <span id="media-viewer-counter" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);background:var(--bg3);border-radius:8px;padding:2px 8px"></span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="_bemFinAnexar(_mediaViewerCtx?.id,true)" style="background:none;border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">📎+ ADICIONAR</button>
+        <button onclick="(()=>{const f=_mediaViewerCtx?.files[_mediaViewerCtx?.idx];if(f){const a=document.createElement('a');a.href=f.src;a.download=f.nome||'comprovante';a.click();}})()" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">⬇ BAIXAR</button>
+        <button onclick="_excluirAnexoMedia()" style="background:none;border:1px solid rgba(255,68,68,0.3);color:var(--neon-red);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace">🗑 EXCLUIR</button>
         <button onclick="_fecharMediaModal()" style="background:none;border:1px solid rgba(255,255,255,0.15);color:var(--text3);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">✕</button>
       </div>
     </div>
-    <div id="media-viewer-body" style="overflow:auto;border-radius:8px"></div>
+    <!-- Viewer com setas de navegação -->
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="media-viewer-prev" onclick="_mediaViewerNav(-1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:18px;flex-shrink:0">‹</button>
+      <div id="media-viewer-body" style="flex:1;overflow:auto;border-radius:8px;min-height:200px"></div>
+      <button id="media-viewer-next" onclick="_mediaViewerNav(1)" style="visibility:hidden;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:18px;flex-shrink:0">›</button>
+    </div>
   </div>
 </div>
 

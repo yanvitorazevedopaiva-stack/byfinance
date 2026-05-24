@@ -19889,9 +19889,12 @@ function renderBemFinanceiro(bem){
     <td>${esc(_descLimpa(e.desc))}</td>
     <td>${_isLancEvento(e)?_lancBadge():'<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">◆ Meus Bens</span>'}</td>
     <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
-    <td style="text-align:center;white-space:nowrap">${e.anexo
-      ?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovante" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎</button>`
-      :`<button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.1)">📎+</button>`}</td>
+    <td style="text-align:center;white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center">
+      <button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Editar" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">✎</button>
+      ${e.anexo
+        ?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovante" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎</button>`
+        :`<button class="btn btn-sm" onclick="_bemFinAnexar(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.15)">📎+</button>`}
+    </td>
   </tr>`).join('')}</tbody></table></div>`:''}`;
   const catColors=['#00ff9d','#00c8ff','#a855f7','#ffd700','#ff4444','#ff8c00','#1effe4'];
   setTimeout(()=>{
@@ -20312,6 +20315,38 @@ function salvarDocumentoBem(){
 }
 function excluirDocBem(id){
   showConfirm('Excluir Documento','Remover este documento?',()=>{setBensDocumentos(getBensDocumentos().filter(d=>d.id!==id));switchBemTab('docs');});
+}
+
+// ── ANEXAR COMPROVANTE DIRETO (sem abrir modal de edição) ──
+function _bemFinAnexar(id){
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/png,image/jpeg,image/jpg,application/pdf';
+  input.onchange=function(){
+    const file=this.files[0];
+    if(!file) return;
+    if(file.size>5*1024*1024){_showError('Arquivo muito grande. Máximo 5 MB.');return;}
+    const reader=new FileReader();
+    reader.onload=function(ev2){
+      const evs=getBensEventos();
+      const idx=evs.findIndex(e=>e.id===id);
+      if(idx===-1) return;
+      evs[idx].anexo=ev2.target.result;
+      save('bensEventos',evs);
+      // re-render financeiro com o bem atual
+      const bem=getBens().find(b=>b.id===evs[idx].bemId);
+      if(bem) renderBemFinanceiro(bem);
+      // toast verde de confirmação
+      let _t=document.getElementById('_ok-toast');
+      if(!_t){_t=document.createElement('div');_t.id='_ok-toast';
+        _t.style.cssText="position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:20001;background:var(--card);border:1px solid rgba(0,255,157,0.5);color:var(--neon-green);padding:10px 22px;border-radius:10px;font-size:12px;font-family:'JetBrains Mono',monospace;box-shadow:0 4px 24px rgba(0,255,157,0.15);transition:opacity .3s;opacity:0;pointer-events:none;text-align:center";
+        document.body.appendChild(_t);}
+      _t.textContent='✓ Comprovante anexado!';_t.style.opacity='1';
+      clearTimeout(_t._tt);_t._tt=setTimeout(()=>{_t.style.opacity='0';},3000);
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
 }
 
 // ── VER ANEXOS ──

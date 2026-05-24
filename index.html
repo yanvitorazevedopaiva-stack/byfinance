@@ -3941,7 +3941,7 @@
       </div>
       <div>
         <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA <span class="tip" data-tip="Classifica o tipo de gasto. Usado para análise de onde você mais gasta e nos relatórios mensais. Ao escolher Mercado, aparece opções extras da lista de compras.">i</span></div>
-        <select id="lanc-cat" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px" onchange="lancCatChange(this.value);lancOnCatChange(this.value);lancCatChangeTerceiro&&lancCatChangeTerceiro(this.value);this.value==='Transporte'&&lancTransporteVeiculo&&lancTransporteVeiculo()">
+        <select id="lanc-cat" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px" onchange="lancCatChange(this.value);lancOnCatChange(this.value);lancCatChangeTerceiro&&lancCatChangeTerceiro(this.value)">
           <option>Alimentação</option><option>Transporte</option><option>Moradia</option>
           <option>Lazer e Entretenimento</option><option>Saúde</option><option>Educação</option>
           <option>Vestuário</option><option>Despesas Pessoais</option><option>Imprevistos</option><option>Investimentos/Poupança</option>
@@ -4337,42 +4337,67 @@
 </div>
 
 <!-- ========== MODAL EDITAR PARCELA ========== -->
-<div id="edit-parcela-modal" style="display:none;position:fixed;inset:0;z-index:3500;background:rgba(0,0,0,0.72);align-items:center;justify-content:center">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(440px,94vw);box-shadow:0 8px 40px rgba(0,0,0,0.6)">
-    <div style="font-size:13px;font-weight:700;color:var(--neon-blue);letter-spacing:1px;margin-bottom:18px">✎ EDITAR PARCELA</div>
-    <div style="display:grid;gap:12px">
+<div id="edit-parcela-modal" style="display:none;position:fixed;inset:0;z-index:3500;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--card);border:1px solid rgba(0,200,255,0.2);border-radius:16px;padding:22px;width:min(420px,94vw);box-shadow:0 12px 48px rgba(0,0,0,0.7)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();salvarEdicaoParcela();}if(event.key==='Escape')document.getElementById('edit-parcela-modal').style.display='none'">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-blue);letter-spacing:1px">✎ EDITAR PARCELA</div>
+      <button onclick="document.getElementById('edit-parcela-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px">✕</button>
+    </div>
+    <!-- Barra de progresso live -->
+    <div id="ep-progress-bar" style="background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:8px">
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div>
-        <input id="ep-desc" type="text" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;font-family:'JetBrains Mono',monospace">PROGRESSO</div>
+        <div id="ep-prog-texto" style="font-size:12px;font-weight:700;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">— / —</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VALOR DA PARCELA (R$)</div>
-          <input id="ep-val" type="number" step="0.01" min="0" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--neon-yellow);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">TOTAL DE PARCELAS</div>
-          <input id="ep-total" type="number" min="1" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
-        </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;font-family:'JetBrains Mono',monospace">TOTAL DA COMPRA</div>
+        <div id="ep-prog-total" style="font-size:13px;font-weight:700;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">R$ —</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PARCELAS JÁ PAGAS</div>
-          <input id="ep-paga" type="number" min="0" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">MÊS DE INÍCIO</div>
-          <input id="ep-inicio" type="month" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
-        </div>
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CARTÃO</div>
-        <select id="ep-cartao" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px"></select>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;font-family:'JetBrains Mono',monospace">RESTANTE</div>
+        <div id="ep-prog-rest" style="font-size:13px;font-weight:700;color:var(--neon-green);font-family:'JetBrains Mono',monospace">R$ —</div>
       </div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:18px">
-      <button onclick="salvarEdicaoParcela()" style="flex:1;padding:10px;background:rgba(0,255,157,0.15);border:1px solid rgba(0,255,157,0.4);color:var(--neon-green);border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px">✓ SALVAR</button>
-      <button onclick="document.getElementById('edit-parcela-modal').style.display='none'" style="flex:1;padding:10px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);color:#ff6666;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px">✕ CANCELAR</button>
+    <!-- Barra visual de progresso -->
+    <div style="height:4px;background:var(--bg3);border-radius:4px;margin-bottom:16px;overflow:hidden">
+      <div id="ep-prog-fill" style="height:100%;background:var(--neon-green);border-radius:4px;transition:width .3s;width:0%"></div>
+    </div>
+    <!-- Campos -->
+    <div style="display:grid;gap:10px">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">DESCRIÇÃO</div>
+        <input id="ep-desc" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box" placeholder="Nome da compra parcelada">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">VALOR / PARCELA</div>
+          <input id="ep-val" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid rgba(255,215,0,0.4);color:var(--neon-yellow);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box" oninput="_epCalcPrev()" placeholder="R$ 0,00">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">TOTAL DE PARCELAS</div>
+          <input id="ep-total" type="number" min="1" max="240" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box" oninput="_epCalcPrev()">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">JÁ PAGAS</div>
+          <input id="ep-paga" type="number" min="0" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);border-radius:8px;font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box" oninput="_epCalcPrev()">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">MÊS DE INÍCIO</div>
+          <input id="ep-inicio" type="month" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">CARTÃO</div>
+        <select id="ep-cartao" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace"></select>
+      </div>
+    </div>
+    <!-- Botões -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-top:16px">
+      <button onclick="salvarEdicaoParcela()" class="btn btn-green" style="padding:11px;font-size:13px;font-weight:700;letter-spacing:.5px">✓ SALVAR</button>
+      <button onclick="document.getElementById('edit-parcela-modal').style.display='none'" class="btn" style="border-color:rgba(255,68,68,0.3);color:var(--neon-red);padding:11px">✕</button>
     </div>
   </div>
 </div>
@@ -8050,13 +8075,10 @@ function getMoneyVal(id){
 function setMoneyVal(id,numericVal){
   const el=document.getElementById(id);
   if(!el)return;
+  if(!el._moneyMask) installMoneyMask(el);
   const v=parseFloat(numericVal)||0;
-  if(el._moneyMask){
-    el.dataset.numeric=v.toFixed(2);
-    el.value=v>0?'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
-  }else{
-    el.value=v||'';
-  }
+  el.dataset.numeric=v.toFixed(2);
+  el.value=v>0?'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
 }
 // Sanitiza string para uso seguro em innerHTML
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -9302,57 +9324,58 @@ function renderParcelasTimeline(){
 
 function renderParcelas(){
   renderParcelasTimeline();
-  // ── Resumo de fatura (vindo de Faturas) ──
+  // ── Resumo de fatura (calculado direto das parcelas) ──
   const resumoEl=document.getElementById('parc-fat-resumo');
   if(fatResumoAtivo&&resumoEl){
     const {cartao,mes}=fatResumoAtivo;
     const mesNome=MESES_FULL[mes];
-    const mesKey=(new Date().getFullYear())+'-'+String(mes+1).padStart(2,'0');
-    // Busca lançamentos daquele cartão/mês em todas as semanas
-    const allLancs=getData('lancamentos');
-    const lancsResumo=[];
-    for(let s=1;s<=5;s++)(allLancs[s]||[]).forEach(l=>{if(l.cartao===cartao&&l.fatMes===mes)lancsResumo.push(l);});
-    const totalFatLancs=lancsResumo.reduce((a,l)=>a+l.val,0);
-    // Busca valor manual da fatura (se não vier de lançamento)
-    const fat=getData('faturas');
-    const valFatura=(fat[cartao]||[])[mes]||0;
+    const year=new Date().getFullYear();
+    const targetAbsMonth=year*12+mes;
+    // Busca todas as parcelas que têm parcela neste mês
+    const allParcs=getData('parcelas');
+    const parcsContrib=[];
+    allParcs.forEach(p=>{
+      if(p.cartao!==cartao||!p.inicio) return;
+      const [pYear,pMon]=p.inicio.split('-').map(Number);
+      if(isNaN(pYear)||isNaN(pMon)) return;
+      const offset=targetAbsMonth-(pYear*12+(pMon-1));
+      if(offset>=0&&offset<p.total) parcsContrib.push({...p,parcNum:offset+1});
+    });
+    const totalFatura=parseFloat(parcsContrib.reduce((a,p)=>a+p.val,0).toFixed(2));
     resumoEl.innerHTML=`
       <div class="card" style="border:1px solid rgba(0,200,255,0.3);background:rgba(0,200,255,0.04);margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <div>
             <div style="font-size:14px;font-weight:800;color:var(--neon-blue);letter-spacing:.5px">📋 RESUMO DA FATURA — ${esc(cartao)} · ${mesNome}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:3px">Lançamentos que compõem esta fatura</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">Parcelas que compõem esta fatura</div>
           </div>
           <div style="display:flex;align-items:center;gap:12px">
             <div style="text-align:right">
               <div style="font-size:10px;color:var(--text3);letter-spacing:1px">TOTAL FATURA</div>
-              <div style="font-size:22px;font-weight:700;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">${fmt(valFatura)}</div>
+              <div style="font-size:22px;font-weight:700;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">${fmt(totalFatura)}</div>
             </div>
             <button onclick="fatResumoAtivo=null;parcCartaoSel='';parcMesSel=new Date().getMonth()+1;renderParcelas()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">✕ FECHAR</button>
           </div>
         </div>
-        ${lancsResumo.length
+        ${parcsContrib.length
           ?`<div class="tbl-wrap"><table>
-            <thead><tr><th>#</th><th>DESCRIÇÃO</th><th>DATA</th><th>TIPO</th><th>CATEGORIA</th><th style="text-align:right">PARCELA</th><th style="text-align:right">TOTAL COMPRA</th></tr></thead>
-            <tbody>${lancsResumo.map((l,i)=>`<tr>
+            <thead><tr><th>#</th><th>DESCRIÇÃO</th><th>INÍCIO</th><th>PARCELA</th><th>PAGAS</th><th style="text-align:right">VALOR/MÊS</th><th style="text-align:right">TOTAL COMPRA</th></tr></thead>
+            <tbody>${parcsContrib.map((p,i)=>`<tr>
               <td style="color:var(--text3)">${i+1}</td>
-              <td style="font-weight:600">${esc(l.desc)}</td>
-              <td style="color:var(--text2)">${esc(l.data)}</td>
-              <td><span class="badge badge-blue">${esc(l.forma)}</span></td>
-              <td><span class="badge badge-purple">${esc(l.cat)}</span></td>
-              <td style="text-align:right;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace;font-weight:700">${fmt(l.val)}</td>
-              <td style="text-align:right;color:var(--text2);font-family:'JetBrains Mono',monospace">${l.valTotal?fmt(l.valTotal):'—'}</td>
+              <td style="font-weight:600">${esc(p.desc)}</td>
+              <td style="color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:11px">${p.inicio}</td>
+              <td><span class="badge badge-blue">${p.parcNum}/${p.total}</span></td>
+              <td style="color:var(--neon-green);font-size:11px;font-family:'JetBrains Mono',monospace">${p.paga||0}/${p.total}</td>
+              <td style="text-align:right;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace;font-weight:700">${fmt(p.val)}</td>
+              <td style="text-align:right;color:var(--text2);font-family:'JetBrains Mono',monospace">${fmt(p.val*p.total)}</td>
             </tr>`).join('')}</tbody>
             <tfoot><tr>
-              <td colspan="5" style="font-weight:700;color:var(--text)">TOTAL LANÇAMENTOS</td>
-              <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-blue)">${fmt(totalFatLancs)}</td>
+              <td colspan="5" style="font-weight:700;color:var(--text)">TOTAL DA FATURA</td>
+              <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-blue)">${fmt(totalFatura)}</td>
               <td></td>
             </tr></tfoot>
-          </table></div>
-          <div style="margin-top:10px;font-size:11px;color:var(--text3)">
-            ${valFatura>totalFatLancs?`⚠ Diferença de ${fmt(valFatura-totalFatLancs)} pode ser de valores manuais na fatura.`:'✓ Total dos lançamentos confere com a fatura.'}
-          </div>`
-          :`<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">Nenhum lançamento encontrado para ${esc(cartao)} em ${mesNome}.<br><span style="font-size:11px">Lançamentos de crédito feitos via página Lançamentos aparecem aqui automaticamente.</span></div>`}
+          </table></div>`
+          :`<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">Nenhuma parcela ativa para ${esc(cartao)} em ${mesNome}.</div>`}
       </div>`;
     resumoEl.style.display='block';
   } else if(cardTodosResumo&&resumoEl){
@@ -9561,7 +9584,7 @@ function editParcela(id){
   if(!p) return;
   _epId=id;
   document.getElementById('ep-desc').value=p.desc||'';
-  document.getElementById('ep-val').value=p.val||'';
+  setMoneyVal('ep-val',p.val||0);
   document.getElementById('ep-total').value=p.total||1;
   document.getElementById('ep-paga').value=p.paga||0;
   document.getElementById('ep-inicio').value=p.inicio||'';
@@ -9570,6 +9593,23 @@ function editParcela(id){
   const carts=getData('cartoes');
   sel.innerHTML=carts.map(c=>`<option value="${esc(c.nome)}"${c.nome===p.cartao?' selected':''}>${esc(c.nome)}</option>`).join('');
   document.getElementById('edit-parcela-modal').style.display='flex';
+  _epCalcPrev();
+}
+
+function _epCalcPrev(){
+  const val=getMoneyVal('ep-val');
+  const total=parseInt(document.getElementById('ep-total')?.value)||0;
+  const paga=parseInt(document.getElementById('ep-paga')?.value)||0;
+  const restantes=Math.max(0,total-paga);
+  const totalVal=parseFloat((val*total).toFixed(2));
+  const restVal=parseFloat((val*restantes).toFixed(2));
+  const pct=total>0?Math.round(paga/total*100):0;
+  const fmt=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const el=id=>document.getElementById(id);
+  if(el('ep-prog-texto')) el('ep-prog-texto').textContent=`${paga} / ${total} pagas`;
+  if(el('ep-prog-total')) el('ep-prog-total').textContent=val>0&&total>0?fmt(totalVal):'R$ —';
+  if(el('ep-prog-rest')) el('ep-prog-rest').textContent=val>0&&restantes>0?fmt(restVal):'R$ —';
+  if(el('ep-prog-fill')) el('ep-prog-fill').style.width=pct+'%';
 }
 
 function salvarEdicaoParcela(){
@@ -11090,8 +11130,42 @@ function setFatAno(v){
   renderFaturas();
 }
 
+function getManualFaturas(){return load('faturasManual')||{};}
+function setManualFaturas(d){save('faturasManual',d);}
+
+function recomputeFaturasFromParcelas(){
+  const parcelas=getData('parcelas');
+  const cartoes=getData('cartoes');
+  const manual=getManualFaturas();
+  const year=new Date().getFullYear();
+  const fat={};
+  // Começa do zero para cartões registrados
+  cartoes.forEach(c=>{fat[c.nome]=Array(12).fill(0);});
+  // Soma contribuições de parcelas
+  parcelas.forEach(p=>{
+    if(!p.cartao||!p.inicio||!p.val||!p.total) return;
+    const [pYear,pMon]=p.inicio.split('-').map(Number);
+    if(isNaN(pYear)||isNaN(pMon)) return;
+    const inicioAbsMonth=pYear*12+(pMon-1);
+    for(let j=0;j<12;j++){
+      const offset=(year*12+j)-inicioAbsMonth;
+      if(offset>=0&&offset<p.total){
+        if(!fat[p.cartao]) fat[p.cartao]=Array(12).fill(0);
+        fat[p.cartao][j]=parseFloat(((fat[p.cartao][j]||0)+p.val).toFixed(2));
+      }
+    }
+  });
+  // Adiciona ajustes manuais por cima das parcelas
+  Object.keys(manual).forEach(cartao=>{
+    if(!fat[cartao]) fat[cartao]=Array(12).fill(0);
+    (manual[cartao]||[]).forEach((v,i)=>{if(v) fat[cartao][i]=parseFloat(((fat[cartao][i]||0)+(v||0)).toFixed(2));});
+  });
+  setData('faturas',fat);
+  return fat;
+}
+
 function renderFaturas(){
-  const fat=getData('faturas');
+  const fat=recomputeFaturasFromParcelas();
   const pagas=getFatPagas();
   const lista=getCartoesNomes(); // usa cartões registrados pelo usuário
   lista.forEach(c=>{if(!fat[c])fat[c]=Array(12).fill(0);});
@@ -11171,10 +11245,11 @@ function saveFatura(){
   const mes=parseInt(document.getElementById('fat-mes').value);
   const val=getMoneyVal('fat-val');
   if(val<0){_showError('Valor inválido.');return;}
-  const fat=getData('faturas');
-  if(!fat[cartao]) fat[cartao]=Array(12).fill(0);
-  fat[cartao][mes]=val;
-  setData('faturas',fat);
+  // Salva como ajuste manual (somado às parcelas calculadas)
+  const manual=getManualFaturas();
+  if(!manual[cartao]) manual[cartao]=Array(12).fill(0);
+  manual[cartao][mes]=val;
+  setManualFaturas(manual);
   renderFaturas();
 }
 
@@ -18154,7 +18229,7 @@ function renderUltimosLancs(){
   const all=getData('lancamentos');
   const items=[];
   Object.values(all).forEach(arr=>{if(Array.isArray(arr)) arr.forEach(l=>{if(l&&l.data) items.push(l);});});
-  items.sort((a,b)=>b.data.localeCompare(a.data));
+  items.sort((a,b)=>b.data!==a.data?b.data.localeCompare(a.data):(b.id||0)-(a.id||0));
   const top=items.slice(0,10);
   if(!top.length){
     el.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:12px;font-size:12px">Nenhum lançamento ainda.</td></tr>';
@@ -19498,7 +19573,9 @@ function renderBemManutencoes(bem){
       <td style="font-size:11px;color:var(--text3)">${e.proximaData?_fmtData(e.proximaData):'—'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3);margin-right:3px">✎</button>
-        ${e.anexo?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver" style="margin-right:4px">📎</button>`:''}
+        ${e.anexo
+          ?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver anexo" style="margin-right:4px;color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎</button>`
+          :`<button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Adicionar anexo" style="margin-right:4px;color:var(--text3);border-color:rgba(255,255,255,0.1)">📎+</button>`}
         <button class="btn btn-sm" onclick="excluirEventoBem(${e.id})" style="color:var(--neon-red);border-color:rgba(255,68,68,0.2)">✕</button>
       </td>
     </tr>`).join('')}</tbody>
@@ -20012,8 +20089,8 @@ function fecharEventoModal(){
 function salvarEventoBem(){
   const data=document.getElementById('bev-f-data').value;
   const desc=document.getElementById('bev-f-desc').value.trim();
-  if(!data){_showError('Informe adata.');return;}
-  if(!desc){_showError('Informe adescrição.');return;}
+  if(!data){_showError('Informe a data.');return;}
+  if(!desc){_showError('Informe a descrição.');return;}
   const valor=parseBRL(document.getElementById('bev-f-valor').value);
   const vincular=document.getElementById('bev-f-vincular').checked;
   const anexoFile=document.getElementById('bev-f-anexo').files[0];
@@ -22801,11 +22878,13 @@ async function tgAuthAprovar(id){
   if(resumo) resumo.innerHTML=`
     <div style="font-weight:700;font-size:14px;margin-bottom:8px">${esc(data.descricao)}</div>
     <div style="color:var(--text3);font-size:12px;line-height:1.8">
-      💰 ${valor} &nbsp;·&nbsp; 🏷 ${esc(data.categoria)} &nbsp;·&nbsp; 📅 ${data.data_lancamento}
+      💰 ${valor} &nbsp;·&nbsp; 📅 ${data.data_lancamento}
     </div>
     ${data.cartao&&data.cartao!=='Não informado'?`<div style="margin-top:6px;font-size:11px;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">💳 Sugerido pelo bot: <strong>${esc(data.cartao)}</strong></div>`:''}
     ${data.parcelas&&data.parcelas>1?`<div style="margin-top:6px;font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">🔄 ${data.parcelas}x de ${parseFloat(data.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`:''}
   `;
+  const _dataEl=document.getElementById('tg-aprovar-data');
+  if(_dataEl) _dataEl.value=data.data_lancamento||'';
 
   // ── Painel de mercado: catálogo + lista destino ──────────────────────────────
   const _mktInfoDiv=document.getElementById('tg-aprovar-mkt-info');
@@ -22846,6 +22925,17 @@ async function tgAuthAprovar(id){
   if(bemSel){
     const bens=typeof getBens==='function'?getBens():[];
     bemSel.innerHTML='<option value="">— nenhum —</option>'+bens.map(b=>`<option value="${b.id}">${esc(b.nome||b.tipo||'Bem')}</option>`).join('');
+  }
+
+  // Mostra bloco de lista de mercado para qualquer compra de Mercado
+  const _mktListaWrap=document.getElementById('tg-aprovar-mkt-lista-wrap');
+  if(_mktListaWrap){
+    const _isMktCat=data.categoria==='Mercado'||data.observacao?.includes('[mkt:');
+    _mktListaWrap.style.display=_isMktCat?'block':'none';
+    const _cbVar=document.getElementById('tg-aprovar-mkt-variavel');
+    const _cbMes=document.getElementById('tg-aprovar-mkt-mes');
+    if(_cbVar) _cbVar.checked=true;
+    if(_cbMes) _cbMes.checked=false;
   }
 
   const estab=document.getElementById('tg-aprovar-estab');
@@ -22925,18 +23015,25 @@ async function tgConfirmarAutorizacao(){
   const nParc=parseInt(document.getElementById('tg-aprovar-nparc')?.value)||1;
   const estab=document.getElementById('tg-aprovar-estab')?.value.trim()||'';
   const bemId=document.getElementById('tg-aprovar-bem')?.value||'';
-  const semana=getSemanaFromData(data.data_lancamento);
+  // Usa data editada pelo usuário no modal, ou a original do banco
+  const dataLanc=document.getElementById('tg-aprovar-data')?.value||data.data_lancamento;
+  const semana=getSemanaFromData(dataLanc);
   const id=Date.now();
   const val=parseFloat(data.valor);
   const desc=estab||data.descricao;
   const isMktVariavel=data.observacao?.includes('[mkt:variavel]');
   const isMktMes=data.observacao?.includes('[mkt:mes]');
-  const isMkt=isMktVariavel||isMktMes;
+  const isMktCat=data.categoria==='Mercado';
+  const isMkt=isMktVariavel||isMktMes||isMktCat;
+  const _cbMktVar=document.getElementById('tg-aprovar-mkt-variavel');
+  const _cbMktMes=document.getElementById('tg-aprovar-mkt-mes');
+  const _addVariavel=isMkt&&(_cbMktVar?.checked!==false);
+  const _addMes=isMkt&&!!_cbMktMes?.checked;
 
   // Receita: lança em receitas, não em lançamentos
   if(data.tipo==='receita'){
     const recs=(typeof getReceitas==='function'?getReceitas():getData('receitas'))||{};
-    const mesKey=data.data_lancamento.substring(0,7);
+    const mesKey=dataLanc.substring(0,7);
     if(!recs[mesKey]) recs[mesKey]=[];
     recs[mesKey].push({
       id,
@@ -22945,7 +23042,7 @@ async function tgConfirmarAutorizacao(){
       cat:data.categoria||'Outros',
       descOutros:'',
       conta:data.cartao||'',
-      dataPrev:data.data_lancamento,
+      dataPrev:dataLanc,
       recebido:true,
       anexo:null
     });
@@ -22955,7 +23052,7 @@ async function tgConfirmarAutorizacao(){
       const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
       await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
         chat_id:data.chat_id,
-        text:`✅ *Receita autorizada!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria}\n📅 ${data.data_lancamento}\n\n_Registrada com sucesso em Receitas._`
+        text:`✅ *Receita autorizada!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria}\n📅 ${dataLanc}\n\n_Registrada com sucesso em Receitas._`
       })});
     }
     document.getElementById('tg-aprovar-modal').style.display='none';
@@ -22971,18 +23068,18 @@ async function tgConfirmarAutorizacao(){
     const valParc=parseFloat((val/nP).toFixed(2));
     const formaStr=cartao+(nP===1?' (à vista)':` (${nP}x)`);
     const parcelas=getData('parcelas');
-    const mesInicio=data.data_lancamento.substring(0,7);
+    const mesInicio=dataLanc.substring(0,7);
     const parcId=id+1;
     parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nP,val:valParc});
     setData('parcelas',parcelas);
-    const mesIdx=parseInt(data.data_lancamento.split('-')[1])-1;
+    const mesIdx=parseInt(dataLanc.split('-')[1])-1;
     const fat=getData('faturas');
     if(!fat[cartao]) fat[cartao]=Array(12).fill(0);
     for(let i=0;i<nP;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}
     setData('faturas',fat);
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
-    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram',...(isMkt?{mktTipo:isMktMes?'mes':'variado'}:{})});
+    all[semana].push({id,desc,data:dataLanc,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram',...(isMkt?{mktTipo:isMktMes?'mes':'variado'}:{})});
     setData('lancamentos',all);
   }else{
     const cartaoSel=document.getElementById('tg-aprovar-cartao')?.value||'';
@@ -22990,17 +23087,14 @@ async function tgConfirmarAutorizacao(){
     const formaStr=forma==='debito'?(cartaoSel?`${cartaoSel} (débito)`:'Débito'):(formaLabel[forma]||'Pix');
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
-    all[semana].push({id,desc,data:data.data_lancamento,forma:formaStr,cat:data.categoria,val,cartao:cartaoSel||undefined,bemId:bemId||undefined,origem:'telegram',...(isMkt?{mktTipo:isMktMes?'mes':'variado'}:{})});
+    all[semana].push({id,desc,data:dataLanc,forma:formaStr,cat:data.categoria,val,cartao:cartaoSel||undefined,bemId:bemId||undefined,origem:'telegram',...(isMkt?{mktTipo:isMktMes?'mes':'variado'}:{})});
     setData('lancamentos',all);
   }
 
-  // Compra de mercado: adiciona à lista do mês e gerencia catálogo
+  // Compra de mercado: adiciona à lista conforme checkboxes do modal
   if(isMkt){
-    if(isMktMes){
-      _mktAdicionarMesCompra(desc, val, data.data_lancamento);
-    }else{
-      _mktAdicionarVariavelAoMes(desc, val, data.data_lancamento);
-    }
+    if(_addVariavel) _mktAdicionarVariavelAoMes(desc, val, dataLanc);
+    if(_addMes) _mktAdicionarMesCompra(desc, val, dataLanc);
     const _cbPreco=document.getElementById('tg-mkt-atualizar-preco');
     if(_cbPreco?.checked){
       const _catUpd=typeof _mktGetCatalogo==='function'?_mktGetCatalogo():(JSON.parse(localStorage.getItem('mkt_catalogo')||'[]'));
@@ -23523,6 +23617,21 @@ async function cfgTgRemoverVinculo(vinculoId){
     <div id="tg-aprovar-resumo" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15);margin-bottom:12px;font-size:13px"></div>
     <div id="tg-aprovar-mkt-info" style="display:none;padding:10px 12px;border-radius:10px;background:rgba(0,200,100,0.07);border:1px solid rgba(0,200,100,0.22);margin-bottom:14px;font-size:12px"></div>
     <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">DATA DO LANÇAMENTO</label>
+        <input id="tg-aprovar-data" type="date" style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid rgba(255,215,0,0.35);color:var(--neon-yellow);font-family:'JetBrains Mono',monospace;font-size:13px;box-sizing:border-box">
+      </div>
+      <div id="tg-aprovar-mkt-lista-wrap" style="display:none;padding:10px 12px;border-radius:10px;background:rgba(0,255,157,0.05);border:1px solid rgba(0,255,157,0.2)">
+        <div style="font-size:11px;font-weight:700;color:var(--neon-green);font-family:'JetBrains Mono',monospace;margin-bottom:8px">🛒 VINCULAR À LISTA DE MERCADO</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="tg-aprovar-mkt-variavel" checked style="accent-color:var(--neon-green);width:15px;height:15px">
+          Adicionar à lista variável (semana)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;margin-top:6px">
+          <input type="checkbox" id="tg-aprovar-mkt-mes" style="accent-color:var(--neon-blue);width:15px;height:15px">
+          Também incluir na lista do mês atual
+        </label>
+      </div>
       <div>
         <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">FORMA DE PAGAMENTO</label>
         <div style="display:flex;flex-wrap:wrap;gap:6px" id="tg-aprovar-formas">

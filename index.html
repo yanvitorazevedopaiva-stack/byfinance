@@ -7925,19 +7925,9 @@ async function initAuth(){
         _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
         const scr=document.getElementById('login-screen');
         if(scr) scr.style.display='none';
-        // Carregar dados do Supabase
-        try{
-          const {data:fotoRow}=await _supabase.from('user_data')
-            .select('data').eq('user_id','__foto__'+username).maybeSingle();
-          if(fotoRow?.data?.perfilFoto){
-            const _fb64=fotoRow.data.perfilFoto;
-            try{localStorage.setItem(username+'_perfilFoto',JSON.stringify(_fb64));}catch(e){}
-            const _fimg=document.getElementById('perfil-foto-img');
-            const _fph=document.getElementById('perfil-foto-placeholder');
-            if(_fimg){_fimg.src=_fb64;_fimg.style.display='block';}
-            if(_fph)_fph.style.display='none';
-          }
-        }catch(e){}
+        // Restaura TODOS os dados do Supabase (inclui navArchived, navOrder, etc.)
+        // Isso garante que F5 sempre carrega o estado mais recente do Supabase
+        await _loadFromSupabase();
         return true;
       }
     }catch(e){console.warn('Supabase getSession erro',e);}

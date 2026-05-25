@@ -8017,6 +8017,7 @@ async function _syncToSupabase(){
     const k=localStorage.key(i);
     if(k&&k.startsWith(prefix)){
       if(k===prefix+'perfilFoto') continue; // foto tem linha própria no Supabase
+      if(k===prefix+'mkt_item_id') continue; // ID local, não sincronizar
       try{data[k]=JSON.parse(localStorage.getItem(k));}
       catch(e){data[k]=localStorage.getItem(k);}
     }
@@ -8060,6 +8061,8 @@ async function _loadFromSupabase(){
     if(!mainRes.error&&mainRes.data?.data){
       Object.entries(mainRes.data.data).forEach(([k,v])=>{
         if(k.endsWith('_perfilFoto')) return; // foto tem linha própria
+        // Não sobrescreve chaves de nav — têm sync próprio via _navRestoreFromSupabase
+        if(k&&(k.endsWith('navArchived')||k.endsWith('navOrder'))) return;
         try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
         catch(e){}
       });
@@ -8087,6 +8090,8 @@ async function _loadFromSupabase(){
           .select('data').eq('user_id','__meta__'+_authUser).maybeSingle();
         if(meta?.data){
           Object.entries(meta.data).forEach(([k,v])=>{
+            // Não sobrescreve chaves de nav — têm sync próprio via _navRestoreFromSupabase
+            if(k&&(k.endsWith('navArchived')||k.endsWith('navOrder'))) return;
             try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}
             catch(e){}
           });

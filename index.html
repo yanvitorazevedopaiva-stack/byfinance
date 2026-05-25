@@ -15097,6 +15097,8 @@ function navArquivar(key){
       const arch=_navGetArchived();
       if(!arch.includes(key)) arch.push(key);
       _navSetArchived(arch);
+      // Sincroniza imediatamente (sem aguardar debounce de 2s)
+      clearTimeout(_syncTimer);_syncToSupabase();
       renderNav();
       _showNavToast('Ação arquivada. Restaure em Configurações → Ações Arquivadas.');
     },
@@ -15111,6 +15113,8 @@ function navDesarquivar(key){
   if(eraB1){if(!o.b1.includes(key))o.b1.push(key);}
   else{if(!o.b2.includes(key))o.b2.push(key);}
   _navSaveOrder(o);
+  // Sincroniza imediatamente (sem aguardar debounce de 2s)
+  clearTimeout(_syncTimer);_syncToSupabase();
   renderNav();
   renderNavArquivadas();
 }

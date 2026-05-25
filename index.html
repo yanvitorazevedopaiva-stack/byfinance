@@ -23707,15 +23707,15 @@ function trfBadgeProgresso(meta){
 // ── TELEGRAM PENDENTES DE AUTORIZAÇÃO ──────────────────────────────────────
 
 async function tgAuthCarregar(){
-  if(!_supabase||!_authUser) return [];
+  if(!_authUser) return [];
   try{
-    // Usa endpoint com service key para contornar RLS da tabela telegram_pendentes
-    const session=await _supabase.auth.getSession();
-    const jwt=session?.data?.session?.access_token;
-    if(!jwt) return [];
+    const session=_supabase?await _supabase.auth.getSession():null;
+    const jwt=session?.data?.session?.access_token||'';
+    const uid=(typeof _authUID!=='undefined'&&_authUID)?_authUID:'';
     const res=await fetch('/api/get-pendentes',{
       method:'POST',
-      headers:{'Authorization':'Bearer '+jwt,'Content-Type':'application/json'}
+      headers:{'Content-Type':'application/json','Authorization':jwt?'Bearer '+jwt:''},
+      body:JSON.stringify({username:_authUser,uid})
     });
     if(!res.ok) return [];
     return await res.json();

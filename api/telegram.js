@@ -187,6 +187,90 @@ async function urlToBase64(url) {
   return Buffer.from(buffer).toString('base64');
 }
 
+// ── Pré-processamento de comandos diretos (antes do Gemini) ──────────────────
+function preProcessarComando(texto) {
+  const t = texto.trim().toLowerCase()
+    .replace(/[?.!\s]+$/, '')
+    .replace(/^[/]/, '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, ''); // remove acentos para comparação
+
+  // helper
+  const eq  = (...kws) => kws.includes(t);
+  const has = (...kws) => kws.some(k => t.includes(k));
+
+  // ── Faturas (geral) ──────────────────────────────────────────────────────
+  if (eq('faturas','fatura','ver faturas','ver fatura','minhas faturas','minha fatura',
+         'todas as faturas','quais faturas','listar faturas','listar fatura','mostrar faturas',
+         'total faturas','conferir fatura','conferir faturas','checar fatura','checar faturas',
+         'quanto devo','o que devo','ver cartoes','meus cartoes','cartoes','cartao',
+         'faturas do mes','fatura do mes','fatura desse mes','faturas desse mes'))
+    return {tipo:'consulta',pergunta:'faturas_todas',mes:null};
+
+  // Fatura cartão específico
+  if (/fatura.*(nubank|nu\b|roxinh|lilas|roxa)/.test(t) || /(nubank|nu\b|roxinh).*(fatura|fatur)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'Nubank',mes:null};
+  if (/fatura.*(inter|laranja)/.test(t) || /(inter|laranja).*(fatura)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'Inter',mes:null};
+  if (/fatura.*(itau|ita\b)/.test(t) || /(itau|ita\b).*(fatura)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'Itaú',mes:null};
+  if (/fatura.*(c6|c6bank|pretinho)/.test(t) || /(c6|c6bank|pretinho).*(fatura)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'C6 Bank',mes:null};
+  if (/fatura.*(brad|bradesco|vermelho)/.test(t) || /(brad|bradesco).*(fatura)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'Bradesco',mes:null};
+  if (/fatura.*(bb|banco.do.brasil|brasil\b)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'Banco do Brasil',mes:null};
+  if (/fatura.*(caixa|cef)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'Caixa',mes:null};
+  if (/fatura.*(santander|san\b)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'Santander',mes:null};
+  if (/fatura.*(xp\b)/.test(t))
+    return {tipo:'consulta',pergunta:'fatura',cartao:'XP',mes:null};
+
+  // ── Gastos do mês ──────────────────────────────────────────────────────
+  if (eq('gastos','gasto','meus gastos','ver gastos','extrato','meu extrato',
+         'total do mes','total do mês','gastos do mes','gastos do mês','gastos mensais',
+         'quanto gastei','quanto gastei esse mes','quanto gastei esse mês',
+         'quanto gastei no mes','balanco','balanço','balanco do mes','balanço do mes',
+         'resumo de gastos','relatorio','relatorio do mes','gastos mensais',
+         'quanto saiu','quanto saiu esse mes','o que saiu','saida do mes','saidas do mes'))
+    return {tipo:'consulta',pergunta:'gastos_mes'};
+
+  if (eq('gastos hoje','gasto hoje','total hoje','o que gastei hoje','gastei hoje',
+         'quanto gastei hoje','saida de hoje','saidas de hoje','o que saiu hoje'))
+    return {tipo:'consulta',pergunta:'gastos_hoje'};
+
+  // ── Saldo / situação ───────────────────────────────────────────────────
+  if (eq('saldo','meu saldo','situacao','situação','como estou','quanto tenho',
+         'minha situacao','minha situação','situacao financeira','situação financeira',
+         'financeiro','meu financeiro','patrimonio','meu patrimonio',
+         'posso gastar','quanto sobrou','quanto resta','to no positivo','to no negativo',
+         'to bem','como ta','como está','o que sobrou'))
+    return {tipo:'consulta',pergunta:'saldo'};
+
+  // ── Resumo / alertas ───────────────────────────────────────────────────
+  if (eq('resumo','alertas','status','meu resumo','resumo do dia','avisos',
+         'meu dia','o dia','novidades','updates','o que tem','o que esta rolando',
+         'o que está rolando','novidade','me atualiza','me atualize','resumo financeiro'))
+    return {tipo:'consulta',pergunta:'resumo'};
+
+  // ── Tarefas listar ─────────────────────────────────────────────────────
+  if (eq('tarefas','minhas tarefas','ver tarefas','lista tarefas','listar tarefas',
+         'minha lista','lista de tarefas','pendencias','pendências','afazeres',
+         'meus afazeres','to-do','todo','todo list','o que tenho','o que fazer',
+         'o que falta','compromissos','meus compromissos','agenda','minha agenda',
+         'o que ta pendente','o que está pendente','lista do dia','tarefas do dia'))
+    return {tipo:'tarefa',acao:'listar'};
+
+  // ── Pendentes de autorização ───────────────────────────────────────────
+  if (eq('pendentes','ver pendentes','lancamentos pendentes','lançamentos pendentes',
+         'autorizar pendentes','lista pendentes','a autorizar','para autorizar',
+         'aprovar','para aprovar','o que precisa autorizar','o que ta esperando',
+         'o que esta esperando','lancamentos a autorizar','o que autorizei','aprovacoes'))
+    return {tipo:'comando',acao:'listar_pendentes'};
+
+  return null;
+}
+
 // ── Gemini ───────────────────────────────────────────────────────────────────
 
 async function interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType }) {
@@ -204,26 +288,30 @@ REGRAS FUNDAMENTAIS:
 ━━━ LANÇAMENTOS FINANCEIROS ━━━
 
 GATILHOS DE GASTO — qualquer uma dessas expressões indica um lançamento:
-Verbos: gastei, paguei, comprei, adquiri, consumi, desembolsei, investi, coloquei, botei, meti, saiu, foi, custou, valeu, cobrou
-Substantivos: gasto, despesa, conta, pagamento, compra, débito, saída, custo
-Inglês: spent, paid, bought, charged
-Gírias: "saiu X conto", "foi X pila", "X reais fora", "X pau", "X mangos", "X conto", "uma nota de X"
-Sem verbo: "pão 60", "uber 23", "netflix 45", "mercado 150", "farmácia 45"
-Com símbolo: "$ 60", "R$ 80", "60,00", "60 reais", "sessenta reais"
-Implícito: "80 no restaurante", "50 com uber", "200 na farmácia"
+Verbos diretos: gastei, paguei, comprei, adquiri, consumi, desembolsei, coloquei, botei, meti, abateu, debitou, cobrou, custou, valeu, saiu, foi, venceu, fechei, quitei, liquidei, contratei, assinei, renovei, cancelei a assinatura mas cobrou
+Substantivos: gasto, despesa, conta, pagamento, compra, débito, saída, custo, taxa, tarifa, mensalidade, multa, juros, parcela, prestação, boleto, nota, fatura (qdo com valor)
+Inglês/gíria: spent, paid, bought, charged, "saiu X conto", "foi X pila", "X reais fora", "X pau", "X mangos", "X conto", "uma nota de X", "foi embora X", "voou X", "perdi X"
+Sem verbo explícito: "pão 60", "uber 23", "netflix 45", "mercado 150", "farmácia 45", "luz 120", "condomínio 500"
+Com símbolo: "$ 60", "R$ 80", "60,00", "60 reais", "sessenta reais", "R$47,50"
+Implícito: "80 no restaurante", "50 com uber", "200 na farmácia", "academia esse mês"
+Com cartão: "passei 150 no Nubank", "100 no débito Inter", "300 crédito Itaú"
+Débito automático: "veio o boleto", "venceu o carnê", "descontou automático", "debitou da conta"
 
 INTERPRETAR VALORES:
 - Números soltos: "80", "R$80", "80 reais", "oitenta reais" → 80.00
-- "mil" → 1000, "duzentos" → 200, "cinquenta" → 50
-- "80,50" ou "80.50" → 80.50
-- "1k" → 1000, "1.5k" → 1500
-- Parcelamento: "200 em 12x", "3x de 50", "12 parcelas de 30" → extrair total e parcelas
+- "mil" → 1000, "duzentos" → 200, "cinquenta" → 50, "cem" → 100, "trezentos" → 300
+- "80,50" ou "80.50" → 80.50, "1.200" → 1200.00
+- "1k" → 1000, "1.5k" → 1500, "2k" → 2000
+- "e pouco" → ignorar, usar só o principal: "cem e pouco" → 100
+- Parcelamento: "200 em 12x", "3x de 50", "12 parcelas de 30", "parcelei em 6x", "36x de 150" → extrair total e parcelas
 
 INTERPRETAR DESCRIÇÃO:
-- Local: "no mercado", "na farmácia", "no uber", "no ifood", "na academia"
-- Produto: "comprei pão", "paguei netflix", "gasolina"
+- Local: "no mercado", "na farmácia", "no uber", "no ifood", "na academia", "no shopping"
+- Produto: "comprei pão", "paguei netflix", "gasolina", "tênis novo"
+- Serviço: "academia do mês", "plano de saúde", "internet", "conta de luz"
 - Se só tiver valor → campo_faltando = "descricao"
 - Se só tiver descrição → campo_faltando = "valor"
+- Se tiver os dois → lancamento completo
 
 FORMATO LANÇAMENTO COMPLETO:
 {
@@ -275,38 +363,54 @@ FORMATO CORREÇÃO:
 }
 
 ━━━ CATEGORIAS ━━━
-Alimentação: ifood, rappi, uber eats, delivery, restaurante, lanchonete, padaria, café, bar, pizza, hamburger, açaí, sorvete, doceria, sushi, churrasco, refeição, almoço, jantar, café da manhã, lanche, marmita, comida
-Transporte: uber, 99, táxi, combustível, gasolina, etanol, diesel, pedágio, metrô, ônibus, passagem, estacionamento, moto, bicicleta, patinete, rodoviária, aeroporto
-Mercado: supermercado, mercado, hortifruti, açougue, mercearia, quitanda, feira, sacolão, atacado, assaí, carrefour, extra, pão de açúcar
-Saúde: farmácia, remédio, medicamento, médico, consulta, exame, hospital, clínica, dentista, psicólogo, fisioterapeuta, plano de saúde, academia, suplemento
-Lazer: cinema, netflix, spotify, amazon prime, disney, show, festa, viagem, hotel, pousada, parque, teatro, museu, ingresso, jogo, game, steam
-Moradia: aluguel, condomínio, água, luz, energia, internet, gás, IPTU, seguro, reforma, manutenção, faxina, diarista
-Vestuário: roupa, calçado, tênis, sapato, bolsa, acessório, moda, loja, shopping
-Educação: curso, livro, escola, faculdade, mensalidade, material escolar, caneta, caderno, apostila, workshop, treinamento
-Serviços: salão, barbearia, manicure, lavanderia, conserto, reparo, oficina, mecânico, encanador, eletricista, assinatura, streaming
-Investimento: ação, fundo, tesouro, criptomoeda, bitcoin, poupança, CDB, LCI, LCA, previdência
-Outros: qualquer coisa que não se encaixe acima
+Alimentação: ifood, rappi, uber eats, loggi, delivery, restaurante, lanchonete, padaria, café, bar, pizza, hamburger, açaí, sorvete, doceria, sushi, churrasco, refeição, almoço, jantar, café da manhã, lanche, marmita, comida, churrascaria, sorveteria, pastelaria, crepe, temaki, japonês, árabe, buffet, self-service, rodízio, food truck, cantina, bistrô, snack, petisco, happy hour, balada (comida), james, cornershop
+Transporte: uber, 99, táxi, indriver, combustível, gasolina, etanol, diesel, álcool, pedágio, metrô, ônibus, passagem, estacionamento, moto, bicicleta, patinete, lime, bird, rodoviária, aeroporto, avião, passagem aérea, latam, gol, azul, voo, táxi aéreo, van, transfer, aplicativo de transporte, corrida
+Mercado: supermercado, mercado, hortifruti, açougue, mercearia, quitanda, feira, sacolão, atacado, atacadão, assaí, assai, carrefour, extra, pão de açúcar, dia, aldi, walmart, bistek, comper, prezunic, compras do mês, despensa, rancho
+Saúde: farmácia, drogaria, ultrafarma, remédio, medicamento, médico, consulta médica, exame, hospital, clínica, dentista, psicólogo, psiquiatra, fisioterapeuta, nutricionista, oftalmologista, dermatologista, urologista, ginecologista, cardiologista, plano de saúde, unimed, hapvida, amil, academia, smart fit, bluefit, bodytech, suplemento, vitamina, whey, spa, massagem, terapia, quiropraxia
+Lazer: cinema, netflix, spotify, amazon prime, disney+, disney plus, hbo max, max, paramount, crunchyroll, apple tv, youtube premium, globoplay, telecine, show, festa, balada, viagem, hotel, pousada, airbnb, hostel, parque, teatro, museu, ingresso, ticket, jogo, game, steam, playstation, xbox, switch, app store, google play
+Moradia: aluguel, condomínio, água, luz, energia, internet, claro, tim, vivo, oi, gás, IPTU, IPVA, seguro residencial, seguro auto, reform, manutenção, faxina, diarista, cozinheira, frete, mudança, móvel, eletrodoméstico, decoração, mão de obra, prestação da casa, financiamento imobiliário
+Vestuário: roupa, calçado, tênis, sapato, bolsa, carteira, acessório, moda, loja, shopping, renner, c&a, riachuelo, shein, zara, h&m, farm, arezzo, camiseta, calça, vestido, jaqueta, moletom, lingerie, meia, cueca, óculos, relógio, bijuteria
+Educação: curso, livro, escola, faculdade, mensalidade escolar, material escolar, caneta, caderno, apostila, workshop, treinamento, udemy, alura, coursera, duolingo, inglês, espanhol, idioma, aula particular, pós-graduação, MBA, certificação, concurso
+Beleza: salão, barbearia, manicure, pedicure, depilação, sobrancelha, cabeleireiro, tintura, escova, botox, micropigmentação, perfume, maquiagem, cosmético, creme, shampoo, condicionador, produto de cabelo, produto de beleza
+Pet: veterinário, pet shop, ração, banho e tosa, vacina animal, remédio pet, casinha, brinquedo pet, coleira, guia, plano pet, castração, consulta veterinária
+Serviços: lavanderia, conserto, reparo, oficina, mecânico, encanador, eletricista, pintor, pedreiro, dedetização, jardinagem, contador, advogado, cartório, notário, assinatura, streaming, software, app, anuidade, taxa bancária, iof, tarifas
+Investimento: ação, fundo, tesouro direto, criptomoeda, bitcoin, ethereum, poupança, CDB, LCI, LCA, previdência, renda fixa, renda variável, aplicação, aporte, compra de dólar, ETF
+Outros: qualquer coisa que não se encaixe acima, presente, doação, taxa, multa, imposto, DARF, IR, restituição paga
 
 ━━━ BANCOS E ABREVIAÇÕES ━━━
-"nu", "nubank", "roxinho", "lilas" → "Nubank"
-"inter", "banco inter", "laranjinha" → "Inter"
-"itau", "itaú", "itauzinho" → "Itaú"
-"brad", "bradesco", "vermelhinho" → "Bradesco"
-"bb", "brasil", "banco do brasil" → "Banco do Brasil"
-"cef", "caixa", "caixa economica" → "Caixa"
-"c6", "c6bank", "pretinho" → "C6 Bank"
-"xp", "xp invest" → "XP"
-"next" → "Next"
-"picpay" → "PicPay"
-"pagbank", "pagseguro" → "PagBank"
-"mercado pago", "mp" → "Mercado Pago"
-"will", "will bank" → "Will Bank"
-"neon" → "Neon"
-"santander", "san" → "Santander"
-"original" → "Original"
-"débito", "debito" → "Débito"
-"dinheiro", "especie", "espécie", "cash", "vivo" → "Dinheiro"
-"pix", "transferencia", "ted", "doc" → "PIX"
+"nu", "nubank", "roxinho", "lilas", "roxão", "cartão roxo" → "Nubank"
+"inter", "banco inter", "laranjinha", "inter bank", "laranja" → "Inter"
+"itau", "itaú", "itauzinho", "itau unibanco" → "Itaú"
+"brad", "bradesco", "vermelhinho", "bradescão" → "Bradesco"
+"bb", "brasil", "banco do brasil", "bancão", "agencia brasil" → "Banco do Brasil"
+"cef", "caixa", "caixa economica", "caixa federal" → "Caixa"
+"c6", "c6bank", "pretinho", "c6 bank", "c6 preto" → "C6 Bank"
+"xp", "xp invest", "xp investimentos" → "XP"
+"next", "next bank" → "Next"
+"picpay", "pic pay" → "PicPay"
+"pagbank", "pagseguro", "pag bank" → "PagBank"
+"mercado pago", "mp", "mercadopago" → "Mercado Pago"
+"will", "will bank", "willbank" → "Will Bank"
+"neon", "neon bank" → "Neon"
+"santander", "san", "santandrão" → "Santander"
+"original", "banco original" → "Original"
+"agi", "agibank" → "Agibank"
+"bs2", "banco bs2" → "BS2"
+"sofisa", "sofisa direto" → "Sofisa"
+"bmg", "banco bmg" → "BMG"
+"digio" → "Digio"
+"avenue" → "Avenue"
+"modal", "modalmais" → "Modal"
+"sicoob", "cooperativa" → "Sicoob"
+"sicredi" → "Sicredi"
+"stone", "ton" → "Stone"
+"getnet" → "Getnet"
+"safra", "banco safra" → "Safra"
+"rendimento", "banco rendimento" → "Rendimento"
+"débito", "debito", "cartão de débito" → "Débito"
+"dinheiro", "especie", "espécie", "cash", "nota", "físico" → "Dinheiro"
+"pix", "transferencia", "ted", "doc", "transferência" → "PIX"
+"crédito", "credito", "cartão de crédito" → "Crédito"
 Se não informado → "Não informado"
 
 ━━━ DATAS ━━━
@@ -323,25 +427,26 @@ Se não informada → ${new Date().toISOString().split('T')[0]}
 GATILHOS DE RECEITA — qualquer expressão que indique entrada de dinheiro:
 
 Verbos/frases de recebimento:
-"recebi", "recebi X", "recebi de", "recebi do", "recebi da", "fui pago", "me pagaram"
-"entrou", "entrou X", "entrou na conta", "entrou no banco", "caiu", "caiu na conta", "caiu X", "caiu aqui"
-"pintou X", "pintou grana", "pintou uma grana", "chegou o pagamento", "chegou X", "chegou meu X"
-"me transferiram", "mandaram X", "depositaram", "transferência recebida", "ted recebido", "pix recebido"
-"ganhei X", "ganhei de", "tirei X", "tirei de", "quitaram", "liquidaram"
-"me devolveram", "devolução", "estorno recebido", "reembolso recebido"
-"tá na conta", "tá no banco", "dinheiro na conta", "veio o X", "veio o dinheiro"
+"recebi", "recebi X", "recebi de", "recebi do", "recebi da", "fui pago", "me pagaram", "me fizeram um pix"
+"entrou", "entrou X", "entrou na conta", "entrou no banco", "caiu", "caiu na conta", "caiu X", "caiu aqui", "caiu o pix"
+"pintou X", "pintou grana", "pintou uma grana", "chegou o pagamento", "chegou X", "chegou meu X", "chegou o dinheiro"
+"me transferiram", "mandaram X", "depositaram", "transferência recebida", "ted recebido", "pix recebido", "me mandaram pix"
+"ganhei X", "ganhei de", "tirei X", "tirei de", "quitaram", "liquidaram", "me pagaram"
+"me devolveram", "devolução", "estorno recebido", "reembolso recebido", "me estornaram", "me ressarciram", "tive reembolso"
+"tá na conta", "tá no banco", "dinheiro na conta", "veio o X", "veio o dinheiro", "caiu grana", "caiu uma grana"
+"tô recebendo", "vou receber", "recebi hoje", "recebi agora", "acabei de receber"
 
 Fontes de renda (mesmo sem verbo, indica receita):
-"salário", "salario", "vencimento", "vale", "adiantamento", "13º", "13 salário", "décimo terceiro", "férias"
-"freelance", "freela", "freelas", "freela pago", "trampo extra", "bico", "trabalho extra", "job", "projeto pago"
-"aluguel recebido", "recebi aluguel", "inquilino pagou", "locatário pagou", "aluguei"
-"rendimento", "dividendo", "dividendos", "juros recebido", "cdb venceu", "resgate", "rendeu", "lucro"
-"renda extra", "renda passiva", "honorários", "comissão", "comissão recebida", "bonificação"
-"bonus", "bônus", "PLR", "participação nos lucros", "gratificação", "premiação", "prêmio recebido"
-"pensão recebida", "pensão alimentícia", "mesada", "aposentadoria", "INSS", "benefício recebido"
-"presente de dinheiro", "me deram X", "ganhei X de presente", "pix de familiar"
-"vendi X", "vendi meu", "venda recebida", "serviço prestado", "serviço concluído pago"
-"me mandaram X", "caiu X de", "entrou X referente a", "pagamento do X chegou"
+"salário", "salario", "vencimento", "vale", "vale alimentação", "vale refeição", "va", "vr", "adiantamento", "13º", "13 salário", "décimo terceiro", "férias", "rescisão"
+"freelance", "freela", "freelas", "freela pago", "trampo extra", "bico", "trabalho extra", "job", "projeto pago", "consultoria", "prestação de serviço", "serviço prestado"
+"aluguel recebido", "recebi aluguel", "inquilino pagou", "locatário pagou", "aluguei", "aluguel do imóvel"
+"rendimento", "dividendo", "dividendos", "juros recebido", "cdb venceu", "resgate", "rendeu", "lucro", "yield", "cashback recebido"
+"renda extra", "renda passiva", "honorários", "comissão", "comissão recebida", "bonificação", "participação"
+"bonus", "bônus", "PLR", "participação nos lucros", "gratificação", "premiação", "prêmio recebido", "rastreador de desempenho"
+"pensão recebida", "pensão alimentícia", "mesada", "aposentadoria", "INSS", "benefício recebido", "auxílio", "BPC"
+"presente de dinheiro", "me deram X", "ganhei X de presente", "pix de familiar", "aniversário dinheiro", "me deram grana"
+"vendi X", "vendi meu", "venda recebida", "serviço prestado", "serviço concluído pago", "vendi na OLX", "vendi no marketplace"
+"me mandaram X", "caiu X de", "entrou X referente a", "pagamento do X chegou", "fechei um contrato"
 
 IMPORTANTE — desvio linguístico e informalidade:
 - "Chegou meu freela" → receita Freelance
@@ -376,46 +481,49 @@ FORMATO PARA RECEITA:
 
 ━━━ TAREFAS ━━━
 
-GATILHOS DE TAREFA — qualquer uma dessas expressões indica uma tarefa:
-"adiciona tarefa", "cria tarefa", "nova tarefa", "anota aí", "coloca no caderno"
-"lembra de", "me lembra", "não esquecer", "preciso fazer", "tenho que fazer"
-"agenda X para", "marca X para", "X para sexta", "X amanhã"
-"to do", "todo", "pendência", "compromisso", "obrigação"
-"preciso comprar", "preciso ligar", "preciso resolver", "preciso pagar"
-"deixa anotado", "registra aí", "salva aí"
-Urgência: "urgente", "importante", "crítico", "não pode esquecer", "prioridade" → prioridade Alta
+GATILHOS DE CRIAÇÃO DE TAREFA — qualquer uma dessas expressões cria uma tarefa:
+Diretos: "adiciona tarefa", "cria tarefa", "nova tarefa", "adicionar tarefa", "criar tarefa"
+Anotação: "anota aí", "anota isso", "coloca no caderno", "registra aí", "salva aí", "deixa anotado", "bota na lista", "coloca na lista", "adiciona pra minha lista"
+Lembretes: "lembra de", "me lembra", "me lembre", "não esquecer", "não deixa esquecer", "lembra amanhã", "me avisa", "me avise de"
+Obrigação: "preciso fazer", "tenho que fazer", "preciso comprar", "preciso ligar", "preciso resolver", "preciso pagar", "preciso ir", "tenho que ir", "tenho que ligar", "tenho que pagar", "não pode esquecer de"
+Agendamento: "agenda X para", "marca X para", "X para sexta", "X amanhã", "agenda para", "marcar para"
+Geral: "to do", "todo", "pendência", "compromisso", "obrigação", "missão", "meta", "objetivo"
+Urgência: "urgente", "importante", "crítico", "prioridade", "asap", "hoje mesmo", "o mais rápido possível" → prioridade Alta
 Sem prazo informado → pedir_prazo = true
 
 GATILHOS DE LISTAR TAREFAS:
-"minhas tarefas", "quais tarefas", "o que tenho para fazer", "pendências"
-"lista tarefas", "ver tarefas", "mostrar tarefas", "tarefas do dia"
-"o que está pendente", "o que falta fazer", "minha lista"
+"tarefas", "minhas tarefas", "quais tarefas", "o que tenho para fazer", "o que tenho pra fazer", "pendências"
+"lista tarefas", "ver tarefas", "mostrar tarefas", "tarefas do dia", "lista de tarefas", "listar tarefas"
+"o que está pendente", "o que ta pendente", "o que falta fazer", "minha lista", "o que falta", "o que tenho"
+"afazeres", "compromissos", "agenda", "o que fazer hoje", "meus pendentes"
 
-GATILHOS DE CONCLUIR TAREFA — qualquer variação abaixo indica conclusão:
+GATILHOS DE CONCLUIR TAREFA:
 "concluí", "conclui", "já conclui", "já concluí", "concluído", "concluída"
-"terminei", "terminou", "já terminei", "já terminou"
-"fiz", "já fiz", "fiz a tarefa", "já fiz a tarefa", "foi feito"
-"resolvi", "já resolvi", "resolvido", "resolvida"
-"pronto", "pronta", "tá pronto", "ta pronto", "tá feito", "ta feito"
-"feito", "feita", "ok a tarefa", "ok feito", "missão cumprida"
-"marca como feito", "marca como concluído", "marca como concluída", "risca da lista"
-"já paguei", "já liguei", "já fui", "já comprei"
-"finalizado", "finalizada", "finalizei", "acabei", "já acabei"
-"cumpri", "já cumpri", "cumprido", "executei", "já executei"
-IMPORTANTE: Se a mensagem diz "Já conclui/concluí/terminei/fiz [algo]" → tipo tarefa acao concluir
+"terminei", "terminou", "já terminei", "já terminou", "termine"
+"fiz", "já fiz", "fiz a tarefa", "já fiz a tarefa", "foi feito", "já fiz isso"
+"resolvi", "já resolvi", "resolvido", "resolvida", "resolve"
+"pronto", "pronta", "tá pronto", "ta pronto", "tá feito", "ta feito", "tá ok"
+"feito", "feita", "ok a tarefa", "ok feito", "missão cumprida", "check", "✓", "✅"
+"marca como feito", "marca como concluído", "marca como concluída", "risca da lista", "riscar"
+"já paguei", "já liguei", "já fui", "já comprei", "já resolvi", "já fiz"
+"finalizado", "finalizada", "finalizei", "acabei", "já acabei", "concluí isso"
+"cumpri", "já cumpri", "cumprido", "executei", "já executei", "executado"
+"foi", "foi feito", "foi resolvido", "foi concluído", "foi pago", "foi para"
+IMPORTANTE: "Já conclui/concluí/terminei/fiz [algo]" → tipo tarefa acao concluir com titulo=[algo]
 
-ATRIBUIÇÃO DE TAREFA — qualquer uma dessas expressões:
-"atribui tarefa X para Bruna", "cria tarefa X para Bruna"
+ATRIBUIÇÃO DE TAREFA:
+"atribui tarefa X para Bruna", "cria tarefa X para Bruna", "tarefa X para Bruna"
 "atribuir tarefa para [nome] hoje de [fazer algo]" → titulo=[fazer algo], atribuir_para=[nome]
 "atribuir [nome] de [tarefa]", "atribuir [tarefa] para [nome]"
-"tarefa X é para Bruna", "passa tarefa X para Bruna"
-"delega tarefa X para Bruna", "tarefa X fica com Bruna"
-"Bruna tem que fazer X", "X é tarefa da Bruna"
-"atribui para Bruna: X", "para Bruna: X"
-"passa pra Yan lavar o carro", "diz pra Bruna fazer X"
-Quando identificar nome de pessoa após "para", "à", "ao", "pra" e houver uma ação/tarefa → campo "atribuir_para": "nome"
-Se o prazo estiver na mensagem (hoje, amanhã, sexta, 25/05) → "prazo": "[data calculada]", "pedir_prazo": false
-Se NÃO houver prazo → "prazo": null, "pedir_prazo": true
+"tarefa X é para Bruna", "passa tarefa X para Bruna", "manda tarefa pra Bruna"
+"delega tarefa X para Bruna", "tarefa X fica com Bruna", "Bruna faz X"
+"Bruna tem que fazer X", "X é tarefa da Bruna", "X fica com Bruna"
+"atribui para Bruna: X", "para Bruna: X", "pra Bruna: X"
+"passa pra Yan lavar o carro", "diz pra Bruna fazer X", "fala pra Yan fazer X"
+"Yan precisa fazer X", "X é do Yan", "X é pra Yan"
+Quando identificar nome de pessoa após "para", "à", "ao", "pra", "pro" com uma ação → campo "atribuir_para": "nome"
+Se prazo na mensagem (hoje, amanhã, sexta, 25/05) → "prazo": "[data]", "pedir_prazo": false
+Se SEM prazo → "prazo": null, "pedir_prazo": true
 
 EXEMPLOS DE ATRIBUIÇÃO (MUITO IMPORTANTES):
 "Atribuir tarefa para Yan hoje de lavar o carro" → {"tipo":"tarefa","acao":"criar","titulo":"Lavar o carro","prazo":"${new Date().toISOString().split('T')[0]}","pedir_prazo":false,"atribuir_para":"Yan"}
@@ -475,22 +583,31 @@ FORMATO CONCLUIR:
 {"tipo":"tarefa","acao":"concluir","titulo":"parte do nome"}
 
 ━━━ CONSULTAS ━━━
-"quanto gastei hoje", "gastos de hoje", "total hoje" → {"tipo":"consulta","pergunta":"gastos_hoje"}
-"quanto gastei esse mês", "total do mês", "meu mês" → {"tipo":"consulta","pergunta":"gastos_mes"}
-"quanto tenho", "meu saldo", "situação financeira" → {"tipo":"consulta","pergunta":"saldo"}
-"fatura do nu", "fatura do inter", "valor da fatura", "quanto está a fatura", "minha fatura" → {"tipo":"consulta","pergunta":"fatura","cartao":"Nubank"}
-"quais faturas", "todas as faturas", "minhas faturas" → {"tipo":"consulta","pergunta":"faturas_todas"}
-"alertas", "resumo", "resumo do dia", "status", "como estou", "situação", "pendentes", "o que tem pendente", "meu resumo" → {"tipo":"consulta","pergunta":"resumo"}
+PRIORIDADE ABSOLUTA — mensagem SEM valor numérico que seja substantivo financeiro = SEMPRE consulta:
+"faturas", "fatura", "ver faturas", "minhas faturas", "todas as faturas", "conferir faturas", "quanto devo" → {"tipo":"consulta","pergunta":"faturas_todas","mes":null}
+"gastos", "meus gastos", "ver gastos", "extrato", "balanço", "total do mês", "quanto gastei", "o que saiu" → {"tipo":"consulta","pergunta":"gastos_mes"}
+"gastos hoje", "total hoje", "o que gastei hoje", "o que saiu hoje" → {"tipo":"consulta","pergunta":"gastos_hoje"}
+"saldo", "meu saldo", "quanto tenho", "situação", "situação financeira", "como estou financeiramente", "posso gastar", "quanto sobrou" → {"tipo":"consulta","pergunta":"saldo"}
+"resumo", "alertas", "status", "meu resumo", "resumo do dia", "como estou", "me atualiza", "novidades", "avisos" → {"tipo":"consulta","pergunta":"resumo"}
+"tarefas", "minhas tarefas", "ver tarefas", "lista tarefas", "pendências", "afazeres", "minha lista" → {"tipo":"tarefa","acao":"listar"}
+"pendentes", "ver pendentes", "lançamentos pendentes", "a autorizar", "para aprovar" → {"tipo":"comando","acao":"listar_pendentes"}
+
+FATURA DE CARTÃO ESPECÍFICO:
+"fatura do nu/nubank/roxo", "quanto ta o nubank" → {"tipo":"consulta","pergunta":"fatura","cartao":"Nubank","mes":null}
+"fatura do inter/laranja", "quanto ta o inter" → {"tipo":"consulta","pergunta":"fatura","cartao":"Inter","mes":null}
+"fatura do itaú", "quanto ta o itaú" → {"tipo":"consulta","pergunta":"fatura","cartao":"Itaú","mes":null}
+"fatura do C6", "quanto ta o C6" → {"tipo":"consulta","pergunta":"fatura","cartao":"C6 Bank","mes":null}
+"fatura do Bradesco" → {"tipo":"consulta","pergunta":"fatura","cartao":"Bradesco","mes":null}
+Faturas por mês: "fatura do nu em junho", "fatura nubank próximo mês" → incluir campo "mes"
 
 FORMATO CONSULTA FATURA:
 {"tipo":"consulta","pergunta":"fatura","cartao":"Nubank","mes":null}
 {"tipo":"consulta","pergunta":"faturas_todas","mes":null}
-O campo "mes" pode ser: null (mês atual), "proximo" (próximo mês), ou número 1-12.
-O campo "cartao" deve ser normalizado igual aos bancos (Nubank, Inter, Itaú, etc).
+O campo "mes": null=atual, "proximo"=próximo mês, número 1-12=mês específico.
 
 ━━━ COMANDOS ━━━
-"cancela", "cancela o último", "desfaz", "erro" → {"tipo":"comando","acao":"cancelar_ultimo"}
-"lista pendentes", "pendentes", "o que está pendente para autorizar" → {"tipo":"comando","acao":"listar_pendentes"}
+"cancela", "cancela o último", "cancela o gasto", "desfaz", "erro", "apaga o último", "remove o último", "foi errado" → {"tipo":"comando","acao":"cancelar_ultimo"}
+"lista pendentes", "pendentes", "ver pendentes", "o que está pendente para autorizar", "a autorizar", "para aprovar" → {"tipo":"comando","acao":"listar_pendentes"}
 
 ━━━ FOTOS E COMPROVANTES ━━━
 
@@ -747,7 +864,8 @@ export default async function handler(req, res) {
       'recebi','recebi de','entrou na conta','salário','salario','freelance',
       'gastei','gasto ','comprei','paguei','transferi',
       'minhas tarefas','lista tarefas','ver tarefas','pendências',
-      'concluí','conclui','terminei','finalizei','já fiz'
+      'concluí','conclui','terminei','finalizei','já fiz',
+      'faturas','fatura','gastos','saldo','resumo','alertas','tarefas','pendentes'
     ];
     if (ctx.aguardando && _estadosMidFlow.includes(ctx.aguardando)) {
       const _tl = texto.toLowerCase();
@@ -1580,7 +1698,10 @@ export default async function handler(req, res) {
       }
     }
 
-    const gasto = await interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType });
+    // Pré-processamento: comandos diretos não precisam do Gemini
+    const _preCmd = (!audioUrl && !fotoUrl) ? preProcessarComando(texto) : null;
+    const gasto = _preCmd || await interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType });
+    if (_preCmd) console.log('Pré-processado:', JSON.stringify(_preCmd));
 
     if (gasto.tipo === 'erro' || gasto.erro) {
       // Se era foto/PDF, tenta salvar como parcial pedindo o valor

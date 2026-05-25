@@ -772,6 +772,26 @@ export default async function handler(req, res) {
       });
       console.log('Vínculo criado resultado:', JSON.stringify(vincResult));
 
+      // Garante mapeamento __uid__ → username imediatamente após o vínculo
+      // (sem isso, a resolução UUID→username falha até o usuário abrir o app)
+      if (tokenData.auth_uid && tokenUsername) {
+        await fetch(`${SUPABASE_URL}/rest/v1/user_data`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'resolution=merge-duplicates,return=minimal',
+          },
+          body: JSON.stringify({
+            user_id: '__uid__' + tokenData.auth_uid,
+            data: { username: tokenUsername },
+            updated_at: new Date().toISOString()
+          })
+        });
+        console.log('Mapeamento __uid__ criado:', tokenData.auth_uid, '->', tokenUsername);
+      }
+
       // Invalida token usado
       await supabaseQuery(`/user_data?user_id=eq.__tgtoken__${tokenLimpo}`, 'DELETE');
       await supabaseQuery(
@@ -795,10 +815,13 @@ export default async function handler(req, res) {
     // Resolve username: vinculo pode ter UUID (legado) ou username direto
     // Tenta mapeamento __uid__ para garantir que user_id seja o username correto
     let user_id = vinculo.user_id;
+    console.log('user_id do vínculo:', user_id);
     if (user_id && user_id.includes('-')) { // parece UUID
       const uidMap = await supabaseQuery(`/user_data?user_id=eq.__uid__${user_id}&select=data`);
       const mappedUser = uidMap?.[0]?.data?.username;
+      console.log('Resolução UUID:', user_id, '->', mappedUser || '(não encontrado)');
       if (mappedUser) user_id = mappedUser;
+      else console.warn('AVISO: UUID não resolvido para username — faturas e dados não encontrados!');
     }
     const nomeRemetente = vinculo.nome || 'Usuário';
     const isPrincipal = vinculo.principal === true;

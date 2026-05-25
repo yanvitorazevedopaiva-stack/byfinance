@@ -24218,16 +24218,17 @@ let _cfgTgTimerInterval=null;
 async function cfgTgCarregarStatus(){
   if(!_supabase||!_authUser) return;
   try{
-    let {data}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUser).order('principal',{ascending:false});
-    // Migração: se não achou pelo username, tenta pelo UUID antigo e migra
-    if((!data||!data.length)&&_authUID){
-      const {data:old}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUID);
-      if(old&&old.length>0){
-        await _supabase.from('telegram_vinculos').update({user_id:_authUser}).eq('user_id',_authUID);
-        const {data:migrado}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUser).order('principal',{ascending:false});
-        data=migrado;
-      }
-    }
+    // Busca por username E por UUID (compatibilidade com registros antigos)
+    const [{data:byUser},{data:byUID}]=await Promise.all([
+      _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUser),
+      _authUID?_supabase.from('telegram_vinculos').select('*').eq('user_id',_authUID):Promise.resolve({data:[]})
+    ]);
+    // Merge e deduplica por chat_id (username tem prioridade)
+    const visto=new Set();
+    const data=[...(byUser||[]),...(byUID||[])].filter(v=>{
+      if(visto.has(v.chat_id)) return false;
+      visto.add(v.chat_id); return true;
+    }).sort((a,b)=>(b.principal||0)-(a.principal||0));
     const naoVinc=document.getElementById('cfg-tg-nao-vinculado');
     const vinc=document.getElementById('cfg-tg-vinculado');
     const status=document.getElementById('cfg-tg-status');

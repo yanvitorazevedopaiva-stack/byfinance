@@ -23709,20 +23709,16 @@ function trfBadgeProgresso(meta){
 async function tgAuthCarregar(){
   if(!_supabase||!_authUser) return [];
   try{
-    // Busca por username E por UUID (bot pode salvar de qualquer forma)
-    const queries=[
-      _supabase.from('telegram_pendentes').select('*').eq('user_id',_authUser).eq('status','pendente')
-    ];
-    const uid=(typeof _authUID!=='undefined'&&_authUID)?_authUID:'';
-    if(uid&&uid!==_authUser) queries.push(
-      _supabase.from('telegram_pendentes').select('*').eq('user_id',uid).eq('status','pendente')
-    );
-    const results=await Promise.all(queries);
-    const todos=results.flatMap(r=>r.data||[]);
-    // Deduplica por id
-    const seen=new Set();
-    return todos.filter(p=>{if(seen.has(p.id))return false;seen.add(p.id);return true;})
-      .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    // Usa endpoint com service key para contornar RLS da tabela telegram_pendentes
+    const session=await _supabase.auth.getSession();
+    const jwt=session?.data?.session?.access_token;
+    if(!jwt) return [];
+    const res=await fetch('/api/get-pendentes',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+jwt,'Content-Type':'application/json'}
+    });
+    if(!res.ok) return [];
+    return await res.json();
   }catch(e){return [];}
 }
 

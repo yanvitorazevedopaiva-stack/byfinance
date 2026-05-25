@@ -15,6 +15,10 @@
     "api/generate-token.js": {
       "memory": 128,
       "maxDuration": 10
+    },
+    "api/get-pendentes.js": {
+      "memory": 128,
+      "maxDuration": 10
     }
   },
   "crons": [

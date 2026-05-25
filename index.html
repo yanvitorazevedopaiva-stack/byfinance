@@ -7925,9 +7925,20 @@ async function initAuth(){
         _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
         const scr=document.getElementById('login-screen');
         if(scr) scr.style.display='none';
-        // Restaura TODOS os dados do Supabase (inclui navArchived, navOrder, etc.)
-        // Isso garante que F5 sempre carrega o estado mais recente do Supabase
-        await _loadFromSupabase();
+        try{
+          const {data:fotoRow}=await _supabase.from('user_data')
+            .select('data').eq('user_id','__foto__'+username).maybeSingle();
+          if(fotoRow?.data?.perfilFoto){
+            const _fb64=fotoRow.data.perfilFoto;
+            try{localStorage.setItem(username+'_perfilFoto',JSON.stringify(_fb64));}catch(e){}
+            const _fimg=document.getElementById('perfil-foto-img');
+            const _fph=document.getElementById('perfil-foto-placeholder');
+            if(_fimg){_fimg.src=_fb64;_fimg.style.display='block';}
+            if(_fph)_fph.style.display='none';
+          }
+        }catch(e){}
+        // Restaura estado do nav (arquivadas, ordem) do Supabase em background
+        _navRestoreFromSupabase();
         return true;
       }
     }catch(e){console.warn('Supabase getSession erro',e);}
@@ -15069,6 +15080,36 @@ const _NAV_UNARCHIVABLE=new Set(['lancamentos','dashboard']);
 function _navGetArchived(){return load('navArchived')||[];}
 function _navSetArchived(arr){save('navArchived',arr);}
 
+// Salva nav state (arquivadas + ordem) diretamente no Supabase (row separada __nav__)
+async function _navSaveSupabase(){
+  if(!_supabase||!_authUser) return;
+  try{
+    const arch=_navGetArchived();
+    const ord=load('navOrder');
+    const navData={};
+    navData[_userPrefix()+'navArchived']=arch;
+    if(ord) navData[_userPrefix()+'navOrder']=ord;
+    await _supabase.from('user_data').upsert(
+      {user_id:'__nav__'+_authUser,data:navData,updated_at:new Date().toISOString()},
+      {onConflict:'user_id'}
+    );
+  }catch(e){}
+}
+// Restaura nav state do Supabase (chamado no initAuth — não sobrescreve outros dados)
+async function _navRestoreFromSupabase(){
+  if(!_supabase||!_authUser) return;
+  try{
+    const {data}=await _supabase.from('user_data')
+      .select('data').eq('user_id','__nav__'+_authUser).maybeSingle();
+    if(!data?.data) return;
+    const arch=data.data[_userPrefix()+'navArchived'];
+    const ord=data.data[_userPrefix()+'navOrder'];
+    if(arch!==undefined){save('navArchived',arch);}
+    if(ord!==undefined){save('navOrder',ord);}
+    renderNav(_currentPage||'dashboard');
+  }catch(e){}
+}
+
 function _navGetOrder(){
   const saved=load('navOrder');
   if(!saved) return JSON.parse(JSON.stringify(_NAV_DEFAULT));
@@ -15101,8 +15142,8 @@ function navArquivar(key){
       const arch=_navGetArchived();
       if(!arch.includes(key)) arch.push(key);
       _navSetArchived(arch);
-      // Sincroniza imediatamente (sem aguardar debounce de 2s)
       clearTimeout(_syncTimer);_syncToSupabase();
+      _navSaveSupabase(); // salva nav state dedicado no Supabase
       renderNav();
       _showNavToast('Ação arquivada. Restaure em Configurações → Ações Arquivadas.');
     },
@@ -15117,8 +15158,8 @@ function navDesarquivar(key){
   if(eraB1){if(!o.b1.includes(key))o.b1.push(key);}
   else{if(!o.b2.includes(key))o.b2.push(key);}
   _navSaveOrder(o);
-  // Sincroniza imediatamente (sem aguardar debounce de 2s)
   clearTimeout(_syncTimer);_syncToSupabase();
+  _navSaveSupabase(); // salva nav state dedicado no Supabase
   renderNav();
   renderNavArquivadas();
 }
@@ -23668,9 +23709,20 @@ function trfBadgeProgresso(meta){
 async function tgAuthCarregar(){
   if(!_supabase||!_authUser) return [];
   try{
-    const {data}=await _supabase.from('telegram_pendentes').select('*')
-      .eq('user_id',_authUser).eq('status','pendente').order('created_at',{ascending:false});
-    return data||[];
+    // Busca por username E por UUID (bot pode salvar de qualquer forma)
+    const queries=[
+      _supabase.from('telegram_pendentes').select('*').eq('user_id',_authUser).eq('status','pendente')
+    ];
+    const uid=(typeof _authUID!=='undefined'&&_authUID)?_authUID:'';
+    if(uid&&uid!==_authUser) queries.push(
+      _supabase.from('telegram_pendentes').select('*').eq('user_id',uid).eq('status','pendente')
+    );
+    const results=await Promise.all(queries);
+    const todos=results.flatMap(r=>r.data||[]);
+    // Deduplica por id
+    const seen=new Set();
+    return todos.filter(p=>{if(seen.has(p.id))return false;seen.add(p.id);return true;})
+      .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   }catch(e){return [];}
 }
 

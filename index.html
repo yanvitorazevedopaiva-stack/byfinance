@@ -7859,6 +7859,15 @@ function doLoginAfterRegister(){
 async function _startSession(u){
   _authUser=u;
   _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
+  if(!_authUID&&_supabase){
+    try{
+      const {data:{session}}=await _supabase.auth.getSession();
+      if(session?.user?.id){
+        _authUID=session.user.id;
+        sessionStorage.setItem('byf_supabase_uid',_authUID);
+      }
+    }catch(_){}
+  }
   sessionStorage.setItem('financeOS_user',u);
   sessionStorage.setItem('byf_session_start',Date.now());
   sessionStorage.setItem('trf_show_on_login','1'); // sinaliza que é um login real
@@ -16368,6 +16377,33 @@ function _initApp(){
   if(_ctDesp) _ctDesp.value=hoje.getFullYear()+'-'+(String(hoje.getMonth()+1).padStart(2,'0'));
   initPerfil();
   renderDashboard();
+  // Polling Telegram pendentes — atualiza a cada 30s automaticamente
+  if(!window._tgPollingAtivo){
+    window._tgPollingAtivo=true;
+    setInterval(()=>{
+      if(_authUID&&_supabase){
+        tgAuthRenderDashboard();
+        tgAuthRenderLanc();
+      }
+    },30000);
+  }
+  // Realtime — escuta inserções novas na tabela telegram_pendentes
+  if(_supabase&&_authUID&&!window._tgRealtimeAtivo){
+    window._tgRealtimeAtivo=true;
+    _supabase
+      .channel('tg-pendentes-'+_authUID)
+      .on('postgres_changes',{
+        event:'INSERT',
+        schema:'public',
+        table:'telegram_pendentes',
+        filter:'user_id=eq.'+_authUID
+      },()=>{
+        tgAuthRenderDashboard();
+        tgAuthRenderLanc();
+        tgAuthRenderModal();
+      })
+      .subscribe();
+  }
   _initFabDrag();
   // Máscara monetária universal em todos os campos financeiros
   applyMascaraBRL();

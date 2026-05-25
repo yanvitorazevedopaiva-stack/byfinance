@@ -55,6 +55,7 @@ function diasAte(diaAlvo, hoje) {
 
 // Monta o resumo completo de alertas para um user_id
 async function buildResumo(user_id) {
+  const original_uid = user_id; // UUID original — usado para queries em telegram_pendentes
   // Resolve UUID → username (telegram_vinculos armazena UUID, dados estão no username)
   if (user_id && user_id.includes('-')) {
     const uidMap = await sb(`/user_data?user_id=eq.__uid__${user_id}&select=data`);
@@ -64,7 +65,7 @@ async function buildResumo(user_id) {
 
   const [userData, pendentes] = await Promise.all([
     sb(`/user_data?user_id=eq.${user_id}&select=data`),
-    sb(`/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&select=id,descricao,valor,data_lancamento,tipo&order=created_at.asc`)
+    sb(`/telegram_pendentes?user_id=eq.${original_uid}&status=eq.pendente&select=id,descricao,valor,data_lancamento,tipo&order=created_at.asc`)
   ]);
 
   const dados = userData?.[0]?.data || {};

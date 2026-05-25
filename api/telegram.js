@@ -1060,7 +1060,7 @@ export default async function handler(req, res) {
               return res.status(200).json({ ok: true });
             }
             await limparContexto(chat_id);
-            await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+            await salvarPendente(chat_id, vinculo_user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
             const vConf = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
             const _parcelaConf = gasto.parcelas && gasto.parcelas > 1 ? `\n🔄 ${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
             await sendTelegram(chat_id,
@@ -1216,7 +1216,7 @@ export default async function handler(req, res) {
             await sendTelegram(chat_id, `💳 Foi à vista ou parcelado?\n\n1️⃣ À vista\n2️⃣ Parcelado`);
           } else {
             await limparContexto(chat_id);
-            await salvarPendente(chat_id, user_id, merged, tipo_midia, mensagem_original, nomeRemetente);
+            await salvarPendente(chat_id, vinculo_user_id, merged, tipo_midia, mensagem_original, nomeRemetente);
             const vFoto = (parseFloat(merged.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
             const _parcelaFoto = merged.parcelas && merged.parcelas > 1 ? `\n🔄 ${merged.parcelas}x de ${parseFloat(merged.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : '';
             await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${escapeMd(merged.descricao||'(sem descrição)')}\n💰 ${vFoto}${_parcelaFoto}\n🏷 ${merged.categoria||'Outros'}\n💳 ${fmtCartao(merged.cartao||'Não informado')}\n${iconeModalidade(merged.modalidade)} ${merged.modalidade}\n📅 ${fmtData(merged.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando autorização no BY Finance.`);
@@ -1570,7 +1570,7 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true });
           }
           await limparContexto(chat_id);
-          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+          await salvarPendente(chat_id, vinculo_user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
           const valorCtx1 = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
           const msgCtx1 = `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${valorCtx1}\n🏷 ${gasto.categoria||'Outros'}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade||'Não informado'}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`;
           await sendTelegram(chat_id, msgCtx1);
@@ -1610,7 +1610,7 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true });
           }
           await limparContexto(chat_id);
-          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+          await salvarPendente(chat_id, vinculo_user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
           const valorCtx2 = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
           const _parcelaCtx2 = gasto.parcelas && gasto.parcelas > 1 ? `\n🔄 *${gasto.parcelas}x de ${parseFloat(gasto.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*` : '';
           const _modLabel2 = gasto.parcelas && gasto.parcelas > 1 ? 'Crédito Parcelado' : (gasto.modalidade||gasto.cartao||'Não informado');
@@ -1643,7 +1643,7 @@ export default async function handler(req, res) {
           if (!l.data_lancamento) l.data_lancamento = new Date().toISOString().split('T')[0];
         });
         await limparContexto(chat_id);
-        for (const l of _lansM) await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original, nomeRemetente);
+        for (const l of _lansM) await salvarPendente(chat_id, vinculo_user_id, l, tipo_midia, mensagem_original, nomeRemetente);
         const _listaMkt = _lansM.map(l=>`• ${l.descricao} — ${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
         const _cartaoMktStr = gasto.cartao && gasto.cartao !== gasto.modalidade ? `💳 ${fmtCartao(gasto.cartao)}\n` : '';
         await sendTelegram(chat_id, `✅ *${_lansM.length} lançamentos registrados!*\n\n${_listaMkt}\n\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
@@ -1661,7 +1661,7 @@ export default async function handler(req, res) {
           gasto.valor_parcela = parseFloat((parseFloat(gasto.valor||0) / np).toFixed(2));
           gasto.observacao = `Parcelado em ${np}x`;
           await limparContexto(chat_id);
-          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+          await salvarPendente(chat_id, vinculo_user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
           const _vP = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
           const _vpP = parseFloat(gasto.valor_parcela).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
           await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${_vP}\n🔄 ${np}x de ${_vpP}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao||'Não informado')}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
@@ -1674,7 +1674,7 @@ export default async function handler(req, res) {
         if (_isVista) {
           gasto.parcelas = null; gasto.valor_parcela = null;
           await limparContexto(chat_id);
-          await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+          await salvarPendente(chat_id, vinculo_user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
           const _vV = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
           await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${_vV}\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao||'Não informado')}\n${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
           const _outrosV = await supabaseQuery(`/telegram_vinculos?user_id=eq.${vinculo_user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
@@ -1706,7 +1706,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
         await limparContexto(chat_id);
-        await salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
+        await salvarPendente(chat_id, vinculo_user_id, gasto, tipo_midia, mensagem_original, nomeRemetente);
         const _vNP = (parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
         const _vpNP = parseFloat(gasto.valor_parcela).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
         await sendTelegram(chat_id, `✅ *Lançamento registrado!*\n\n📝 ${gasto.descricao||'(sem descrição)'}\n💰 ${_vNP}\n🔄 *${_np}x de ${_vpNP}* — Crédito Parcelado\n🏷 ${gasto.categoria||'Outros'}\n💳 ${fmtCartao(gasto.cartao||'Não informado')}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n⏳ Aguardando sua autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
@@ -1845,7 +1845,7 @@ export default async function handler(req, res) {
           const _tGf  = _gf.reduce((a, g) => a + (g.val || 0), 0);
           const _tRf  = _rf.reduce((a, r) => a + (r.val || 0), 0);
           const _res  = _tRf - _tFat - _tGf;
-          const _pend = await supabaseQuery(`/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&select=id,descricao,valor`);
+          const _pend = await supabaseQuery(`/telegram_pendentes?user_id=eq.${vinculo_user_id}&status=eq.pendente&select=id,descricao,valor`);
           const _tar  = (_d[user_id + '_tarefas'] || []).filter(t => !t.concluida);
           const _mNm  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][_mesIdx];
           let _msg = `📊 *RESUMO — ${_mNm.toUpperCase()}*\n\n`;
@@ -1868,7 +1868,7 @@ export default async function handler(req, res) {
         const _totalFat = Object.values(_fat).reduce((a,arr) => a + (arr[_mi]||0), 0);
         const _totalGf  = _gf.reduce((a,g) => a + (g.val||0), 0);
         const _total = _totalFat + _totalGf;
-        const _pend = await supabaseQuery(`/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&select=id,descricao,valor`);
+        const _pend = await supabaseQuery(`/telegram_pendentes?user_id=eq.${vinculo_user_id}&status=eq.pendente&select=id,descricao,valor`);
         const _totalPend = (_pend||[]).reduce((a,p) => a + parseFloat(p.valor||0), 0);
         let _msg = `💸 *Gastos de ${_mNm}:*\n\n`;
         _msg += `💳 Faturas: *${_totalFat.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*\n`;
@@ -1882,7 +1882,7 @@ export default async function handler(req, res) {
 
       if (gasto.pergunta === 'gastos_hoje') {
         const _hoje = new Date().toISOString().split('T')[0];
-        const _pend = await supabaseQuery(`/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&data_lancamento=eq.${_hoje}&select=descricao,valor,categoria`);
+        const _pend = await supabaseQuery(`/telegram_pendentes?user_id=eq.${vinculo_user_id}&status=eq.pendente&data_lancamento=eq.${_hoje}&select=descricao,valor,categoria`);
         if (!_pend || !_pend.length) {
           await sendTelegram(chat_id, `✅ Nenhum gasto registrado hoje.`);
         } else {
@@ -2284,7 +2284,7 @@ export default async function handler(req, res) {
     }
 
     for (const l of lancamentos) {
-      await salvarPendente(chat_id, user_id, l, tipo_midia, mensagem_original, nomeRemetente);
+      await salvarPendente(chat_id, vinculo_user_id, l, tipo_midia, mensagem_original, nomeRemetente);
     }
 
     {

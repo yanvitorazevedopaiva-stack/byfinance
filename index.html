@@ -23707,23 +23707,14 @@ function trfBadgeProgresso(meta){
 // ── TELEGRAM PENDENTES DE AUTORIZAÇÃO ──────────────────────────────────────
 
 async function tgAuthCarregar(){
-  if(!_authUser) return [];
+  if(!_supabase||typeof _authUID==='undefined'||!_authUID) return [];
   try{
-    const session=_supabase?await _supabase.auth.getSession():null;
-    const jwt=session?.data?.session?.access_token||'';
-    const uid=(typeof _authUID!=='undefined'&&_authUID)?_authUID:'';
-    console.log('[tgAuth] carregando pendentes para:', _authUser, 'uid:', uid.substring(0,8)||'(vazio)');
-    const res=await fetch('/api/get-pendentes',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':jwt?'Bearer '+jwt:''},
-      body:JSON.stringify({username:_authUser,uid})
-    });
-    const text=await res.text();
-    console.log('[tgAuth] resposta /api/get-pendentes status:', res.status, 'body[:200]:', text.substring(0,200));
-    if(!res.ok) return [];
-    try{return JSON.parse(text);}catch(e){return [];}
+    const {data,error}=await _supabase.from('telegram_pendentes').select('*')
+      .eq('user_id',_authUID).eq('status','pendente').order('created_at',{ascending:false});
+    if(error) throw error;
+    return data||[];
   }catch(e){
-    console.error('[tgAuth] erro ao carregar pendentes:',e);
+    console.error('[tgAuth] erro:',e);
     return [];
   }
 }

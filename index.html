@@ -24292,7 +24292,7 @@ async function cfgTgGerarToken(){
     const nomeInput=document.getElementById('cfg-tg-novo-nome');
     const nome=(nomeInput?.value.trim())||_authUser||'Usuário';
     // Chama API server-side que usa service key (bypassa RLS)
-    const resp=await fetch('/api/generate-token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:_authUser,nome})});
+    const resp=await fetch('/api/generate-token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:_authUser,nome,auth_uid:_authUID||null})});
     if(!resp.ok) throw new Error('Falha na API');
     const {token}=await resp.json();
     if(!token) throw new Error('Token não retornado');

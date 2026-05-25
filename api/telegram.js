@@ -149,7 +149,9 @@ async function supabaseQuery(path, method = 'GET', body = null) {
   if (!text || text.trim() === '') return [];
   try {
     const parsed = JSON.parse(text);
-    // sempre retorna array; se vier objeto de erro do Supabase, retorna []
+    if (!Array.isArray(parsed) && parsed?.code) {
+      console.error(`supabaseQuery ${method} ${path} erro:`, JSON.stringify(parsed));
+    }
     return Array.isArray(parsed) ? parsed : [];
   } catch(e) { return []; }
 }
@@ -635,18 +637,22 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
       }
 
-      // username vem direto do token (não precisa de UUID)
       const tokenUsername = tokenData.username;
+      // Usa auth_uid (UUID) se disponível — compatível com colunas UUID no Supabase
+      // Fallback para username se coluna for TEXT
+      const vinculoUserId = tokenData.auth_uid || tokenUsername;
+      console.log('Criando vínculo: chat_id=', chat_id, 'user_id=', vinculoUserId);
 
-      // Remove vínculo antigo deste chat_id e cria novo com username correto
+      // Remove vínculo antigo deste chat_id e cria novo
       await supabaseQuery(`/telegram_vinculos?chat_id=eq.${chat_id}`, 'DELETE');
-      await supabaseQuery('/telegram_vinculos', 'POST', {
-        user_id: tokenUsername,
+      const vincResult = await supabaseQuery('/telegram_vinculos', 'POST', {
+        user_id: vinculoUserId,
         chat_id,
         nome: tokenData.nome || 'Usuário',
         principal: false,
         vinculado_em: new Date().toISOString()
       });
+      console.log('Vínculo criado resultado:', JSON.stringify(vincResult));
 
       // Invalida token usado
       await supabaseQuery(`/user_data?user_id=eq.__tgtoken__${tokenLimpo}`, 'DELETE');

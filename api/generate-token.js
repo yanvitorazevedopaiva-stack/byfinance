@@ -6,7 +6,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { user_id, nome } = req.body || {};
+  const { user_id, nome, auth_uid } = req.body || {};
   if (!user_id) return res.status(400).json({ error: 'user_id required' });
 
   const token = Math.floor(100000 + Math.random() * 900000).toString();
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     },
     body: JSON.stringify({
       user_id: '__tgtoken__' + token,
-      data: { token, nome: nome || user_id, username: user_id, expires_at: expiresAt },
+      data: { token, nome: nome || user_id, username: user_id, auth_uid: auth_uid || null, expires_at: expiresAt },
       updated_at: new Date().toISOString(),
     }),
   });

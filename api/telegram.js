@@ -615,6 +615,8 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
       }
 
+      // Remove vínculo antigo deste chat_id (evita duplicata ou registro com UUID antigo)
+      await supabaseQuery(`/telegram_vinculos?chat_id=eq.${chat_id}`, 'DELETE');
       await supabaseQuery('/telegram_vinculos', 'POST', {
         user_id: tokenData.user_id,
         chat_id,

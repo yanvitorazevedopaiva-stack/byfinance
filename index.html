@@ -23343,13 +23343,12 @@ async function trfAceitarTarefa(id){
 async function _trfPopulaAtribuirSel(){
   const sel=document.getElementById('trf-atribuir');
   if(!sel) return;
-  const uid=_authUID||sessionStorage.getItem('byf_supabase_uid');
   const meuNome=load('perfilNome')||_authUser||'Eu';
   // Opção padrão: para mim
   let opcoesBase=`<option value="">— Tarefa para mim (${esc(meuNome)}) —</option>`;
-  if(!_supabase||!uid){sel.innerHTML=opcoesBase;return;}
+  if(!_supabase||!_authUser){sel.innerHTML=opcoesBase;return;}
   try{
-    const {data}=await _supabase.from('telegram_vinculos').select('nome,chat_id').eq('user_id',uid);
+    const {data}=await _supabase.from('telegram_vinculos').select('nome,chat_id').eq('user_id',_authUser);
     if(!data||!data.length){sel.innerHTML=opcoesBase;return;}
     // Inclui o próprio usuário como opção explícita (com chat_id se tiver)
     const euVinculo=data.find(v=>v.nome&&v.nome.toLowerCase()===meuNome.toLowerCase());
@@ -24021,8 +24020,8 @@ async function tgConfirmarAutorizacao(){
   }
 
   // Notifica outros vínculos que o lançamento foi autorizado
-  if(_supabase&&_authUID){
-    _supabase.from('telegram_vinculos').select('chat_id,nome').eq('user_id',_authUID)
+  if(_supabase&&_authUser){
+    _supabase.from('telegram_vinculos').select('chat_id,nome').eq('user_id',_authUser)
       .neq('chat_id',data.chat_id||0)
       .then(({data:vinculos})=>{
         const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -24219,7 +24218,7 @@ let _cfgTgTimerInterval=null;
 async function cfgTgCarregarStatus(){
   if(!_supabase||!_authUID) return;
   try{
-    const {data}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUID).order('principal',{ascending:false});
+    const {data}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUser).order('principal',{ascending:false});
     const naoVinc=document.getElementById('cfg-tg-nao-vinculado');
     const vinc=document.getElementById('cfg-tg-vinculado');
     const status=document.getElementById('cfg-tg-status');
@@ -24244,7 +24243,7 @@ async function cfgTgCarregarStatus(){
             </div>
             <button onclick="cfgTgEditarNome('${v.id}','${esc(v.nome||'Usuário')}')" title="Editar nome"
               class="cfg-btn" style="padding:5px 10px;font-size:11px;border-color:rgba(0,200,255,0.3);color:var(--neon-blue)">✎ EDITAR</button>
-            ${!v.principal?`<button onclick="cfgTgRemoverVinculo('${v.id}')" class="cfg-btn cfg-btn-danger" style="padding:5px 10px;font-size:11px">✕</button>`:''}
+            <button onclick="cfgTgRemoverVinculo('${v.id}')" class="cfg-btn cfg-btn-danger" style="padding:5px 10px;font-size:11px">✕</button>
           </div>`).join('');
       }
     }else{
@@ -24264,7 +24263,7 @@ async function cfgTgGerarToken(){
     const nome=(nomeInput?.value.trim())||_authUser||'Usuário';
     const token=Math.floor(100000+Math.random()*900000).toString();
     const expiresAt=new Date(Date.now()+10*60*1000).toISOString();
-    await _supabase.from('telegram_tokens').upsert({user_id:_authUID,token,nome,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
+    await _supabase.from('telegram_tokens').upsert({user_id:_authUser,token,nome,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
 
     // Atualiza ambos os displays (painel vinculado e não-vinculado)
     const wrap=document.getElementById('cfg-tg-token-wrap');
@@ -24324,7 +24323,7 @@ async function cfgTgDesvincular(){
   if(!_supabase||!_authUID) return;
   if(!confirm('Desvincular todos os números do Telegram? Você precisará vincular novamente.')) return;
   try{
-    await _supabase.from('telegram_vinculos').delete().eq('user_id',_authUID);
+    await _supabase.from('telegram_vinculos').delete().eq('user_id',_authUser);
     cfgTgCarregarStatus();
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Telegram desvinculado.');
   }catch(e){

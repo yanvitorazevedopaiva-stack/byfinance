@@ -1296,7 +1296,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *Aceitar*\n2️⃣ *Reagendar*\n3️⃣ *Negar*`);
+        await sendTelegram(chat_id, `⚠️ Você tem uma tarefa pendente de resposta!\n\nResponda primeiro:\n1️⃣ *Aceitar*\n2️⃣ *Reagendar*\n3️⃣ *Negar*\n\n_Novos lançamentos só serão processados após responder._`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'reagendar_tarefa') {
@@ -1357,7 +1357,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *Aceitar* a proposta\n2️⃣ *Propor* outro dia`);
+        await sendTelegram(chat_id, `⚠️ Resposta pendente!\n\n1️⃣ *Aceitar* a proposta de reagendamento\n2️⃣ *Propor* outro dia\n\n_Novos lançamentos só serão processados após responder._`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'contraproposta_prazo') {
@@ -1422,7 +1422,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        await sendTelegram(chat_id, `Não entendi. Responda:\n1️⃣ *Aceitar*\n2️⃣ *Negar*`);
+        await sendTelegram(chat_id, `⚠️ Você tem uma ação pendente!\n\n1️⃣ *Aceitar*\n2️⃣ *Negar*\n\n_Novos lançamentos só serão processados após responder._`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'descricao_receita') {

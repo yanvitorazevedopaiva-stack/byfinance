@@ -1936,7 +1936,18 @@ export default async function handler(req, res) {
           const txt = lista.map(t => {
             const prazo = t.prazo ? ` · 📅 ${new Date(t.prazo+'T12:00:00').toLocaleDateString('pt-BR')}` : '';
             const prio = t.prio === 'Alta' ? ' 🔴' : t.prio === 'Media' ? ' 🟡' : ' 🟢';
-            return `• ${t.titulo}${prio}${prazo}`;
+            // Atribuição: quem criou ou para quem foi atribuída
+            let atribInfo = '';
+            if (t.atribuidor_nome && t.atribuidor_nome !== nomeRemetente) {
+              atribInfo = ` · 👤 _de ${escapeMd(t.atribuidor_nome)}_`;
+            } else if (t.origem_nome && t.origem_nome !== nomeRemetente) {
+              atribInfo = ` · 👤 _de ${escapeMd(t.origem_nome)}_`;
+            } else if (t.atribuido_para) {
+              atribInfo = ` · 👥 _para ${escapeMd(t.atribuido_para)}_`;
+            } else if (t.origem === 'sistema' || !t.origem) {
+              atribInfo = ` · 🖥 _sistema_`;
+            }
+            return `• ${t.titulo}${prio}${prazo}${atribInfo}`;
           }).join('\n');
           await sendTelegram(chat_id, `📋 *Tarefas pendentes:*\n\n${txt}`);
         }

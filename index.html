@@ -8932,7 +8932,8 @@ function renderDashboard(){
       _el.innerHTML=_p.map(t=>{
         const _d=t.prazo?Math.round((new Date(t.prazo+'T00:00:00')-new Date())/(1000*60*60*24)):null;
         const _b=_d===null?'':_d<0?`<span style="font-size:10px;font-weight:700;color:var(--neon-red);background:rgba(255,68,68,0.1);padding:1px 6px;border-radius:5px;white-space:nowrap">ATRASADA</span>`:_d===0?`<span style="font-size:10px;font-weight:700;color:var(--neon-green);background:rgba(0,255,157,0.1);padding:1px 6px;border-radius:5px;white-space:nowrap">HOJE</span>`:`<span style="font-size:10px;color:var(--text3);white-space:nowrap">em ${_d}d</span>`;
-        return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)"><input type="checkbox" onchange="trfToggle(${t.id});renderDashboard()" style="accent-color:var(--neon-green);cursor:pointer;flex-shrink:0"><span style="flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((t.titulo||'').substring(0,32))}</span>${_b}</div>`;
+        const _atrib=(t.atribuidor_nome?`<span style="font-size:9px;color:var(--neon-blue)">📥 ${esc(t.atribuidor_nome)}</span>`:'')+(t.atribuido_para?`<span style="font-size:9px;color:var(--neon-purple)">📤 ${esc(t.atribuido_para)}</span>`:'');
+        return`<div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)"><input type="checkbox" onchange="trfToggle(${t.id});renderDashboard()" style="accent-color:var(--neon-green);cursor:pointer;flex-shrink:0;margin-top:2px"><div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((t.titulo||'').substring(0,32))}</div>${_atrib?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:2px">${_atrib}</div>`:''}</div>${_b}</div>`;
       }).join('');
     }).catch(()=>{});
     const hoje3=new Date().toISOString().split('T')[0];
@@ -8947,9 +8948,10 @@ function renderDashboard(){
           :diff<0?`<span style="font-size:10px;font-weight:700;color:var(--neon-red);background:rgba(255,68,68,0.1);padding:1px 6px;border-radius:5px;white-space:nowrap">ATRASADA</span>`
           :diff===0?`<span style="font-size:10px;font-weight:700;color:var(--neon-green);background:rgba(0,255,157,0.1);padding:1px 6px;border-radius:5px;white-space:nowrap">HOJE</span>`
           :`<span style="font-size:10px;color:var(--text3);white-space:nowrap">em ${diff}d</span>`;
-        return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-          <input type="checkbox" onchange="trfToggle(${t.id});renderDashboard()" style="accent-color:var(--neon-green);cursor:pointer;flex-shrink:0">
-          <span style="flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((t.titulo||'').substring(0,32))}</span>
+        const atrib=(t.atribuidor_nome?`<span style="font-size:9px;color:var(--neon-blue)">📥 ${esc(t.atribuidor_nome)}</span>`:'')+(t.atribuido_para?`<span style="font-size:9px;color:var(--neon-purple)">📤 ${esc(t.atribuido_para)}</span>`:'');
+        return`<div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <input type="checkbox" onchange="trfToggle(${t.id});renderDashboard()" style="accent-color:var(--neon-green);cursor:pointer;flex-shrink:0;margin-top:2px">
+          <div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((t.titulo||'').substring(0,32))}</div>${atrib?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:2px">${atrib}</div>`:''}</div>
           ${badge}
         </div>`;
       }).join('');

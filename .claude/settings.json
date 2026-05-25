@@ -16,7 +16,8 @@
       "PowerShell(\\(Get-Content \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\" | Measure-Object -Line\\).Lines; \\(Get-Content \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\api\\\\telegram.js\" | Measure-Object -Line\\).Lines)",
       "Bash(git commit -m 'style: capitaliza opcoes Aceitar/Reagendar/Negar *)",
       "Bash(grep -v \"__sbrow_\\\\|data:\\\\|#\\\\|//\")",
-      "Bash(grep -v \"//.*setInterval\")"
+      "Bash(grep -v \"//.*setInterval\")",
+      "Read(//c/Users/Usuário/Desktop/TEST/api/**)"
     ]
   }
 }

@@ -23753,12 +23753,24 @@ function trfBadgeProgresso(meta){
 // ── TELEGRAM PENDENTES DE AUTORIZAÇÃO ──────────────────────────────────────
 
 async function tgAuthCarregar(){
-  if(!_supabase||typeof _authUID==='undefined'||!_authUID) return [];
+  if(!_supabase||((typeof _authUID==='undefined'||!_authUID)&&!_authUser)) return [];
   try{
-    const {data,error}=await _supabase.from('telegram_pendentes').select('*')
-      .eq('user_id',_authUID).eq('status','pendente').order('created_at',{ascending:false});
-    if(error) throw error;
-    return data||[];
+    // Busca por UUID e por username simultaneamente para cobrir todos os casos
+    const queries=[
+      _authUID?_supabase.from('telegram_pendentes').select('*')
+        .eq('user_id',_authUID).eq('status','pendente'):Promise.resolve({data:[]}),
+      _authUser?_supabase.from('telegram_pendentes').select('*')
+        .eq('user_id',_authUser).eq('status','pendente'):Promise.resolve({data:[]})
+    ];
+    const [r1,r2]=await Promise.all(queries);
+    if(r1.error) throw r1.error;
+    // Merge e deduplica por id
+    const vistos=new Set();
+    const todos=[...(r1.data||[]),...(r2.data||[])].filter(p=>{
+      if(vistos.has(p.id)) return false;
+      vistos.add(p.id); return true;
+    });
+    return todos.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   }catch(e){
     console.error('[tgAuth] erro:',e);
     return [];
@@ -24059,12 +24071,24 @@ async function tgConfirmarAutorizacao(){
     });
     if(typeof setReceitas==='function') setReceitas(recs); else setData('receitas',recs);
     await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
-    if(data.chat_id){
+    {
       const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-      await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-        chat_id:data.chat_id,
-        text:`✅ *Receita autorizada!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria}\n📅 ${dataLanc}\n\n_Registrada com sucesso em Receitas._`
-      })});
+      const textoReceita=`✅ *Receita autorizada!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria}\n📅 ${dataLanc}\n\n_Registrada com sucesso em Receitas._`;
+      // Notifica todos os vínculos
+      const _chatIdsRec=new Set();
+      if(data.chat_id) _chatIdsRec.add(String(data.chat_id));
+      try{
+        const {data:_vRec}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUser);
+        if(_vRec) _vRec.forEach(v=>{if(v.chat_id) _chatIdsRec.add(String(v.chat_id));});
+        if(_authUID){
+          const {data:_vRecUID}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUID);
+          if(_vRecUID) _vRecUID.forEach(v=>{if(v.chat_id) _chatIdsRec.add(String(v.chat_id));});
+        }
+      }catch(_){}
+      await Promise.all([..._chatIdsRec].map(cid=>
+        fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({chat_id:cid,text:textoReceita})}).catch(()=>{})
+      ));
     }
     document.getElementById('tg-aprovar-modal').style.display='none';
     if(btnConfirmar){btnConfirmar.disabled=false;btnConfirmar.textContent='⚡ CONFIRMAR LANÇAMENTO';}
@@ -24121,35 +24145,23 @@ async function tgConfirmarAutorizacao(){
   const autorizador=load('perfilNome')||_authUser||'Usuário';
   const _remetenteInfo=data.remetente&&data.remetente!==autorizador?`\n👤 Registrado por: *${esc(data.remetente)}*\n✅ Autorizado por: *${esc(autorizador)}*`:`\n✅ Autorizado por: *${esc(autorizador)}*`;
 
-  if(data.chat_id){
+  {
     const valor=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-    await fetch('/api/notify',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        chat_id:data.chat_id,
-        text:`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria}\n📅 ${data.data_lancamento}${_remetenteInfo}\n\n_Registrado com sucesso no BY Finance._`
-      })
-    });
-  }
-
-  // Notifica outros vínculos que o lançamento foi autorizado
-  if(_supabase&&_authUser){
-    _supabase.from('telegram_vinculos').select('chat_id,nome').eq('user_id',_authUser)
-      .neq('chat_id',data.chat_id||0)
-      .then(({data:vinculos})=>{
-        const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-        (vinculos||[]).forEach(v=>{
-          fetch('/api/notify',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({
-              chat_id:v.chat_id,
-              text:`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria||'Outros'}\n📅 ${data.data_lancamento}${_remetenteInfo}\n\n_Registrado no sistema._`
-            })
-          }).catch(()=>{});
-        });
-      }).catch(()=>{});
+    const textoAutorizado=`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria||'Outros'}\n📅 ${data.data_lancamento}${_remetenteInfo}\n\n_Registrado com sucesso no BY Finance._`;
+    const _chatIdsAut=new Set();
+    if(data.chat_id) _chatIdsAut.add(String(data.chat_id));
+    try{
+      const {data:_vAut}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUser);
+      if(_vAut) _vAut.forEach(v=>{if(v.chat_id) _chatIdsAut.add(String(v.chat_id));});
+      if(_authUID){
+        const {data:_vAutUID}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUID);
+        if(_vAutUID) _vAutUID.forEach(v=>{if(v.chat_id) _chatIdsAut.add(String(v.chat_id));});
+      }
+    }catch(_){}
+    await Promise.all([..._chatIdsAut].map(cid=>
+      fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({chat_id:cid,text:textoAutorizado})}).catch(()=>{})
+    ));
   }
 
   document.getElementById('tg-aprovar-modal').style.display='none';

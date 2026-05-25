@@ -49,7 +49,8 @@ function iconeModalidade(forma) {
 function normalizeModalidade(texto) {
   const t = (texto || '').toLowerCase().trim();
   if (t === '1' || t.includes('pix') || t.includes('transferen') || t.includes('ted') || t.includes('doc')) return 'PIX';
-  if (t === '2' || t.includes('créd') || t.includes('cred')) return 'Crédito';
+  if (t === '5' || t === 'crédito parcelado' || t === 'credito parcelado' || t === 'parcelado' || t === 'parcelada') return 'Crédito Parcelado';
+  if (t === '2' || (t.includes('créd') || t.includes('cred')) && !t.includes('parc')) return 'Crédito';
   if (t === '3' || t.includes('déb') || t.includes('deb')) return 'Débito';
   if (t === '4' || t.includes('dinheiro') || t.includes('espécie') || t.includes('especie') || t.includes('cash') || t.includes('vivo')) return 'Dinheiro';
   return texto.trim();
@@ -1021,7 +1022,7 @@ export default async function handler(req, res) {
           const _isCredConf = _modConf.includes('créd') || _modConf.includes('cred');
           if (!gasto.modalidade) {
             await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
-            await sendTelegram(chat_id, `💳 Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`);
+            await sendTelegram(chat_id, `💳 Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro\n5️⃣ Crédito Parcelado`);
           } else if (_isCDConf && (!gasto.cartao || gasto.cartao === 'Não informado')) {
             await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
             await sendTelegram(chat_id, `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`);
@@ -1124,7 +1125,7 @@ export default async function handler(req, res) {
           valor: `💰 *Valor* (atual: _${(parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}_)\n\nDigite o novo valor:`,
           categoria: `🏷 *Categoria* (atual: _${gasto.categoria||'Outros'}_)\n\nEx: Alimentação, Transporte, Mercado, Saúde, Lazer`,
           cartao: `💳 *Cartão ou banco* (atual: _${fmtCartao(gasto.cartao||'Não informado')}_)\n\nEx: Nubank, Inter, Itaú, Bradesco...`,
-          modalidade: `💳 *Forma de pagamento* (atual: _${gasto.modalidade||'Não informado'}_)\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`,
+          modalidade: `💳 *Forma de pagamento* (atual: _${gasto.modalidade||'Não informado'}_)\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro\n5️⃣ Crédito Parcelado`,
           data: `📅 *Data* (atual: _${fmtData(gasto.data_lancamento)}_)\n\nEx: 22/05 ou hoje`,
         };
         await setContexto(chat_id, { aguardando: 'editar_valor_campo', gasto_parcial: gasto, campo_editar: escolhido });
@@ -1182,7 +1183,7 @@ export default async function handler(req, res) {
           const _isCredDF = _modDF.includes('créd')||_modDF.includes('cred');
           if (!merged.modalidade) {
             await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: merged });
-            await sendTelegram(chat_id, `💳 Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`);
+            await sendTelegram(chat_id, `💳 Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro\n5️⃣ Crédito Parcelado`);
           } else if (_isCDDF && (!merged.cartao || merged.cartao === 'Não informado')) {
             await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: merged });
             await sendTelegram(chat_id, `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`);
@@ -1522,16 +1523,16 @@ export default async function handler(req, res) {
         gasto.tipo = 'lancamento';
         // Continua para verificar campos restantes abaixo
       } else if (campo === 'modalidade') {
-        // Usuário respondeu a modalidade (aceita número 1-4 ou texto)
         const _normMod = normalizeModalidade(texto);
-        const _validMods = ['PIX', 'Crédito', 'Débito', 'Dinheiro'];
+        const _validMods = ['PIX', 'Crédito', 'Débito', 'Dinheiro', 'Crédito Parcelado'];
         if (!_validMods.includes(_normMod)) {
-          // Resposta inválida — repergunta sem consumir o contexto
-          await sendTelegram(chat_id, `Não entendi. Escolha uma das opções:\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`);
+          await sendTelegram(chat_id, `Não entendi. Escolha uma das opções:\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro\n5️⃣ Crédito Parcelado`);
           return res.status(200).json({ ok: true });
         }
-        gasto.modalidade = _normMod;
-        // preserva tipo (pode ser 'multiplos')
+        // "Crédito Parcelado" = Crédito mas já sabe que vai parcelar
+        const _jaParcelado = _normMod === 'Crédito Parcelado';
+        gasto.modalidade = _jaParcelado ? 'Crédito' : _normMod;
+        if (_jaParcelado) gasto.ja_parcelado = true;
         if (gasto.tipo !== 'multiplos') gasto.tipo = 'lancamento';
         const modLow = gasto.modalidade.toLowerCase();
         const isPix = modLow.includes('pix');
@@ -1552,11 +1553,9 @@ export default async function handler(req, res) {
           const outrosCtx1 = await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&chat_id=neq.${chat_id}&select=chat_id,nome`);
           for (const o of (outrosCtx1||[])) { await sendTelegram(o.chat_id, `📱 *${escapeMd(nomeRemetente)} registrou um gasto pendente*\n\n📝 ${escapeMd(gasto.descricao||'(sem descrição)')}\n💰 ${valorCtx1}\n🏷 ${escapeMd(gasto.categoria||'Outros')}\n${iconeModalidade(gasto.modalidade)} ${escapeMd(gasto.modalidade||'Não informado')}\n📅 ${fmtData(gasto.data_lancamento||new Date().toISOString().split('T')[0])}\n\n_Acesse o BY Finance para autorizar\\._`); }
         } else {
-          // Crédito/Débito → precisa saber o cartão/banco
+          // Crédito/Débito → precisa do cartão/banco
           await setContexto(chat_id, { aguardando: 'cartao', gasto_parcial: gasto });
-          await sendTelegram(chat_id,
-            `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`
-          );
+          await sendTelegram(chat_id, `💳 Qual cartão ou banco?\n\nEx: Nubank, Inter, Itaú, Bradesco...`);
         }
         return res.status(200).json({ ok: true });
 
@@ -1568,11 +1567,16 @@ export default async function handler(req, res) {
           await sendTelegram(chat_id, `🛒 Essa compra foi no mercado/supermercado?\n\n1️⃣ Compra do mês\n2️⃣ Compra variável (semana)\n3️⃣ Não é mercado`);
           return res.status(200).json({ ok: true });
         } else {
-          // Crédito sem parcelas → perguntar antes de salvar
           const _isCredCartao = (gasto.modalidade || '').toLowerCase().includes('cred');
           if (_isCredCartao && !gasto.parcelas) {
-            await setContexto(chat_id, { aguardando: 'parcelamento', gasto_parcial: gasto });
-            await sendTelegram(chat_id, `💳 Foi à vista ou parcelado?\n\n1️⃣ À vista\n2️⃣ Parcelado`);
+            if (gasto.ja_parcelado) {
+              // Opção 5 (Crédito Parcelado): vai direto para número de parcelas
+              await setContexto(chat_id, { aguardando: 'num_parcelas', gasto_parcial: gasto });
+              await sendTelegram(chat_id, `🔢 Em quantas parcelas?\n\nEx: 2, 3, 6, 12`);
+            } else {
+              await setContexto(chat_id, { aguardando: 'parcelamento', gasto_parcial: gasto });
+              await sendTelegram(chat_id, `💳 Foi à vista ou parcelado?\n\n1️⃣ À vista\n2️⃣ Parcelado`);
+            }
             return res.status(200).json({ ok: true });
           }
           await limparContexto(chat_id);

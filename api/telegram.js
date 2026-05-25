@@ -1794,9 +1794,13 @@ export default async function handler(req, res) {
             return k ? dadosFat[k] : {};
           })()
           || {};
-        const mesIdx = gasto.mes && gasto.mes !== 'proximo'
-          ? (parseInt(gasto.mes) - 1)
-          : gasto.mes === 'proximo'
+        const MESES_NOMES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+        const mesStr = (gasto.mes || '').toString().toLowerCase().trim();
+        const mesIdx = mesStr && mesStr !== 'proximo'
+          ? (MESES_NOMES.includes(mesStr)
+              ? MESES_NOMES.indexOf(mesStr)
+              : isNaN(parseInt(mesStr)) ? new Date().getMonth() : parseInt(mesStr) - 1)
+          : mesStr === 'proximo'
           ? (new Date().getMonth() + 1) % 12
           : new Date().getMonth();
         const mesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesIdx];

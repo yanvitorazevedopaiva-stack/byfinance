@@ -589,11 +589,29 @@ export default async function handler(req, res) {
     // 2. Se NÃO vinculado — verifica se está enviando um token
     if (!vinculo) {
       const tokenLimpo = texto.trim().replace(/\s/g, '');
+      console.log('Sem vínculo, buscando token:', tokenLimpo);
 
-      const tokenRes = await supabaseQuery(
-        `/telegram_tokens?token=eq.${tokenLimpo}&usado=eq.false&select=user_id,token,expires_at,nome`
-      );
-      const tokenData = tokenRes?.[0];
+      // Busca token em user_data (salvo via api/generate-token com service key)
+      const tokenUdRes = await supabaseQuery(`/user_data?user_id=eq.__tgtoken__${tokenLimpo}&select=data`);
+      let tokenData = tokenUdRes?.[0]?.data || null;
+      console.log('Token user_data resultado:', JSON.stringify(tokenData));
+
+      // Fallback: busca na tabela telegram_tokens (legado)
+      if (!tokenData) {
+        const tokenRes = await supabaseQuery(
+          `/telegram_tokens?token=eq.${tokenLimpo}&usado=eq.false&select=user_id,token,expires_at,nome`
+        );
+        const legado = tokenRes?.[0];
+        if (legado) {
+          // Resolve username via mapeamento __uid__
+          let username = legado.user_id;
+          if (username && username.includes('-')) {
+            const m = await supabaseQuery(`/user_data?user_id=eq.__uid__${username}&select=data`);
+            if (m?.[0]?.data?.username) username = m[0].data.username;
+          }
+          tokenData = { token: legado.token, nome: legado.nome, username, expires_at: legado.expires_at };
+        }
+      }
 
       if (!tokenData) {
         await sendTelegram(chat_id,
@@ -612,21 +630,28 @@ export default async function handler(req, res) {
         await sendTelegram(chat_id,
           `⏰ *Código expirado!*\n\nGere um novo código em *Configurações → Telegram* no BY Finance.`
         );
+        // Limpa token expirado
+        await supabaseQuery(`/user_data?user_id=eq.__tgtoken__${tokenLimpo}`, 'DELETE');
         return res.status(200).json({ ok: true });
       }
 
-      // Remove vínculo antigo deste chat_id (evita duplicata ou registro com UUID antigo)
+      // username vem direto do token (não precisa de UUID)
+      const tokenUsername = tokenData.username;
+
+      // Remove vínculo antigo deste chat_id e cria novo com username correto
       await supabaseQuery(`/telegram_vinculos?chat_id=eq.${chat_id}`, 'DELETE');
       await supabaseQuery('/telegram_vinculos', 'POST', {
-        user_id: tokenData.user_id,
+        user_id: tokenUsername,
         chat_id,
         nome: tokenData.nome || 'Usuário',
         principal: false,
         vinculado_em: new Date().toISOString()
       });
 
+      // Invalida token usado
+      await supabaseQuery(`/user_data?user_id=eq.__tgtoken__${tokenLimpo}`, 'DELETE');
       await supabaseQuery(
-        `/telegram_tokens?user_id=eq.${tokenData.user_id}`,
+        `/telegram_tokens?token=eq.${tokenLimpo}`,
         'PATCH',
         { usado: true }
       );

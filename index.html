@@ -24281,15 +24281,17 @@ async function cfgTgCarregarStatus(){
 }
 
 async function cfgTgGerarToken(){
-  if(!_supabase||!_authUser) return;
+  if(!_authUser) return;
   const btn=document.getElementById('cfg-tg-btn-gerar')||document.getElementById('cfg-tg-btn-gerar2');
   if(btn) btn.disabled=true;
   try{
     const nomeInput=document.getElementById('cfg-tg-novo-nome');
     const nome=(nomeInput?.value.trim())||_authUser||'Usuário';
-    const token=Math.floor(100000+Math.random()*900000).toString();
-    const expiresAt=new Date(Date.now()+10*60*1000).toISOString();
-    await _supabase.from('telegram_tokens').upsert({user_id:_authUID,token,nome,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
+    // Chama API server-side que usa service key (bypassa RLS)
+    const resp=await fetch('/api/generate-token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:_authUser,nome})});
+    if(!resp.ok) throw new Error('Falha na API');
+    const {token}=await resp.json();
+    if(!token) throw new Error('Token não retornado');
 
     // Atualiza ambos os displays (painel vinculado e não-vinculado)
     const wrap=document.getElementById('cfg-tg-token-wrap');

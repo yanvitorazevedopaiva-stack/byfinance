@@ -11,6 +11,10 @@
     "api/cron-alertas.js": {
       "memory": 256,
       "maxDuration": 30
+    },
+    "api/generate-token.js": {
+      "memory": 128,
+      "maxDuration": 10
     }
   },
   "crons": [

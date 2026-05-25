@@ -23129,14 +23129,13 @@ function _trfSet(d){save('tarefas',d);}
 
 async function _trfSyncParaSupabase(){
   try{
-    const uid=_authUID||sessionStorage.getItem('byf_supabase_uid');
-    if(!_supabase||!uid) return;
+    if(!_supabase||!_authUser) return;
     const tarefas=_trfGet();
-    const {data:atual}=await _supabase.from('user_data').select('data').eq('user_id',uid).single();
+    const {data:atual}=await _supabase.from('user_data').select('data').eq('user_id',_authUser).single();
     const dadosAtuais=atual?.data||{};
-    dadosAtuais.tarefas=tarefas;
+    dadosAtuais[_authUser+'_tarefas']=tarefas;
     await _supabase.from('user_data').upsert({
-      user_id:uid,
+      user_id:_authUser,
       data:dadosAtuais,
       updated_at:new Date().toISOString()
     },{onConflict:'user_id'});
@@ -23149,8 +23148,9 @@ async function _trfSyncSupabase(){
   if(!_supabase||!_authUser) return;
   try{
     const {data}=await _supabase.from('user_data')
-      .select('data').eq('user_id',_authUID||sessionStorage.getItem('byf_supabase_uid')).maybeSingle();
-    const remotas=data?.data?.tarefas||data?.tarefas;
+      .select('data').eq('user_id',_authUser).maybeSingle();
+    // Lê chave prefixada (bot salva como yanpaiva_tarefas) ou chave legada 'tarefas'
+    const remotas=data?.data?.[_authUser+'_tarefas']||data?.data?.tarefas||data?.tarefas;
     if(!Array.isArray(remotas)||!remotas.length) return;
     const locais=_trfGet();
     const idsLocais=new Set(locais.map(t=>t.id));

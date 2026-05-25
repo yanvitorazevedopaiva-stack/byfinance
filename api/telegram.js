@@ -694,6 +694,27 @@ export default async function handler(req, res) {
   const msg = update?.message;
   if (!msg) return res.status(200).json({ ok: true });
 
+  // ── Proteção contra duplicatas (Telegram reenvia se servidor demora) ──
+  const updateId = update.update_id;
+  const msgId = msg.message_id;
+  const chatIdRaw = msg.chat.id;
+  const dedupKey = `__tgdedup__${chatIdRaw}_${msgId}_${updateId}`;
+  try {
+    const existing = await supabaseQuery(`/user_data?user_id=eq.${dedupKey}&select=user_id`);
+    if (existing && existing.length > 0) {
+      console.log('Update duplicado ignorado:', dedupKey);
+      return res.status(200).json({ ok: true });
+    }
+    // Marca como processado (TTL de 1h via updated_at — pode limpar depois)
+    await supabaseQuery('/user_data', 'POST', {
+      user_id: dedupKey,
+      data: { processed_at: new Date().toISOString() },
+      updated_at: new Date().toISOString()
+    });
+  } catch(e) {
+    console.warn('Dedup check falhou, continua processando:', e.message);
+  }
+
   const chat_id = msg.chat.id;
   let texto = msg.text || msg.caption || '';
 

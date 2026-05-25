@@ -7948,6 +7948,8 @@ async function initAuth(){
         }catch(e){}
         // Restaura estado do nav (arquivadas, ordem) do Supabase em background
         _navRestoreFromSupabase();
+        // Carrega dados do Supabase para o localStorage deste PC
+        await _loadFromSupabase();
         return true;
       }
     }catch(e){console.warn('Supabase getSession erro',e);}
@@ -16381,22 +16383,25 @@ function _initApp(){
   if(!window._tgPollingAtivo){
     window._tgPollingAtivo=true;
     setInterval(()=>{
-      if(_authUID&&_supabase){
+      const _uid=_authUID||sessionStorage.getItem('byf_supabase_uid')||'';
+      if(_uid&&_supabase){ _authUID=_uid;
         tgAuthRenderDashboard();
         tgAuthRenderLanc();
       }
     },30000);
   }
   // Realtime — escuta inserções novas na tabela telegram_pendentes
-  if(_supabase&&_authUID&&!window._tgRealtimeAtivo){
+  const _uidParaRealtime=_authUID||sessionStorage.getItem('byf_supabase_uid')||'';
+  if(_supabase&&_uidParaRealtime&&!window._tgRealtimeAtivo){
+    _authUID=_uidParaRealtime; // garante que _authUID está preenchido
     window._tgRealtimeAtivo=true;
     _supabase
-      .channel('tg-pendentes-'+_authUID)
+      .channel('tg-pendentes-'+_uidParaRealtime)
       .on('postgres_changes',{
         event:'INSERT',
         schema:'public',
         table:'telegram_pendentes',
-        filter:'user_id=eq.'+_authUID
+        filter:'user_id=eq.'+_uidParaRealtime
       },()=>{
         tgAuthRenderDashboard();
         tgAuthRenderLanc();

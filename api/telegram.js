@@ -643,7 +643,14 @@ export default async function handler(req, res) {
     }
 
     // 3. JÁ VINCULADO — processa normalmente
-    const user_id = vinculo.user_id;
+    // Resolve username: vinculo pode ter UUID (legado) ou username direto
+    // Tenta mapeamento __uid__ para garantir que user_id seja o username correto
+    let user_id = vinculo.user_id;
+    if (user_id && user_id.includes('-')) { // parece UUID
+      const uidMap = await supabaseQuery(`/user_data?user_id=eq.__uid__${user_id}&select=data`);
+      const mappedUser = uidMap?.[0]?.data?.username;
+      if (mappedUser) user_id = mappedUser;
+    }
     const nomeRemetente = vinculo.nome || 'Usuário';
     const isPrincipal = vinculo.principal === true;
 

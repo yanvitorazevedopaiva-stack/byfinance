@@ -7862,6 +7862,14 @@ async function _startSession(u){
   sessionStorage.setItem('financeOS_user',u);
   sessionStorage.setItem('byf_session_start',Date.now());
   sessionStorage.setItem('trf_show_on_login','1'); // sinaliza que é um login real
+  // Mapeamento UUID→username para o bot encontrar dados via user_data
+  if(_authUID&&_supabase){
+    _supabase.from('user_data').upsert({
+      user_id:'__uid__'+_authUID,
+      data:{username:u},
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id'}).catch(()=>{});
+  }
   setTimeout(()=>_registrarAcesso&&_registrarAcesso(),100);
   const scr=document.getElementById('login-screen');
   if(scr) scr.classList.add('fading');
@@ -16295,6 +16303,14 @@ function _initApp(){
   _migrateFaturasSpread(); // corrige faturas que foram lançadas sem spread de parcelas
   _migrateEmailStorage();  // converte e-mails antigos de base64 para texto puro
   setTimeout(_migrarArquivosParaSupabase,3000); // migra arquivos base64 existentes para Supabase em background
+  // Garante mapeamento UUID→username para o bot (roda sempre que o app inicia)
+  if(_authUID&&_authUser&&_supabase){
+    _supabase.from('user_data').upsert({
+      user_id:'__uid__'+_authUID,
+      data:{username:_authUser},
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id'}).catch(()=>{});
+  }
   _applyUserProfile(_authUser);
   renderNav('dashboard');
   document.getElementById('lanc-data').value=new Date().toISOString().split('T')[0];
@@ -24273,7 +24289,7 @@ async function cfgTgGerarToken(){
     const nome=(nomeInput?.value.trim())||_authUser||'Usuário';
     const token=Math.floor(100000+Math.random()*900000).toString();
     const expiresAt=new Date(Date.now()+10*60*1000).toISOString();
-    await _supabase.from('telegram_tokens').upsert({user_id:_authUser,token,nome,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
+    await _supabase.from('telegram_tokens').upsert({user_id:_authUID,token,nome,expires_at:expiresAt,usado:false},{onConflict:'user_id'});
 
     // Atualiza ambos os displays (painel vinculado e não-vinculado)
     const wrap=document.getElementById('cfg-tg-token-wrap');

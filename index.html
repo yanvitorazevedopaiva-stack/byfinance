@@ -23666,11 +23666,10 @@ function trfBadgeProgresso(meta){
 // ── TELEGRAM PENDENTES DE AUTORIZAÇÃO ──────────────────────────────────────
 
 async function tgAuthCarregar(){
-  const uid=(typeof _authUID!=='undefined'&&_authUID)?_authUID:(await _supabase?.auth?.getUser())?.data?.user?.id;
-  if(!_supabase||!uid) return [];
+  if(!_supabase||!_authUser) return [];
   try{
     const {data}=await _supabase.from('telegram_pendentes').select('*')
-      .eq('user_id',uid).eq('status','pendente').order('created_at',{ascending:false});
+      .eq('user_id',_authUser).eq('status','pendente').order('created_at',{ascending:false});
     return data||[];
   }catch(e){return [];}
 }

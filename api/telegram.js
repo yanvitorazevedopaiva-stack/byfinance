@@ -2164,7 +2164,7 @@ export default async function handler(req, res) {
       await limparContexto(chat_id);
       const _obs = receita_tipo === 'fixa' ? `[receita_fixa:dia${dia||5}]` : null;
       await supabaseQuery('/telegram_pendentes', 'POST', {
-        user_id,
+        user_id: vinculo_user_id,
         descricao: gasto.descricao,
         valor: gasto.valor,
         categoria: gasto.categoria || 'Outros',

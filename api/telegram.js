@@ -1784,7 +1784,16 @@ export default async function handler(req, res) {
     if (gasto.tipo === 'consulta') {
       if (gasto.pergunta === 'fatura' || gasto.pergunta === 'faturas_todas') {
         const userData = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
-        const faturas = userData?.[0]?.data?.[user_id + '_faturas'] || {};
+        const dadosFat = userData?.[0]?.data || {};
+        // Tenta com user_id direto, depois com username resolvido (compatibilidade UUID vs username)
+        const faturas = dadosFat[user_id + '_faturas']
+          || dadosFat[vinculo_user_id + '_faturas']
+          || (() => {
+            // Busca qualquer chave que termine em _faturas
+            const chave = Object.keys(dadosFat).find(k => k.endsWith('_faturas'));
+            return chave ? dadosFat[chave] : {};
+          })()
+          || {};
         const mesIdx = gasto.mes && gasto.mes !== 'proximo'
           ? (parseInt(gasto.mes) - 1)
           : gasto.mes === 'proximo'

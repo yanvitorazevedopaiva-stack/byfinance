@@ -8923,6 +8923,18 @@ function renderDashboard(){
   // ── Widget Tarefas ──
   const elTrf=document.getElementById('d-tarefas-widget');
   if(elTrf){
+    // Sincroniza tarefas do Supabase (bot pode ter criado novas) e re-renderiza
+    _trfSyncSupabase().then(()=>{
+      const _el=document.getElementById('d-tarefas-widget');
+      if(!_el) return;
+      const _p=_trfGet().filter(t=>!t.concluida).sort((a,b)=>(a.prazo||'9')>(b.prazo||'9')?1:-1).slice(0,5);
+      if(!_p.length){_el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">Nenhuma tarefa pendente 🎉</div>';return;}
+      _el.innerHTML=_p.map(t=>{
+        const _d=t.prazo?Math.round((new Date(t.prazo+'T00:00:00')-new Date())/(1000*60*60*24)):null;
+        const _b=_d===null?'':_d<0?`<span style="font-size:10px;font-weight:700;color:var(--neon-red);background:rgba(255,68,68,0.1);padding:1px 6px;border-radius:5px;white-space:nowrap">ATRASADA</span>`:_d===0?`<span style="font-size:10px;font-weight:700;color:var(--neon-green);background:rgba(0,255,157,0.1);padding:1px 6px;border-radius:5px;white-space:nowrap">HOJE</span>`:`<span style="font-size:10px;color:var(--text3);white-space:nowrap">em ${_d}d</span>`;
+        return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)"><input type="checkbox" onchange="trfToggle(${t.id});renderDashboard()" style="accent-color:var(--neon-green);cursor:pointer;flex-shrink:0"><span style="flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((t.titulo||'').substring(0,32))}</span>${_b}</div>`;
+      }).join('');
+    }).catch(()=>{});
     const hoje3=new Date().toISOString().split('T')[0];
     const pendentes=_trfGet().filter(t=>!t.concluida)
       .sort((a,b)=>(a.prazo||'9')>(b.prazo||'9')?1:-1).slice(0,5);

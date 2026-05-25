@@ -7835,8 +7835,8 @@ async function doCadastro(){
   _saveUsers(users);
   if(email) _setUserEmail(u,email);
   if(_supabase){
-    _supabase.from('user_data').upsert({user_id:'__users__',data:{financeOS_users:users},updated_at:new Date().toISOString()},{onConflict:'user_id'}).catch(()=>{});
-    _supabase.from('user_data').upsert({user_id:u,data:{},updated_at:new Date().toISOString()},{onConflict:'user_id'}).catch(()=>{});
+    Promise.resolve(_supabase.from('user_data').upsert({user_id:'__users__',data:{financeOS_users:users},updated_at:new Date().toISOString()},{onConflict:'user_id'})).catch(()=>{});
+    Promise.resolve(_supabase.from('user_data').upsert({user_id:u,data:{},updated_at:new Date().toISOString()},{onConflict:'user_id'})).catch(()=>{});
   }
   const rk=Math.floor(100000+Math.random()*900000).toString();
   localStorage.setItem('financeOS_rk_'+u,rk);
@@ -16354,11 +16354,11 @@ function _initApp(){
   setTimeout(_migrarArquivosParaSupabase,3000); // migra arquivos base64 existentes para Supabase em background
   // Garante mapeamento UUID→username para o bot (roda sempre que o app inicia)
   if(_authUID&&_authUser&&_supabase){
-    _supabase.from('user_data').upsert({
+    Promise.resolve(_supabase.from('user_data').upsert({
       user_id:'__uid__'+_authUID,
       data:{username:_authUser},
       updated_at:new Date().toISOString()
-    },{onConflict:'user_id'}).catch(()=>{});
+    },{onConflict:'user_id'})).catch(()=>{});
   }
   _applyUserProfile(_authUser);
   renderNav('dashboard');
@@ -17199,10 +17199,10 @@ async function _cfgDeletarSupabaseUsuario(u){
   if(!_supabase||!u) return;
   const uLower=u.toLowerCase();
   const ops=[
-    _supabase.from('user_data').delete().eq('user_id',u).catch(()=>{}),
-    _supabase.from('user_data').delete().eq('user_id','__foto__'+u).catch(()=>{}),
-    _supabase.from('user_data').delete().eq('user_id','__meta__'+u).catch(()=>{}),
-    _supabase.from('user_data').delete().eq('user_id','__profile__'+uLower).catch(()=>{}),
+    Promise.resolve(_supabase.from('user_data').delete().eq('user_id',u)).catch(()=>{}),
+    Promise.resolve(_supabase.from('user_data').delete().eq('user_id','__foto__'+u)).catch(()=>{}),
+    Promise.resolve(_supabase.from('user_data').delete().eq('user_id','__meta__'+u)).catch(()=>{}),
+    Promise.resolve(_supabase.from('user_data').delete().eq('user_id','__profile__'+uLower)).catch(()=>{}),
   ];
   await Promise.all(ops);
   // Remove usuário da tabela __users__

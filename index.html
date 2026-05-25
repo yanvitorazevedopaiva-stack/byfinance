@@ -24216,9 +24216,18 @@ async function tgAuthVerificarEAbrir(){
 let _cfgTgTimerInterval=null;
 
 async function cfgTgCarregarStatus(){
-  if(!_supabase||!_authUID) return;
+  if(!_supabase||!_authUser) return;
   try{
-    const {data}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUser).order('principal',{ascending:false});
+    let {data}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUser).order('principal',{ascending:false});
+    // Migração: se não achou pelo username, tenta pelo UUID antigo e migra
+    if((!data||!data.length)&&_authUID){
+      const {data:old}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUID);
+      if(old&&old.length>0){
+        await _supabase.from('telegram_vinculos').update({user_id:_authUser}).eq('user_id',_authUID);
+        const {data:migrado}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUser).order('principal',{ascending:false});
+        data=migrado;
+      }
+    }
     const naoVinc=document.getElementById('cfg-tg-nao-vinculado');
     const vinc=document.getElementById('cfg-tg-vinculado');
     const status=document.getElementById('cfg-tg-status');
@@ -24255,7 +24264,7 @@ async function cfgTgCarregarStatus(){
 }
 
 async function cfgTgGerarToken(){
-  if(!_supabase||!_authUID) return;
+  if(!_supabase||!_authUser) return;
   const btn=document.getElementById('cfg-tg-btn-gerar')||document.getElementById('cfg-tg-btn-gerar2');
   if(btn) btn.disabled=true;
   try{
@@ -24319,11 +24328,11 @@ function cfgTgCopiarToken2(){
 }
 
 async function cfgTgDesvincular(){
-  // Mantido para compatibilidade — remove todos os vínculos
-  if(!_supabase||!_authUID) return;
+  if(!_supabase||!_authUser) return;
   if(!confirm('Desvincular todos os números do Telegram? Você precisará vincular novamente.')) return;
   try{
     await _supabase.from('telegram_vinculos').delete().eq('user_id',_authUser);
+    if(_authUID) await _supabase.from('telegram_vinculos').delete().eq('user_id',_authUID);
     cfgTgCarregarStatus();
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Telegram desvinculado.');
   }catch(e){

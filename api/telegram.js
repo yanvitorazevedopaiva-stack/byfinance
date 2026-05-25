@@ -1720,7 +1720,7 @@ export default async function handler(req, res) {
       if (!gasto.modalidade) {
         await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
         await sendTelegram(chat_id,
-          `${iconeModalidade('')} Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`
+          `${iconeModalidade('')} Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro\n5️⃣ Crédito Parcelado`
         );
         return res.status(200).json({ ok: true });
       }
@@ -2235,7 +2235,7 @@ export default async function handler(req, res) {
     if (gasto.tipo === 'lancamento' && !gasto.modalidade) {
       await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
       await sendTelegram(chat_id,
-        `Entendi! ${iconeModalidade('')} Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`
+        `Entendi! ${iconeModalidade('')} Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro\n5️⃣ Crédito Parcelado`
       );
       return res.status(200).json({ ok: true });
     }
@@ -2255,7 +2255,7 @@ export default async function handler(req, res) {
     if (gasto.tipo === 'multiplos' && !gasto.modalidade) {
       await setContexto(chat_id, { aguardando: 'modalidade', gasto_parcial: gasto });
       await sendTelegram(chat_id,
-        `Entendi! ${iconeModalidade('')} Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro`
+        `Entendi! ${iconeModalidade('')} Como foi o pagamento?\n\n1️⃣ PIX\n2️⃣ Crédito\n3️⃣ Débito\n4️⃣ Dinheiro\n5️⃣ Crédito Parcelado`
       );
       return res.status(200).json({ ok: true });
     }

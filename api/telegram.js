@@ -478,6 +478,7 @@ FORMATO CONCLUIR:
 "quanto tenho", "meu saldo", "situação financeira" → {"tipo":"consulta","pergunta":"saldo"}
 "fatura do nu", "fatura do inter", "valor da fatura", "quanto está a fatura", "minha fatura" → {"tipo":"consulta","pergunta":"fatura","cartao":"Nubank"}
 "quais faturas", "todas as faturas", "minhas faturas" → {"tipo":"consulta","pergunta":"faturas_todas"}
+"alertas", "resumo", "resumo do dia", "status", "como estou", "situação", "pendentes", "o que tem pendente", "meu resumo" → {"tipo":"consulta","pergunta":"resumo"}
 
 FORMATO CONSULTA FATURA:
 {"tipo":"consulta","pergunta":"fatura","cartao":"Nubank","mes":null}
@@ -1619,6 +1620,40 @@ export default async function handler(req, res) {
           }
           return res.status(200).json({ ok: true });
         }
+      }
+
+      if (gasto.pergunta === 'resumo') {
+        await sendTelegram(chat_id, `⏳ Buscando seu resumo...`);
+        const cronUrl = `${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/cron-alertas`;
+        try {
+          await fetch(cronUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id, user_id })
+          });
+        } catch(_e) {
+          // fallback inline se o fetch interno falhar
+          const _ud = await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+          const _d  = _ud?.[0]?.data || {};
+          const _mesIdx = new Date().getMonth();
+          const _fat  = _d[user_id + '_faturas'] || {};
+          const _gf   = _d[user_id + '_gastosFixos'] || [];
+          const _rf   = _d[user_id + '_receitasFixas'] || [];
+          const _tFat = Object.values(_fat).reduce((a, arr) => a + (arr[_mesIdx] || 0), 0);
+          const _tGf  = _gf.reduce((a, g) => a + (g.val || 0), 0);
+          const _tRf  = _rf.reduce((a, r) => a + (r.val || 0), 0);
+          const _res  = _tRf - _tFat - _tGf;
+          const _pend = await supabaseQuery(`/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&select=id,descricao,valor`);
+          const _tar  = (_d[user_id + '_tarefas'] || []).filter(t => !t.concluida);
+          const _mNm  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][_mesIdx];
+          let _msg = `📊 *RESUMO — ${_mNm.toUpperCase()}*\n\n`;
+          _msg += _res >= 0 ? `▲ *SUPERÁVIT: ${(_res).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}* ✅\n` : `▼ *DÉFICIT: ${Math.abs(_res).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}* ⚠️\n`;
+          _msg += `💰 Receitas: ${_tRf.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} · 💳 Faturas: ${_tFat.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} · 📋 Fixos: ${_tGf.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}\n\n`;
+          if (_pend.length) _msg += `🔔 *${_pend.length} gasto${_pend.length>1?'s':''} pendente${_pend.length>1?'s':''}* aguardando autorização\n\n`;
+          if (_tar.length) _msg += `📋 *${_tar.length} tarefa${_tar.length>1?'s':''} pendente${_tar.length>1?'s':''}*\n`;
+          await sendTelegram(chat_id, _msg + `\n━━━━━━━━━━━━━━\n_BY Persona Finance_`);
+        }
+        return res.status(200).json({ ok: true });
       }
 
       await sendTelegram(chat_id, `📊 Consultas detalhadas disponíveis em breve.\nAcesse o BY Finance para ver seus relatórios.`);

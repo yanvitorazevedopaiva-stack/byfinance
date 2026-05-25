@@ -21,20 +21,21 @@ export default async function handler(req, res) {
 
   if (!username && !uid) return res.status(400).json({ error: 'username or uid required' });
 
-  // Monta IDs únicos para busca
+  // Monta IDs base
   const ids = [...new Set([username, uid].filter(Boolean))];
 
-  // Se só temos uid (sem username), tenta resolver via __uid__ mapping
-  let resolvedUsername = username || '';
-  if (!resolvedUsername && uid) {
+  // SEMPRE resolve via __uid__ mapping — o bot pode ter salvo com username diferente
+  // (ex: mapeamento antigo tinha 'yanpaiva' mas _authUser agora é 'Yan')
+  if (uid) {
     try {
       const mapRes = await fetch(
         `${SUPABASE_URL}/rest/v1/user_data?user_id=eq.__uid__${uid}&select=data`,
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
       );
       const mapData = await mapRes.json();
-      resolvedUsername = mapData?.[0]?.data?.username || '';
-      if (resolvedUsername && !ids.includes(resolvedUsername)) ids.push(resolvedUsername);
+      const mappedUsername = mapData?.[0]?.data?.username || '';
+      console.log('get-pendentes: __uid__ mapping retornou:', mappedUsername);
+      if (mappedUsername && !ids.includes(mappedUsername)) ids.push(mappedUsername);
     } catch(e) {
       console.error('get-pendentes: erro ao resolver uid:', e.message);
     }

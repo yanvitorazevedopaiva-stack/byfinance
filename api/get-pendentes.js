@@ -1,15 +1,7 @@
-// api/get-pendentes.js — Busca pendentes usando service key (bypassa RLS)
+// api/get-pendentes.js — Busca pendentes do Telegram usando service key (bypassa RLS)
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
-
-async function sb(path) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); } catch(e) { return []; }
-}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,58 +10,70 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { username, uid } = req.body || {};
-
-  // Verifica JWT se fornecido — garante que o token pertence ao uid declarado
-  const jwt = (req.headers.authorization || '').replace('Bearer ', '').trim();
-  if (jwt) {
-    try {
-      const authRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-        headers: { 'Authorization': `Bearer ${jwt}`, 'apikey': SUPABASE_KEY }
-      });
-      if (authRes.ok) {
-        const authData = await authRes.json();
-        // uid fornecido deve bater com o JWT
-        if (uid && authData.id && authData.id !== uid) {
-          return res.status(403).json({ error: 'Token mismatch' });
-        }
-      }
-    } catch(e) {}
+  // Diagnóstico: garante que env vars existem
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error('get-pendentes: env vars ausentes', { SUPABASE_URL: !!SUPABASE_URL, SUPABASE_KEY: !!SUPABASE_KEY });
+    return res.status(500).json({ error: 'Server config error' });
   }
+
+  const { username, uid } = req.body || {};
+  console.log('get-pendentes chamado:', { username, uid: uid ? uid.substring(0,8)+'...' : '' });
 
   if (!username && !uid) return res.status(400).json({ error: 'username or uid required' });
 
-  // Resolve username a partir do uid se não fornecido
+  // Monta IDs únicos para busca
+  const ids = [...new Set([username, uid].filter(Boolean))];
+
+  // Se só temos uid (sem username), tenta resolver via __uid__ mapping
   let resolvedUsername = username || '';
   if (!resolvedUsername && uid) {
     try {
-      const mapData = await sb(`/user_data?user_id=eq.__uid__${uid}&select=data`);
+      const mapRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/user_data?user_id=eq.__uid__${uid}&select=data`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const mapData = await mapRes.json();
       resolvedUsername = mapData?.[0]?.data?.username || '';
-    } catch(e) {}
+      if (resolvedUsername && !ids.includes(resolvedUsername)) ids.push(resolvedUsername);
+    } catch(e) {
+      console.error('get-pendentes: erro ao resolver uid:', e.message);
+    }
   }
 
-  // Busca por username E uid (bot pode ter salvo de qualquer forma)
-  const ids = [...new Set([resolvedUsername, uid].filter(Boolean))];
-  if (!ids.length) return res.status(200).json([]);
+  // Monta query OR para cobrir qualquer formato que o bot usou
+  const orParts = ids.map(id => `user_id.eq.${id}`);
+  const filter = orParts.length > 1
+    ? `or=(${orParts.join(',')})`
+    : `user_id=eq.${ids[0]}`;
 
-  // Monta query OR
-  let filter;
-  if (ids.length === 1) {
-    filter = `user_id=eq.${ids[0]}`;
-  } else {
-    filter = `or=(${ids.map(id => `user_id.eq.${id}`).join(',')})`;
-  }
+  const url = `${SUPABASE_URL}/rest/v1/telegram_pendentes?${filter}&status=eq.pendente&order=created_at.desc`;
+  console.log('get-pendentes: query URL (sem base):', url.replace(SUPABASE_URL, ''));
 
   try {
-    const pendentes = await sb(
-      `/telegram_pendentes?${filter}&status=eq.pendente&order=created_at.desc`
-    );
+    const pendRes = await fetch(url, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const text = await pendRes.text();
+    console.log('get-pendentes: status Supabase:', pendRes.status, 'body[:200]:', text.substring(0, 200));
+
+    let pendentes;
+    try { pendentes = JSON.parse(text); } catch(e) { pendentes = []; }
+    if (!Array.isArray(pendentes)) {
+      console.error('get-pendentes: resposta inesperada:', text.substring(0, 300));
+      return res.status(200).json([]);
+    }
+
     // Deduplica por id
     const seen = new Set();
-    const uniq = (Array.isArray(pendentes) ? pendentes : [])
-      .filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
+    const uniq = pendentes.filter(p => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id); return true;
+    });
+
+    console.log(`get-pendentes: encontrou ${uniq.length} pendente(s) para`, ids);
     return res.status(200).json(uniq);
   } catch(e) {
+    console.error('get-pendentes: erro na query:', e.message);
     return res.status(500).json({ error: 'Query failed', detail: e.message });
   }
 }

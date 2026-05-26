@@ -76,12 +76,16 @@ async function buildResumo(user_id) {
   // ── 1. DÉFICIT / SUPERÁVIT ──
   const faturas       = dados[user_id + '_faturas']       || {};
   const gastosFixos   = dados[user_id + '_gastosFixos']   || [];
-  const receitasFixas = dados[user_id + '_receitasFixas'] || [];
+  const receitasFixas  = dados[user_id + '_receitasFixas'] || [];
+  const receitasVar    = dados[user_id + '_receitas'] || {};
+  const mesKey         = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+  const receitasVarMes = (receitasVar[mesKey] || []).reduce((a, r) => a + (r.val || r.valor || 0), 0);
 
   const totalFatMes   = Object.values(faturas).reduce((a, arr) => a + (arr[mesAtual] || 0), 0);
   const totalGf       = gastosFixos.reduce((a, g) => a + (g.val || 0), 0);
   const totalRecFixas = receitasFixas.reduce((a, r) => a + (r.val || 0), 0);
-  const resultado     = totalRecFixas - totalFatMes - totalGf;
+  const totalReceitas = totalRecFixas + receitasVarMes;
+  const resultado     = totalReceitas - totalFatMes - totalGf;
   const isPositivo    = resultado >= 0;
 
   // ── 2. TAREFAS PENDENTES ──
@@ -126,7 +130,7 @@ async function buildResumo(user_id) {
 
   // Bloco déficit/superávit
   msg += `━━━ *RESULTADO ${MESES[mesAtual].toUpperCase()}* ━━━\n`;
-  msg += `💰 Receitas: *${fmt(totalRecFixas)}*\n`;
+  msg += `💰 Receitas: *${fmt(totalReceitas)}*${receitasVarMes>0?` _(+${fmt(receitasVarMes)} variável)_`:''}\n`;
   msg += `💳 Faturas: *-${fmt(totalFatMes)}*\n`;
   msg += `📋 Gastos Fixos: *-${fmt(totalGf)}*\n`;
   msg += isPositivo

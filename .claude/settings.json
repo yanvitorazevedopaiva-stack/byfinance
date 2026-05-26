@@ -17,7 +17,8 @@
       "Bash(git commit -m 'style: capitaliza opcoes Aceitar/Reagendar/Negar *)",
       "Bash(grep -v \"__sbrow_\\\\|data:\\\\|#\\\\|//\")",
       "Bash(grep -v \"//.*setInterval\")",
-      "Read(//c/Users/Usuário/Desktop/TEST/api/**)"
+      "Read(//c/Users/Usuário/Desktop/TEST/api/**)",
+      "Bash(grep -n \"bfq-desc\\\\|bfq-valor\\\\|LANÇAR DESPESA\\\\|bem-fin-quick\\\\|formHtml.*bfq\\\\|formHtml=\\\\`\" \"C:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\")"
     ]
   }
 }

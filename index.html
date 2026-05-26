@@ -20216,31 +20216,60 @@ function renderBemFinanceiro(bem){
     const existeForm=panel.querySelector('.bem-fin-quick');
     if(existeForm) return; // já tem
     const formHtml=`<div class="bem-fin-quick">
-      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:10px">⚡ LANÇAR DESPESA DIRETAMENTE</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 120px auto;gap:8px;align-items:end">
-        <div>
-          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">DESCRIÇÃO</div>
-          <input id="bfq-desc" type="text" placeholder="Ex: Gasolina, Revisão..." style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;box-sizing:border-box">
-        </div>
-        <div>
-          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">TIPO</div>
-          <select id="bfq-tipo" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px">
-            <option>Manutenção</option><option>Combustível</option><option>Vistoria</option>
-            <option>Troca de Peça</option><option>Seguro</option><option>IPVA</option>
-            <option>IPTU</option><option>Outro</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">VALOR</div>
-          <input id="bfq-valor" type="text" placeholder="R$ 0,00" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:7px;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:700;box-sizing:border-box">
-        </div>
-        <div>
-          <div style="font-size:9px;color:var(--text3);margin-bottom:3px">DATA</div>
-          <input id="bfq-data" type="date" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;box-sizing:border-box" value="${hoje.toISOString().slice(0,10)}">
-        </div>
-        <button onclick="_addBemFinQuick(${bem.id})" class="btn btn-green" style="white-space:nowrap">+ LANÇAR</button>
+  <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);margin-bottom:10px">⚡ LANÇAR DESPESA DIRETAMENTE</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 120px;gap:8px;align-items:end;margin-bottom:10px">
+    <div>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:3px">DESCRIÇÃO</div>
+      <input id="bfq-desc" type="text" placeholder="Ex: Gasolina, Revisão..." style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;box-sizing:border-box">
+    </div>
+    <div>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:3px">TIPO</div>
+      <select id="bfq-tipo" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px">
+        <option>Manutenção</option><option>Combustível</option><option>Vistoria</option>
+        <option>Troca de Peça</option><option>Seguro</option><option>IPVA</option>
+        <option>IPTU</option><option>Outro</option>
+      </select>
+    </div>
+    <div>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:3px">VALOR TOTAL (R$)</div>
+      <input id="bfq-valor" type="text" placeholder="0,00" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:7px;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:700;box-sizing:border-box">
+    </div>
+    <div>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:3px">DATA</div>
+      <input id="bfq-data" type="date" style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px;box-sizing:border-box" value="${hoje.toISOString().slice(0,10)}">
+    </div>
+  </div>
+  <div style="margin-bottom:10px">
+    <div style="font-size:9px;color:var(--text3);margin-bottom:6px">FORMA DE PAGAMENTO</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px" id="bfq-formas">
+      ${['debito','cred-vista','cred-parc','pix','dinheiro'].map((f,i)=>{
+        const labels={debito:'DÉBITO','cred-vista':'CRÉDITO À VISTA','cred-parc':'CRÉDITO PARCELADO',pix:'PIX',dinheiro:'DINHEIRO'};
+        const icons={debito:'💳','cred-vista':'💳','cred-parc':'💳',pix:'🟢',dinheiro:'💵'};
+        return `<button type="button" onclick="bfqSetForma('${f}',${bem.id})" id="bfq-forma-${f}" class="btn btn-sm" style="font-size:10px;${f==='pix'?'background:rgba(0,255,157,0.15);border-color:rgba(0,255,157,0.5);color:var(--neon-green);':''}">${icons[f]} ${labels[f]}</button>`;
+      }).join('')}
+    </div>
+  </div>
+  <div id="bfq-parc-wrap" style="display:none;margin-bottom:10px">
+    <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+      <div>
+        <div style="font-size:9px;color:var(--text3);margin-bottom:4px">CARTÃO</div>
+        <select id="bfq-cartao" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px">
+          ${getCartoesNomes().map(c=>`<option>${esc(c)}</option>`).join('')}
+        </select>
       </div>
-    </div>`;
+      <div id="bfq-nparc-wrap" style="display:none">
+        <div style="font-size:9px;color:var(--text3);margin-bottom:4px">Nº DE PARCELAS</div>
+        <select id="bfq-nparc" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;font-size:12px">
+          ${[2,3,4,5,6,7,8,9,10,11,12].map(n=>`<option value="${n}">${n}x</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button onclick="_addBemFinQuick(${bem.id})" class="btn btn-green" style="white-space:nowrap">+ LANÇAR</button>
+  </div>
+  <input type="hidden" id="bfq-forma-atual" value="pix">
+</div>`;
     panel.insertAdjacentHTML('afterbegin',formHtml);
     const valEl=panel.querySelector('#bfq-valor');
     if(valEl) _initMascaraOnce(valEl);
@@ -20276,7 +20305,7 @@ function renderBemFinanceiro(bem){
     <td>${(e._lancRef||_isLancEvento(e))?_lancBadge():'<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">◆ Meus Bens</span>'}</td>
     <td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${fmt(e.valor||0)}</td>
     <td style="text-align:center;white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center">
-      ${(()=>{if(e._lancRef)return'<button class="btn btn-sm" onclick="showPage(\'semanal\')" title="Ver em Semanal" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">⚡</button>';const n=(e.anexos&&e.anexos.length)||(e.anexo?1:0);return`<button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Editar" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">✎</button>`+(n>0?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovantes" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎${n>1?` <span style='font-size:10px;background:var(--neon-green);color:#000;border-radius:8px;padding:0 4px;font-weight:700'>${n}</span>`:''}</button>`:`<button class="btn btn-sm" onclick="_bemFinAnexar(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.15)">📎+</button>`);})()}
+      ${(()=>{if(e._lancRef)return'<button class="btn btn-sm" onclick="showPage(\'semanal\')" title="Ver em Semanal" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">⚡</button>'+'<button class="btn btn-sm" onclick="_bemAnexarLanc(\''+e.id+'\')" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.15)">📎+</button>';const n=(e.anexos&&e.anexos.length)||(e.anexo?1:0);return`<button class="btn btn-sm" onclick="abrirEventoModal(${e.id})" title="Editar" style="color:var(--neon-blue);border-color:rgba(0,200,255,0.3)">✎</button>`+(n>0?`<button class="btn btn-sm" onclick="_verAnexoBem(${e.id})" title="Ver comprovantes" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">📎${n>1?` <span style='font-size:10px;background:var(--neon-green);color:#000;border-radius:8px;padding:0 4px;font-weight:700'>${n}</span>`:''}</button>`:`<button class="btn btn-sm" onclick="_bemFinAnexar(${e.id})" title="Anexar comprovante" style="color:var(--text3);border-color:rgba(255,255,255,0.15)">📎+</button>`);})()}
     </td>
   </tr>`).join('')}</tbody></table></div>`:''}`;
   const catColors=['#00ff9d','#00c8ff','#a855f7','#ffd700','#ff4444','#ff8c00','#1effe4'];
@@ -20359,23 +20388,85 @@ function renderBemRelatorio(bem){
   </div>`).join('')}</div>`:''}`;
 }
 
+function bfqSetForma(forma,bemId){
+  document.getElementById('bfq-forma-atual').value=forma;
+  ['debito','cred-vista','cred-parc','pix','dinheiro'].forEach(f=>{
+    const btn=document.getElementById('bfq-forma-'+f);
+    if(!btn) return;
+    if(f===forma){btn.style.background='rgba(0,255,157,0.15)';btn.style.borderColor='rgba(0,255,157,0.5)';btn.style.color='var(--neon-green)';}
+    else{btn.style.background='';btn.style.borderColor='';btn.style.color='';}
+  });
+  const wrap=document.getElementById('bfq-parc-wrap');
+  if(wrap) wrap.style.display=(forma==='cred-parc'||forma==='cred-vista')?'block':'none';
+  const nparcWrap=document.getElementById('bfq-nparc-wrap');
+  if(nparcWrap) nparcWrap.style.display=forma==='cred-parc'?'block':'none';
+}
+
 function _addBemFinQuick(bemId){
   const desc=(document.getElementById('bfq-desc').value||'').trim();
   const tipo=document.getElementById('bfq-tipo').value;
   const valor=parseBRL(document.getElementById('bfq-valor').value||'0');
   const data=document.getElementById('bfq-data').value;
-  if(!desc){_showError('Informe adescrição.');return;}
-  if(valor<=0){_showError('Informe ovalor.');return;}
-  if(!data){_showError('Informe adata.');return;}
+  const forma=document.getElementById('bfq-forma-atual')?.value||'pix';
+  if(!desc){_showError('Informe a descrição.');return;}
+  if(valor<=0){_showError('Informe o valor.');return;}
+  if(!data){_showError('Informe a data.');return;}
+  const id=Date.now();
+  const semana=getSemanaFromData(data);
+  if(forma==='cred-parc'||forma==='cred-vista'){
+    const cartao=(document.getElementById('bfq-cartao')?.value)||getCartoesNomes()[0]||'Cartão';
+    const nParc=forma==='cred-parc'?(parseInt(document.getElementById('bfq-nparc')?.value)||2):1;
+    const valParc=parseFloat((valor/nParc).toFixed(2));
+    const mesInicio=data.substring(0,7);
+    const mesIdx=parseInt(data.split('-')[1])-1;
+    const formaLabel=cartao+(nParc===1?' (à vista)':` (${nParc}x)`);
+    const parcelas=getData('parcelas');
+    const parcId=id+1;
+    parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nParc,val:valParc});
+    setData('parcelas',parcelas);
+    const fat=getData('faturas');
+    if(!fat[cartao]) fat[cartao]=Array(12).fill(0);
+    for(let i=0;i<nParc;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}
+    setData('faturas',fat);
+    const all=getData('lancamentos');
+    if(!all[semana]) all[semana]=[];
+    all[semana].push({id,desc,data,forma:formaLabel,cat:tipo,val:valParc,valTotal:valor,cartao,nParc,parcId,fatMes:mesIdx,fatVal:valParc,_bemId:bemId});
+    setData('lancamentos',all);
+  } else {
+    const formaLabel=forma==='debito'?'Débito':forma==='dinheiro'?'Dinheiro':'Pix';
+    const all=getData('lancamentos');
+    if(!all[semana]) all[semana]=[];
+    all[semana].push({id,desc,data,forma:formaLabel,cat:tipo,val:valor,_bemId:bemId});
+    setData('lancamentos',all);
+  }
   const ev=getBensEventos();
-  ev.push({id:Date.now(),bemId,tipo,data,desc,local:'',contato:'',valor,
-    proximaData:null,proximaKm:null,garantiaAte:null,anexo:null,obs:''});
+  ev.push({id:id+2,bemId,tipo,data,desc,local:'',contato:'',valor,
+    proximaData:null,proximaKm:null,garantiaAte:null,anexo:null,obs:'',_lancId:id});
   setBensEventos(ev);
   document.getElementById('bfq-desc').value='';
   document.getElementById('bfq-valor').value='';
-  // re-renderiza financeiro
+  _syncToSupabase();
   const bem=getBens().find(b=>b.id===bemId);
   if(bem){_renderFichaHeader(bemId);renderBemFinanceiro(bem);}
+}
+
+function _bemAnexarLanc(lancId){
+  const numId=parseInt((lancId+'').replace(/^(lanc_|lf_)/,''));
+  if(!numId) return;
+  const ev=getBensEventos();
+  const evRef=ev.find(e=>e._lancId===numId);
+  if(evRef){_bemFinAnexar(evRef.id);return;}
+  const allL=getData('lancamentos');
+  let lanc=null;
+  for(const sem of Object.keys(allL)){const found=(allL[sem]||[]).find(l=>l.id===numId);if(found){lanc=found;break;}}
+  if(!lanc) return;
+  const newId=Date.now();
+  const bemId=lanc._bemId||lanc.bemId;
+  if(!bemId) return;
+  ev.push({id:newId,bemId,tipo:'Outro',data:lanc.data||'',desc:lanc.desc||'',local:'',contato:'',
+    valor:lanc.val||0,proximaData:null,proximaKm:null,garantiaAte:null,anexo:null,obs:'',_lancId:numId});
+  setBensEventos(ev);
+  _bemFinAnexar(newId);
 }
 
 // ── MODAL BEM ──

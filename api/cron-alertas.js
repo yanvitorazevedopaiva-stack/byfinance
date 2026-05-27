@@ -121,6 +121,14 @@ async function buildResumo(user_id) {
   }
   vencimentos.sort((a, b) => a.diff - b.diff);
 
+  // ── 4. COMPRAS EXPIRANDO ──
+  const comprasLista = dados[user_id + '_compras_lista'] || [];
+  const comprasExpirando = comprasLista.filter(c => {
+    if(c.status !== 'aguardando' || !c.data) return false;
+    const dias = Math.floor((hoje - new Date(c.data)) / (1000*60*60*24));
+    return dias >= 27 && dias <= 30;
+  });
+
   // ── MONTA MENSAGEM ──
   const horaBrasilia = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours();
   const [emoji, saudacao] = horaBrasilia < 12 ? ['🌅','Bom dia']
@@ -190,8 +198,17 @@ async function buildResumo(user_id) {
     }
   }
 
+  if(comprasExpirando.length > 0){
+    msg += `\n━━━ *COMPRAS EXPIRANDO* ━━━\n`;
+    for(const c of comprasExpirando){
+      const dias = Math.floor((hoje - new Date(c.data)) / (1000*60*60*24));
+      const restam = 30 - dias;
+      msg += `⏰ *${c.desc}* — ${fmt(c.val)} — expira em *${restam} dia${restam!==1?'s':''}*\n`;
+    }
+  }
+
   // Nada a reportar
-  const temAlgo = (pendentes && pendentes.length > 0) || tarefasPend.length > 0 || vencimentos.length > 0;
+  const temAlgo = (pendentes && pendentes.length > 0) || tarefasPend.length > 0 || vencimentos.length > 0 || comprasExpirando.length > 0;
   if (!temAlgo) {
     msg += `\n✅ *Tudo em dia!* Nenhum pendente, tarefa ou vencimento nos próximos 7 dias.\n`;
   }

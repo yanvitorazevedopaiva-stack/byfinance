@@ -1136,7 +1136,7 @@ export default async function handler(req, res) {
         }
 
         // Não entendeu
-        await sendTelegram(chat_id, `Responda *sim* para confirmar ou *não* para editar.`);
+        await sendTelegram(chat_id, `Não entendi.\n\n1️⃣ *Sim* — confirmar\n2️⃣ *Não* — editar`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'editar_menu_foto') {
@@ -2284,7 +2284,7 @@ export default async function handler(req, res) {
         `🏷 ${gasto.categoria || 'Outros'}\n` +
         `💳 ${fmtCartao(gasto.cartao || 'Não informado')}\n` +
         `📅 ${fmtData(gasto.data_lancamento || new Date().toISOString().split('T')[0])}\n\n` +
-        `Está correto? Responda *sim* para confirmar ou *não* para editar.`
+        `Está correto?\n\n1️⃣ *Sim* — confirmar\n2️⃣ *Não* — editar`
       );
       return res.status(200).json({ ok: true });
     }

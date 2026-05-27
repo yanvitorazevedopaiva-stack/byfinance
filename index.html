@@ -8649,6 +8649,25 @@ function renderDashboard(){
   const gf=getData('gastosFixos');
   const totalGf=gf.reduce((a,i)=>a+i.val,0);
   const saldo=salario-totalGf;
+  // ── Totais PIX e Débito do mês ──
+  const _mesAtualKey=new Date().toISOString().slice(0,7);
+  const _lancMes=Object.values(getData('lancamentos')||{}).flat().filter(l=>{
+    return (l.data||'').startsWith(_mesAtualKey);
+  });
+  const _totalPix=_lancMes.filter(l=>['pix','pix-credito'].includes(l.forma)).reduce((a,l)=>a+(parseFloat(l.val)||0),0);
+  const _totalDeb=_lancMes.filter(l=>l.forma==='debito').reduce((a,l)=>a+(parseFloat(l.val)||0),0);
+  const _totalFatMes=Object.values(getData('faturas')||{}).reduce((a,arr)=>{
+    const m=new Date().getMonth();
+    return a+(Array.isArray(arr)?arr[m]||0:0);
+  },0);
+  // ── Itens de compra expirando em 3 dias (30 dias desde lançamento) ──
+  const _compras=getCompras().filter(c=>c.status==='aguardando');
+  const _hoje=new Date();
+  const _expirando=_compras.filter(c=>{
+    if(!c.data) return false;
+    const dias=Math.floor((_hoje-new Date(c.data))/(1000*60*60*24));
+    return dias>=27&&dias<=30;
+  });
 
   document.getElementById('d-saldo').textContent=fmt(saldo);
   document.getElementById('d-saldo').className='card-value '+(saldo>=0?'val-green':'val-red');
@@ -8778,6 +8797,16 @@ function renderDashboard(){
     }
   });
 
+  // Linhas fixas PIX, Débito, Faturas
+  alertsHtml+=`<div class="alert alert-blue"><span class="alert-icon">🔄</span><span>PIX do mês: <b>${fmt(_totalPix)}</b></span></div>`;
+  alertsHtml+=`<div class="alert alert-blue"><span class="alert-icon">💳</span><span>Débito do mês: <b>${fmt(_totalDeb)}</b></span></div>`;
+  alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">🗂</span><span>Total faturas mês vigente: <b>${fmt(_totalFatMes)}</b></span></div>`;
+  // Itens de compra expirando
+  for(const c of _expirando){
+    const dias=Math.floor((_hoje-new Date(c.data))/(1000*60*60*24));
+    const restam=30-dias;
+    alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">⏰</span><span>Compra <b>${esc(c.desc)}</b> expira em <b>${restam} dia${restam!==1?'s':''}</b> — ${fmt(c.val)}</span></div>`;
+  }
   if(daAlertas) daAlertas.innerHTML=alertsHtml;
 
   // Gráfico categorias — atualiza dados sem destruir

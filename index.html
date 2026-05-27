@@ -8662,10 +8662,10 @@ function renderDashboard(){
   },0);
   // ── Itens de compra expirando em 3 dias (30 dias desde lançamento) ──
   const _compras=getCompras().filter(c=>c.status==='aguardando');
-  const _hoje=new Date();
+  const _hojeNow=new Date();
   const _expirando=_compras.filter(c=>{
     if(!c.data) return false;
-    const dias=Math.floor((_hoje-new Date(c.data))/(1000*60*60*24));
+    const dias=Math.floor((_hojeNow-new Date(c.data))/(1000*60*60*24));
     return dias>=27&&dias<=30;
   });
 

@@ -83,8 +83,10 @@ async function buildResumo(user_id) {
 
   const totalFatMes   = Object.values(faturas).reduce((a, arr) => a + (arr[mesAtual] || 0), 0);
   const totalGf       = gastosFixos.reduce((a, g) => a + (g.val || 0), 0);
+  // Se há receitas variáveis lançadas no mês, usa elas (já incluem tudo lançado)
+  // Caso contrário, usa as fixas como previsão
   const totalRecFixas = receitasFixas.reduce((a, r) => a + (r.val || 0), 0);
-  const totalReceitas = totalRecFixas + receitasVarMes;
+  const totalReceitas = receitasVarMes > 0 ? receitasVarMes : totalRecFixas;
   const resultado     = totalReceitas - totalFatMes - totalGf;
   const isPositivo    = resultado >= 0;
 
@@ -130,7 +132,7 @@ async function buildResumo(user_id) {
 
   // Bloco déficit/superávit
   msg += `━━━ *RESULTADO ${MESES[mesAtual].toUpperCase()}* ━━━\n`;
-  msg += `💰 Receitas: *${fmt(totalReceitas)}*${receitasVarMes>0?` _(+${fmt(receitasVarMes)} variável)_`:''}\n`;
+  msg += `💰 Receitas: *${fmt(totalReceitas)}*${receitasVarMes>0&&totalRecFixas>0?` _(previsto: ${fmt(totalRecFixas)})_`:''}\n`;
   msg += `💳 Faturas: *-${fmt(totalFatMes)}*\n`;
   msg += `📋 Gastos Fixos: *-${fmt(totalGf)}*\n`;
   msg += isPositivo

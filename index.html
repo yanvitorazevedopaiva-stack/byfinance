@@ -23998,6 +23998,25 @@ async function tgAuthAprovar(id){
     ${data.cartao&&data.cartao!=='Não informado'?`<div style="margin-top:6px;font-size:11px;color:var(--neon-blue);font-family:'JetBrains Mono',monospace">💳 Sugerido pelo bot: <strong>${esc(data.cartao)}</strong></div>`:''}
     ${data.parcelas&&data.parcelas>1?`<div style="margin-top:6px;font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">🔄 ${data.parcelas}x de ${parseFloat(data.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`:''}
   `;
+  // Se for mercado, exibe tabela de itens
+  const itensMercado = data.itens_mercado || [];
+  const itensWrap = document.getElementById('tg-aprovar-itens-mercado');
+  if (itensWrap) {
+    if (itensMercado.length > 0) {
+      itensWrap.style.display = 'block';
+      itensWrap.innerHTML = `
+        <div style="font-size:10px;color:var(--text3);margin:10px 0 6px;letter-spacing:1px">ITENS DO CUPOM</div>
+        <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:4px 0">
+          ${itensMercado.map(it=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04)">
+              <span style="font-size:12px;color:var(--text)">${esc(it.nome)}${it.qtd>1?` <span style="color:var(--text3)">x${it.qtd}</span>`:''}</span>
+              <span style="font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${parseFloat(it.total||it.vlr||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>
+            </div>`).join('')}
+        </div>`;
+    } else {
+      itensWrap.style.display = 'none';
+    }
+  }
   const _dataEl=document.getElementById('tg-aprovar-data');
   if(_dataEl) _dataEl.value=data.data_lancamento||'';
 
@@ -24230,6 +24249,23 @@ async function tgConfirmarAutorizacao(){
       if(_idx>=0){_catUpd[_idx].preco=val;if(typeof _mktSetCatalogo==='function')_mktSetCatalogo(_catUpd);else localStorage.setItem('mkt_catalogo',JSON.stringify(_catUpd));_showToast('✓ Preço atualizado no catálogo!');}
     }
     setTimeout(()=>_mktAbrirCadastroRapido(desc, val, data.categoria||'Mercado'), 700);
+  }
+
+  // Se for mercado variável, adiciona itens à lista de compras variáveis do mês
+  if (data.mktTipo === 'variavel' && data.itens_mercado?.length > 0) {
+    const mesKey = data.data_lancamento?.slice(0,7) || new Date().toISOString().slice(0,7);
+    const comprasVar = getData('compras_variaveis') || {};
+    if (!comprasVar[mesKey]) comprasVar[mesKey] = [];
+    comprasVar[mesKey].push({
+      id: Date.now(),
+      data: data.data_lancamento,
+      estabelecimento: data.descricao,
+      total: parseFloat(data.valor)||0,
+      modalidade: data.modalidade,
+      itens: data.itens_mercado,
+      origem: 'telegram'
+    });
+    setData('compras_variaveis', comprasVar);
   }
 
   await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
@@ -24759,6 +24795,7 @@ async function cfgTgRemoverVinculo(vinculoId){
       <button onclick="document.getElementById('tg-aprovar-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
     </div>
     <div id="tg-aprovar-resumo" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15);margin-bottom:12px;font-size:13px"></div>
+    <div id="tg-aprovar-itens-mercado" style="display:none"></div>
     <div id="tg-aprovar-mkt-info" style="display:none;padding:10px 12px;border-radius:10px;background:rgba(0,200,100,0.07);border:1px solid rgba(0,200,100,0.22);margin-bottom:14px;font-size:12px"></div>
     <div style="display:flex;flex-direction:column;gap:14px">
       <div>

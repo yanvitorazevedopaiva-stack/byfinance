@@ -1652,7 +1652,40 @@ export default async function handler(req, res) {
           else if (_isVariavel) { l.mktTipo = 'variavel'; if (!l.categoria) l.categoria = 'Mercado'; }
           else { l.mktTipo = null; if (!l.categoria) l.categoria = 'Outros'; }
           if (!l.data_lancamento) l.data_lancamento = new Date().toISOString().split('T')[0];
+          // Preserva itens individuais com qtd e valor unitário vindos do Gemini
+          if (!l.itens && l.quantidade && l.valor_unitario) {
+            l.itens = [{ nome: l.descricao, qtd: l.quantidade, vlr: l.valor_unitario }];
+          }
         });
+        // Agrupa todos os itens individuais em um único pendente de mercado
+        if (_isMes || _isVariavel) {
+          const _totalMkt = _lansM.reduce((a,l)=>a+(parseFloat(l.valor)||0),0);
+          const _itensMkt = _lansM.map(l=>({
+            nome: l.descricao,
+            qtd: l.quantidade || l.qtd || 1,
+            vlr: l.valor_unitario || l.valor_parcela || parseFloat(l.valor)||0,
+            total: parseFloat(l.valor)||0,
+            sku: l.sku || null
+          }));
+          // Salva um único pendente consolidado com todos os itens
+          const _pendMkt = {
+            descricao: `Mercado — ${_lansM.length} itens`,
+            valor: _totalMkt,
+            modalidade: gasto.modalidade,
+            cartao: gasto.cartao,
+            categoria: 'Mercado',
+            mktTipo: _isMes ? 'mes' : 'variavel',
+            data_lancamento: _lansM[0]?.data_lancamento || new Date().toISOString().split('T')[0],
+            itens_mercado: _itensMkt,
+            tipo: 'mercado'
+          };
+          await limparContexto(chat_id);
+          await salvarPendente(chat_id, vinculo_user_id, _pendMkt, tipo_midia, mensagem_original, nomeRemetente);
+          const _listaMkt = _itensMkt.slice(0,8).map(i=>`• ${i.nome}${i.qtd>1?` x${i.qtd}`:''} — ${parseFloat(i.total||i.vlr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
+          const _cartaoMktStr = gasto.cartao && gasto.cartao !== gasto.modalidade ? `💳 ${fmtCartao(gasto.cartao)}\n` : '';
+          await sendTelegramTodos(vinculo_user_id, `✅ *Mercado registrado!*\n\n${_listaMkt}${_itensMkt.length>8?`\n_...e mais ${_itensMkt.length-8} itens_`:''}\n\n💰 *Total: ${_totalMkt.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+          return res.status(200).json({ ok: true });
+        }
         await limparContexto(chat_id);
         for (const l of _lansM) await salvarPendente(chat_id, vinculo_user_id, l, tipo_midia, mensagem_original, nomeRemetente);
         const _listaMkt = _lansM.map(l=>`• ${l.descricao} — ${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');

@@ -1690,7 +1690,9 @@ export default async function handler(req, res) {
         for (const l of _lansM) await salvarPendente(chat_id, vinculo_user_id, l, tipo_midia, mensagem_original, nomeRemetente);
         const _listaMkt = _lansM.map(l=>`• ${l.descricao} — ${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
         const _cartaoMktStr = gasto.cartao && gasto.cartao !== gasto.modalidade ? `💳 ${fmtCartao(gasto.cartao)}\n` : '';
-        await sendTelegramTodos(vinculo_user_id, `✅ *${_lansM.length} lançamentos registrados!*\n\n${_listaMkt}\n\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+        const _dataFmtMkt = _lansM[0]?.data_lancamento ? fmtData(_lansM[0].data_lancamento) : fmtData(new Date().toISOString().split('T')[0]);
+        const _totalMktFmt = _lansM.reduce((a,l)=>a+(parseFloat(l.valor)||0),0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        await sendTelegramTodos(vinculo_user_id, `✅ *${_lansM.length} lançamentos registrados!*\n\n${_listaMkt}\n\n💰 *Total: R$ ${_totalMktFmt}*\n🏷 Mercado\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${_dataFmtMkt}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'parcelamento') {

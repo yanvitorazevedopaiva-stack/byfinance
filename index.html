@@ -23944,6 +23944,7 @@ async function tgAuthRenderModal(){
         <div>
           <div style="font-size:14px;font-weight:700">${esc(p.descricao)}</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">📅 ${p.data_lancamento} · 🏷 ${esc(p.categoria)} · ${p.tipo==='receita'?'🏦':'💳'} ${esc(p.cartao)}</div>
+          ${p.itens_mercado?.length>0?`<div style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:6px">${p.itens_mercado.slice(0,4).map(it=>`<div style="font-size:11px;color:var(--text3);line-height:1.6">• ${esc(it.nome)}${it.qtd>1?` x${it.qtd}`:''} — <span style="color:var(--text)">${parseFloat(it.total||it.vlr||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span></div>`).join('')}${p.itens_mercado.length>4?`<div style="font-size:10px;color:var(--text3);margin-top:2px">_...e mais ${p.itens_mercado.length-4} itens_</div>`:''}</div>`:''}
           <div style="font-size:10px;color:var(--text3);margin-top:2px">via ${p.tipo_midia||'texto'} · ${new Date(p.created_at).toLocaleString('pt-BR')}${p.remetente?` · <span style="color:var(--neon-blue);font-weight:700">👤 ${esc(p.remetente)}</span>`:''}</div>
         </div>
         <div style="font-size:18px;font-weight:700;color:${p.tipo==='receita'?'var(--neon-green)':'var(--neon-red)'}">${tgAuthFmtValor(p.valor)}</div>
@@ -24023,7 +24024,7 @@ async function tgAuthAprovar(id){
   // ── Painel de mercado: catálogo + lista destino ──────────────────────────────
   const _mktInfoDiv=document.getElementById('tg-aprovar-mkt-info');
   if(_mktInfoDiv){
-    const _isMktItem=data.observacao?.includes('[mkt:');
+    const _isMktItem=data.observacao?.includes('[mkt:') || data.tipo==='mercado' || (data.itens_mercado?.length>0);
     if(_isMktItem){
       const _mktTipoTag=data.observacao?.includes('[mkt:mes]')?'mes':'variavel';
       const _mktTipoLabel=_mktTipoTag==='mes'?'📋 Compra do mês':'🛒 Compra variável (semana)';
@@ -24049,6 +24050,22 @@ async function tgAuthAprovar(id){
         _html+=`<div style="color:var(--text3);font-size:11px">⚠️ Item não cadastrado — será solicitado cadastro rápido após autorização</div>`;
       }
       _mktInfoDiv.innerHTML=_html;
+      // Tabela de itens do cupom
+      if(data.itens_mercado?.length>0){
+        _html+=`<div style="margin-top:10px;font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:5px">ITENS ESCANEADOS</div>
+        <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;max-height:200px;overflow-y:auto">
+          ${data.itens_mercado.map(it=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+              <span style="color:var(--text)">${esc(it.nome)}${it.qtd>1?` <span style="color:var(--text3);font-size:11px">x${it.qtd}</span>`:''}</span>
+              <span style="font-family:'JetBrains Mono',monospace;color:var(--neon-green);white-space:nowrap;margin-left:8px">${parseFloat(it.total||it.vlr||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>
+            </div>`).join('')}
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(0,255,157,0.06);font-size:12px;font-weight:700">
+            <span style="color:var(--text3)">TOTAL</span>
+            <span style="font-family:'JetBrains Mono',monospace;color:var(--neon-green)">${parseFloat(data.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>
+          </div>
+        </div>`;
+        _mktInfoDiv.innerHTML=_html;
+      }
       _mktInfoDiv.style.display='block';
     }else{
       _mktInfoDiv.style.display='none';

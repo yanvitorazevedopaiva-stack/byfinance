@@ -29,6 +29,10 @@ async function sendTelegramTodos(user_id, text) {
   }
 }
 
+function escapeMd(text) {
+  return (text||'').replace(/[_*[\]()~`>#+=|{}.!\\-]/g, '\\$&');
+}
+
 function fmtData(data) {
   if (!data) return '';
   const [y, m, d] = data.split('-');
@@ -141,7 +145,9 @@ async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_orig
     parcelas: gasto.parcelas || null,
     valor_parcela: gasto.valor_parcela || null,
     observacao: gasto.mktTipo === 'variavel' ? ('[mkt:variavel]'+(gasto.observacao?' '+gasto.observacao:'')) : gasto.mktTipo === 'mes' ? ('[mkt:mes]'+(gasto.observacao?' '+gasto.observacao:'')) : (gasto.observacao||null),
-    remetente: remetente || null
+    remetente: remetente || null,
+    itens_mercado: gasto.itens_mercado || null,
+    tipo: gasto.tipo || null
   };
   console.log('Salvando pendente:', JSON.stringify(registro));
   const resultado = await supabaseQuery('/telegram_pendentes', 'POST', registro);
@@ -1691,8 +1697,18 @@ export default async function handler(req, res) {
         const _listaMkt = _lansM.map(l=>`• ${l.descricao} — ${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
         const _cartaoMktStr = gasto.cartao && gasto.cartao !== gasto.modalidade ? `💳 ${fmtCartao(gasto.cartao)}\n` : '';
         const _dataFmtMkt = _lansM[0]?.data_lancamento ? fmtData(_lansM[0].data_lancamento) : fmtData(new Date().toISOString().split('T')[0]);
-        const _totalMktFmt = _lansM.reduce((a,l)=>a+(parseFloat(l.valor)||0),0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-        await sendTelegramTodos(vinculo_user_id, `✅ *${_lansM.length} lançamentos registrados!*\n\n${_listaMkt}\n\n💰 *Total: R$ ${_totalMktFmt}*\n🏷 Mercado\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${_dataFmtMkt}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+        const _totalMktVal = _lansM.reduce((a,l)=>a+(parseFloat(l.valor)||0),0);
+        const _totalMktFmt = _totalMktVal.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const _listaMktDetalhada = _lansM.map(l=>{
+          const vlrFmt = parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+          const qtd = l.quantidade && l.quantidade > 1 ? ` x${l.quantidade}` : '';
+          const vlrUnit = l.valor_unitario && l.quantidade > 1
+            ? ` _(${parseFloat(l.valor_unitario).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} un.)_`
+            : '';
+          return `• ${escapeMd(l.descricao_original || l.descricao)}${qtd} — *${vlrFmt}*${vlrUnit}`;
+        }).join('\n');
+        const _mktTipoLabel = _isMes ? '📋 Compra do mês' : '🛒 Compra variável';
+        await sendTelegramTodos(vinculo_user_id, `✅ *Mercado registrado!*\n\n${_listaMktDetalhada}\n\n💰 *Total: ${_totalMktFmt}*\n🏷 Mercado · ${_mktTipoLabel}\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${_dataFmtMkt}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'parcelamento') {

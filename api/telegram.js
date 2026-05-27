@@ -29,10 +29,6 @@ async function sendTelegramTodos(user_id, text) {
   }
 }
 
-function escapeMd(text) {
-  return (text||'').replace(/[_*[\]()~`>#+=|{}.!\\-]/g, '\\$&');
-}
-
 function fmtData(data) {
   if (!data) return '';
   const [y, m, d] = data.split('-');

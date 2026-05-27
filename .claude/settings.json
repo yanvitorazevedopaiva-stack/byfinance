@@ -18,7 +18,11 @@
       "Bash(grep -v \"__sbrow_\\\\|data:\\\\|#\\\\|//\")",
       "Bash(grep -v \"//.*setInterval\")",
       "Read(//c/Users/Usuário/Desktop/TEST/api/**)",
-      "Bash(grep -n \"bfq-desc\\\\|bfq-valor\\\\|LANÇAR DESPESA\\\\|bem-fin-quick\\\\|formHtml.*bfq\\\\|formHtml=\\\\`\" \"C:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\")"
+      "Bash(grep -n \"bfq-desc\\\\|bfq-valor\\\\|LANÇAR DESPESA\\\\|bem-fin-quick\\\\|formHtml.*bfq\\\\|formHtml=\\\\`\" \"C:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\")",
+      "Bash(node --input-type=module)",
+      "Read(//mnt/c/Users/Usuario/Desktop/**)",
+      "Bash(node --check api/telegram.js)",
+      "PowerShell(node --check \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\api\\\\telegram.js\" 2>&1)"
     ]
   }
 }

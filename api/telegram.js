@@ -1071,8 +1071,8 @@ export default async function handler(req, res) {
 
       if (campo === 'confirmar_lancamento_foto') {
         const _t=texto.toLowerCase().trim();
-        const sim = ['sim','s','ok','certo','correto','pode','confirma','confirmar','yes','y','continua','continuar','envia','enviar','tá bom','ta bom','exato','isso','perfeito','👍','beleza','blz','combinado','fechado','claro','pode ser','bora','top','show','tudo certo','tudo bem','correto','positivo','afirmativo'].some(p=>_t.startsWith(p)||_t===p);
-        const nao = ['não','nao','n','errado','errada','editar','edita','mudar','muda','corrigir','corrige','incorreto','incorreta','errou','wrong','no','negativo','negativo','tá errado','ta errado','não está','nao esta','incorreto','muda','alterar','altera','ajustar','ajusta'].some(p=>_t.startsWith(p)||_t===p);
+        const sim = ['1','sim','s','ok','certo','correto','pode','confirma','confirmar','yes','y','continua','continuar','envia','enviar','tá bom','ta bom','exato','isso','perfeito','👍','beleza','blz','combinado','fechado','claro','pode ser','bora','top','show','tudo certo','tudo bem','correto','positivo','afirmativo'].some(p=>_t.startsWith(p)||_t===p);
+        const nao = ['2','não','nao','n','errado','errada','editar','edita','mudar','muda','corrigir','corrige','incorreto','incorreta','errou','wrong','no','negativo','negativo','tá errado','ta errado','não está','nao esta','incorreto','muda','alterar','altera','ajustar','ajusta'].some(p=>_t.startsWith(p)||_t===p);
 
         if (sim) {
           const _modConf = (gasto.modalidade || '').toLowerCase();
@@ -2286,7 +2286,7 @@ export default async function handler(req, res) {
       await sendTelegram(chat_id,
         `📋 *${_lans.length} itens identificados no cupom:*\n\n${_listaEsb}\n\n` +
         `💰 Total: *${_totalEsb.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*\n\n` +
-        `Está correto? *sim* para confirmar ou *não* para cancelar.`
+        `Está correto? *1* ou *sim* para confirmar · *2* ou *não* para cancelar.`
       );
       return res.status(200).json({ ok: true });
     }

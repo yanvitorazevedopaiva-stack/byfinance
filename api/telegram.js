@@ -629,11 +629,36 @@ O campo "mes": null=atual, "proximo"=próximo mês, número 1-12=mês específic
 
 REGRA PRINCIPAL: Se há uma foto, SEMPRE tente extrair pelo menos o valor. Nunca retorne erro para fotos — use lancamento_parcial se faltar informação.
 
-COMPROVANTES FÍSICOS (papel fotografado, recibo, cupom):
+COMPROVANTES FÍSICOS (papel fotografado, recibo, cupom fiscal, nota fiscal):
 - Procure o campo "Total", "Valor", "R$", "TOTAL A PAGAR", "VALOR TOTAL"
 - Identifique o estabelecimento pelo cabeçalho ou logotipo
 - Mercado Pago, PagBank, InfinitePay, SumUp = máquina de cartão → usar como banco/cartão
 - Se texto parcialmente ilegível → tente pelo contexto visual
+
+CUPOM FISCAL / NOTA FISCAL com lista de itens:
+- Extraia TODOS os itens individualmente com nome, quantidade e valor unitário
+- Use tipo "multiplos" com cada item como um lançamento separado
+- Formato de cada item no array lancamentos:
+  {
+    "tipo": "lancamento",
+    "descricao": "Nome do produto exatamente como no cupom",
+    "descricao_original": "Nome exato do cupom sem abreviações",
+    "valor": 89.90,
+    "valor_unitario": 89.90,
+    "quantidade": 1,
+    "categoria": "Vestuário",
+    "cartao": "Não informado",
+    "modalidade": "Dinheiro",
+    "data_lancamento": "${new Date().toISOString().split('T')[0]}",
+    "mktTipo": "variavel"
+  }
+- O campo "valor" deve ser o valor TOTAL do item (qtd × valor unitário)
+- O campo "valor_unitario" deve ser o preço unitário
+- O campo "quantidade" deve ser a quantidade comprada
+- O campo "descricao_original" deve ser o nome exato como aparece no cupom
+- NUNCA agrupe itens — cada produto é um lançamento separado
+- A soma de todos os valores deve bater com o TOTAL do cupom
+- Forma de pagamento: leia o rodapé do cupom (Dinheiro, Crédito, Débito, PIX)
 
 COMPROVANTES DIGITAIS (prints de tela):
 - Notificação de banco: "Você pagou R$ X para Y" → lancamento com descricao=Y, valor=X

@@ -1141,8 +1141,19 @@ export default async function handler(req, res) {
 
         if (nao) {
           if (gasto.tipo === 'multiplos') {
-            await limparContexto(chat_id);
-            await sendTelegram(chat_id, `❌ Lançamento cancelado.`);
+            const _lansM = gasto.lancamentos || [];
+            const _totalM = _lansM.reduce((a,l)=>a+(parseFloat(l.valor)||0),0)
+              .toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+            await setContexto(chat_id, { aguardando: 'editar_menu_foto', gasto_parcial: gasto });
+            await sendTelegram(chat_id,
+              `✏️ *O que deseja editar nos ${_lansM.length} itens?*\n\n` +
+              _lansM.slice(0,8).map((l,i)=>`${i+1}️⃣ ${escapeMd(l.descricao||'(sem nome)')} — *${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*`).join('\n') +
+              `\n\n💰 *Total: ${_totalM}*\n\n` +
+              `Digite o número do item para editar, ou:\n` +
+              `✏️ *D* — editar descrição geral\n` +
+              `💳 *C* — editar cartão/pagamento\n` +
+              `❌ *0* — cancelar`
+            );
             return res.status(200).json({ ok: true });
           }
           const _vMenu=(parseFloat(gasto.valor)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});

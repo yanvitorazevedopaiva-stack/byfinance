@@ -8859,6 +8859,26 @@ function renderDashboard(){
     const restam=30-dias;
     alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">⏰</span><span>Compra <b>${esc(c.desc)}</b> expira em <b>${restam} dia${restam!==1?'s':''}</b> — ${fmt(c.val)}</span></div>`;
   }
+  // Parcelas de terceiros com vencimento próximo
+  const _parcTerceiros=(getData('parcelas')||[]).filter(p=>p.terceiro&&p.paga<p.total);
+  const _cartoes=getData('cartoes')||[];
+  const _hojeD=new Date();
+  _parcTerceiros.forEach(p=>{
+    const cartao=_cartoes.find(c=>c.nome===p.cartao);
+    if(!cartao) return;
+    const _fechDia=parseInt(cartao.fechamento||0);
+    const _vencDia=parseInt(cartao.vencimento||0);
+    const _diffFech=_fechDia>=_hojeD.getDate()?_fechDia-_hojeD.getDate():30-_hojeD.getDate()+_fechDia;
+    const _diffVenc=_vencDia>=_hojeD.getDate()?_vencDia-_hojeD.getDate():30-_hojeD.getDate()+_vencDia;
+    const _parcRestante=p.total-p.paga;
+    const _valParc=parseFloat(p.val||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    if(_diffFech<=3){
+      alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">👥</span><span>Fatura de <b>${esc(p.cartao)}</b> fecha em ${_diffFech}d — cobra <b>${esc(p.terceiro)}</b> por <b>${esc(p.desc)}</b> (${_valParc}/mês · ${_parcRestante}x restantes)</span></div>`;
+    }
+    if(_diffVenc<=1){
+      alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">👥</span><span>Vencimento hoje/amanhã — lembrou de cobrar <b>${esc(p.terceiro)}</b> por <b>${esc(p.desc)}</b>? (${_valParc})</span></div>`;
+    }
+  });
   if(daAlertas) daAlertas.innerHTML=alertsHtml;
 
   // Gráfico categorias — atualiza dados sem destruir
@@ -10738,6 +10758,10 @@ function addLancamento(){
   const semana=getSemanaFromData(data);
   const id=Date.now();
 
+  const _terceiroCat=document.getElementById('lanc-cat')?.value;
+  const _terceiroNome=(document.getElementById('lanc-terceiro-nome')?.value||'').trim();
+  const _isTerceiro=_terceiroCat==='Terceiros'&&_terceiroNome.length>0;
+
   if(lancTipo==='credito'){
     const cartao=document.getElementById('lanc-cartao').value;
     if(!cartao){_showError('Selecione o cartão.');return;}
@@ -10749,7 +10773,8 @@ function addLancamento(){
     const parcelas=getData('parcelas');
     const mesInicio=data.substring(0,7); // YYYY-MM
     const parcId=id+1;
-    parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nParc,val:valParc});
+    parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nParc,val:valParc,
+      terceiro:_isTerceiro?_terceiroNome:null});
     // TAREFA 2 — Retroatividade: se fatura do mês já foi quitada, marcar parcela como paga
     const mesIdxFatura=parseInt(data.split('-')[1])-1;
     const fatPagasAtual=getFatPagas();
@@ -24230,8 +24255,31 @@ async function tgAuthAprovar(id){
     tgSetForma('pix',document.querySelector('#tg-aprovar-formas .lanc-forma-btn'),data.cartao);
   }
 
+  // Sempre reseta tipo de compra para "pessoal" ao abrir novo modal
+  tgSetTipoCompra('pessoal');
+  const _tgNomeInp=document.getElementById('tg-terceiro-nome');
+  if(_tgNomeInp) _tgNomeInp.value='';
+
   const modal=document.getElementById('tg-aprovar-modal');
   if(modal) modal.style.display='flex';
+}
+
+let _tgTipoCompra='pessoal';
+function tgSetTipoCompra(tipo){
+  _tgTipoCompra=tipo;
+  const btnP=document.getElementById('tg-tipo-pessoal');
+  const btnT=document.getElementById('tg-tipo-terceiro');
+  const inp=document.getElementById('tg-terceiro-nome');
+  if(btnP&&btnT){
+    if(tipo==='pessoal'){
+      btnP.style.background='rgba(0,255,157,0.15)';btnP.style.borderColor='rgba(0,255,157,0.5)';btnP.style.color='var(--neon-green)';
+      btnT.style.background='';btnT.style.borderColor='';btnT.style.color='';
+    } else {
+      btnT.style.background='rgba(168,85,247,0.15)';btnT.style.borderColor='rgba(168,85,247,0.5)';btnT.style.color='var(--neon-purple)';
+      btnP.style.background='';btnP.style.borderColor='';btnP.style.color='';
+    }
+  }
+  if(inp) inp.style.display=tipo==='terceiro'?'block':'none';
 }
 
 async function tgConfirmarAutorizacao(){
@@ -24320,6 +24368,9 @@ async function tgConfirmarAutorizacao(){
     return;
   }
 
+  const _tgTerceiroNome=(document.getElementById('tg-terceiro-nome')?.value||'').trim();
+  const _tgIsTerceiro=_tgTipoCompra==='terceiro'&&_tgTerceiroNome.length>0;
+
   if(forma==='cred-parc'||forma==='cred-vista'){
     const cartao=document.getElementById('tg-aprovar-cartao')?.value||data.cartao||'Nubank';
     const nP=forma==='cred-parc'?nParc:1;
@@ -24328,7 +24379,8 @@ async function tgConfirmarAutorizacao(){
     const parcelas=getData('parcelas');
     const mesInicio=dataLanc.substring(0,7);
     const parcId=id+1;
-    parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nP,val:valParc});
+    parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nP,val:valParc,
+      terceiro:_tgIsTerceiro?_tgTerceiroNome:null});
     setData('parcelas',parcelas);
     const mesIdx=parseInt(dataLanc.split('-')[1])-1;
     const fat=getData('faturas');
@@ -24907,6 +24959,14 @@ async function cfgTgRemoverVinculo(vinculoId){
       <button onclick="document.getElementById('tg-aprovar-modal').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:4px 9px;cursor:pointer">✕</button>
     </div>
     <div id="tg-aprovar-resumo" style="padding:12px;border-radius:10px;background:var(--bg2);border:1px solid rgba(0,255,157,0.15);margin-bottom:12px;font-size:13px"></div>
+    <div id="tg-aprovar-terceiro-wrap" style="margin-bottom:12px">
+      <div style="font-size:9px;color:var(--text3);margin-bottom:6px;letter-spacing:1px">TIPO DE COMPRA</div>
+      <div style="display:flex;gap:8px">
+        <button id="tg-tipo-pessoal" onclick="tgSetTipoCompra('pessoal')" class="btn btn-sm" style="font-size:11px;background:rgba(0,255,157,0.15);border-color:rgba(0,255,157,0.5);color:var(--neon-green)">👤 Pessoal</button>
+        <button id="tg-tipo-terceiro" onclick="tgSetTipoCompra('terceiro')" class="btn btn-sm" style="font-size:11px">👥 Terceiro</button>
+      </div>
+      <input id="tg-terceiro-nome" type="text" placeholder="Nome do terceiro..." style="display:none;margin-top:8px;width:100%;padding:7px 10px;background:var(--bg);border:1px solid rgba(168,85,247,0.35);color:var(--neon-purple);border-radius:8px;font-size:12px;box-sizing:border-box">
+    </div>
     <div id="tg-aprovar-itens-mercado" style="display:none"></div>
     <div id="tg-aprovar-mkt-info" style="display:none;padding:10px 12px;border-radius:10px;background:rgba(0,200,100,0.07);border:1px solid rgba(0,200,100,0.22);margin-bottom:14px;font-size:12px"></div>
     <div style="display:flex;flex-direction:column;gap:14px">

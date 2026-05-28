@@ -207,8 +207,33 @@ async function buildResumo(user_id) {
     }
   }
 
+  // ── 5. PARCELAS DE TERCEIROS ──
+  const parcelas = dados[user_id + '_parcelas'] || [];
+  const cartoes2 = dados[user_id + '_cartoes'] || [];
+  const parcelasTerceiros = parcelas.filter(p => p.terceiro && p.paga < p.total);
+  const alertasTerceiros = [];
+  parcelasTerceiros.forEach(p => {
+    const cartao = cartoes2.find(c => c.nome === p.cartao);
+    if(!cartao) return;
+    const fechDia = parseInt(cartao.fechamento || 0);
+    const vencDia = parseInt(cartao.vencimento || 0);
+    const diffFech = fechDia >= hoje.getDate() ? fechDia - hoje.getDate() : 30 - hoje.getDate() + fechDia;
+    const diffVenc = vencDia >= hoje.getDate() ? vencDia - hoje.getDate() : 30 - hoje.getDate() + vencDia;
+    const parcRestante = p.total - p.paga;
+    if(diffFech <= 3){
+      alertasTerceiros.push(`💳 Fatura *${p.cartao}* fecha em ${diffFech}d — cobra *${p.terceiro}* por *${p.desc}* (${fmt(p.val)}/mês · ${parcRestante}x restantes)`);
+    }
+    if(diffVenc <= 1){
+      alertasTerceiros.push(`⚠️ Vencimento hoje/amanhã — lembrou de cobrar *${p.terceiro}* por *${p.desc}*? (${fmt(p.val)})`);
+    }
+  });
+  if(alertasTerceiros.length > 0){
+    msg += `\n━━━ *COBRANÇAS DE TERCEIROS* ━━━\n`;
+    alertasTerceiros.forEach(a => msg += a + '\n');
+  }
+
   // Nada a reportar
-  const temAlgo = (pendentes && pendentes.length > 0) || tarefasPend.length > 0 || vencimentos.length > 0 || comprasExpirando.length > 0;
+  const temAlgo = (pendentes && pendentes.length > 0) || tarefasPend.length > 0 || vencimentos.length > 0 || comprasExpirando.length > 0 || alertasTerceiros.length > 0;
   if (!temAlgo) {
     msg += `\n✅ *Tudo em dia!* Nenhum pendente, tarefa ou vencimento nos próximos 7 dias.\n`;
   }

@@ -114,7 +114,11 @@ async function buildResumo(user_id) {
         vencimentos.push({ nome: c.nome, tipo: 'Fechamento', dia: c.fechamento, diff });
     }
     if (c.vencimento) {
-      const diff = diasAte(parseInt(c.vencimento), hoje);
+      // Ajusta para próximo dia útil se cair em fim de semana
+      const _vd = new Date(hoje.getFullYear(), hoje.getMonth(), parseInt(c.vencimento));
+      if(_vd.getDay()===6) _vd.setDate(_vd.getDate()+2);
+      if(_vd.getDay()===0) _vd.setDate(_vd.getDate()+1);
+      const diff = diasAte(_vd.getDate(), hoje);
       if (diff >= 0 && diff <= 7)
         vencimentos.push({ nome: c.nome, tipo: 'Vencimento Fatura', dia: c.vencimento, diff });
     }
@@ -216,14 +220,26 @@ async function buildResumo(user_id) {
   parcelas.filter(p => p.terceiro && p.paga < p.total).forEach(p => {
     const cartao = cartoes2.find(c => c.nome === p.cartao);
     if(!cartao) return;
-    const fechDia = parseInt(cartao.fechamento || 0);
-    const vencDia = parseInt(cartao.vencimento || 0);
+    const fechDia = parseInt(cartao.fechamento) || 0;
+    const vencDia = parseInt(cartao.vencimento) || 0;
     const parcRestante = p.total - p.paga;
-    if(diaHoje === fechDia){
-      alertasTerceiros.push(`💳 Fatura *${p.cartao}* fecha hoje — cobra *${p.terceiro}* por *${p.desc}* (${fmt(p.val)}/mês · ${parcRestante}x restantes)`);
+
+    if(fechDia > 0){
+      const _fechD = new Date(hoje.getFullYear(), hoje.getMonth(), fechDia);
+      if(_fechD.getDay()===6) _fechD.setDate(_fechD.getDate()+2);
+      if(_fechD.getDay()===0) _fechD.setDate(_fechD.getDate()+1);
+      if(diaHoje === _fechD.getDate()){
+        alertasTerceiros.push(`💳 Fatura *${p.cartao}* fecha hoje — cobra *${p.terceiro}* por *${p.desc}* (${fmt(p.val)}/mês · ${parcRestante}x restantes)`);
+      }
     }
-    if(diaHoje === vencDia){
-      alertasTerceiros.push(`⚠️ Vencimento hoje — lembrou de cobrar *${p.terceiro}* por *${p.desc}*? (${fmt(p.val)})`);
+
+    if(vencDia > 0){
+      const _vencD = new Date(hoje.getFullYear(), hoje.getMonth(), vencDia);
+      if(_vencD.getDay()===6) _vencD.setDate(_vencD.getDate()+2);
+      if(_vencD.getDay()===0) _vencD.setDate(_vencD.getDate()+1);
+      if(diaHoje === _vencD.getDate()){
+        alertasTerceiros.push(`⚠️ Vencimento hoje — lembrou de cobrar *${p.terceiro}* por *${p.desc}*? (${fmt(p.val)})`);
+      }
     }
   });
   if(alertasTerceiros.length > 0){

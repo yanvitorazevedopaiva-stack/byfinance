@@ -8803,7 +8803,7 @@ function renderDashboard(){
     const fatAtual=(getData('faturas')[c.nome]||[])[new Date().getMonth()]||0;
     if(!fatAtual) return;
     if(_ctFoiPago(c.nome,_mesK)) return;
-    const dias=_dHoje-c.vencimento;
+    const dias=_dHoje-getVencimentoReal(c);
     if(dias>0){
       const taxaDia=(c.jurosDia||(c.jurosMes?c.jurosMes/30:0))/100;
       const total=_ctCalcularJuros(fatAtual,dias,c.multaAtraso||0,taxaDia*100);
@@ -8866,14 +8866,14 @@ function renderDashboard(){
   _parcTerceiros.forEach(p=>{
     const _ct=_cartoesList.find(c=>c.nome===p.cartao);
     if(!_ct) return;
-    const _fechDia=parseInt(_ct.fechamento||0);
-    const _vencDia=parseInt(_ct.vencimento||0);
     const _parcRestante=p.total-p.paga;
     const _valFmt=parseFloat(p.val||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-    if(_diaHoje===_fechDia){
+    const _fechDiaReal=getFechamentoReal(_ct);
+    const _vencDiaReal=getVencimentoReal(_ct);
+    if(_fechDiaReal&&_diaHoje===_fechDiaReal){
       alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">👥</span><span>Fatura <b>${esc(p.cartao)}</b> fecha hoje — cobra <b>${esc(p.terceiro)}</b> por <b>${esc(p.desc)}</b> (${_valFmt}/mês · ${_parcRestante}x restantes)</span></div>`;
     }
-    if(_diaHoje===_vencDia){
+    if(_vencDiaReal&&_diaHoje===_vencDiaReal){
       alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">👥</span><span>Vencimento hoje — lembrou de cobrar <b>${esc(p.terceiro)}</b> por <b>${esc(p.desc)}</b>? (${_valFmt})</span></div>`;
     }
   });
@@ -9780,8 +9780,9 @@ function renderParcelas(){
               const num=curAbs-mesAbsoluto(p.inicio)+1;
               tdExtra=`<td><span class="badge badge-blue" style="font-family:'JetBrains Mono',monospace">${num}/${p.total}</span></td>${compCell}`;
             }
-            return `<tr>
-              <td style="font-weight:500">${esc(p.desc)}</td>
+            const _terceiroBadge=p.terceiro?`<span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.4);color:var(--neon-purple)">👥 ${esc(p.terceiro)}</span>`:'';
+            return `<tr style="${p.terceiro?'background:rgba(168,85,247,0.04);border-left:2px solid rgba(168,85,247,0.4)':''}">
+              <td style="font-weight:500">${esc(p.desc)}${_terceiroBadge}</td>
               ${tdExtra}
               <td style="color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">${fmt(p.val)}</td>
               <td style="color:${restP>0?'var(--neon-red)':'var(--neon-green)'};font-family:'JetBrains Mono',monospace">${restP>0?fmt(rest):'✓ QUITADO'}</td>
@@ -9922,6 +9923,31 @@ function getSemanaFromData(dateStr){
   if(isNaN(d)) return semanaAtual||1;
   const primeiroDia=new Date(d.getFullYear(),d.getMonth(),1);
   return Math.min(5,Math.ceil((d.getDate()+primeiroDia.getDay())/7));
+}
+
+// Ajusta data de vencimento para próximo dia útil se cair em fim de semana
+function ajustarParaDiaUtil(ano, mes, dia) {
+  const d = new Date(ano, mes, dia);
+  const diaSemana = d.getDay();
+  if (diaSemana === 6) d.setDate(d.getDate() + 2); // sábado → segunda
+  if (diaSemana === 0) d.setDate(d.getDate() + 1); // domingo → segunda
+  return d;
+}
+
+// Retorna o dia de vencimento real do cartão considerando fins de semana
+function getVencimentoReal(cartao) {
+  if (!cartao || !cartao.vencimento) return null;
+  const hoje = new Date();
+  const d = ajustarParaDiaUtil(hoje.getFullYear(), hoje.getMonth(), parseInt(cartao.vencimento));
+  return d.getDate();
+}
+
+// Retorna o dia de fechamento real do cartão considerando fins de semana
+function getFechamentoReal(cartao) {
+  if (!cartao || !cartao.fechamento) return null;
+  const hoje = new Date();
+  const d = ajustarParaDiaUtil(hoje.getFullYear(), hoje.getMonth(), parseInt(cartao.fechamento));
+  return d.getDate();
 }
 
 let lancTipo='credito'; // 'credito' | 'emprestimo' | 'pix_credito' | 'outros'
@@ -12996,7 +13022,7 @@ function renderCartoes(){
     const isCredito=c.tipo==='Crédito'||c.tipo==='Crédito e Débito';
     const foiPago=_ctFoiPago(c.nome,mesChave);
     if(isCredito&&c.vencimento&&fatMesVis>0&&!foiPago){
-      const diasAtraso=hoje-c.vencimento;
+      const diasAtraso=hoje-getVencimentoReal(c);
       if(diasAtraso>0){
         const taxaDia=(c.jurosDia||(c.jurosMes?c.jurosMes/30:0))/100;
         const multaPct=c.multaAtraso||0;
@@ -15744,7 +15770,7 @@ function _dashVencimentosVisuais(){
   const hoje=new Date();
   const dHoje=hoje.getDate();
   const items=cartoes.filter(c=>c.vencimento).map(c=>{
-    let dist=parseInt(c.vencimento)-dHoje;
+    let dist=getVencimentoReal(c)-dHoje;
     if(dist<0)dist+=30;
     return{nome:c.nome,dia:c.vencimento,dist};
   }).filter(v=>v.dist<=7).sort((a,b)=>a.dist-b.dist);
@@ -18747,7 +18773,7 @@ function renderUltimosLancs(){
     const badge=catBadge[l.cat]||'graphite';
     return `<tr>
       <td style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);white-space:nowrap">${_fmtData(l.data)}</td>
-      <td style="font-size:12px;font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.desc||'—')}</td>
+      <td style="font-size:12px;font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.desc||'—')}${l.terceiro?`<span style="display:inline-block;margin-left:5px;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:var(--neon-purple)">👥 ${esc(l.terceiro)}</span>`:''}</td>
       <td><span class="badge badge-${badge}" style="font-size:10px">${esc(l.cat||'—')}</span></td>
       <td style="font-size:11px;color:var(--text3);white-space:nowrap">${isCredito?'Créd':'Déb'}</td>
       <td style="font-size:11px;color:var(--neon-blue);white-space:nowrap">${l.cartao?esc(l.cartao):'—'}</td>
@@ -24434,10 +24460,11 @@ async function tgConfirmarAutorizacao(){
 
   const autorizador=load('perfilNome')||_authUser||'Usuário';
   const _remetenteInfo=data.remetente&&data.remetente!==autorizador?`\n👤 Registrado por: *${esc(data.remetente)}*\n✅ Autorizado por: *${esc(autorizador)}*`:`\n✅ Autorizado por: *${esc(autorizador)}*`;
+  const _terceiroInfo=_tgIsTerceiro?`\n👥 *Compra de terceiro:* ${esc(_tgTerceiroNome)}`:'';
 
   {
     const valor=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-    const textoAutorizado=`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria||'Outros'}\n📅 ${data.data_lancamento}${_remetenteInfo}\n\n_Registrado com sucesso no BY Finance._`;
+    const textoAutorizado=`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria||'Outros'}${_terceiroInfo}\n📅 ${data.data_lancamento}${_remetenteInfo}\n\n_Registrado com sucesso no BY Finance._`;
     const _chatIdsAut=new Set();
     if(data.chat_id) _chatIdsAut.add(String(data.chat_id));
     try{

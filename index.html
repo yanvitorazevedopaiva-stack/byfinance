@@ -16431,6 +16431,17 @@ function _initApp(){
   if(_ctDesp) _ctDesp.value=hoje.getFullYear()+'-'+(String(hoje.getMonth()+1).padStart(2,'0'));
   initPerfil();
   renderDashboard();
+  // Garante render completo após Supabase carregar
+  setTimeout(()=>{
+    renderDashboard();
+    if(typeof renderMetas==='function') renderMetas();
+    if(typeof renderTarefas==='function') renderTarefas();
+    if(typeof renderSemanal==='function') renderSemanal();
+    if(typeof renderInvestimentos==='function') renderInvestimentos();
+    if(typeof renderUltimosLancs==='function') renderUltimosLancs();
+    if(typeof tgAuthRenderDashboard==='function') tgAuthRenderDashboard();
+    if(typeof tgAuthRenderModal==='function') tgAuthRenderModal();
+  }, 2000);
   // Polling Telegram pendentes — atualiza a cada 30s automaticamente
   if(!window._tgPollingAtivo){
     window._tgPollingAtivo=true;

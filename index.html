@@ -9643,7 +9643,7 @@ function renderParcelas(){
             <tbody>${lancsCartao.map((l,i)=>`<tr>
               <td style="color:var(--text3)">${i+1}</td>
               <td style="font-weight:600">${esc(l.desc)}</td>
-              <td style="color:var(--text2)">${esc(l.data)}</td>
+              <td style="color:var(--text2)">${_fmtData(l.data)}</td>
               <td style="color:var(--neon-blue);font-size:11px">Sem.${l._sem}</td>
               <td><span class="badge badge-blue">${esc(l.forma)}</span></td>
               <td><span class="badge badge-purple">${esc(l.cat)}</span></td>
@@ -10371,7 +10371,7 @@ function renderSemanal(){
         html+=`<tr>
           <td style="color:var(--text3)">${idx+1}</td>
           <td>${highlightDesc(l.desc)}</td>
-          <td>${esc(l.data)}</td>
+          <td>${_fmtData(l.data)}</td>
           <td><span class="badge badge-blue">${esc(l.forma)}</span></td>
           <td><span class="badge badge-purple">${esc(l.cat)}</span></td>
           <td>${buildValorCell(l)}</td>
@@ -10398,7 +10398,7 @@ function renderSemanal(){
       ?items.map((l,idx)=>`<tr>
           <td>${idx+1}</td>
           <td>${highlightDesc(l.desc)}</td>
-          <td>${esc(l.data)}</td>
+          <td>${_fmtData(l.data)}</td>
           <td><span class="badge badge-blue">${esc(l.forma)}</span></td>
           <td><span class="badge badge-purple">${esc(l.cat)}</span></td>
           <td>${buildValorCell(l)}</td>
@@ -13715,7 +13715,7 @@ function renderCompras(){
         </div>
       </div>
       <div class="cp-row-val">${fmt(it.val)}</div>
-      <div class="cp-row-date">${it.data}</div>
+      <div class="cp-row-date">${_fmtData(it.data)}</div>
       <div class="cp-row-dias" style="color:${diasCor}">${dias}d</div>
       <div><span class="cp-badge ${stKey}">${badgeLabel}</span></div>
       <div class="cp-row-btns">${btns}</div>
@@ -14197,7 +14197,7 @@ function gerarRelatorioCustom(secoesList,mesRef,anoRef){
             return`<tr>
               <td style="font-weight:600">${e(cp.desc)}</td>
               <td style="color:#64748b">${cp.onde?e(cp.onde):'—'}</td>
-              <td style="color:#64748b;font-family:'Courier New',monospace;font-size:11px">${e(cp.data)}</td>
+              <td style="color:#64748b;font-family:'Courier New',monospace;font-size:11px">${_fmtData(cp.data)}</td>
               <td style="text-align:right;font-family:'Courier New',monospace;font-weight:700;color:${ST_CLR[stKey]}">${dias}d</td>
               <td class="mn y" style="text-align:right">${f(cp.val)}</td>
               <td><span class="bdg" style="background:${ST_BG[stKey]};color:${ST_CLR[stKey]}">${ST_LABEL[stKey]}</span></td>
@@ -14643,7 +14643,7 @@ function gerarRelatorio(){
         <tbody>${its.map((l,i)=>`<tr>
           <td style="color:#94a3b8;font-size:10px">${i+1}</td>
           <td style="font-weight:500">${e(l.desc)}</td>
-          <td style="color:#64748b">${e(l.data)}</td>
+          <td style="color:#64748b">${_fmtData(l.data)}</td>
           <td><span class="bdg bb">${e(l.forma)}</span></td>
           <td><span class="bdg bp">${e(l.cat)}</span></td>
           <td class="mn y" style="text-align:right">${f(l.val)}</td>
@@ -14945,7 +14945,7 @@ function gerarRelatorioPagina(secao){
           <tbody>${its.map((l,i)=>`<tr>
             <td style="color:#94a3b8">${i+1}</td>
             <td style="font-weight:500">${e(l.desc)}</td>
-            <td style="color:#64748b">${e(l.data)}</td>
+            <td style="color:#64748b">${_fmtData(l.data)}</td>
             <td><span class="bdg bb">${e(l.forma)}</span></td>
             <td><span class="bdg bp">${e(l.cat)}</span></td>
             <td class="mn y" style="text-align:right">${f(l.val)}</td>
@@ -24372,7 +24372,7 @@ async function tgConfirmarAutorizacao(){
     await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
     {
       const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-      const textoReceita=`✅ *Receita autorizada!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria}\n📅 ${dataLanc}\n\n_Registrada com sucesso em Receitas._`;
+      const textoReceita=`✅ *Receita autorizada!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria}\n📅 ${dataLanc.split('-').reverse().join('/')}\n\n_Registrada com sucesso em Receitas._`;
       // Notifica todos os vínculos
       const _chatIdsRec=new Set();
       if(data.chat_id) _chatIdsRec.add(String(data.chat_id));
@@ -24468,7 +24468,7 @@ async function tgConfirmarAutorizacao(){
 
   {
     const valor=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-    const textoAutorizado=`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria||'Outros'}${_terceiroInfo}\n📅 ${data.data_lancamento}${_remetenteInfo}\n\n_Registrado com sucesso no BY Finance._`;
+    const textoAutorizado=`✅ *Lançamento autorizado no sistema!*\n\n📝 ${desc}\n💰 ${valor}\n🏷 ${data.categoria||'Outros'}${_terceiroInfo}\n📅 ${_fmtData(data.data_lancamento)}${_remetenteInfo}\n\n_Registrado com sucesso no BY Finance._`;
     const _chatIdsAut=new Set();
     if(data.chat_id) _chatIdsAut.add(String(data.chat_id));
     try{
@@ -24509,7 +24509,7 @@ async function tgAuthRejeitar(id){
   const resumo=document.getElementById('tg-rejeitar-resumo');
   if(resumo) resumo.innerHTML=`
     <div style="font-weight:700;font-size:14px;margin-bottom:8px">${esc(data.descricao)}</div>
-    <div style="color:var(--text3);font-size:12px">💰 ${valor} &nbsp;·&nbsp; 🏷 ${esc(data.categoria)} &nbsp;·&nbsp; 💳 ${esc(data.cartao)} &nbsp;·&nbsp; 📅 ${data.data_lancamento}</div>
+    <div style="color:var(--text3);font-size:12px">💰 ${valor} &nbsp;·&nbsp; 🏷 ${esc(data.categoria)} &nbsp;·&nbsp; 💳 ${esc(data.cartao)} &nbsp;·&nbsp; 📅 ${_fmtData(data.data_lancamento)}</div>
   `;
 
   const motivo=document.getElementById('tg-rejeitar-motivo');

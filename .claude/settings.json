@@ -22,7 +22,10 @@
       "Bash(node --input-type=module)",
       "Read(//mnt/c/Users/Usuario/Desktop/**)",
       "Bash(node --check api/telegram.js)",
-      "PowerShell(node --check \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\api\\\\telegram.js\" 2>&1)"
+      "PowerShell(node --check \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\api\\\\telegram.js\" 2>&1)",
+      "Bash(Select-String -Pattern '`[^`]*\\\\$\\\\{[^}]*\\(data|prazo|dataLanc\\)[^}]*\\\\}[^`]*`' index.html)",
+      "Bash(Select-Object -First 50)",
+      "Bash(grep -n '\\\\${.*data}' \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\")"
     ]
   }
 }

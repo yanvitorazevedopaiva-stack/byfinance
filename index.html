@@ -8124,7 +8124,17 @@ async function _loadFromSupabase(){
 }
 
 // ===================== STORAGE =====================
-function load(key){try{const v=localStorage.getItem(_userPrefix()+key);return v?JSON.parse(v):null;}catch(e){return null;}}
+function load(key){
+  try{
+    const v=localStorage.getItem(_userPrefix()+key);
+    if(!v||v==='undefined'||v==='null') return null;
+    return JSON.parse(v);
+  }catch(e){
+    // Remove chave corrompida
+    try{localStorage.removeItem(_userPrefix()+key);}catch(_){}
+    return null;
+  }
+}
 function save(key,val){
   try{localStorage.setItem(_userPrefix()+key,JSON.stringify(val));}catch(e){
     if(e.name==='QuotaExceededError'||e.code===22||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
@@ -8138,7 +8148,12 @@ function save(key,val){
   _syncTimer=setTimeout(_syncToSupabase,2000);
   return true;
 }
-function getData(key){return load(key)||JSON.parse(JSON.stringify(DEFAULT[key]));}
+function getData(key){
+  const v=load(key);
+  if(v!==null&&v!==undefined) return v;
+  const d=DEFAULT[key];
+  return d!==undefined?JSON.parse(JSON.stringify(d)):(Array.isArray(d)?[]:{});
+}
 function setData(key,val){save(key,val);}
 function getSalario(){const v=load('salario');return(v!=null)?v:DEFAULT.salario;}
 function setSalario(v){save('salario',v);}

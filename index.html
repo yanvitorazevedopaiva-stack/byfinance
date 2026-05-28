@@ -7922,10 +7922,22 @@ async function initAuth(){
       const {data:{session}}=await _supabase.auth.getSession();
       if(session?.user){
         const uid=session.user.id;
-        const username=session.user.user_metadata?.username
+        // Tenta resolver username — prioridade: metadata > localStorage > Supabase user_data > email
+        let username=session.user.user_metadata?.username
           ||localStorage.getItem('byf_username_'+uid)
-          ||session.user.email?.split('@')[0]
-          ||'usuario';
+          ||'';
+        // Se ainda não tem username (outro PC com localStorage vazio), busca no Supabase
+        if(!username){
+          try{
+            const _uidMapRes=await _supabase.from('user_data')
+              .select('data').eq('user_id','__uid__'+uid).maybeSingle();
+            if(_uidMapRes.data?.data?.username){
+              username=_uidMapRes.data.data.username;
+            }
+          }catch(_){}
+        }
+        // Último fallback: parte do email antes do @
+        if(!username) username=session.user.email?.split('@')[0]||'usuario';
         sessionStorage.setItem('financeOS_user',username);
         sessionStorage.setItem('byf_supabase_uid',uid);
         if(!sessionStorage.getItem('byf_session_start'))

@@ -24011,8 +24011,12 @@ function _tgRenderPendentes(lista){
 
 async function tgAuthRenderDashboard(delay=0){
   const _run=async()=>{
-    const el=document.getElementById('d-tg-pendentes-lista');
-    if(!el) return;
+    let el=document.getElementById('d-tg-pendentes-lista');
+    // Se elemento não existe ainda, tenta novamente em 500ms
+    if(!el){
+      setTimeout(()=>tgAuthRenderDashboard(0),500);
+      return;
+    }
     // Usa exatamente o mesmo caminho que tgAuthRenderModal (que funciona)
     const lista=await tgAuthCarregar();
     _tgRenderPendentes(lista);

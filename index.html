@@ -8654,8 +8654,9 @@ function renderDashboard(){
   const _lancMes=Object.values(getData('lancamentos')||{}).flat().filter(l=>{
     return (l.data||'').startsWith(_mesAtualKey);
   });
-  const _totalPix=_lancMes.filter(l=>['pix','pix-credito'].includes(l.forma)).reduce((a,l)=>a+(parseFloat(l.val)||0),0);
-  const _totalDeb=_lancMes.filter(l=>l.forma==='debito').reduce((a,l)=>a+(parseFloat(l.val)||0),0);
+  const _normForma=f=>(f||'').toLowerCase().trim();
+  const _totalPix=_lancMes.filter(l=>['pix','pix-credito','pix crédito'].includes(_normForma(l.forma||l.modalidade||l.tipo))).reduce((a,l)=>a+(parseFloat(l.val||l.valor)||0),0);
+  const _totalDeb=_lancMes.filter(l=>['debito','débito'].includes(_normForma(l.forma||l.modalidade||l.tipo))).reduce((a,l)=>a+(parseFloat(l.val||l.valor)||0),0);
   const _totalFatMes=Object.values(getData('faturas')||{}).reduce((a,arr)=>{
     const m=new Date().getMonth();
     return a+(Array.isArray(arr)?arr[m]||0:0);
@@ -8737,10 +8738,26 @@ function renderDashboard(){
   if(altosFat.length>0) alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">⚡</span><span>Faturas altas mês anterior: ${altosFat.slice(0,2).join(', ')}...</span></div>`;
 
   // Índice de comprometimento de renda (debt-to-income)
-  const dti=(salario>0&&isFinite(totalGf/salario)?(totalGf/salario*100):0).toFixed(1);
-  const dtiClass=dti>85?'alert-red':dti>70?'alert-yellow':'alert-blue';
-  alertsHtml+=`<div class="alert ${dtiClass}"><span class="alert-icon">📊</span><span>Comprometimento de renda: <b>${dti}%</b> em gastos fixos</span></div>`;
-  alertsHtml+=`<div class="alert alert-green"><span class="alert-icon">✦</span><span>Liberdade financeira prevista para <b>Agosto/2026</b>!</span></div>`;
+  const _mesKeyRec=new Date().toISOString().slice(0,7);
+  const _recVar=getData('receitas')||{};
+  const _recVarMes=(_recVar[_mesKeyRec]||[]).reduce((a,r)=>a+(r.val||r.valor||0),0);
+  const _recFixas=(getData('receitasFixas')||[]).reduce((a,r)=>a+(r.val||0),0);
+  const _recTotal=_recVarMes>0?_recVarMes:_recFixas;
+  const dti=(_recTotal>0&&isFinite(totalGf/_recTotal)?(_recTotal>0?(totalGf/_recTotal*100):0):0).toFixed(1);
+  const dtiClass=parseFloat(dti)>80?'alert-red':parseFloat(dti)>50?'alert-yellow':'alert-blue';
+  if(_recTotal>0) alertsHtml+=`<div class="alert ${dtiClass}"><span class="alert-icon">📊</span><span>Comprometimento de renda: <b>${dti}%</b> em gastos fixos</span></div>`;
+  // Liberdade financeira — só mostra se houver meta de economia configurada
+  const _metaEcon=getData('meta_econ')||null;
+  if(_metaEcon&&_metaEcon.valor>0&&_recTotal>0){
+    const _sobraReal=_recTotal-totalGf-_totalFatMes;
+    if(_sobraReal>0){
+      const _mesesRestantes=Math.ceil(_metaEcon.valor/_sobraReal);
+      const _dtLiberdade=new Date();
+      _dtLiberdade.setMonth(_dtLiberdade.getMonth()+_mesesRestantes);
+      const _lblLib=_dtLiberdade.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+      alertsHtml+=`<div class="alert alert-green"><span class="alert-icon">✦</span><span>Liberdade financeira prevista para <b>${_lblLib}</b>!</span></div>`;
+    }
+  }
 
   // Alertas de cartões em atraso com juros
   const _dHoje=new Date().getDate();

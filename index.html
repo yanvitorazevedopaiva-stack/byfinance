@@ -15101,6 +15101,13 @@ document.addEventListener('DOMContentLoaded',async()=>{
   const loggedIn=await initAuth();
   if(!loggedIn) return; // aguarda login
   _initApp();
+  // Re-renderiza após load do Supabase para garantir dados atualizados
+  setTimeout(()=>{
+    if(typeof renderDashboard==='function') renderDashboard();
+    if(typeof renderUltimosLancs==='function') renderUltimosLancs();
+    if(typeof tgAuthRenderDashboard==='function') tgAuthRenderDashboard();
+    if(typeof tgAuthRenderModal==='function') tgAuthRenderModal();
+  },1500);
   // Restaura a última página visitada antes do F5
   const _lp=sessionStorage.getItem('_lastPage');
   if(_lp&&_lp!=='dashboard'&&document.getElementById('page-'+_lp)){

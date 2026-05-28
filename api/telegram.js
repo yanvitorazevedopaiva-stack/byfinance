@@ -1691,10 +1691,11 @@ export default async function handler(req, res) {
         await limparContexto(chat_id);
         for (const l of _lansM) await salvarPendente(chat_id, vinculo_user_id, l, tipo_midia, mensagem_original, nomeRemetente);
         const _listaMkt = _lansM.map(l=>`• ${l.descricao} — ${parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
-        const _cartaoMktStr = gasto.cartao && gasto.cartao !== gasto.modalidade ? `💳 ${fmtCartao(gasto.cartao)}\n` : '';
+        const _cartaoMktStr = gasto.cartao && gasto.cartao !== gasto.modalidade ? `💳 ${escapeMd(gasto.cartao)}\n` : '';
         const _dataFmtMkt = _lansM[0]?.data_lancamento ? fmtData(_lansM[0].data_lancamento) : fmtData(new Date().toISOString().split('T')[0]);
         const _totalMktVal = _lansM.reduce((a,l)=>a+(parseFloat(l.valor)||0),0);
         const _totalMktFmt = _totalMktVal.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const _parcMktStr = gasto.parcelas && gasto.parcelas > 1 ? `🔄 *${gasto.parcelas}x* de ${(_totalMktVal/gasto.parcelas).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}\n` : '';
         const _listaMktDetalhada = _lansM.map(l=>{
           const vlrFmt = parseFloat(l.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
           const qtd = l.quantidade && l.quantidade > 1 ? ` x${l.quantidade}` : '';
@@ -1704,7 +1705,7 @@ export default async function handler(req, res) {
           return `• ${escapeMd(l.descricao_original || l.descricao)}${qtd} — *${vlrFmt}*${vlrUnit}`;
         }).join('\n');
         const _mktTipoLabel = _isMes ? '📋 Compra do mês' : '🛒 Compra variável';
-        await sendTelegramTodos(vinculo_user_id, `✅ *Mercado registrado!*\n\n${_listaMktDetalhada}\n\n💰 *Total: ${_totalMktFmt}*\n🏷 Mercado · ${_mktTipoLabel}\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${_dataFmtMkt}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+        await sendTelegramTodos(vinculo_user_id, `✅ *Mercado registrado!*\n\n${_listaMktDetalhada}\n\n💰 *Total: ${_totalMktFmt}*\n${_parcMktStr}🏷 Mercado · ${_mktTipoLabel}\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n📅 ${_dataFmtMkt}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
         return res.status(200).json({ ok: true });
 
       } else if (campo === 'parcelamento') {
@@ -2298,7 +2299,7 @@ export default async function handler(req, res) {
       await sendTelegram(chat_id,
         `📋 *${_lans.length} itens identificados no cupom:*\n\n${_listaEsb}\n\n` +
         `💰 Total: *${_totalEsb.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*\n\n` +
-        `Está correto? *1* ou *sim* para confirmar · *2* ou *não* para cancelar.`
+        `Está correto?\n\n1️⃣ *Sim* — confirmar\n2️⃣ *Não* — editar`
       );
       return res.status(200).json({ ok: true });
     }

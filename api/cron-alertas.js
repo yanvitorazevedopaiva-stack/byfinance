@@ -207,24 +207,23 @@ async function buildResumo(user_id) {
     }
   }
 
-  // ── 5. PARCELAS DE TERCEIROS ──
+  // ── 5. PARCELAS DE TERCEIROS — alerta no dia do fechamento/vencimento ──
   const parcelas = dados[user_id + '_parcelas'] || [];
   const cartoes2 = dados[user_id + '_cartoes'] || [];
-  const parcelasTerceiros = parcelas.filter(p => p.terceiro && p.paga < p.total);
+  const diaHoje = hoje.getDate();
   const alertasTerceiros = [];
-  parcelasTerceiros.forEach(p => {
+
+  parcelas.filter(p => p.terceiro && p.paga < p.total).forEach(p => {
     const cartao = cartoes2.find(c => c.nome === p.cartao);
     if(!cartao) return;
     const fechDia = parseInt(cartao.fechamento || 0);
     const vencDia = parseInt(cartao.vencimento || 0);
-    const diffFech = fechDia >= hoje.getDate() ? fechDia - hoje.getDate() : 30 - hoje.getDate() + fechDia;
-    const diffVenc = vencDia >= hoje.getDate() ? vencDia - hoje.getDate() : 30 - hoje.getDate() + vencDia;
     const parcRestante = p.total - p.paga;
-    if(diffFech <= 3){
-      alertasTerceiros.push(`💳 Fatura *${p.cartao}* fecha em ${diffFech}d — cobra *${p.terceiro}* por *${p.desc}* (${fmt(p.val)}/mês · ${parcRestante}x restantes)`);
+    if(diaHoje === fechDia){
+      alertasTerceiros.push(`💳 Fatura *${p.cartao}* fecha hoje — cobra *${p.terceiro}* por *${p.desc}* (${fmt(p.val)}/mês · ${parcRestante}x restantes)`);
     }
-    if(diffVenc <= 1){
-      alertasTerceiros.push(`⚠️ Vencimento hoje/amanhã — lembrou de cobrar *${p.terceiro}* por *${p.desc}*? (${fmt(p.val)})`);
+    if(diaHoje === vencDia){
+      alertasTerceiros.push(`⚠️ Vencimento hoje — lembrou de cobrar *${p.terceiro}* por *${p.desc}*? (${fmt(p.val)})`);
     }
   });
   if(alertasTerceiros.length > 0){

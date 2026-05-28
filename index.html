@@ -8859,24 +8859,22 @@ function renderDashboard(){
     const restam=30-dias;
     alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">⏰</span><span>Compra <b>${esc(c.desc)}</b> expira em <b>${restam} dia${restam!==1?'s':''}</b> — ${fmt(c.val)}</span></div>`;
   }
-  // Parcelas de terceiros com vencimento próximo
+  // Parcelas de terceiros — alerta só no dia do fechamento do cartão
   const _parcTerceiros=(getData('parcelas')||[]).filter(p=>p.terceiro&&p.paga<p.total);
-  const _cartoes=getData('cartoes')||[];
-  const _hojeD=new Date();
+  const _cartoesList=getData('cartoes')||[];
+  const _diaHoje=new Date().getDate();
   _parcTerceiros.forEach(p=>{
-    const cartao=_cartoes.find(c=>c.nome===p.cartao);
-    if(!cartao) return;
-    const _fechDia=parseInt(cartao.fechamento||0);
-    const _vencDia=parseInt(cartao.vencimento||0);
-    const _diffFech=_fechDia>=_hojeD.getDate()?_fechDia-_hojeD.getDate():30-_hojeD.getDate()+_fechDia;
-    const _diffVenc=_vencDia>=_hojeD.getDate()?_vencDia-_hojeD.getDate():30-_hojeD.getDate()+_vencDia;
+    const _ct=_cartoesList.find(c=>c.nome===p.cartao);
+    if(!_ct) return;
+    const _fechDia=parseInt(_ct.fechamento||0);
+    const _vencDia=parseInt(_ct.vencimento||0);
     const _parcRestante=p.total-p.paga;
-    const _valParc=parseFloat(p.val||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-    if(_diffFech<=3){
-      alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">👥</span><span>Fatura de <b>${esc(p.cartao)}</b> fecha em ${_diffFech}d — cobra <b>${esc(p.terceiro)}</b> por <b>${esc(p.desc)}</b> (${_valParc}/mês · ${_parcRestante}x restantes)</span></div>`;
+    const _valFmt=parseFloat(p.val||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    if(_diaHoje===_fechDia){
+      alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">👥</span><span>Fatura <b>${esc(p.cartao)}</b> fecha hoje — cobra <b>${esc(p.terceiro)}</b> por <b>${esc(p.desc)}</b> (${_valFmt}/mês · ${_parcRestante}x restantes)</span></div>`;
     }
-    if(_diffVenc<=1){
-      alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">👥</span><span>Vencimento hoje/amanhã — lembrou de cobrar <b>${esc(p.terceiro)}</b> por <b>${esc(p.desc)}</b>? (${_valParc})</span></div>`;
+    if(_diaHoje===_vencDia){
+      alertsHtml+=`<div class="alert alert-red"><span class="alert-icon">👥</span><span>Vencimento hoje — lembrou de cobrar <b>${esc(p.terceiro)}</b> por <b>${esc(p.desc)}</b>? (${_valFmt})</span></div>`;
     }
   });
   if(daAlertas) daAlertas.innerHTML=alertsHtml;
@@ -24459,6 +24457,13 @@ async function tgConfirmarAutorizacao(){
   document.getElementById('tg-aprovar-modal').style.display='none';
   document.getElementById('tg-auth-modal').style.display='none';
   if(btnConfirmar){btnConfirmar.disabled=false;btnConfirmar.textContent='⚡ CONFIRMAR LANÇAMENTO';}
+  _tgTipoCompra='pessoal';
+  const _inp=document.getElementById('tg-terceiro-nome');
+  if(_inp){_inp.value='';_inp.style.display='none';}
+  const _btnP=document.getElementById('tg-tipo-pessoal');
+  const _btnT=document.getElementById('tg-tipo-terceiro');
+  if(_btnP){_btnP.style.background='rgba(0,255,157,0.15)';_btnP.style.borderColor='rgba(0,255,157,0.5)';_btnP.style.color='var(--neon-green)';}
+  if(_btnT){_btnT.style.background='';_btnT.style.borderColor='';_btnT.style.color='';}
   setTimeout(()=>{tgAuthRenderDashboard();tgAuthRenderModal();tgAuthRenderLanc();},500);
   _showToast('✓ Lançamento autorizado!');
 }

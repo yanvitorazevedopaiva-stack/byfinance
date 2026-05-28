@@ -7945,6 +7945,14 @@ async function initAuth(){
         localStorage.setItem('byf_username_'+uid,username);
         _authUser=username;
         _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
+        // Garante que o mapping __uid__ existe no Supabase para este usuário
+        try{
+          _supabase.from('user_data').upsert({
+            user_id:'__uid__'+uid,
+            data:{username:username},
+            updated_at:new Date().toISOString()
+          },{onConflict:'user_id'}).catch(()=>{});
+        }catch(_){}
         const scr=document.getElementById('login-screen');
         if(scr) scr.style.display='none';
         try{

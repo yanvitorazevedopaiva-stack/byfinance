@@ -6062,9 +6062,11 @@
       <div class="compras-dec-sub" id="cdec-sub"></div>
       <div class="compras-dec-btns">
         <button style="border-color:var(--neon-green);color:var(--neon-green);background:rgba(0,255,157,.07)"
-          onclick="comprasDecisao('manter')">✔ SIM, QUERO</button>
+          onclick="comprasDecisao('aprovar')">✔ APROVAR COMPRA</button>
         <button style="border-color:var(--neon-red);color:var(--neon-red);background:rgba(255,68,68,.07)"
-          onclick="comprasDecisao('excluir')">✕ EXCLUIR</button>
+          onclick="comprasDecisao('negar')">✕ NEGAR</button>
+        <button style="border-color:var(--text3);color:var(--text3);background:rgba(255,255,255,.04)"
+          onclick="comprasDecisao('manter')">↩ DECIDIR DEPOIS</button>
       </div>
     </div>
   </div>
@@ -13679,10 +13681,10 @@ function renderCompras(){
   // Renderizar linhas
   wrap.innerHTML=sorted.map((it,idx)=>{
     const dias=diasDesde(it.data);
-    const stKey=it.status==='confirmada'?'confirmada':dias>=30?'decisao30':dias>=15?'lembrete15':'aguardando';
-    const accentColor={aguardando:'blue',lembrete15:'yellow',decisao30:'red',confirmada:'green'}[stKey];
-    const diasCor={aguardando:'var(--neon-blue)',lembrete15:'var(--neon-yellow)',decisao30:'var(--neon-red)',confirmada:'var(--neon-green)'}[stKey];
-    const badgeLabel={aguardando:'◆ AGUARDANDO',lembrete15:'⏰ 15 DIAS',decisao30:'🚨 DECIDIR AGORA',confirmada:'✔ CONFIRMADA'}[stKey];
+    const stKey=it.status==='confirmada'?'confirmada':it.status==='negado'?'negado':it.status==='aprovado'?'aprovado':it.status==='votando'?'votando':dias>=30?'decisao30':dias>=15?'lembrete15':'aguardando';
+    const accentColor={aguardando:'blue',lembrete15:'yellow',decisao30:'red',confirmada:'green',negado:'red',aprovado:'green',votando:'yellow'}[stKey]||'blue';
+    const diasCor={aguardando:'var(--neon-blue)',lembrete15:'var(--neon-yellow)',decisao30:'var(--neon-red)',confirmada:'var(--neon-green)',negado:'var(--neon-red)',aprovado:'var(--neon-green)',votando:'var(--neon-yellow)'}[stKey]||'var(--neon-blue)';
+    const badgeLabel={aguardando:'◆ AGUARDANDO',lembrete15:'⏰ 15 DIAS',decisao30:'🚨 DECIDIR AGORA',confirmada:'✔ CONFIRMADA',negado:'✕ NEGADO',aprovado:'✔ APROVADO',votando:'🗳 VOTANDO'}[stKey]||'◆ AGUARDANDO';
     const fillPct=Math.min(100,Math.round(dias/30*100));
     const fillColor={aguardando:'var(--neon-blue)',lembrete15:'var(--neon-yellow)',decisao30:'var(--neon-red)',confirmada:'var(--neon-green)'}[stKey];
     const imp=it.imp||3;
@@ -13701,6 +13703,9 @@ function renderCompras(){
     const meta=[];
     if(it.onde) meta.push(esc(it.onde));
     if(it.obs) meta.push(`"${esc(it.obs)}"`);
+    if(it.status==='votando'&&it.votos) meta.push(`🗳 ${it.votos.filter(v=>v.voto==='aprovar').length}/${it.votos.length} aprovaram`);
+    if(it.status==='negado'&&it.negado_por) meta.push(`✕ ${esc(it.negado_por)}${it.negado_motivo?` — "${esc(it.negado_motivo)}"`:''}`);
+    if(it.status==='aprovado') meta.push(`✔ Aprovado por todos`);
     return `<div class="cp-row" style="opacity:${stKey==='confirmada'?.65:1}">
       <div class="cp-row-accent ${accentColor}"></div>
       <div>
@@ -13754,14 +13759,77 @@ function mostrarDecisaoModal(it,dias,tipo){
 
 function comprasDecisao(acao){
   document.getElementById('compras-decision-modal').classList.remove('open');
-  if(!_comprasDecId) return;
-  if(acao==='excluir'){
-    excluirCompra(_comprasDecId);
+  if(!_comprasDecId){return;}
+  const it=getCompras().find(x=>x.id===_comprasDecId);
+  if(!it){_comprasDecId=null;return;}
+
+  if(acao==='negar'){
+    const motivo=prompt(`Por que está negando "${it.desc}"?\nDigite o motivo:`);
+    if(motivo===null){_comprasDecId=null;return;}
+    const lista=getCompras();
+    const idx=lista.findIndex(x=>x.id===_comprasDecId);
+    if(idx>-1){
+      lista[idx].status='negado';
+      lista[idx].negado_por=_authUser||'Sistema';
+      lista[idx].negado_motivo=motivo;
+    }
+    setCompras(lista);
+    _notificarTodosCompra(lista[idx],'negado',motivo);
+    renderCompras();
+
+  } else if(acao==='aprovar'){
+    const lista=getCompras();
+    const idx=lista.findIndex(x=>x.id===_comprasDecId);
+    if(idx>-1){
+      lista[idx].status='votando';
+      lista[idx].votos=[{user:_authUser||'Sistema',voto:'aprovar',data:new Date().toISOString()}];
+    }
+    setCompras(lista);
+    _enviarVotacaoCompra(lista[idx]);
+    renderCompras();
+
   } else {
-    // manter — apenas fecha e deixa na lista
     renderCompras();
   }
   _comprasDecId=null;
+}
+
+async function _notificarTodosCompra(it,tipo,motivo){
+  if(!_supabase||!_authUID) return;
+  try{
+    const {data:vinculos}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUID);
+    if(!vinculos?.length) return;
+    let msg='';
+    if(tipo==='negado'){
+      msg=`❌ *Compra negada!*\n\n🛍 *${it.desc}*\n💰 ${fmt(it.val)}\n\n👤 Negado por: *${it.negado_por||_authUser}*\n💬 Motivo: _${motivo||'Não informado'}_`;
+    } else if(tipo==='aprovado'){
+      msg=`✅ *Compra aprovada por todos!*\n\n🛍 *${it.desc}*\n💰 ${fmt(it.val)}\n\n_Acesse o BY Finance para efetuar a compra._`;
+    }
+    await Promise.all(vinculos.map(v=>
+      fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({chat_id:v.chat_id,text:msg})}).catch(()=>{})
+    ));
+  }catch(e){console.warn('_notificarTodosCompra erro:',e);}
+}
+
+async function _enviarVotacaoCompra(it){
+  if(!_supabase||!_authUID) return;
+  try{
+    const {data:vinculos}=await _supabase.from('telegram_vinculos').select('chat_id,nome').eq('user_id',_authUID);
+    if(!vinculos?.length) return;
+    const msg=`🗳 *Votação de compra!*\n\n🛍 *${it.desc}*\n💰 ${fmt(it.val)}\n${it.onde?`🏪 ${it.onde}\n`:''}\n*${_authUser}* aprovou esta compra. Você concorda?\n\n1️⃣ *Aprovar*\n2️⃣ *Negar*`;
+    await Promise.all(vinculos.map(async v=>{
+      await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({chat_id:v.chat_id,text:msg})}).catch(()=>{});
+      if(_supabase){
+        await _supabase.from('telegram_contexto').upsert({
+          chat_id:String(v.chat_id),
+          contexto:{aguardando:'voto_compra',compra_id:it.id,compra_desc:it.desc,compra_val:it.val},
+          updated_at:new Date().toISOString()
+        },{onConflict:'chat_id'}).catch(()=>{});
+      }
+    }));
+  }catch(e){console.warn('_enviarVotacaoCompra erro:',e);}
 }
 
 function confirmarCompra(id){

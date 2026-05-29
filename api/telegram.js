@@ -725,6 +725,48 @@ Mensagem: `;
   }
 }
 
+async function _registrarVotoCompra(chat_id, user_id, compra_id, voto, motivo, nomeVotante){
+  try{
+    const uidMap=await supabaseQuery(`/user_data?user_id=eq.__uid__${user_id}&select=data`);
+    const username=uidMap?.[0]?.data?.username||user_id;
+    const userDataRes=await supabaseQuery(`/user_data?user_id=eq.${username}&select=data`);
+    const dados=userDataRes?.[0]?.data||{};
+    const compras=dados[username+'_compras_lista']||[];
+    const idx=compras.findIndex(c=>c.id===compra_id);
+    if(idx===-1) return;
+    const it=compras[idx];
+    if(!it.votos) it.votos=[];
+    it.votos=it.votos.filter(v=>v.user!==nomeVotante);
+    it.votos.push({user:nomeVotante,voto,motivo:motivo||null,data:new Date().toISOString()});
+    const vinculos=await supabaseQuery(`/telegram_vinculos?user_id=eq.${user_id}&select=chat_id,nome`);
+    const totalVinculos=vinculos?.length||1;
+    const aprovacoes=it.votos.filter(v=>v.voto==='aprovar').length;
+    const negacoes=it.votos.filter(v=>v.voto==='negar');
+    if(negacoes.length>0){
+      it.status='negado';
+      it.negado_por=negacoes[0].user;
+      it.negado_motivo=negacoes[0].motivo;
+      const msg=`❌ *Compra negada!*\n\n🛍 *${it.desc}*\n💰 ${parseFloat(it.val||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}\n\n👤 Negado por: *${negacoes[0].user}*\n💬 Motivo: _${negacoes[0].motivo||'Não informado'}_`;
+      await Promise.all((vinculos||[]).map(v=>sendTelegram(v.chat_id,msg).catch(()=>{})));
+    } else if(aprovacoes>=totalVinculos){
+      it.status='aprovado';
+      const msg=`✅ *Compra aprovada por todos!*\n\n🛍 *${it.desc}*\n💰 ${parseFloat(it.val||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}\n\n_Acesse o BY Finance para efetuar a compra._`;
+      await Promise.all((vinculos||[]).map(v=>sendTelegram(v.chat_id,msg).catch(()=>{})));
+    } else {
+      it.status='votando';
+      await sendTelegram(chat_id,`🗳 *${aprovacoes}/${totalVinculos}* aprovaram *${it.desc}* até agora.`);
+    }
+    dados[username+'_compras_lista']=compras;
+    await supabaseQuery('/user_data','POST',{
+      user_id:username,
+      data:dados,
+      updated_at:new Date().toISOString()
+    });
+  }catch(e){
+    console.error('_registrarVotoCompra erro:',e.message);
+  }
+}
+
 // ── Handler principal ─────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
@@ -1806,6 +1848,33 @@ export default async function handler(req, res) {
         if (!isNaN(num)) gasto.valor = num;
         gasto.tipo = 'lancamento';
         // Continua para verificar o que falta abaixo
+      } else if (campo === 'voto_compra') {
+        const _compraId = ctx?.compra_id;
+        const _compraDesc = ctx?.compra_desc || 'Compra';
+        const _sim=['1','sim','s','aprovar'].includes(texto.toLowerCase().trim());
+        const _nao=['2','não','nao','n','negar'].includes(texto.toLowerCase().trim());
+        if(!_sim&&!_nao){
+          await sendTelegram(chat_id,`Por favor responda:\n1️⃣ *Aprovar*\n2️⃣ *Negar*`);
+          return res.status(200).json({ok:true});
+        }
+        if(_nao){
+          await setContexto(chat_id,{aguardando:'voto_compra_motivo',compra_id:_compraId,compra_desc:_compraDesc});
+          await sendTelegram(chat_id,`💬 Qual o motivo para negar *${escapeMd(_compraDesc)}*?`);
+          return res.status(200).json({ok:true});
+        }
+        await _registrarVotoCompra(chat_id,vinculo_user_id,_compraId,'aprovar',null,nomeRemetente);
+        await limparContexto(chat_id);
+        await sendTelegram(chat_id,`✅ Voto de aprovação registrado para *${escapeMd(_compraDesc)}*!`);
+        return res.status(200).json({ok:true});
+
+      } else if (campo === 'voto_compra_motivo') {
+        const _compraId = ctx?.compra_id;
+        const _compraDesc = ctx?.compra_desc || 'Compra';
+        await _registrarVotoCompra(chat_id,vinculo_user_id,_compraId,'negar',texto,nomeRemetente);
+        await limparContexto(chat_id);
+        await sendTelegram(chat_id,`✕ Voto de negação registrado para *${escapeMd(_compraDesc)}*.`);
+        return res.status(200).json({ok:true});
+
       } else if (campo === 'categoria') {
         gasto.categoria = texto;
         gasto.tipo = 'lancamento';

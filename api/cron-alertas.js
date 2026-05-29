@@ -144,7 +144,9 @@ async function buildResumo(user_id) {
 
   // Bloco déficit/superávit
   msg += `━━━ *RESULTADO ${MESES[mesAtual].toUpperCase()}* ━━━\n`;
-  msg += `💰 Receitas: *${fmt(totalReceitas)}*${receitasVarMes>0&&totalRecFixas>0?` _(previsto: ${fmt(totalRecFixas)})_`:''}\n`;
+  msg += `💰 *Receitas: ${fmt(totalReceitas)}*\n`;
+  if(totalRecFixas>0) msg += `   ↳ Fixas: ${fmt(totalRecFixas)}\n`;
+  if(receitasVarMes>0) msg += `   ↳ Variáveis: ${fmt(receitasVarMes)}\n`;
   msg += `💳 Faturas: *-${fmt(totalFatMes)}*\n`;
   msg += `📋 Gastos Fixos: *-${fmt(totalGf)}*\n`;
   msg += isPositivo

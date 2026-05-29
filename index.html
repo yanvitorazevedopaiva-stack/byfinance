@@ -18076,6 +18076,7 @@ function renderParceirosPage(){
   el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="background:var(--bg2)">
+        <th style="padding:10px 14px;text-align:center;font-size:10px;color:var(--text3);letter-spacing:.5px;width:32px">#</th>
         <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--text3);letter-spacing:.5px">NOME</th>
         <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--text3);letter-spacing:.5px">CATEGORIA</th>
         <th style="padding:10px 14px;text-align:center;font-size:10px;color:var(--text3);letter-spacing:.5px">VISITAS</th>
@@ -18084,8 +18085,9 @@ function renderParceirosPage(){
         <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--text3);letter-spacing:.5px">CONTATO</th>
         <th></th>
       </tr></thead>
-      <tbody>${sorted.map(p=>`
+      <tbody>${sorted.map((p,i)=>`
         <tr style="border-top:1px solid var(--border)">
+          <td style="padding:10px 14px;text-align:center;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3)">${i+1}</td>
           <td style="padding:10px 14px;font-weight:700;color:var(--text)">${esc(p.nome)}</td>
           <td style="padding:10px 14px;color:var(--text2)">${esc(p.categoria||'—')}</td>
           <td style="padding:10px 14px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--neon-blue)">${p.frequencia||0}x</td>

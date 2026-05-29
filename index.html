@@ -18142,10 +18142,39 @@ function lancEstabSelecionar(nome){
   const sug=document.getElementById('lanc-estab-sugestoes');
   if(sug) sug.style.display='none';
 }
+function _tgEstabSugestoes(q){
+  const sug=document.getElementById('tg-aprovar-estab-sug');
+  if(!sug) return;
+  if(!q||q.length<1){sug.style.display='none';return;}
+  const lista=getParceiros();
+  const filtrados=lista.filter(p=>p.nome.toLowerCase().includes(q.toLowerCase())).slice(0,6);
+  if(!filtrados.length){sug.style.display='none';return;}
+  sug.style.display='block';
+  sug.innerHTML=filtrados.map(p=>`
+    <div onclick="_tgEstabSelecionar('${p.nome.replace(/'/g,"\\'")}')"
+      style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"
+      onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+      <div>
+        <span style="font-size:13px;color:var(--text);font-weight:700">${esc(p.nome)}</span>
+        <span style="font-size:10px;color:var(--text3);margin-left:8px">${esc(p.categoria||'')}</span>
+      </div>
+      <span style="font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">${fmt(p.totalGasto||0)}</span>
+    </div>`).join('');
+}
+
+function _tgEstabSelecionar(nome){
+  const inp=document.getElementById('tg-aprovar-estab');
+  if(inp) inp.value=nome;
+  const sug=document.getElementById('tg-aprovar-estab-sug');
+  if(sug) sug.style.display='none';
+}
 document.addEventListener('click',e=>{
   const sug=document.getElementById('lanc-estab-sugestoes');
   const inp=document.getElementById('lanc-estabelecimento');
   if(sug&&inp&&!inp.contains(e.target)&&!sug.contains(e.target)) sug.style.display='none';
+  const sugTg=document.getElementById('tg-aprovar-estab-sug');
+  const inpTg=document.getElementById('tg-aprovar-estab');
+  if(sugTg&&inpTg&&!inpTg.contains(e.target)&&!sugTg.contains(e.target)) sugTg.style.display='none';
 });
 
 // ===================== TAREFA 11 — MULTI-MOEDA =====================
@@ -24316,18 +24345,28 @@ async function tgAuthAprovar(id){
   if(!data) return;
 
   const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-  // Formata data para exibição em brasileiro
-  const _dataLancFmt=data.data_lancamento
-    ? data.data_lancamento.split('-').reverse().join('/')
-    : '—';
+  const _dataFmtApr=data.data_lancamento?data.data_lancamento.split('-').reverse().join('/'):'—';
+  const _mktTipoObs=data.observacao?.includes('[mkt:mes]')?'📋 Compra do mês':data.observacao?.includes('[mkt:variavel]')?'🛒 Compra variável':'';
+  const _parcStr=data.parcelas&&data.parcelas>1?data.parcelas+'x de '+parseFloat(data.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'';
+  const _modalStr=data.modalidade&&data.modalidade!=='Não informado'?data.modalidade:'';
+  const _cartaoStr=data.cartao&&data.cartao!=='Não informado'?data.cartao:'';
+  const _catStr=data.categoria&&data.categoria!=='Outros'?data.categoria:'';
+  const _remStr=data.remetente?data.remetente:'';
   const resumo=document.getElementById('tg-aprovar-resumo');
   if(resumo) resumo.innerHTML=`
-    <div style="font-weight:700;font-size:14px;margin-bottom:8px">${esc(data.descricao)}</div>
-    <div style="color:var(--text3);font-size:12px;line-height:1.8">
-      💰 ${valor} &nbsp;·&nbsp; 📅 ${_dataLancFmt}
+    <div style="font-weight:700;font-size:15px;margin-bottom:10px;color:var(--text)">${esc(data.descricao)}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+      <div style="color:var(--text3)">💰 Valor</div>
+      <div style="color:var(--neon-green);font-family:'JetBrains Mono',monospace;font-weight:700">${valor}</div>
+      <div style="color:var(--text3)">📅 Data</div>
+      <div style="color:var(--text)">${_dataFmtApr}</div>
+      ${_modalStr?`<div style="color:var(--text3)">💳 Pagamento</div><div style="color:var(--text)">${esc(_modalStr)}</div>`:''}
+      ${_cartaoStr?`<div style="color:var(--text3)">🏦 Cartão</div><div style="color:var(--neon-blue);font-weight:700">${esc(_cartaoStr)}</div>`:''}
+      ${_parcStr?`<div style="color:var(--text3)">🔄 Parcelas</div><div style="color:var(--neon-yellow);font-weight:700">${_parcStr}</div>`:''}
+      ${_catStr?`<div style="color:var(--text3)">🏷 Categoria</div><div style="color:var(--text)">${esc(_catStr)}</div>`:''}
+      ${_mktTipoObs?`<div style="color:var(--text3)">🛒 Tipo</div><div style="color:var(--neon-green)">${_mktTipoObs}</div>`:''}
+      ${_remStr?`<div style="color:var(--text3)">👤 Enviado por</div><div style="color:var(--neon-purple);font-weight:700">${esc(_remStr)}</div>`:''}
     </div>
-    ${data.cartao&&data.cartao!=='Não informado'?`<div style="margin-top:6px;font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace">💳 <span style="color:var(--text3)">Cartão identificado:</span> <strong style="color:var(--neon-blue)">${esc(data.cartao)}</strong></div>`:''}
-    ${data.parcelas&&data.parcelas>1?`<div style="margin-top:6px;font-size:11px;color:var(--neon-yellow);font-family:'JetBrains Mono',monospace">🔄 ${data.parcelas}x de ${parseFloat(data.valor_parcela||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`:''}
   `;
   // Se for mercado, exibe tabela de itens
   const itensMercado = data.itens_mercado || [];
@@ -25238,9 +25277,13 @@ async function cfgTgRemoverVinculo(vinculoId){
         <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">Nº DE PARCELAS</label>
         <input id="tg-aprovar-nparc" type="number" min="2" max="48" value="2" style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
       </div>
-      <div id="tg-aprovar-estab-wrap">
+      <div id="tg-aprovar-estab-wrap" style="position:relative">
         <label id="tg-aprovar-estab-label" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">ESTABELECIMENTO (opcional)</label>
-        <input id="tg-aprovar-estab" type="text" placeholder="Nome do estabelecimento..." style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
+        <input id="tg-aprovar-estab" type="text" placeholder="Nome do estabelecimento..."
+          oninput="_tgEstabSugestoes(this.value)"
+          autocomplete="off"
+          style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
+        <div id="tg-aprovar-estab-sug" style="display:none;position:absolute;z-index:999;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.4);max-height:200px;overflow-y:auto;width:100%;top:100%;left:0"></div>
       </div>
       <div id="tg-aprovar-bem-wrap">
         <label style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:6px">VINCULAR A BEM (opcional)</label>

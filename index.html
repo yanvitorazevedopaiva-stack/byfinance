@@ -24195,6 +24195,120 @@ function tgSetForma(forma,btn,cartaoSugerido){
   }
 }
 
+function _tgAbrirRevisaoItens(itens, pendId){
+  const painel=document.getElementById('tg-revisar-itens-painel');
+  if(!painel) return;
+  painel.style.display=painel.style.display==='block'?'none':'block';
+  if(painel.style.display==='none') return;
+
+  const catalogo=_mktGetCatalogo();
+
+  const itensComStatus=itens.map(it=>{
+    const nomeOrig=(it.descricao_original||it.nome||'').toUpperCase().trim();
+    const nomeLimpo=(it.nome||it.descricao_original||'').toLowerCase().trim();
+    let match=null, status='novo';
+
+    match=catalogo.find(c=>(c.descOriginal||c.nome||'').toUpperCase().trim()===nomeOrig);
+    if(match){ status='cadastrado'; }
+    else {
+      const palavras=nomeLimpo.split(/\s+/).filter(p=>p.length>2);
+      const similar=catalogo.find(c=>{
+        const nc=(c.nome||'').toLowerCase();
+        return palavras.length>0 && palavras.filter(p=>nc.includes(p)).length>=Math.ceil(palavras.length*0.6);
+      });
+      if(similar){ match=similar; status='similar'; }
+    }
+    return {...it,_status:status,_match:match||null};
+  });
+
+  const cores={
+    cadastrado:{bg:'rgba(0,255,157,0.07)',cor:'var(--neon-green)',label:'✓ Cadastrado'},
+    similar:{bg:'rgba(255,215,0,0.07)',cor:'var(--neon-yellow)',label:'~ Similar'},
+    novo:{bg:'rgba(255,68,68,0.07)',cor:'var(--neon-red)',label:'+ Novo'}
+  };
+
+  painel.innerHTML=`
+    <div style="padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);letter-spacing:1px;font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between">
+      <span>📦 ${itens.length} ITENS DO CUPOM</span>
+      <span>🟢 ${itensComStatus.filter(i=>i._status==='cadastrado').length} · 🟡 ${itensComStatus.filter(i=>i._status==='similar').length} · 🔴 ${itensComStatus.filter(i=>i._status==='novo').length}</span>
+    </div>
+    ${itensComStatus.map((it,idx)=>{
+      const c=cores[it._status];
+      const vlrFmt=parseFloat(it.total||it.vlr||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      const vlrUnitFmt=parseFloat(it.vlr||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      return `<div id="tg-item-row-${idx}" style="padding:8px 12px;border-bottom:1px solid var(--border);background:${c.bg}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:700;color:var(--text)">${esc(it.nome||it.descricao_original||'—')}</div>
+            ${it.descricao_original&&it.descricao_original!==it.nome?`<div style="font-size:10px;color:var(--text3)">${esc(it.descricao_original)}</div>`:''}
+            <div style="font-size:10px;color:var(--text3)">Qtd: ${it.qtd||1} · Unit: ${vlrUnitFmt}</div>
+            <div style="font-size:10px;color:${c.cor};margin-top:2px">${c.label}${it._match?`: ${esc(it._match.nome)}`:''}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;font-weight:700;color:var(--neon-green);font-family:'JetBrains Mono',monospace">${vlrFmt}</div>
+            <div style="display:flex;gap:4px;margin-top:4px;justify-content:flex-end">
+              ${it._status==='novo'?`<button onclick="_tgCadastrarItemRapido(${idx})" style="padding:3px 7px;border-radius:5px;border:1px solid rgba(0,255,157,0.4);background:rgba(0,255,157,0.1);color:var(--neon-green);font-size:10px;cursor:pointer">+ Cadastrar</button>`:''}
+              ${it._status==='similar'?`<button onclick="_tgVincularItem(${idx})" style="padding:3px 7px;border-radius:5px;border:1px solid rgba(255,215,0,0.4);background:rgba(255,215,0,0.1);color:var(--neon-yellow);font-size:10px;cursor:pointer">Vincular</button>`:''}
+              <button onclick="_tgIgnorarItem(${idx})" style="padding:3px 7px;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text3);font-size:10px;cursor:pointer">Ignorar</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}`;
+
+  window._tgItensRevisao=itensComStatus;
+  window._tgPendRevisaoId=pendId;
+}
+
+function _tgCadastrarItemRapido(idx){
+  const it=window._tgItensRevisao?.[idx];
+  if(!it) return;
+  const nome=it.nome||it.descricao_original||'Item';
+  const catalogo=_mktGetCatalogo();
+  const novoItem={
+    id:'mkt'+Date.now()+idx,
+    sku:'I'+(Date.now()+idx),
+    nome:nome,
+    descOriginal:it.descricao_original||nome,
+    cat:'Mercado',
+    qtd:it.qtd||1,
+    unidade:'un',
+    preco:it.vlr||0,
+    obs:'Cadastrado via cupom fiscal'
+  };
+  catalogo.push(novoItem);
+  _mktSetCatalogo(catalogo);
+  window._tgItensRevisao[idx]._status='cadastrado';
+  window._tgItensRevisao[idx]._match=novoItem;
+  const row=document.getElementById(`tg-item-row-${idx}`);
+  if(row){
+    row.style.background='rgba(0,255,157,0.07)';
+    const btns=row.querySelectorAll('button');
+    btns.forEach(b=>{if(b.textContent.includes('Cadastrar'))b.remove();});
+    _showToast(`✓ "${nome}" cadastrado no catálogo!`);
+  }
+}
+
+function _tgVincularItem(idx){
+  if(!window._tgItensRevisao?.[idx]) return;
+  window._tgItensRevisao[idx]._status='cadastrado';
+  const row=document.getElementById(`tg-item-row-${idx}`);
+  if(row){
+    row.style.background='rgba(0,255,157,0.07)';
+    const btns=row.querySelectorAll('button');
+    btns.forEach(b=>{if(b.textContent.includes('Vincular')){b.textContent='✓ Vinculado';b.disabled=true;}});
+    _showToast('✓ Item vinculado ao catálogo!');
+  }
+}
+
+function _tgIgnorarItem(idx){
+  const row=document.getElementById(`tg-item-row-${idx}`);
+  if(row){
+    row.style.opacity='0.4';
+    row.querySelectorAll('button').forEach(b=>b.remove());
+  }
+}
+
 async function tgAuthAprovar(id){
   _tgAprovarId=id;
   if(!_supabase) return;
@@ -24283,6 +24397,18 @@ async function tgAuthAprovar(id){
         _mktInfoDiv.innerHTML=_html;
       }
       _mktInfoDiv.style.display='block';
+      // Ativa botão revisar itens se tiver itens_mercado
+      const _btnRevisar=document.getElementById('tg-aprovar-revisar-itens');
+      const _painelRevisar=document.getElementById('tg-revisar-itens-painel');
+      if(_btnRevisar){
+        if(data.itens_mercado?.length>0){
+          _btnRevisar.style.display='block';
+          _btnRevisar.onclick=()=>_tgAbrirRevisaoItens(data.itens_mercado,id);
+          if(_painelRevisar) _painelRevisar.style.display='none';
+        } else {
+          _btnRevisar.style.display='none';
+        }
+      }
     }else{
       _mktInfoDiv.style.display='none';
     }
@@ -25072,6 +25198,8 @@ async function cfgTgRemoverVinculo(vinculoId){
       <input id="tg-terceiro-nome" type="text" placeholder="Nome do terceiro..." style="display:none;margin-top:8px;width:100%;padding:7px 10px;background:var(--bg);border:1px solid rgba(168,85,247,0.35);color:var(--neon-purple);border-radius:8px;font-size:12px;box-sizing:border-box">
     </div>
     <div id="tg-aprovar-itens-mercado" style="display:none"></div>
+    <button id="tg-aprovar-revisar-itens" style="display:none;width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid rgba(0,200,255,0.3);background:rgba(0,200,255,0.07);color:var(--neon-blue);font-size:11px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:1px">📦 REVISAR E VINCULAR ITENS AO CATÁLOGO</button>
+    <div id="tg-revisar-itens-painel" style="display:none;margin-top:10px;border:1px solid var(--border);border-radius:10px;overflow:hidden"></div>
     <div id="tg-aprovar-mkt-info" style="display:none;padding:10px 12px;border-radius:10px;background:rgba(0,200,100,0.07);border:1px solid rgba(0,200,100,0.22);margin-bottom:14px;font-size:12px"></div>
     <div style="display:flex;flex-direction:column;gap:14px">
       <div>

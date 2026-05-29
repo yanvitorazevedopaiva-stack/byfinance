@@ -636,29 +636,43 @@ COMPROVANTES FÍSICOS (papel fotografado, recibo, cupom fiscal, nota fiscal):
 - Se texto parcialmente ilegível → tente pelo contexto visual
 
 CUPOM FISCAL / NOTA FISCAL com lista de itens:
-- Extraia TODOS os itens individualmente com nome, quantidade e valor unitário
-- Use tipo "multiplos" com cada item como um lançamento separado
-- Formato de cada item no array lancamentos:
-  {
-    "tipo": "lancamento",
-    "descricao": "Nome do produto exatamente como no cupom",
-    "descricao_original": "Nome exato do cupom sem abreviações",
-    "valor": 89.90,
-    "valor_unitario": 89.90,
-    "quantidade": 1,
-    "categoria": "Vestuário",
-    "cartao": "Não informado",
-    "modalidade": "Dinheiro",
-    "data_lancamento": "${new Date().toISOString().split('T')[0]}",
-    "mktTipo": "variavel"
-  }
-- O campo "valor" deve ser o valor TOTAL do item (qtd × valor unitário)
-- O campo "valor_unitario" deve ser o preço unitário
-- O campo "quantidade" deve ser a quantidade comprada
-- O campo "descricao_original" deve ser o nome exato como aparece no cupom
-- NUNCA agrupe itens — cada produto é um lançamento separado
-- A soma de todos os valores deve bater com o TOTAL do cupom
-- Forma de pagamento: leia o rodapé do cupom (Dinheiro, Crédito, Débito, PIX)
+Analise a imagem com MÁXIMA atenção. Sua prioridade é extrair CADA LINHA de produto individualmente.
+
+INSTRUÇÕES OBRIGATÓRIAS — siga todas sem exceção:
+1. Leia a tabela de itens linha por linha — colunas típicas: COD, DESCRIÇÃO, QTD, VL.UNIT, VL.ITEM ou similar
+2. Para CADA produto extraia: nome completo, quantidade, valor unitário, valor total do item
+3. NUNCA agrupe produtos — cada linha da nota = um objeto separado no array lancamentos
+4. A soma de todos os valores dos itens DEVE ser igual ao TOTAL da nota
+5. Preserve o nome original sem traduzir — ex: "DETERG BARRA 500G MACA" permanece assim
+6. Se quantidade for 1, ainda inclua "quantidade": 1
+7. Leia o rodapé da nota para identificar forma de pagamento
+8. Use a data impressa na nota como data_lancamento no formato YYYY-MM-DD
+9. Se não conseguir ler um item claramente → inclua com descricao "ITEM ILEGÍVEL" e valor 0
+10. NUNCA retorne menos itens do que os visíveis na imagem
+
+FORMATO OBRIGATÓRIO de cada item no array:
+{
+  "tipo": "lancamento",
+  "descricao": "Nome legível do produto",
+  "descricao_original": "NOME EXATO COMO APARECE NA NOTA",
+  "valor": 2.09,
+  "valor_unitario": 2.09,
+  "quantidade": 1,
+  "categoria": "Mercado",
+  "cartao": "Não informado",
+  "modalidade": "Dinheiro",
+  "data_lancamento": "YYYY-MM-DD",
+  "mktTipo": "variavel"
+}
+
+RETORNO ESPERADO para cupom fiscal:
+{
+  "tipo": "multiplos",
+  "lancamentos": [...um objeto por produto...],
+  "total_nota": 288.90,
+  "estabelecimento": "Nome do estabelecimento",
+  "forma_pagamento": "Dinheiro"
+}
 
 COMPROVANTES DIGITAIS (prints de tela):
 - Notificação de banco: "Você pagou R$ X para Y" → lancamento com descricao=Y, valor=X
@@ -986,7 +1000,7 @@ export default async function handler(req, res) {
     // ── Detecção de nova intenção: evita que contexto antigo capture mensagem nova ──
     // Se o usuário estiver num fluxo (modalidade, cartão, etc.) e enviar uma mensagem
     // com intenção claramente diferente, limpa o contexto e processa do zero.
-    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas','mercado_multiplos','menu_ajuda','resposta_reagendamento','contraproposta_prazo','resposta_contraproposta','receita_tipo','receita_dia'];
+    const _estadosMidFlow = ['modalidade','cartao','valor','descricao','categoria','descricao_receita','descricao_foto','parcelamento','num_parcelas','mercado_multiplos','menu_ajuda','resposta_reagendamento','contraproposta_prazo','resposta_contraproposta','receita_tipo','receita_dia','editar_itens_mercado'];
     const _novosIntentosKw = [
       'atribui','atribuir','criar tarefa','nova tarefa','tarefa para','tarefa:',
       'recebi','recebi de','entrou na conta','salário','salario','freelance',
@@ -1759,6 +1773,22 @@ export default async function handler(req, res) {
             itens_mercado: _itensMkt,
             tipo: 'mercado'
           };
+          // Verifica se há itens com problema (ilegíveis ou valor zero)
+          const _itensProblema = _itensMkt.filter(i => !i.total || i.total === 0 || i.nome === 'ITEM ILEGÍVEL');
+          if (_itensProblema.length > 0) {
+            await setContexto(chat_id, {
+              aguardando: 'editar_itens_mercado',
+              gasto_parcial: { ...gasto, lancamentos: _lansM, itens_mercado: _itensMkt, _pendMkt }
+            });
+            const _listaProblemas = _itensProblema.slice(0,5).map((item,i) => `${i+1}. ${item.nome} — ⚠️ valor não lido`).join('\n');
+            await sendTelegram(chat_id,
+              `⚠️ *${_itensProblema.length} item(ns) precisam de correção:*\n\n${_listaProblemas}\n\n` +
+              `Digite no formato:\n_número: descrição, quantidade, valor_\n` +
+              `Ex: _1: Detergente Barra 500g, 1, 2.09_\n\n` +
+              `Ou envie *ok* para salvar assim mesmo.`
+            );
+            return res.status(200).json({ ok: true });
+          }
           await limparContexto(chat_id);
           await salvarPendente(chat_id, vinculo_user_id, _pendMkt, tipo_midia, mensagem_original, nomeRemetente);
           const _listaMkt = _itensMkt.slice(0,8).map(i=>`• ${i.nome}${i.qtd>1?` x${i.qtd}`:''} — ${parseFloat(i.total||i.vlr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
@@ -1874,6 +1904,60 @@ export default async function handler(req, res) {
         await limparContexto(chat_id);
         await sendTelegram(chat_id,`✕ Voto de negação registrado para *${escapeMd(_compraDesc)}*.`);
         return res.status(200).json({ok:true});
+
+      } else if (campo === 'editar_itens_mercado') {
+        const _ctxParcial = ctx.gasto_parcial || {};
+        const _itens = _ctxParcial.itens_mercado || [];
+        const _pendMktSalvo = _ctxParcial._pendMkt;
+
+        if (texto.toLowerCase().trim() === 'ok') {
+          await limparContexto(chat_id);
+          if (_pendMktSalvo) {
+            _pendMktSalvo.itens_mercado = _itens;
+            _pendMktSalvo.valor = _itens.reduce((a,i)=>a+(parseFloat(i.total||i.vlr)||0),0);
+            await salvarPendente(chat_id, vinculo_user_id, _pendMktSalvo, tipo_midia, mensagem_original, nomeRemetente);
+          }
+          const _totalFinal = _itens.reduce((a,i) => a + (parseFloat(i.total||i.vlr)||0), 0);
+          await sendTelegramTodos(vinculo_user_id,
+            `✅ *Mercado registrado!*\n\n` +
+            _itens.slice(0,8).map(i=>`• ${i.nome}${i.qtd>1?` x${i.qtd}`:''} — ${parseFloat(i.total||i.vlr||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n') +
+            `\n\n💰 *Total: ${_totalFinal.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`
+          );
+          return res.status(200).json({ ok: true });
+        }
+
+        // Parseia correção: "1: Detergente Barra 500g, 1, 2.09"
+        const _matchEd = texto.match(/^(\d+):\s*(.+),\s*(\d+(?:[.,]\d+)?),\s*(\d+(?:[.,]\d+)?)$/);
+        if (_matchEd) {
+          const _idxEd = parseInt(_matchEd[1]) - 1;
+          const _nomeEd = _matchEd[2].trim();
+          const _qtdEd = parseFloat(_matchEd[3].replace(',','.'));
+          const _vlrEd = parseFloat(_matchEd[4].replace(',','.'));
+          if (_idxEd >= 0 && _idxEd < _itens.length) {
+            _itens[_idxEd].nome = _nomeEd;
+            _itens[_idxEd].qtd = _qtdEd;
+            _itens[_idxEd].vlr = _vlrEd;
+            _itens[_idxEd].total = parseFloat((_qtdEd * _vlrEd).toFixed(2));
+          }
+          const _aindaProb = _itens.filter(i => !i.total || i.total === 0 || i.nome === 'ITEM ILEGÍVEL');
+          await setContexto(chat_id, {
+            aguardando: 'editar_itens_mercado',
+            gasto_parcial: { ..._ctxParcial, itens_mercado: _itens }
+          });
+          if (_aindaProb.length > 0) {
+            const _listaProb = _aindaProb.slice(0,5).map((item,i) => `${i+1}. ${item.nome} — ⚠️`).join('\n');
+            await sendTelegram(chat_id, `✅ Item corrigido!\n\n⚠️ *Ainda há ${_aindaProb.length} item(ns) pendentes:*\n\n${_listaProb}\n\nDigite a correção ou envie *ok* para salvar assim mesmo.`);
+          } else {
+            await sendTelegram(chat_id, `✅ Todos os itens corrigidos!\n\nEnvie *ok* para confirmar e salvar.`);
+          }
+          return res.status(200).json({ ok: true });
+        }
+
+        await sendTelegram(chat_id,
+          `Formato inválido. Use:\n_número: descrição, quantidade, valor_\n` +
+          `Ex: _1: Detergente Barra 500g, 1, 2.09_\n\nOu envie *ok* para salvar assim mesmo.`
+        );
+        return res.status(200).json({ ok: true });
 
       } else if (campo === 'categoria') {
         gasto.categoria = texto;

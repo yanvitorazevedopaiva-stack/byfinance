@@ -507,6 +507,12 @@ Geral: "to do", "todo", "pendência", "compromisso", "obrigação", "missão", "
 Urgência: "urgente", "importante", "crítico", "prioridade", "asap", "hoje mesmo", "o mais rápido possível" → prioridade Alta
 Sem prazo informado → pedir_prazo = true
 
+REGRA TAREFA PRÓPRIA vs ATRIBUÍDA:
+- Tarefa própria (atribuir_para: null): qualquer frase na primeira pessoa sem mencionar outro nome. Ex: "tenho que lavar amanhã", "vou ao banco sexta", "preciso pagar a conta", "lavar o tênis amanhã"
+- Tarefa atribuída (atribuir_para: "nome"): só quando mencionar explicitamente outro nome. Ex: "passa para Bruna fazer X", "Bruna tem que fazer X"
+- CRÍTICO: Se o nome mencionado for o próprio remetente → atribuir_para: null. Ex: "Yan vai lavar amanhã" quando remetente é Yan → atribuir_para: null
+- NUNCA coloque atribuir_para com o nome do próprio usuário que está enviando a mensagem
+
 GATILHOS DE LISTAR TAREFAS:
 "tarefas", "minhas tarefas", "quais tarefas", "o que tenho para fazer", "o que tenho pra fazer", "pendências"
 "lista tarefas", "ver tarefas", "mostrar tarefas", "tarefas do dia", "lista de tarefas", "listar tarefas"
@@ -1762,16 +1768,21 @@ export default async function handler(req, res) {
             sku: l.sku || null
           }));
           // Salva um único pendente consolidado com todos os itens
+          const _nParcMkt=gasto.parcelas&&gasto.parcelas>1?parseInt(gasto.parcelas):null;
+          const _vlrParcMkt=_nParcMkt?parseFloat((_totalMkt/_nParcMkt).toFixed(2)):null;
+          const _modalMkt=_nParcMkt?'Crédito Parcelado':(gasto.modalidade||'');
           const _pendMkt = {
             descricao: `Mercado — ${_lansM.length} itens`,
             valor: _totalMkt,
-            modalidade: gasto.modalidade,
+            modalidade: _modalMkt,
             cartao: gasto.cartao,
             categoria: 'Mercado',
             mktTipo: _isMes ? 'mes' : 'variavel',
             data_lancamento: _lansM[0]?.data_lancamento || new Date().toISOString().split('T')[0],
             itens_mercado: _itensMkt,
-            tipo: 'mercado'
+            tipo: 'mercado',
+            parcelas: _nParcMkt,
+            valor_parcela: _vlrParcMkt
           };
           // Verifica se há itens com problema (ilegíveis ou valor zero)
           const _itensProblema = _itensMkt.filter(i => !i.total || i.total === 0 || i.nome === 'ITEM ILEGÍVEL');
@@ -1793,7 +1804,10 @@ export default async function handler(req, res) {
           await salvarPendente(chat_id, vinculo_user_id, _pendMkt, tipo_midia, mensagem_original, nomeRemetente);
           const _listaMkt = _itensMkt.slice(0,8).map(i=>`• ${i.nome}${i.qtd>1?` x${i.qtd}`:''} — ${parseFloat(i.total||i.vlr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`).join('\n');
           const _cartaoMktStr = gasto.cartao && gasto.cartao !== gasto.modalidade ? `💳 ${fmtCartao(gasto.cartao)}\n` : '';
-          await sendTelegramTodos(vinculo_user_id, `✅ *Mercado registrado!*\n\n${_listaMkt}${_itensMkt.length>8?`\n_...e mais ${_itensMkt.length-8} itens_`:''}\n\n💰 *Total: ${_totalMkt.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*\n${_cartaoMktStr}${iconeModalidade(gasto.modalidade)} ${gasto.modalidade}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
+          const _parcMktMsg=_nParcMkt?`🔄 *${_nParcMkt}x* de ${_vlrParcMkt.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}\n`:'';
+          const _mktTipoMsg=_isMes?'📋 Compra do mês':'🛒 Compra variável';
+          const _dataFmtMktMsg=_lansM[0]?.data_lancamento?fmtData(_lansM[0].data_lancamento):fmtData(new Date().toISOString().split('T')[0]);
+          await sendTelegramTodos(vinculo_user_id, `✅ *Mercado registrado!*\n\n${_listaMkt}${_itensMkt.length>8?`\n_...e mais ${_itensMkt.length-8} itens_`:''}\n\n💰 *Total: ${_totalMkt.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*\n${_parcMktMsg}${_cartaoMktStr}${iconeModalidade(_modalMkt)} ${_modalMkt}\n🏷 Mercado · ${_mktTipoMsg}\n📅 ${_dataFmtMktMsg}\n\n⏳ Aguardando autorização no BY Finance.\nVocê tem *7 dias* para aprovar ou rejeitar.`);
           return res.status(200).json({ ok: true });
         }
         await limparContexto(chat_id);
@@ -2288,6 +2302,7 @@ export default async function handler(req, res) {
                 tarefa_id: nova.id
               }
             });
+            // Só manda "aguardando resposta" se não for o próprio usuário
             await sendTelegram(chat_id,
               `✅ *Tarefa criada e atribuída para ${gasto.atribuir_para}!*\n\n` +
               `📝 ${gasto.titulo}\n` +
@@ -2299,8 +2314,10 @@ export default async function handler(req, res) {
               `✅ Tarefa criada!\n\n⚠ Não encontrei "${gasto.atribuir_para}" nos números vinculados desta conta.`
             );
           } else {
-            // Atribuiu para si mesmo
-            await sendTelegram(chat_id, `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade || 'Média'}`);
+            // Atribuiu para si mesmo — cria sem aguardar resposta, notifica todos
+            await sendTelegramTodos(vinculo_user_id,
+              `✅ *Tarefa criada!*\n\n📋 ${gasto.titulo}${prazoTxt}\n🎯 Prioridade: ${gasto.prioridade || 'Média'}`
+            );
           }
           await limparContexto(chat_id);
           return res.status(200).json({ ok: true });

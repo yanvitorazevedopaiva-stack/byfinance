@@ -5017,6 +5017,7 @@
 <div id="page-mercado" class="page">
   <!-- ── PAINEL PRINCIPAL ── -->
   <div id="mkt-panel-main">
+    <div id="mkt-pendentes-cadastro-wrap" style="display:none;margin-bottom:18px;padding:14px 16px;background:var(--card);border:1px solid rgba(255,215,0,0.25);border-radius:12px"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px">
       <div class="page-title" style="margin:0">MERCADO<span class="help-btn" onclick="showHelp('mercado')">?</span></div>
       <button onclick="mktIniciarScan()"
@@ -5205,7 +5206,7 @@
       </div>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button onclick="_mktSalvarCadastroRapido()" class="btn btn-green" style="flex:1;font-size:13px;padding:11px">✓ CADASTRAR</button>
-        <button onclick="document.getElementById('mkt-cad-rapido-modal').style.display='none'" class="btn" style="border-color:rgba(255,68,68,0.3);color:var(--neon-red);padding:11px 16px">Pular</button>
+        <button onclick="_mktPularCadastroRapido()" class="btn" style="border-color:rgba(255,68,68,0.3);color:var(--neon-red);padding:11px 16px">Pular — cadastrar depois</button>
       </div>
     </div>
   </div>
@@ -16368,16 +16369,19 @@ function _renderTabelaDiaria(){
   const hoje=new Date(); hoje.setHours(0,0,0,0);
   const pfx=semAnoSel+'-'+String(semMesSel+1).padStart(2,'0');
 
-  // grade[semIdx 0-4][dow 0=Seg..6=Dom] = array lancamentos
-  const grade=Array.from({length:5},()=>Array.from({length:7},()=>[]));
+  // grade[semIdx 0-5][dow 0=Seg..6=Dom] = array lancamentos
+  const grade=Array.from({length:6},()=>Array.from({length:7},()=>[]));
 
-  for(let s=1;s<=5;s++){
+  for(let s=1;s<=6;s++){
     (allRaw[s]||[]).forEach(l=>{
       if(!l.data||!l.data.startsWith(pfx)) return;
       // inclui todos os lançamentos — crédito parcelado já tem val=1ª parcela
       const d=new Date(l.data+'T00:00:00');
       const dia=d.getDate();
-      const semIdx=Math.min(4,Math.ceil(dia/7)-1);
+      // Calcula semana real pelo dia do mês — garante que todos os dias aparecem
+      const primeiroDiaMes=new Date(semAnoSel,semMesSel,1).getDay(); // 0=Dom
+      const primeiroDiaMesAdj=(primeiroDiaMes+6)%7; // 0=Seg
+      const semIdx=Math.min(5,Math.floor((dia-1+primeiroDiaMesAdj)/7));
       const dow=(d.getDay()+6)%7; // 0=Seg
       grade[semIdx][dow].push(l);
     });
@@ -16385,9 +16389,9 @@ function _renderTabelaDiaria(){
 
   const dias=['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
   let html=`<thead><tr>
-    <th style="text-align:left;padding-left:6px"></th>
-    ${dias.map(d=>`<th>${d}</th>`).join('')}
-    <th>TOTAL</th>
+    <th style="text-align:left;padding-left:10px;font-size:9px;color:var(--text3);letter-spacing:1px;font-weight:700;padding-bottom:10px"></th>
+    ${dias.map(d=>`<th style="font-size:9px;color:var(--text3);letter-spacing:1px;font-weight:700;padding-bottom:10px;text-align:center">${d}</th>`).join('')}
+    <th style="font-size:9px;color:var(--text3);letter-spacing:1px;font-weight:700;padding-bottom:10px;text-align:right;padding-right:10px">TOTAL</th>
   </tr></thead><tbody>`;
 
   let algumaDados=false;
@@ -16396,7 +16400,8 @@ function _renderTabelaDiaria(){
     if(totSem===0&&!semana.some(d=>d.length>0)) return;
     algumaDados=true;
     const totColor=metaSemanal>0?(totSem>=metaSemanal?'var(--neon-red)':totSem>=metaSemanal*0.8?'var(--neon-yellow)':'var(--neon-green)'):'var(--text)';
-    html+=`<tr><td class="sem-row-label" style="padding-left:6px">Sem ${si+1}</td>`;
+    html+=`<tr style="border-top:1px solid rgba(255,255,255,0.04)">
+      <td style="padding:10px 6px 10px 10px;font-size:10px;font-weight:700;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap">SEM ${si+1}</td>`;
     semana.forEach((lancs,dow)=>{
       const tot=lancs.reduce((a,l)=>a+l.val,0);
       let cls='';
@@ -16410,22 +16415,29 @@ function _renderTabelaDiaria(){
         if(d.getTime()===hoje.getTime()){cls+=' dia-today';isTodayCell=true;}
       } else {
         // verifica se hoje é este slot mesmo sem lançamento
-        const diaNum=(si*7)+dow+1;
-        const dTest=new Date(semAnoSel,semMesSel,diaNum);
-        dTest.setHours(0,0,0,0);
-        if(dTest.getTime()===hoje.getTime()) cls='dia-today';
+        const _p1=new Date(semAnoSel,semMesSel,1).getDay();
+        const _pAdj=(_p1+6)%7;
+        const diaNum=si*7+dow+1-_pAdj;
+        if(diaNum>=1){
+          const dTest=new Date(semAnoSel,semMesSel,diaNum);
+          dTest.setHours(0,0,0,0);
+          if(dTest.getTime()===hoje.getTime()) cls='dia-today';
+        }
       }
       // storeamos os IDs como atributo data para evitar problemas de escaping
       const idsList=JSON.stringify(lancs.map(l=>l.id));
       const onclick=lancs.length>0?`onclick="_abrirDiaModal(${si},${dow},this)"` :'';
-      html+=`<td class="${cls}" ${onclick} data-ids='${idsList.replace(/'/g,'&#39;')}' data-si="${si}" data-dow="${dow}">
+      const _cellBg=cls.includes('dia-critico')?'rgba(255,68,68,0.1)':cls.includes('dia-alto')?'rgba(255,215,0,0.07)':cls.includes('dia-today')?'rgba(0,200,255,0.07)':'';
+      const _cellBorder=cls.includes('dia-today')?'1px solid rgba(0,200,255,0.3)':'1px solid transparent';
+      html+=`<td class="${cls}" ${onclick} data-ids='${idsList.replace(/'/g,'&#39;')}' data-si="${si}" data-dow="${dow}"
+        style="text-align:center;padding:8px 4px;border-radius:6px;background:${_cellBg};border:${_cellBorder};cursor:${lancs.length>0?'pointer':'default'}">
         ${tot>0
-          ?`<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600">${'R$'+Math.round(tot)}</span>`
-          :'<span style="color:var(--text3);font-size:11px">—</span>'}
+          ?`<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${cls.includes('dia-critico')?'var(--neon-red)':cls.includes('dia-alto')?'var(--neon-yellow)':'var(--text)'}">${'R$'+Math.round(tot)}</span>`
+          :`<span style="color:var(--text3);font-size:13px;opacity:0.3">·</span>`}
       </td>`;
     });
     const totBg=metaSemanal>0?(totSem>=metaSemanal?'rgba(255,68,68,0.07)':totSem>=metaSemanal*0.8?'rgba(255,215,0,0.05)':'var(--bg2)'):'var(--bg2)';
-    html+=`<td class="sem-total-cell" style="background:${totBg};color:${totColor}">${totSem>0?fmt(totSem):'—'}</td></tr>`;
+    html+=`<td style="text-align:right;padding-right:10px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${totColor};background:${totBg};border-radius:6px">${totSem>0?fmt(totSem):'—'}</td></tr>`;
   });
 
   if(!algumaDados) html+=`<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhum lançamento no mês selecionado.</td></tr>`;
@@ -22129,6 +22141,8 @@ function delMetaSimples(id, periodo, sfx){
 // ===================== MERCADO PAGE =====================
 function _mktGetCatalogo(){return load('mkt_catalogo')||[];}
 function _mktSetCatalogo(d){save('mkt_catalogo',d);}
+function _mktGetPendentesCadastro(){return load('mkt_pendentes_cadastro')||[];}
+function _mktSetPendentesCadastro(d){save('mkt_pendentes_cadastro',d);}
 function _mktGetListas(){return load('mkt_listas')||[];}
 function _mktSetListas(d){save('mkt_listas',d);}
 function _mktGetLista(){return load('mkt_lista')||[];}
@@ -23539,6 +23553,29 @@ function mktScannerVincularNaLista(listaId){
   mktScannerRenderItem();
 }
 function renderMercado(){
+  // Quadro de itens pendentes de cadastro
+  const _pendsCad=_mktGetPendentesCadastro();
+  const _pendsCadWrap=document.getElementById('mkt-pendentes-cadastro-wrap');
+  if(_pendsCadWrap){
+    if(_pendsCad.length>0){
+      _pendsCadWrap.style.display='block';
+      _pendsCadWrap.innerHTML=`
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--neon-yellow);font-weight:700;margin-bottom:10px">⏳ ITENS PENDENTES DE CADASTRO (${_pendsCad.length})</div>
+        ${_pendsCad.map(p=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.15);border-radius:8px;margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text)">${esc(p.nome)}</div>
+              <div style="font-size:11px;color:var(--text3)">${esc(p.cat||'Mercado')} · ${p.preco>0?fmt(p.preco):'preço não informado'} · ${p.data||''}</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button onclick="_mktCadastrarPendente('${p.id}')" class="btn btn-sm" style="color:var(--neon-green);border-color:rgba(0,255,157,0.3)">+ Cadastrar</button>
+              <button onclick="_mktRemoverPendente('${p.id}')" class="btn btn-sm" style="color:var(--neon-red);border-color:rgba(255,68,68,0.3)">✕</button>
+            </div>
+          </div>`).join('')}`;
+    } else {
+      _pendsCadWrap.style.display='none';
+    }
+  }
   _mktRenderCatalogo();_mktRenderListas();_mktRenderAnalise();
   if(_mktMesId){document.getElementById('mkt-panel-main').style.display='none';document.getElementById('mkt-panel-mes').style.display='block';_mktRenderMes();}
   else{document.getElementById('mkt-panel-main').style.display='block';document.getElementById('mkt-panel-mes').style.display='none';}
@@ -24675,7 +24712,22 @@ async function tgConfirmarAutorizacao(){
       const _idx=_catUpd.findIndex(c=>_nLow===c.nome.toLowerCase().trim()||(c.nome.length>3&&_nLow.includes(c.nome.toLowerCase().trim())));
       if(_idx>=0){_catUpd[_idx].preco=val;if(typeof _mktSetCatalogo==='function')_mktSetCatalogo(_catUpd);else localStorage.setItem('mkt_catalogo',JSON.stringify(_catUpd));_showToast('✓ Preço atualizado no catálogo!');}
     }
-    setTimeout(()=>_mktAbrirCadastroRapido(desc, val, data.categoria||'Mercado'), 700);
+    setTimeout(()=>{
+      if(data.itens_mercado?.length>0){
+        const _cat=_mktGetCatalogo();
+        const _naoCadastrados=data.itens_mercado.filter(it=>{
+          const n=(it.nome||it.descricao_original||'').toLowerCase().trim();
+          return n && !_cat.some(c=>c.nome.toLowerCase().trim()===n||(n.includes(c.nome.toLowerCase().trim())&&c.nome.length>3));
+        }).map(it=>({
+          nome:it.nome||it.descricao_original||'',
+          preco:parseFloat(it.vlr||it.valor_unitario||0),
+          cat:_mktGuessCategoriaMkt(it.nome||it.descricao_original||'')
+        })).filter(it=>it.nome);
+        if(_naoCadastrados.length>0) _mktAbrirFilaCadastro(_naoCadastrados);
+      } else {
+        _mktAbrirCadastroRapido(desc,val,data.categoria||'Mercado');
+      }
+    },700);
   }
 
   // Se for mercado variável, adiciona itens à lista de compras variáveis do mês
@@ -24809,8 +24861,53 @@ function _mktSalvarCadastroRapido() {
   const catalogo=_mktGetCatalogo();
   catalogo.push({id:Date.now(),nome,cat,unidade,preco,qtd:1});
   _mktSetCatalogo(catalogo);
+  // Remove da fila de pendentes se existir
+  const _pends=_mktGetPendentesCadastro().filter(p=>p.nome.toLowerCase().trim()!==nome.toLowerCase().trim());
+  _mktSetPendentesCadastro(_pends);
   document.getElementById('mkt-cad-rapido-modal').style.display='none';
   _showToast('✓ "'+nome+'" cadastrado no catálogo!');
+  renderMercado();
+  _mktAbrirProximoPendente();
+}
+
+function _mktPularCadastroRapido(){
+  const nome=(document.getElementById('mkt-cad-rapido-nome')?.value||'').trim();
+  const cat=document.getElementById('mkt-cad-rapido-cat')?.value||'Mercearia';
+  const preco=parseFloat(document.getElementById('mkt-cad-rapido-preco')?.value)||0;
+  const unidade=document.getElementById('mkt-cad-rapido-unidade')?.value||'un';
+  if(nome){
+    const pends=_mktGetPendentesCadastro();
+    const jaExiste=pends.some(p=>p.nome.toLowerCase().trim()===nome.toLowerCase().trim());
+    if(!jaExiste) pends.push({id:Date.now(),nome,cat,preco,unidade,data:new Date().toISOString().split('T')[0]});
+    _mktSetPendentesCadastro(pends);
+  }
+  document.getElementById('mkt-cad-rapido-modal').style.display='none';
+  _mktAbrirProximoPendente();
+}
+
+let _mktFilaPendentes=[];
+function _mktAbrirFilaCadastro(itens){
+  _mktFilaPendentes=[...itens];
+  _mktAbrirProximoPendente();
+}
+function _mktAbrirProximoPendente(){
+  if(!_mktFilaPendentes||!_mktFilaPendentes.length) return;
+  const it=_mktFilaPendentes.shift();
+  if(!it||!it.nome){_mktAbrirProximoPendente();return;}
+  const _catAtual=_mktGetCatalogo();
+  const _nLow=it.nome.toLowerCase().trim();
+  const _jaExiste=_catAtual.some(c=>c.nome.toLowerCase().trim()===_nLow||(_nLow.includes(c.nome.toLowerCase().trim())&&c.nome.length>3));
+  if(_jaExiste){_mktAbrirProximoPendente();return;}
+  setTimeout(()=>_mktAbrirCadastroRapido(it.nome,it.preco||0,it.cat||'Mercado'),300);
+}
+function _mktCadastrarPendente(id){
+  const p=_mktGetPendentesCadastro().find(x=>String(x.id)===String(id));
+  if(!p) return;
+  _mktAbrirCadastroRapido(p.nome,p.preco,p.cat);
+}
+function _mktRemoverPendente(id){
+  _mktSetPendentesCadastro(_mktGetPendentesCadastro().filter(p=>String(p.id)!==String(id)));
+  renderMercado();
 }
 
 function mktAdicionarVariavelManual() {

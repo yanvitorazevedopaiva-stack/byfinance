@@ -3336,7 +3336,26 @@
 <!-- ========== DASHBOARD ========== -->
 <div id="page-dashboard" class="page active">
   <div class="page-title">DASHBOARD<span class="help-btn" onclick="showHelp('dashboard')">?</span></div>
-  <div class="page-sub" id="d-page-sub">// VISÃO GERAL DO MÊS</div>
+  <div class="page-sub" id="d-page-sub" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <span id="d-page-sub-label">// VISÃO GERAL DO MÊS</span>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="_dashNavMes(-1)" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text3);font-size:13px;cursor:pointer">‹</button>
+      <select id="d-mes-sel" onchange="_dashSetMes(this.value,document.getElementById('d-ano-sel').value)"
+        style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer">
+        <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+        <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+        <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+        <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
+      </select>
+      <select id="d-ano-sel" onchange="_dashSetMes(document.getElementById('d-mes-sel').value,this.value)"
+        style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer">
+        <option value="2023">2023</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option>
+      </select>
+      <button onclick="_dashNavMes(1)" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text3);font-size:13px;cursor:pointer">›</button>
+      <button id="d-btn-hoje" onclick="_dashSetMes(new Date().getMonth(),new Date().getFullYear())"
+        style="display:none;padding:3px 8px;border-radius:6px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.07);color:var(--neon-green);font-size:10px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace">HOJE</button>
+    </div>
+  </div>
 
   <!-- 1. BARRA DE SAÚDE FINANCEIRA -->
   <div class="health-bar-wrap" id="health-bar-wrap">
@@ -3681,6 +3700,17 @@
         <input type="number" id="ct-new-venc" placeholder="Dia" min="1" max="31" style="width:100%">
       </div>
       <button class="btn" onclick="addCartao()">+ ADICIONAR</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text3)">
+        <input type="checkbox" id="ct-new-terceiro" onchange="ctTerceiroChange()"
+          style="accent-color:var(--neon-purple);width:14px;height:14px;cursor:pointer">
+        <span>👥 Cartão de terceiro</span>
+      </label>
+      <div id="ct-new-terceiro-wrap" style="display:none;flex:1">
+        <input type="text" id="ct-new-terceiro-nome" placeholder="Nome do titular do cartão..."
+          style="width:100%;padding:6px 10px;background:var(--bg2);border:1px solid rgba(168,85,247,0.35);color:var(--neon-purple);border-radius:8px;font-size:12px;box-sizing:border-box">
+      </div>
     </div>
 
     <!-- Área de anexo de contrato — aparece ao selecionar o tipo -->
@@ -8299,7 +8329,23 @@ function verAnexo(nome,tipo,dados,sub){
   m.classList.add('open');
   const _render=src=>{
     if(!src){body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--neon-red);font-size:12px;font-family:'JetBrains Mono',monospace">Arquivo não encontrado no servidor.</div>`;return;}
-    body.innerHTML=tipo&&tipo.startsWith('image/')?`<img src="${src}" alt="${esc(nome)}" style="max-width:100%;height:auto">`:`<iframe src="${src}" title="${esc(nome)}" style="width:100%;height:80vh;border:none;border-radius:8px"></iframe>`;
+    if(tipo&&tipo.startsWith('image/')){
+      body.innerHTML=`<div style="text-align:center;background:var(--bg);border-radius:8px;padding:8px"><img src="${src}" alt="${esc(nome)}" style="max-width:100%;height:auto;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,0.4)"></div>`;
+    } else {
+      body.innerHTML=`
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+          <button onclick="document.getElementById('anx-pdf-frame').style.cssText='width:100%;height:60vh!important;border:1px solid var(--border);border-radius:8px;background:#fff'"
+            style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text3);font-size:11px;cursor:pointer">📄 Compacto</button>
+          <button onclick="document.getElementById('anx-pdf-frame').style.cssText='width:100%;height:85vh!important;border:1px solid var(--border);border-radius:8px;background:#fff'"
+            style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text3);font-size:11px;cursor:pointer">📄 Grande</button>
+          <button onclick="window.open('${src}','_blank')"
+            style="padding:4px 10px;border-radius:6px;border:1px solid rgba(0,200,255,0.3);background:rgba(0,200,255,0.07);color:var(--neon-blue);font-size:11px;cursor:pointer;font-weight:700">🔗 Nova aba</button>
+          <a href="${src}" download="${esc(nome)}" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.07);color:var(--neon-green);font-size:11px;font-weight:700;text-decoration:none">⬇ Baixar</a>
+        </div>
+        <iframe id="anx-pdf-frame" src="${src}#toolbar=1&navpanes=1&scrollbar=1&view=FitH" title="${esc(nome)}"
+          style="width:100%;height:75vh!important;border:1px solid var(--border);border-radius:8px;background:#fff;display:block">
+        </iframe>`;
+    }
   };
   if(typeof dados==='string'&&dados.startsWith('__sbrow_')){
     body.innerHTML=`<div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">☁ Carregando arquivo...</div>`;
@@ -8677,6 +8723,25 @@ function _scaleOpts(yFmt){
   };
 }
 
+let _dashMes=new Date().getMonth();
+let _dashAno=new Date().getFullYear();
+function _dashSetMes(m,a){
+  _dashMes=parseInt(m);
+  _dashAno=parseInt(a);
+  renderDashboard();
+}
+function _dashIsAtual(){
+  const h=new Date();
+  return _dashMes===h.getMonth()&&_dashAno===h.getFullYear();
+}
+function _dashNavMes(dir){
+  let m=_dashMes+dir;
+  let a=_dashAno;
+  if(m<0){m=11;a--;}
+  if(m>11){m=0;a++;}
+  _dashSetMes(m,a);
+}
+
 function renderDashboard(){
   tgAuthRenderDashboard();
   // Modal de tarefas — abre 1x por sessão, 600ms após o dashboard renderizar
@@ -8688,7 +8753,7 @@ function renderDashboard(){
   const totalGf=gf.reduce((a,i)=>a+i.val,0);
   const saldo=salario-totalGf;
   // ── Totais PIX e Débito do mês ──
-  const _mesAtualKey=new Date().toISOString().slice(0,7);
+  const _mesAtualKey=_dashAno+'-'+String(_dashMes+1).padStart(2,'0');
   const _lancMes=Object.values(getData('lancamentos')||{}).flat().filter(l=>{
     return (l.data||'').startsWith(_mesAtualKey);
   });
@@ -8696,8 +8761,7 @@ function renderDashboard(){
   const _totalPix=_lancMes.filter(l=>['pix','pix-credito','pix crédito'].includes(_normForma(l.forma||l.modalidade||l.tipo))).reduce((a,l)=>a+(parseFloat(l.val||l.valor)||0),0);
   const _totalDeb=_lancMes.filter(l=>['debito','débito'].includes(_normForma(l.forma||l.modalidade||l.tipo))).reduce((a,l)=>a+(parseFloat(l.val||l.valor)||0),0);
   const _totalFatMes=Object.values(getData('faturas')||{}).reduce((a,arr)=>{
-    const m=new Date().getMonth();
-    return a+(Array.isArray(arr)?arr[m]||0:0);
+    return a+(Array.isArray(arr)?arr[_dashMes]||0:0);
   },0);
   // ── Itens de compra expirando em 3 dias (30 dias desde lançamento) ──
   const _compras=getCompras().filter(c=>c.status==='aguardando');
@@ -8719,7 +8783,7 @@ function renderDashboard(){
 
   // Fatura do mês atual (índice dinâmico)
   const fat=getData('faturas');
-  const mesAtual=new Date().getMonth();
+  const mesAtual=_dashMes;
   const totalFatMes=Object.values(fat).reduce((a,arr)=>a+(arr[mesAtual]||0),0);
   document.getElementById('d-fat-mes').textContent=fmt(totalFatMes);
   // Widget Financiamentos
@@ -8776,7 +8840,7 @@ function renderDashboard(){
   if(altosFat.length>0) alertsHtml+=`<div class="alert alert-yellow"><span class="alert-icon">⚡</span><span>Faturas altas mês anterior: ${altosFat.slice(0,2).join(', ')}...</span></div>`;
 
   // Índice de comprometimento de renda (debt-to-income)
-  const _mesKeyRec=new Date().toISOString().slice(0,7);
+  const _mesKeyRec=_dashAno+'-'+String(_dashMes+1).padStart(2,'0');
   const _recVar=getData('receitas')||{};
   const _recVarMes=(_recVar[_mesKeyRec]||[]).reduce((a,r)=>a+(r.val||r.valor||0),0);
   const _recFixas=(getData('receitasFixas')||[]).reduce((a,r)=>a+(r.val||0),0);
@@ -9111,6 +9175,16 @@ function renderDashboard(){
         <span style="color:var(--neon-green);font-family:'JetBrains Mono',monospace">${fmt(i.valorAtual||i.val||0)}</span>
       </div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0;text-align:center">Nenhum investimento.</div>'}`;
   }
+  // Sincroniza seletores com o mês exibido
+  const _selMes=document.getElementById('d-mes-sel');
+  const _selAno=document.getElementById('d-ano-sel');
+  const _btnHoje=document.getElementById('d-btn-hoje');
+  const _subLabel=document.getElementById('d-page-sub-label');
+  const _MESES_DASH=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  if(_selMes) _selMes.value=_dashMes;
+  if(_selAno) _selAno.value=_dashAno;
+  if(_btnHoje) _btnHoje.style.display=_dashIsAtual()?'none':'block';
+  if(_subLabel) _subLabel.textContent=_dashIsAtual()?'// VISÃO GERAL DO MÊS':'// '+_MESES_DASH[_dashMes].toUpperCase()+' '+_dashAno;
 }
 
 // ===================== GASTOS FIXOS =====================
@@ -9144,6 +9218,25 @@ function gfSalvarOrcamentoMercado(val){
   gfRenderMercadoCard();
   _showToast('Orçamento de mercado salvo!');
 }
+function gfGetStatusListaMercado(){
+  // Retorna: 'sem-lista' | 'pendente' | 'concluida'
+  const agora=new Date();
+  const mesAtual=agora.getFullYear()+'-'+String(agora.getMonth()+1).padStart(2,'0');
+  try{
+    const listas=_mktGetListas();
+    const listaMes=listas.find(l=>l.mes===mesAtual);
+    if(!listaMes) return 'sem-lista';
+    return listaMes.status==='concluida'?'concluida':'pendente';
+  }catch(e){return 'sem-lista';}
+}
+function gfGetMktLinhaAtiva(){
+  return load('gf_mkt_linha_ativa')!==false&&load('gf_mkt_linha_ativa')!=='false';
+}
+function gfSetMktLinhaAtiva(v){
+  save('gf_mkt_linha_ativa', v?'true':'false');
+  renderGastos();
+}
+
 function gfGetTotalListaMercado(){
   const agora=new Date();
   const mesAtual=agora.getFullYear()+'-'+String(agora.getMonth()+1).padStart(2,'0');
@@ -9194,10 +9287,12 @@ function renderGastos(){
   const data=getData('gastosFixos');
   const mesVig=_gfMesVigente();
   // Total exclui itens inativos no mês vigente
+  const _mktLinhaAtiva=gfGetMktLinhaAtiva();
+  const _mktTotalGf=_mktLinhaAtiva?gfGetTotalListaMercado():0;
   const total=data.reduce((a,i)=>{
     const inativo=(i.inativosMeses||[]).includes(mesVig);
     return a+(inativo?0:i.val);
-  },0);
+  },0)+_mktTotalGf;
   const salBase=parseFloat(salario)||0;
   const sobra=salBase-total;
   const pct=salBase>0?isFinite(total/salBase)?(total/salBase*100).toFixed(1):'0.0':'0.0';
@@ -9245,7 +9340,40 @@ function renderGastos(){
   const curGfMes=gfMesKey();
   const tbody=document.getElementById('gf-tbody');
   if(!tbody) return;
-  tbody.innerHTML=data.map(g=>{
+
+  // Linha especial de Lista de Mercado
+  const _mktStatus=gfGetStatusListaMercado();
+  const _mktCores={
+    'sem-lista':{cor:'var(--text3)',bg:'',badge:'— Sem lista criada',badgeCls:''},
+    'pendente':{cor:'var(--neon-yellow)',bg:'rgba(255,215,0,0.04)',badge:'⏳ Pendente',badgeCls:'alert-yellow'},
+    'concluida':{cor:'var(--neon-green)',bg:'rgba(0,255,157,0.04)',badge:'✓ Concluída',badgeCls:'alert-green'}
+  };
+  const _mktC=_mktCores[_mktStatus];
+  const _mktLinhaHtml=`<tr style="background:${_mktLinhaAtiva?_mktC.bg:''}">
+    <td style="font-weight:600;color:${_mktLinhaAtiva?_mktC.cor:'var(--text3)'};${!_mktLinhaAtiva?'opacity:.4;text-decoration:line-through':''}">
+      🛒 Lista de Mercado
+      <span class="tip" data-tip="Espelha automaticamente o total previsto da lista de mercado do mês vigente. Amarelo = lista criada mas pendente. Verde = lista concluída. Pode desativar para lançar o valor manualmente.">i</span>
+    </td>
+    <td style="color:var(--text3);${!_mktLinhaAtiva?'opacity:.4':''}">Alimentação</td>
+    <td style="${!_mktLinhaAtiva?'opacity:.4':''}"><span class="prio-badge prio-importante">🟡 Importante</span></td>
+    <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${_mktLinhaAtiva?_mktC.cor:'var(--text3)'};${!_mktLinhaAtiva?'opacity:.4':''}">
+      ${_mktLinhaAtiva?fmt(_mktTotalGf):'—'}
+    </td>
+    <td colspan="2">
+      ${_mktLinhaAtiva&&_mktStatus!=='sem-lista'?`<span class="badge badge-${_mktStatus==='concluida'?'green':'yellow'}" style="font-size:10px">${_mktC.badge}</span>`:`<span style="font-size:11px;color:var(--text3)">${_mktC.badge}</span>`}
+    </td>
+    <td>
+      <button onclick="gfSetMktLinhaAtiva(${!_mktLinhaAtiva})"
+        style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;
+          border:1px solid ${_mktLinhaAtiva?'rgba(255,68,68,0.3)':'rgba(0,255,157,0.3)'};
+          background:${_mktLinhaAtiva?'rgba(255,68,68,0.07)':'rgba(0,255,157,0.07)'};
+          color:${_mktLinhaAtiva?'var(--neon-red)':'var(--neon-green)'}">
+        ${_mktLinhaAtiva?'DESATIVAR':'ATIVAR'}
+      </button>
+    </td>
+  </tr>`;
+
+  tbody.innerHTML=_mktLinhaHtml+data.map(g=>{
     const gPrio=g.prio||'essencial';
     if(g.id===gfEditingId){
       return `<tr style="background:rgba(0,200,255,0.06)">
@@ -9920,6 +10048,27 @@ function salvarEdicaoParcela(){
 let semanaAtual=1;
 
 // Retorna semana (1-5) a partir de uma string de data 'YYYY-MM-DD'
+// Retorna YYYY-MM de competência da fatura considerando fechamento do cartão.
+// Compra APÓS o fechamento → pertence ao mês seguinte.
+function getMesCompetencia(dataCompra, nomeCartao){
+  if(!dataCompra) return new Date().toISOString().substring(0,7);
+  const d=new Date(dataCompra+'T12:00:00');
+  if(isNaN(d)) return dataCompra.substring(0,7);
+  const cartoes=getData('cartoes')||[];
+  const cartao=cartoes.find(c=>c.nome===nomeCartao||(nomeCartao&&c.nome.toLowerCase().includes((nomeCartao+'').toLowerCase())));
+  const fechamento=cartao?.fechamento?parseInt(cartao.fechamento):null;
+  if(!fechamento||d.getDate()<=fechamento){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  }
+  const prox=new Date(d.getFullYear(),d.getMonth()+1,1);
+  return prox.getFullYear()+'-'+String(prox.getMonth()+1).padStart(2,'0');
+}
+// Retorna índice do mês (0-11) de competência da fatura
+function getMesIdxCompetencia(dataCompra, nomeCartao){
+  const mc=getMesCompetencia(dataCompra,nomeCartao);
+  return parseInt(mc.split('-')[1])-1;
+}
+
 function getSemanaFromData(dateStr){
   if(!dateStr) return semanaAtual||1;
   const d=new Date(dateStr+'T12:00:00');
@@ -10798,12 +10947,12 @@ function addLancamento(){
 
     // 1. Adiciona à parcelas
     const parcelas=getData('parcelas');
-    const mesInicio=data.substring(0,7); // YYYY-MM
+    const mesInicio=getMesCompetencia(data,cartao);
     const parcId=id+1;
     parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nParc,val:valParc,
       terceiro:_isTerceiro?_terceiroNome:null});
     // TAREFA 2 — Retroatividade: se fatura do mês já foi quitada, marcar parcela como paga
-    const mesIdxFatura=parseInt(data.split('-')[1])-1;
+    const mesIdxFatura=getMesIdxCompetencia(data,cartao);
     const fatPagasAtual=getFatPagas();
     if(fatPagasAtual[cartao]&&fatPagasAtual[cartao][mesIdxFatura]){
       parcelas[parcelas.length-1].paga=Math.min(1,nParc);
@@ -10811,7 +10960,7 @@ function addLancamento(){
     setData('parcelas',parcelas);
 
     // 2. Distribui na fatura do cartão — uma parcela por mês consecutivo
-    const mesIdx=parseInt(data.split('-')[1])-1; // 0-based
+    const mesIdx=getMesIdxCompetencia(data,cartao);
     const fat=getData('faturas');
     if(!fat[cartao]) fat[cartao]=Array(12).fill(0);
     for(let i=0;i<nParc;i++){
@@ -11464,7 +11613,8 @@ function renderFaturas(){
         const venc=c.vencimento?`dia ${c.vencimento}`:'—';
         const fech=c.fechamento?` · fecha ${c.fechamento}`:'';
         const cor=cores[i%cores.length];
-        return`<span class="badge ${cor}" title="Fechamento: ${c.fechamento||'—'} · Vencimento: ${c.vencimento||'—'}">${esc(c.nome)} · ${venc}${fech}</span>`;
+        const _badgeTerceiro=c.terceiro?`<span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:var(--neon-purple)">👥 ${c.titular?c.titular:'Terceiro'}</span>`:'';
+        return`<span class="badge ${cor}" title="Fechamento: ${c.fechamento||'—'} · Vencimento: ${c.vencimento||'—'}${c.terceiro?' · Titular: '+(c.titular||'Terceiro'):''}">${esc(c.nome)} · ${venc}${fech}${_badgeTerceiro}</span>`;
       }).join('');
     }
   }
@@ -13092,6 +13242,15 @@ function ctTipoChange(){
   }
 }
 
+function ctTerceiroChange(){
+  const cb=document.getElementById('ct-new-terceiro');
+  const wrap=document.getElementById('ct-new-terceiro-wrap');
+  const limiteInp=document.getElementById('ct-new-limite');
+  if(!cb||!wrap) return;
+  wrap.style.display=cb.checked?'flex':'none';
+  if(limiteInp) limiteInp.placeholder=cb.checked?'Opcional':'0,00';
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   const fi=document.getElementById('ct-new-contrato');
   if(fi) fi.addEventListener('change',function(){
@@ -13129,7 +13288,11 @@ function addCartao(){
   const arquivo=arquivoEl.files[0];
   const taxasDetectadas=arquivoEl._taxasDetectadas||null;
   const _save=contrato=>{
+    const _isTerceiroCard=document.getElementById('ct-new-terceiro')?.checked||false;
+    const _titularCard=(document.getElementById('ct-new-terceiro-nome')?.value||'').trim();
     const novoCartao={id:newId,nome,cor,tipo,limite,fechamento:fecha,vencimento:venc,
+      terceiro:_isTerceiroCard||false,
+      titular:_isTerceiroCard&&_titularCard?_titularCard:null,
       contrato:contrato||null,
       // aplica taxas detectadas automaticamente (usuário pode editar depois)
       jurosMes:taxasDetectadas?.jurosMes||0,
@@ -13140,6 +13303,10 @@ function addCartao(){
     cartoes.push(novoCartao);
     setData('cartoes',cartoes);
     document.getElementById('ct-new-nome').value='';
+    const _cbT=document.getElementById('ct-new-terceiro');
+    if(_cbT){_cbT.checked=false;ctTerceiroChange();}
+    const _tN=document.getElementById('ct-new-terceiro-nome');
+    if(_tN) _tN.value='';
     document.getElementById('ct-new-tipo').value='';
     document.getElementById('ct-new-limite').value='';
     document.getElementById('ct-new-fecha').value='';
@@ -13884,10 +14051,10 @@ function cpLancarConfirmar(){
     const valParc=parseFloat((val/nParc).toFixed(2));
     const parcelas=getData('parcelas');
     const parcId=baseId+1;
-    parcelas.push({id:parcId,cartao,desc:it.desc,inicio:data.substring(0,7),paga:0,total:nParc,val:valParc});
+    parcelas.push({id:parcId,cartao,desc:it.desc,inicio:getMesCompetencia(data,cartao),paga:0,total:nParc,val:valParc});
     setData('parcelas',parcelas);
     const fat=getData('faturas');if(!fat[cartao])fat[cartao]=Array(12).fill(0);
-    const mesIdx=parseInt(data.split('-')[1])-1;
+    const mesIdx=getMesIdxCompetencia(data,cartao);
     for(let i=0;i<nParc;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}
     setData('faturas',fat);
     all[sem].push({id:baseId,desc:it.desc,data,forma:`${cartao} (${nParc}x)`,cat,val:valParc,valTotal:val,cartao,nParc,parcId,fatMes:mesIdx,fatVal:valParc});
@@ -16660,9 +16827,17 @@ let _cronoAnxPending=null; // anexo temporário antes de salvar o empréstimo
 
 function getCronoOrder(){
   const cartoes=getData('cartoes');
+  const gf=getData('gastosFixos')||[];
   let order=load('cronoPagOrder')||[];
   cartoes.forEach(c=>{if(!order.includes(c.nome))order.push(c.nome);});
-  order=order.filter(n=>cartoes.find(c=>c.nome===n));
+  gf.forEach(g=>{const k='gf:'+g.id;if(!order.includes(k))order.push(k);});
+  order=order.filter(n=>{
+    if(n.startsWith('gf:')){
+      const id=parseInt(n.slice(3));
+      return gf.find(g=>g.id===id);
+    }
+    return cartoes.find(c=>c.nome===n);
+  });
   setData('cronoPagOrder',order);
   return order;
 }
@@ -16807,8 +16982,16 @@ function renderCronoPag(){
     const pagtos=getCronoPagamento();
 
     // ── Totais ──
-    let totalFat=0,totalEmpMes=0,totalVlrPagar=0,totalJurosAbs=0;
+    let totalFat=0,totalEmpMes=0,totalVlrPagar=0,totalJurosAbs=0,totalGfCrono=0;
+    const _gfCrono=getData('gastosFixos')||[];
+    const _mesVigCronoTot=selYear+'-'+String(mesIdx+1).padStart(2,'0');
     order.forEach(n=>{
+      if(n.startsWith('gf:')){
+        const _gfId=parseInt(n.slice(3));
+        const _gfIt=_gfCrono.find(g=>g.id===_gfId);
+        if(_gfIt&&!(_gfIt.inativosMeses||[]).includes(_mesVigCronoTot)) totalGfCrono+=_gfIt.val;
+        return;
+      }
       const fatVal=getFatVal(faturas,n,mesIdx);
       totalFat+=fatVal;
       const cardEmps=emps[n]||[];
@@ -16832,8 +17015,8 @@ function renderCronoPag(){
       </div>
       <div class="card card-blue" style="padding:14px 16px">
         <div class="card-label">COMPROMISSO TOTAL DO MÊS</div>
-        <div class="card-value val-blue" style="font-size:20px">${fmt(totalFat+totalEmpMes)}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">faturas + parcelas emp.</div>
+        <div class="card-value val-blue" style="font-size:20px">${fmt(totalFat+totalEmpMes+totalGfCrono)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">faturas + gastos fixos + parcelas emp.</div>
       </div>`;
 
     // ── Tabela ──
@@ -16852,7 +17035,53 @@ function renderCronoPag(){
     const contatos=getCronoContatos();
 
     const cronoQuit=getCronoQuitado();
+    const gastosFixos=getData('gastosFixos')||[];
+    const mesVigCrono=selYear+'-'+String(mesIdx+1).padStart(2,'0');
     const rows=order.map((nome,idx)=>{
+      // ── Linha de Gasto Fixo ──
+      if(nome.startsWith('gf:')){
+        const gfId=parseInt(nome.slice(3));
+        const gfItem=gastosFixos.find(g=>g.id===gfId);
+        if(!gfItem) return'';
+        const inativo=(gfItem.inativosMeses||[]).includes(mesVigCrono);
+        if(inativo) return'';
+        const mesKey=mesVigCrono;
+        const pagKey='gf:'+gfId;
+        const n64=btoa(unescape(encodeURIComponent(pagKey)));
+        const pago=parseFloat(pagtos[pagKey])||0;
+        const isQuitado=!!(cronoQuit[pagKey]&&cronoQuit[pagKey][mesKey]);
+        const sem=pago>=gfItem.val
+          ?{cls:'crono-sem-verde',dot:'●',label:'PAGO'}
+          :{cls:'crono-sem-vermelho',dot:'●',label:'PENDENTE'};
+        const quitadoBtn=isQuitado
+          ?`<span style="color:var(--neon-green);font-weight:700;font-size:11px;font-family:'JetBrains Mono',monospace">✓ PAGO</span>
+            <button onclick="toggleCronoQuitado(${JSON.stringify(pagKey)},${JSON.stringify(mesKey)})"
+              style="margin-left:6px;font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid rgba(255,68,68,0.3);background:transparent;color:var(--neon-red);cursor:pointer;font-family:'JetBrains Mono',monospace">↩ desfazer</button>`
+          :`<button onclick="toggleCronoQuitado(${JSON.stringify(pagKey)},${JSON.stringify(mesKey)})"
+              style="font-size:10px;padding:3px 9px;border-radius:5px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.06);color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:700">✓ Quitar</button>`;
+        return `<tr data-nome64="${n64}" style="opacity:${isQuitado?.6:1}"
+          draggable="true"
+          ondragstart="cronoDragStart(event)" ondragover="cronoDragOver(event)"
+          ondrop="cronoDrop(event)" ondragend="cronoDragEnd()">
+          <td style="color:var(--text3);font-size:13px;cursor:grab">⠿</td>
+          <td>
+            <span style="display:inline-flex;align-items:center;gap:6px">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--neon-yellow);display:inline-block;flex-shrink:0"></span>
+              <span style="font-weight:700;font-size:13px">${esc(gfItem.desc)}</span>
+              <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--neon-yellow)">📋 Gasto Fixo</span>
+            </span>
+          </td>
+          <td style="color:var(--text3);font-size:11px">${esc(gfItem.cat||'—')}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-yellow)">${fmt(gfItem.val)}</td>
+          <td>—</td>
+          <td>${gfItem.vencimento?`dia ${gfItem.vencimento}`:'—'}</td>
+          <td><span class="${sem.cls}" style="font-size:11px">${sem.dot} ${sem.label}</span></td>
+          <td>—</td><td>—</td><td>—</td>
+          <td>${quitadoBtn}</td>
+          <td style="color:var(--text3);font-size:11px;cursor:grab">⠿</td>
+        </tr>`;
+      }
+      // ── Linha de Cartão (original) ──
       const cart=cartoes.find(c=>c.nome===nome);
       if(!cart) return'';
       const cor=PILL_COLORS[cart.cor]||PILL_COLORS.blue;
@@ -20669,8 +20898,8 @@ function _addBemFinQuick(bemId){
     const cartao=(document.getElementById('bfq-cartao')?.value)||getCartoesNomes()[0]||'Cartão';
     const nParc=forma==='cred-parc'?(parseInt(document.getElementById('bfq-nparc')?.value)||2):1;
     const valParc=parseFloat((valor/nParc).toFixed(2));
-    const mesInicio=data.substring(0,7);
-    const mesIdx=parseInt(data.split('-')[1])-1;
+    const mesInicio=getMesCompetencia(data,cartao);
+    const mesIdx=getMesIdxCompetencia(data,cartao);
     const formaLabel=cartao+(nParc===1?' (à vista)':` (${nParc}x)`);
     const parcelas=getData('parcelas');
     const parcId=id+1;
@@ -20905,9 +21134,10 @@ function salvarEventoBem(){
         if(forma==='credito_parc'&&cartao){
           const valParc=parseFloat((valor/nParc).toFixed(2));
           const parcelas=getData('parcelas');
-          parcelas.push({id:baseId+100,cartao,desc:`[BEM] ${desc}`,inicio:data.substring(0,7),paga:0,total:nParc,val:valParc});
+          parcelas.push({id:baseId+100,cartao,desc:`[BEM] ${desc}`,inicio:getMesCompetencia(data,cartao),paga:0,total:nParc,val:valParc});
           setData('parcelas',parcelas);
           const fat=getData('faturas');if(!fat[cartao])fat[cartao]=Array(12).fill(0);
+          const mesIdx=getMesIdxCompetencia(data,cartao);
           for(let i=0;i<nParc;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}
           setData('faturas',fat);
           all[sem].push({id:baseId,desc:`[BEM] ${desc}`,data,forma:`${cartao} (${nParc}x)`,cat,val:valParc,valTotal:valor,cartao,nParc});
@@ -24677,12 +24907,12 @@ async function tgConfirmarAutorizacao(){
     const valParc=parseFloat((val/nP).toFixed(2));
     const formaStr=cartao+(nP===1?' (à vista)':` (${nP}x)`);
     const parcelas=getData('parcelas');
-    const mesInicio=dataLanc.substring(0,7);
+    const mesInicio=getMesCompetencia(dataLanc,cartao);
     const parcId=id+1;
     parcelas.push({id:parcId,cartao,desc,inicio:mesInicio,paga:0,total:nP,val:valParc,
       terceiro:_tgIsTerceiro?_tgTerceiroNome:null});
     setData('parcelas',parcelas);
-    const mesIdx=parseInt(dataLanc.split('-')[1])-1;
+    const mesIdx=getMesIdxCompetencia(dataLanc,cartao);
     const fat=getData('faturas');
     if(!fat[cartao]) fat[cartao]=Array(12).fill(0);
     for(let i=0;i<nP;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}

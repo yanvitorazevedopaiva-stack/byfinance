@@ -214,6 +214,26 @@ function preProcessarComando(texto) {
   const eq  = (...kws) => kws.includes(t);
   const has = (...kws) => kws.some(k => t.includes(k));
 
+  // ── Cancelar último ──────────────────────────────────────────────────────
+  if (eq('cancela','cancelar','desfaz','desfazer','apaga','apagar','remove','remover',
+         'tira isso','era errado','foi errado','errei','lancamento errado','nao era isso',
+         'cancela o ultimo','cancela ultimo','apaga o ultimo','remove o ultimo',
+         'cancela o ultimo','apaga o ultimo','remove o ultimo'))
+    return {tipo:'comando',acao:'cancelar_ultimo'};
+
+  // ── Fatura por mês específico ─────────────────────────────────────────────
+  if (/fatura.*(janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/.test(t) ||
+      /fatura.*(mes que vem|proximo mes|proxima fatura|mes passado)/.test(t)){
+    const _meses={janeiro:1,fevereiro:2,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+    const _mesNome=Object.keys(_meses).find(m=>t.includes(m));
+    const _mesNum=_mesNome?_meses[_mesNome]:null;
+    const _isProximo=t.includes('mes que vem')||t.includes('proximo');
+    const _isPassado=t.includes('passado');
+    const _mesPassado=new Date().getMonth()===0?11:new Date().getMonth()-1;
+    return {tipo:'consulta',pergunta:'faturas_todas',
+      mes:_mesNum||(_isProximo?'proximo':_isPassado?_mesPassado+1:null)};
+  }
+
   // ── Faturas (geral) ──────────────────────────────────────────────────────
   if (eq('faturas','fatura','ver faturas','ver fatura','minhas faturas','minha fatura',
          'todas as faturas','quais faturas','listar faturas','listar fatura','mostrar faturas',
@@ -531,6 +551,7 @@ GATILHOS DE CONCLUIR TAREFA:
 "finalizado", "finalizada", "finalizei", "acabei", "já acabei", "concluí isso"
 "cumpri", "já cumpri", "cumprido", "executei", "já executei", "executado"
 "foi", "foi feito", "foi resolvido", "foi concluído", "foi pago", "foi para"
+"dei conta", "dei um jeito", "resolvi o papo", "mandei ver", "ta resolvido", "tá resolvido", "ta ok", "tá ok", "ok feito", "pronto isso", "isso foi", "esse foi", "ja dei um jeito", "já dei um jeito"
 IMPORTANTE: "Já conclui/concluí/terminei/fiz [algo]" → tipo tarefa acao concluir com titulo=[algo]
 
 ATRIBUIÇÃO DE TAREFA:
@@ -784,6 +805,26 @@ async function _registrarVotoCompra(chat_id, user_id, compra_id, voto, motivo, n
     });
   }catch(e){
     console.error('_registrarVotoCompra erro:',e.message);
+  }
+}
+
+async function getMesCompetenciaTg(dataCompra, nomeCartao, user_id){
+  if(!dataCompra) return new Date().toISOString().substring(0,7);
+  const d=new Date(dataCompra+'T12:00:00');
+  if(isNaN(d)) return dataCompra.substring(0,7);
+  try{
+    const userData=await supabaseQuery(`/user_data?user_id=eq.${user_id}&select=data`);
+    const dados=userData?.[0]?.data||{};
+    const cartoes=dados[user_id+'_cartoes']||[];
+    const cartao=cartoes.find(c=>c.nome===nomeCartao||(nomeCartao&&c.nome.toLowerCase().includes((nomeCartao+'').toLowerCase())));
+    const fechamento=cartao?.fechamento?parseInt(cartao.fechamento):null;
+    if(!fechamento||d.getDate()<=fechamento){
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    }
+    const prox=new Date(d.getFullYear(),d.getMonth()+1,1);
+    return prox.getFullYear()+'-'+String(prox.getMonth()+1).padStart(2,'0');
+  }catch(e){
+    return dataCompra.substring(0,7);
   }
 }
 

@@ -8334,9 +8334,9 @@ function verAnexo(nome,tipo,dados,sub){
     } else {
       body.innerHTML=`
         <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
-          <button onclick="document.getElementById('anx-pdf-frame').style.cssText='width:100%;height:60vh!important;border:1px solid var(--border);border-radius:8px;background:#fff'"
+          <button onclick="document.getElementById('anx-pdf-frame').style.cssText='width:100%;height:60vh!important;border:1px solid var(--border);border-radius:8px;background:#fff;display:block'"
             style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text3);font-size:11px;cursor:pointer">📄 Compacto</button>
-          <button onclick="document.getElementById('anx-pdf-frame').style.cssText='width:100%;height:85vh!important;border:1px solid var(--border);border-radius:8px;background:#fff'"
+          <button onclick="document.getElementById('anx-pdf-frame').style.cssText='width:100%;height:85vh!important;border:1px solid var(--border);border-radius:8px;background:#fff;display:block'"
             style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text3);font-size:11px;cursor:pointer">📄 Grande</button>
           <button onclick="window.open('${src}','_blank')"
             style="padding:4px 10px;border-radius:6px;border:1px solid rgba(0,200,255,0.3);background:rgba(0,200,255,0.07);color:var(--neon-blue);font-size:11px;cursor:pointer;font-weight:700">🔗 Nova aba</button>
@@ -16964,6 +16964,11 @@ function toggleCronoQuitado(nome,mesKey){
   renderCronoPag();
 }
 
+function _cronoSetReceita(val){
+  save('crono_receita_sel', val);
+  renderCronoPag();
+}
+
 function renderCronoPag(){
   try{
     const sel=document.getElementById('crono-mes-sel');
@@ -17001,6 +17006,20 @@ function renderCronoPag(){
       totalJurosAbs+=cardEmps.reduce((s,e)=>s+((e.emp_total||0)-(e.divida||0)),0);
     });
 
+    // Receitas do mês para o card
+    const _cronoMesKey=selYear+'-'+String(mesIdx+1).padStart(2,'0');
+    const _recVar=getData('receitas')||{};
+    const _recFixas=getData('receitasFixas')||[];
+    const _cronoReceitasSel=load('crono_receita_sel')||'__todas__';
+    const _cronoReceitas=[
+      ...((_recVar[_cronoMesKey]||[]).map(r=>({...r,id:r.id||('v'+r.desc)}))),
+      ...(_recFixas.map(r=>({...r,id:'f'+r.id})))
+    ];
+    const _cronoReceitaSel=_cronoReceitasSel;
+    const _cronoReceitaTotal=_cronoReceitaSel==='__todas__'
+      ?_cronoReceitas.reduce((a,r)=>a+(r.val||r.valor||0),0)
+      :(_cronoReceitas.find(r=>String(r.id)===_cronoReceitaSel)?.val||_cronoReceitas.find(r=>String(r.id)===_cronoReceitaSel)?.valor||0);
+
     const resumo=document.getElementById('crono-resumo');
     if(resumo) resumo.innerHTML=`
       <div class="card card-red" style="padding:14px 16px">
@@ -17008,15 +17027,23 @@ function renderCronoPag(){
         <div class="card-value val-red" style="font-size:20px">${fmt(totalFat)}</div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px">${order.length} cartão${order.length!==1?'s':''}</div>
       </div>
-      <div class="card card-yellow" style="padding:14px 16px">
-        <div class="card-label">PARCELAS EMPRÉSTIMOS / MÊS</div>
-        <div class="card-value val-yellow" style="font-size:20px">${totalEmpMes>0?fmt(totalEmpMes):'R$ 0,00'}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">total mensal de parcelas</div>
+      <div class="card card-green" style="padding:14px 16px">
+        <div class="card-label">RECEITAS DO MÊS</div>
+        <div class="card-value val-green" style="font-size:20px" id="crono-receita-total">${fmt(_cronoReceitaTotal)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px">
+          <select id="crono-receita-sel" onchange="_cronoSetReceita(this.value)"
+            style="width:100%;padding:3px 6px;border-radius:5px;border:1px solid rgba(0,255,157,0.3);background:var(--bg2);color:var(--text);font-size:10px;cursor:pointer">
+            <option value="__todas__">Todas as receitas</option>
+            ${_cronoReceitas.map(r=>`<option value="${r.id}" ${_cronoReceitaSel===String(r.id)?'selected':''}>${esc(r.desc||r.descricao||'Receita')} — ${fmt(r.val||r.valor||0)}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="card card-blue" style="padding:14px 16px">
         <div class="card-label">COMPROMISSO TOTAL DO MÊS</div>
         <div class="card-value val-blue" style="font-size:20px">${fmt(totalFat+totalEmpMes+totalGfCrono)}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">faturas + gastos fixos + parcelas emp.</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">
+          ${_cronoReceitaTotal>0?`Sobra: <span style="color:${(totalFat+totalEmpMes+totalGfCrono)<=_cronoReceitaTotal?'var(--neon-green)':'var(--neon-red)'}">${fmt(_cronoReceitaTotal-(totalFat+totalEmpMes+totalGfCrono))}</span>`:' faturas + gastos fixos'}
+        </div>
       </div>`;
 
     // ── Tabela ──
@@ -17063,22 +17090,23 @@ function renderCronoPag(){
           draggable="true"
           ondragstart="cronoDragStart(event)" ondragover="cronoDragOver(event)"
           ondrop="cronoDrop(event)" ondragend="cronoDragEnd()">
-          <td style="color:var(--text3);font-size:13px;cursor:grab">⠿</td>
+          <td style="color:var(--text3);font-size:13px;cursor:grab;width:20px">⠿</td>
           <td>
             <span style="display:inline-flex;align-items:center;gap:6px">
               <span style="width:10px;height:10px;border-radius:50%;background:var(--neon-yellow);display:inline-block;flex-shrink:0"></span>
               <span style="font-weight:700;font-size:13px">${esc(gfItem.desc)}</span>
               <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--neon-yellow)">📋 Gasto Fixo</span>
             </span>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(gfItem.cat||'Outros')}</div>
           </td>
-          <td style="color:var(--text3);font-size:11px">${esc(gfItem.cat||'—')}</td>
+          <td><span class="${sem.cls}" style="font-size:11px">${sem.dot} ${sem.label}</span></td>
           <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-yellow)">${fmt(gfItem.val)}</td>
           <td>—</td>
-          <td>${gfItem.vencimento?`dia ${gfItem.vencimento}`:'—'}</td>
-          <td><span class="${sem.cls}" style="font-size:11px">${sem.dot} ${sem.label}</span></td>
-          <td>—</td><td>—</td><td>—</td>
+          <td>${gfItem.vencimento?`Dia ${gfItem.vencimento}`:'—'}</td>
+          <td style="color:${isQuitado?'var(--neon-green)':'var(--text3)'}">${isQuitado?'0d':'—'}</td>
+          <td>—</td><td>—</td><td>—</td><td>—</td>
           <td>${quitadoBtn}</td>
-          <td style="color:var(--text3);font-size:11px;cursor:grab">⠿</td>
+          <td style="color:var(--text3);font-size:11px;cursor:grab;width:20px">⠿</td>
         </tr>`;
       }
       // ── Linha de Cartão (original) ──
@@ -17167,7 +17195,7 @@ function renderCronoPag(){
     if(tfoot) tfoot.innerHTML=`<tr>
       <td style="text-align:left;color:var(--text2)">TOTAL</td>
       <td></td>
-      <td style="color:var(--neon-red)">${fmt(totalFat)}</td>
+      <td style="color:var(--neon-red)">${fmt(totalFat+totalGfCrono)}</td>
       <td></td><td></td><td></td><td></td>
       <td style="color:var(--text3)">—</td>
       <td style="color:var(--neon-yellow)">${totalVlrPagar>0?fmt(totalVlrPagar):'R$ 0,00'}</td>

@@ -17107,7 +17107,7 @@ function renderCronoPag(){
             return`<span style="color:var(--neon-green)">${_d}d</span>`;
           })()}</td>
           <td style="color:var(--text3)">—</td>
-          <td style="color:var(--text3)">—</td>
+          <td><input type="date" class="crono-date-inp" value="${(getCronoPrevDates()[pagKey]&&getCronoPrevDates()[pagKey][mesKey])||''}" onchange="saveCronoPrevDate('${n64}','${mesKey}',this.value)" title="Data prevista de pagamento"></td>
           <td style="color:var(--text3)">—</td>
           <td style="color:var(--text3)">—</td>
           <td style="font-size:11px;color:var(--text3)">${_gfNumero}º</td>

@@ -17006,19 +17006,13 @@ function renderCronoPag(){
       totalJurosAbs+=cardEmps.reduce((s,e)=>s+((e.emp_total||0)-(e.divida||0)),0);
     });
 
-    // Receitas do mês para o card
+    // Receitas do mês selecionado
     const _cronoMesKey=selYear+'-'+String(mesIdx+1).padStart(2,'0');
-    const _recVar=getData('receitas')||{};
-    const _recFixas=getData('receitasFixas')||[];
-    const _cronoReceitasSel=load('crono_receita_sel')||'__todas__';
-    const _cronoReceitas=[
-      ...((_recVar[_cronoMesKey]||[]).map(r=>({...r,id:r.id||('v'+r.desc)}))),
-      ...(_recFixas.map(r=>({...r,id:'f'+r.id})))
-    ];
-    const _cronoReceitaSel=_cronoReceitasSel;
-    const _cronoReceitaTotal=_cronoReceitaSel==='__todas__'
-      ?_cronoReceitas.reduce((a,r)=>a+(r.val||r.valor||0),0)
-      :(_cronoReceitas.find(r=>String(r.id)===_cronoReceitaSel)?.val||_cronoReceitas.find(r=>String(r.id)===_cronoReceitaSel)?.valor||0);
+    const _recVarCrono=getData('receitas')||{};
+    const _recFixasCrono=getData('receitasFixas')||[];
+    const _recVarTotal=(_recVarCrono[_cronoMesKey]||[]).reduce((a,r)=>a+(r.val||r.valor||0),0);
+    const _recFixasTotal=_recFixasCrono.reduce((a,r)=>a+(r.val||0),0);
+    const _cronoReceitaTotal=_recVarTotal>0?_recVarTotal:_recFixasTotal;
 
     const resumo=document.getElementById('crono-resumo');
     if(resumo) resumo.innerHTML=`
@@ -17029,14 +17023,8 @@ function renderCronoPag(){
       </div>
       <div class="card card-green" style="padding:14px 16px">
         <div class="card-label">RECEITAS DO MÊS</div>
-        <div class="card-value val-green" style="font-size:20px" id="crono-receita-total">${fmt(_cronoReceitaTotal)}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:6px">
-          <select id="crono-receita-sel" onchange="_cronoSetReceita(this.value)"
-            style="width:100%;padding:3px 6px;border-radius:5px;border:1px solid rgba(0,255,157,0.3);background:var(--bg2);color:var(--text);font-size:10px;cursor:pointer">
-            <option value="__todas__">Todas as receitas</option>
-            ${_cronoReceitas.map(r=>`<option value="${r.id}" ${_cronoReceitaSel===String(r.id)?'selected':''}>${esc(r.desc||r.descricao||'Receita')} — ${fmt(r.val||r.valor||0)}</option>`).join('')}
-          </select>
-        </div>
+        <div class="card-value val-green" style="font-size:20px">${fmt(_cronoReceitaTotal)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">${mesLabel}</div>
       </div>
       <div class="card card-blue" style="padding:14px 16px">
         <div class="card-label">COMPROMISSO TOTAL DO MÊS</div>
@@ -17086,26 +17074,38 @@ function renderCronoPag(){
               style="margin-left:6px;font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid rgba(255,68,68,0.3);background:transparent;color:var(--neon-red);cursor:pointer;font-family:'JetBrains Mono',monospace">↩ desfazer</button>`
           :`<button onclick="toggleCronoQuitado(${JSON.stringify(pagKey)},${JSON.stringify(mesKey)})"
               style="font-size:10px;padding:3px 9px;border-radius:5px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.06);color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:700">✓ Quitar</button>`;
+        const _gfNumero=order.filter(n=>!n.startsWith('gf:')).length + order.slice(0,idx).filter(n=>n.startsWith('gf:')).indexOf(nome) + 1;
         return `<tr data-nome64="${n64}" style="opacity:${isQuitado?.6:1}"
           draggable="true"
           ondragstart="cronoDragStart(event)" ondragover="cronoDragOver(event)"
           ondrop="cronoDrop(event)" ondragend="cronoDragEnd()">
           <td style="color:var(--text3);font-size:13px;cursor:grab;width:20px">⠿</td>
           <td>
-            <span style="display:inline-flex;align-items:center;gap:6px">
-              <span style="width:10px;height:10px;border-radius:50%;background:var(--neon-yellow);display:inline-block;flex-shrink:0"></span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);font-size:11px;font-weight:700;color:var(--neon-yellow);flex-shrink:0">${_gfNumero}</span>
               <span style="font-weight:700;font-size:13px">${esc(gfItem.desc)}</span>
               <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--neon-yellow)">📋 Gasto Fixo</span>
-            </span>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(gfItem.cat||'Outros')}</div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;padding-left:28px">${esc(gfItem.cat||'Outros')}</div>
           </td>
-          <td><span class="${sem.cls}" style="font-size:11px">${sem.dot} ${sem.label}</span></td>
+          <td><span class="crono-sem ${sem.cls}">${sem.dot} ${sem.label}</span></td>
           <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--neon-yellow)">${fmt(gfItem.val)}</td>
-          <td>—</td>
-          <td>${gfItem.vencimento?`Dia ${gfItem.vencimento}`:'—'}</td>
-          <td style="color:${isQuitado?'var(--neon-green)':'var(--text3)'}">${isQuitado?'0d':'—'}</td>
-          <td>—</td><td>—</td><td>—</td><td>—</td>
-          <td>${quitadoBtn}</td>
+          <td style="color:var(--text3)">—</td>
+          <td style="color:var(--text2)">${gfItem.vencimento?'Dia '+gfItem.vencimento:'—'}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-weight:700">${(()=>{
+            if(!gfItem.vencimento) return'—';
+            const _h=new Date();
+            const _dias=Math.ceil((new Date(_h.getFullYear(),_h.getMonth(),parseInt(gfItem.vencimento))-_h)/86400000);
+            if(_dias<0) return`<span style="color:var(--neon-red)">ATRASADO</span>`;
+            if(_dias===0) return`<span style="color:var(--neon-yellow)">HOJE</span>`;
+            return`<span style="color:var(--neon-green)">${_dias}d</span>`;
+          })()}</td>
+          <td style="color:var(--text3)">—</td>
+          <td style="color:var(--text3)">—</td>
+          <td style="color:var(--text3)">—</td>
+          <td style="color:var(--text3)">—</td>
+          <td style="font-size:11px;color:var(--text3)">${_gfNumero}º</td>
+          <td style="padding:6px 12px">${quitadoBtn}</td>
           <td style="color:var(--text3);font-size:11px;cursor:grab;width:20px">⠿</td>
         </tr>`;
       }

@@ -9281,6 +9281,17 @@ function gfRenderMercadoCard(){
   }
 }
 
+function toggleGfQuitado(gfId){
+  const _mesKey=gfMesKey();
+  const _pagKey='gf:'+gfId;
+  const _q=getCronoQuitado();
+  if(!_q[_pagKey]) _q[_pagKey]={};
+  const _isNowPago=!(_q[_pagKey][_mesKey]);
+  _q[_pagKey][_mesKey]=_isNowPago;
+  setCronoQuitado(_q);
+  renderGastos();
+  if(document.getElementById('crono-board')) renderCronoPag();
+}
 function renderGastos(){
   gfRenderMercadoCard();
   const salario=getSalario();
@@ -9418,7 +9429,17 @@ function renderGastos(){
       <td style="font-family:'JetBrains Mono',monospace;color:${inativo?'var(--text3)':'var(--neon-yellow)'};font-size:12px">${inativo?'—':fmt(g.val*12)}</td>
       <td>${vencBadge}</td>
       <td><div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${gfAnxCell(g.id,curGfMes)}</div></td>
-      <td><div style="display:flex;gap:4px;white-space:nowrap">
+      <td><div style="display:flex;gap:4px;white-space:nowrap;align-items:center">
+        ${(()=>{
+          const _gfMesKey=gfMesKey();
+          const _gfQ=getCronoQuitado();
+          const _gfPagKey='gf:'+g.id;
+          const _isGfPago=!!(_gfQ[_gfPagKey]&&_gfQ[_gfPagKey][_gfMesKey]);
+          return _isGfPago
+            ?`<span style="color:var(--neon-green);font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace">✓ PAGO</span>
+              <button onclick="toggleGfQuitado(${g.id})" style="font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid rgba(255,68,68,0.3);background:transparent;color:var(--neon-red);cursor:pointer;font-family:'JetBrains Mono',monospace">↩ desfazer</button>`
+            :`<button onclick="toggleGfQuitado(${g.id})" style="font-size:10px;padding:3px 9px;border-radius:5px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.06);color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:700">✓ Quitar</button>`;
+        })()}
         <button class="${inativo?'gf-btn-reativar':'gf-btn-inativar'}" onclick="toggleGfInativo(${g.id})">${inativo?'▶ REATIVAR':'⏸ INATIVAR'}</button>
         <button class="btn btn-blue btn-sm" onclick="startEditGF(${g.id})">✎</button>
         <button class="btn btn-red btn-sm" onclick="delGF(${g.id})">✕</button>
@@ -11299,10 +11320,18 @@ function toggleFatPaga(cartao,mes){
   });
   if(changed) setData('parcelas',parcelas);
 
+  // Sincroniza com cronograma — quitar fatura = quitar no cronograma automaticamente
+  const _mesKey=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
+  const _cronoQ=getCronoQuitado();
+  if(!_cronoQ[cartao]) _cronoQ[cartao]={};
+  _cronoQ[cartao][_mesKey]=isNowPaid;
+  setCronoQuitado(_cronoQ);
+
   renderFaturas();
   if(document.getElementById('parc-timeline')) renderParcelas();
   if(document.getElementById('ct-cards-visual')) renderCartoes();
   if(document.getElementById('d-fat-cartoes')) renderDashboard();
+  if(document.getElementById('crono-board')) renderCronoPag();
 }
 
 // ── Menu flutuante de fatura ──
@@ -16969,6 +16998,18 @@ function _cronoSetReceita(val){
   renderCronoPag();
 }
 
+function _cronoVerFatura(cartao, mesIdx){
+  showPage('faturas');
+  setTimeout(()=>{
+    // Simula click no centro da tela para abrir menu da fatura
+    const _evt={
+      stopPropagation:()=>{},
+      clientX:window.innerWidth/2,
+      clientY:220
+    };
+    if(typeof abrirMenuFatura==='function') abrirMenuFatura(cartao, mesIdx, _evt);
+  }, 600);
+}
 function renderCronoPag(){
   try{
     const sel=document.getElementById('crono-mes-sel');
@@ -17006,13 +17047,19 @@ function renderCronoPag(){
       totalJurosAbs+=cardEmps.reduce((s,e)=>s+((e.emp_total||0)-(e.divida||0)),0);
     });
 
-    // Receitas do mês selecionado
+    // Receitas e PIX+Débito do mês selecionado
     const _cronoMesKey=selYear+'-'+String(mesIdx+1).padStart(2,'0');
     const _recVarCrono=getData('receitas')||{};
     const _recFixasCrono=getData('receitasFixas')||[];
     const _recVarTotal=(_recVarCrono[_cronoMesKey]||[]).reduce((a,r)=>a+(r.val||r.valor||0),0);
     const _recFixasTotal=_recFixasCrono.reduce((a,r)=>a+(r.val||0),0);
     const _cronoReceitaTotal=_recVarTotal>0?_recVarTotal:_recFixasTotal;
+    const _lancMesCrono=Object.values(getData('lancamentos')||{}).flat().filter(l=>(l.data||'').startsWith(_cronoMesKey));
+    const _cronoPixDebTotal=_lancMesCrono
+      .filter(l=>['pix','debito','dinheiro'].includes((l.forma||'').toLowerCase().trim()))
+      .reduce((a,l)=>a+(parseFloat(l.val||l.valor)||0),0);
+    const _cronoReceitaLiq=_cronoReceitaTotal-_cronoPixDebTotal;
+    const _totalGfSafe=typeof totalGfCrono!=='undefined'?totalGfCrono:0;
 
     const resumo=document.getElementById('crono-resumo');
     if(resumo) resumo.innerHTML=`
@@ -17023,14 +17070,20 @@ function renderCronoPag(){
       </div>
       <div class="card card-green" style="padding:14px 16px">
         <div class="card-label">RECEITAS DO MÊS</div>
-        <div class="card-value val-green" style="font-size:20px">${fmt(_cronoReceitaTotal)}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">${mesLabel}</div>
+        <div class="card-value val-green" style="font-size:20px">${fmt(_cronoReceitaLiq)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.8">
+          <div>Bruta: <span style="color:var(--neon-green)">${fmt(_cronoReceitaTotal)}</span></div>
+          <div>PIX + Débito: <span style="color:var(--neon-red)">-${fmt(_cronoPixDebTotal)}</span></div>
+          <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:3px;padding-top:3px">
+            Líquida: <span style="color:${_cronoReceitaLiq>=0?'var(--neon-green)':'var(--neon-red)'};font-weight:700">${fmt(_cronoReceitaLiq)}</span>
+          </div>
+        </div>
       </div>
       <div class="card card-blue" style="padding:14px 16px">
         <div class="card-label">COMPROMISSO TOTAL DO MÊS</div>
-        <div class="card-value val-blue" style="font-size:20px">${fmt(totalFat+totalEmpMes+totalGfCrono)}</div>
+        <div class="card-value val-blue" style="font-size:20px">${fmt(totalFat+totalEmpMes+_totalGfSafe)}</div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px">
-          ${_cronoReceitaTotal>0?`Sobra: <span style="color:${(totalFat+totalEmpMes+totalGfCrono)<=_cronoReceitaTotal?'var(--neon-green)':'var(--neon-red)'}">${fmt(_cronoReceitaTotal-(totalFat+totalEmpMes+totalGfCrono))}</span>`:' faturas + gastos fixos'}
+          ${_cronoReceitaTotal>0?`Sobra: <span style="color:${(_cronoReceitaLiq-(totalFat+totalEmpMes+_totalGfSafe))>=0?'var(--neon-green)':'var(--neon-red)'};font-weight:700">${fmt(_cronoReceitaLiq-(totalFat+totalEmpMes+_totalGfSafe))}</span>`:'faturas + gastos fixos'}
         </div>
       </div>`;
 
@@ -17156,12 +17209,11 @@ function renderCronoPag(){
         : '<span style="color:var(--text3);font-size:11px">—</span>';
 
       const isQuitado=!!(cronoQuit[nome]&&cronoQuit[nome][mesKey]);
+      // Cartões: quitar vem de Faturas automaticamente — só mostra status
       const quitadoBtn=isQuitado
         ?`<span style="color:var(--neon-green);font-weight:700;font-size:11px;font-family:'JetBrains Mono',monospace">✓ PAGO</span>
-          <button onclick="toggleCronoQuitado(${JSON.stringify(nome)},${JSON.stringify(mesKey)})"
-            style="margin-left:6px;font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid rgba(255,68,68,0.3);background:transparent;color:var(--neon-red);cursor:pointer;font-family:'JetBrains Mono',monospace">↩ desfazer</button>`
-        :`<button onclick="toggleCronoQuitado(${JSON.stringify(nome)},${JSON.stringify(mesKey)})"
-            style="font-size:10px;padding:3px 9px;border-radius:5px;border:1px solid rgba(0,255,157,0.3);background:rgba(0,255,157,0.06);color:var(--neon-green);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:700">✓ Quitar</button>`;
+          <span style="margin-left:6px;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">via Faturas</span>`
+        :`<span style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">— Pendente</span>`;
       return `<tr draggable="true" data-nome64="${n64}"
           ondragstart="cronoDragStart(event)" ondragover="cronoDragOver(event)"
           ondrop="cronoDrop(event)" ondragend="cronoDragEnd(event)"
@@ -17191,7 +17243,11 @@ function renderCronoPag(){
         <td style="font-family:'JetBrains Mono',monospace;color:${vlrPagar>0?'var(--neon-yellow)':'var(--text3)'}">${vlrPagar>0?fmt(vlrPagar):'—'}</td>
         <td style="font-family:'JetBrains Mono',monospace;color:${jurosAbs>0?'var(--neon-red)':'var(--text3)'}">${jurosPct}</td>
         <td style="font-size:11px;color:var(--text3)">${idx+1}º</td>
-        <td style="padding:6px 12px"><button class="crono-emp-btn" onclick="openCronoFormB64('${n64}')">＋ Empréstimo</button></td>
+        <td style="padding:6px 8px;white-space:nowrap">
+          <button class="crono-emp-btn" onclick="openCronoFormB64('${n64}')">＋ Empréstimo</button>
+          <button onclick="_cronoVerFatura('${esc(nome)}',${mesIdx})"
+            style="margin-left:4px;font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid rgba(0,200,255,0.3);background:rgba(0,200,255,0.06);color:var(--neon-blue);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:700">📊 Fatura</button>
+        </td>
         <td style="white-space:nowrap;padding:6px 10px">${quitadoBtn}</td>
       </tr>`;
     });
@@ -19888,11 +19944,10 @@ function verDocUsuario(id){
   if(!d||!d.arquivo) return;
   _resolveAnexo(d.arquivo).then(src=>{
     if(!src) return;
-    const w=window.open('');
-    w.document.write(src.startsWith('data:application/pdf')
-      ?`<title>${esc(d.nome)}</title><iframe src="${src}" style="width:100%;height:100vh;border:none"></iframe>`
-      :`<title>${esc(d.nome)}</title><img src="${src}" style="max-width:100%;height:auto">`);
-    w.document.close();
+    // Detecta tipo pelo conteúdo da string base64
+    const _tipo=src.startsWith('data:image')?src.split(';')[0].replace('data:',''):
+                src.startsWith('data:application/pdf')?'application/pdf':'application/pdf';
+    verAnexo(d.nome, _tipo, src, d.categoria||'Documento');
   });
 }
 

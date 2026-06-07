@@ -11123,6 +11123,14 @@ function addLancamento(){
     salvarParceiro(_estabNome,val);
     _estabInp.value='';
     lancRenderTop5Parceiros();
+    // Salva estabelecimento no lançamento para rastreabilidade
+    const _allLanc=getData('lancamentos');
+    const _semLanc=getSemanaFromData(document.getElementById('lanc-data')?.value||new Date().toISOString().split('T')[0]);
+    if(_allLanc[_semLanc]){
+      const _lancIdx=_allLanc[_semLanc].findIndex(l=>l.id===id);
+      if(_lancIdx>-1) _allLanc[_semLanc][_lancIdx].estabelecimento=_estabNome;
+      setData('lancamentos',_allLanc);
+    }
   }
 
   // Vincular despesa a um Bem (se selecionado)

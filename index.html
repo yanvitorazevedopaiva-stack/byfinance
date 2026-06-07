@@ -8558,14 +8558,23 @@ function getVencProximos(dias=7){
 
 // ===================== SAÚDE FINANCEIRA =====================
 function renderHealthBar(){
-  const salario=parseFloat(getSalario())||0;
+  const salarioCad=parseFloat(getSalario())||0;
+  // Prioriza receitas reais do mês para cálculo mais preciso
+  const _mesKeyHB=new Date().toISOString().slice(0,7);
+  const _recVarHB=(getData('receitas')||{})[_mesKeyHB]||[];
+  const _recVarTotalHB=_recVarHB.reduce((a,r)=>a+(r.val||r.valor||0),0);
+  const _recFixasHB=(getData('receitasFixas')||[]).reduce((a,r)=>a+(r.val||0),0);
+  // Usa receitas reais se disponíveis, senão receitas fixas, senão salário cadastrado
+  const salario=_recVarTotalHB>0?_recVarTotalHB:(_recFixasHB>0?_recFixasHB:salarioCad);
   const gf=getData('gastosFixos');
   const totalGf=gf.reduce((a,i)=>a+i.val,0);
   const parcelas=getData('parcelas');
   const totalDividas=parcelas.reduce((a,p)=>a+(p.total-p.paga)*p.val,0);
   const parcsAtivas=parcelas.filter(p=>p.paga<p.total).length;
   const saldo=salario-totalGf;
-  const dti=salario>0?isFinite(totalGf/salario)?(totalGf/salario*100):0:0;
+  // Só calcula dti se salário for razoável (> 10% dos gastos fixos)
+  const _salarioValido=salario>0&&(totalGf===0||salario>totalGf*0.1);
+  const dti=_salarioValido?isFinite(totalGf/salario)?(totalGf/salario*100):0:0;
 
   // ── Sem salário cadastrado: score inválido ─────────────────
   if(!salario){
@@ -12875,9 +12884,9 @@ function toggleRecebido(mesKey,id){
 
 function delReceita(mesKey,id){
   const recs=getReceitas();
-  const e=(recs[mesKey]||[]).find(x=>x.id===id);
+  const e=(recs[mesKey]||[]).find(x=>String(x.id)===String(id));
   showConfirm('Remover Receita',`"${e?e.desc:'este lançamento'}" — ${e?fmt(e.val):''} será removido.`,()=>{
-    recs[mesKey]=(recs[mesKey]||[]).filter(x=>x.id!==id);
+    recs[mesKey]=(recs[mesKey]||[]).filter(x=>String(x.id)!==String(id));
     setReceitas(recs);
     renderReceita();
   });
@@ -14090,7 +14099,7 @@ function cpLancarConfirmar(){
   } else if(forma==='credito'){
     // Crédito à vista: 1x
     const fat=getData('faturas');if(!fat[cartao])fat[cartao]=Array(12).fill(0);
-    const mesIdx=parseInt(data.split('-')[1])-1;
+    const mesIdx=getMesIdxCompetencia(data,cartao);
     fat[cartao][mesIdx]=parseFloat(((fat[cartao][mesIdx]||0)+val).toFixed(2));
     setData('faturas',fat);
     all[sem].push({id:baseId,desc:it.desc,data,forma:`${cartao} (à vista)`,cat,val,cartao});
@@ -21217,14 +21226,13 @@ function salvarEventoBem(){
         const all=getData('lancamentos');const sem=getSemanaFromData(data);
         if(!all[sem])all[sem]=[];
         const baseId=Date.now()+1;
-        const mesIdx=parseInt(data.split('-')[1])-1;
+        const mesIdx=getMesIdxCompetencia(data,cartao);
         if(forma==='credito_parc'&&cartao){
           const valParc=parseFloat((valor/nParc).toFixed(2));
           const parcelas=getData('parcelas');
           parcelas.push({id:baseId+100,cartao,desc:`[BEM] ${desc}`,inicio:getMesCompetencia(data,cartao),paga:0,total:nParc,val:valParc});
           setData('parcelas',parcelas);
           const fat=getData('faturas');if(!fat[cartao])fat[cartao]=Array(12).fill(0);
-          const mesIdx=getMesIdxCompetencia(data,cartao);
           for(let i=0;i<nParc;i++){const m=(mesIdx+i)%12;fat[cartao][m]=parseFloat(((fat[cartao][m]||0)+valParc).toFixed(2));}
           setData('faturas',fat);
           all[sem].push({id:baseId,desc:`[BEM] ${desc}`,data,forma:`${cartao} (${nParc}x)`,cat,val:valParc,valTotal:valor,cartao,nParc});

@@ -9925,7 +9925,7 @@ function renderParcelas(){
         <tbody>
           ${parc.map(p=>{
             const rest=(p.total-p.paga)*p.val;
-            const pct=Math.min(100,Math.round(p.paga/p.total*100));
+            const pct=(p.total>0?Math.min(100,Math.round(p.paga/p.total*100)):0);
             const restP=p.total-p.paga;
             const fillCls=pct>=100?'fill-green':pct>50?'fill-blue':'fill-yellow';
             // Comprovante usa sempre compKey
@@ -10087,7 +10087,7 @@ function getMesCompetencia(dataCompra, nomeCartao){
   const cartoes=getData('cartoes')||[];
   const cartao=cartoes.find(c=>c.nome===nomeCartao||(nomeCartao&&c.nome.toLowerCase().includes((nomeCartao+'').toLowerCase())));
   const fechamento=cartao?.fechamento?parseInt(cartao.fechamento):null;
-  if(!fechamento||d.getDate()<=fechamento){
+  if(!fechamento||d.getDate()<fechamento){
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
   }
   const prox=new Date(d.getFullYear(),d.getMonth()+1,1);
@@ -10404,7 +10404,8 @@ function renderSemanal(){
 
   // ── Totais por semana ──
   const totSem={};
-  for(let s=1;s<=5;s++) totSem[s]=(all[s]||[]).reduce((a,l)=>a+l.val,0);
+  // Lançamentos de fatura do próximo mês não sangram a meta do mês atual
+  for(let s=1;s<=5;s++) totSem[s]=(all[s]||[]).filter(l=>!l.fatProxMes).reduce((a,l)=>a+l.val,0);
   const totTodas=Object.values(totSem).reduce((a,v)=>a+v,0);
 
   // ── Limite semanal ──
@@ -11003,7 +11004,8 @@ function addLancamento(){
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
     // val no semanal = valor da parcela (1ª parcela), valTotal = valor total da compra
-    all[semana].push({id,desc,data,forma,cat,val:valParc,valTotal:val,cartao,nParc,parcId,fatMes:mesIdx,fatVal:valParc});
+    const _fatProx=getMesCompetencia(data,cartao)>data.substring(0,7);
+    all[semana].push({id,desc,data,forma,cat,val:valParc,valTotal:val,cartao,nParc,parcId,fatMes:mesIdx,fatVal:valParc,fatProxMes:_fatProx||undefined});
     setData('lancamentos',all);
 
   } else if(lancTipo==='emprestimo'){
@@ -14362,7 +14364,7 @@ function gerarRelatorioCustom(secoesList,mesRef,anoRef){
           return`<div class="gh" style="border-color:${clr};color:${clr}">${e(cartao)}<span style="color:#dc2626">${f(rc)} restante</span></div>
           <table style="margin-bottom:14px">
             <thead><tr><th>Descrição</th><th>Início</th><th>Pagas</th><th>Total</th><th style="text-align:right">Valor/Mês</th><th style="text-align:right">Restante</th><th>Progresso</th></tr></thead>
-            <tbody>${ps.map(p=>{const rp=p.total-p.paga;const pct=Math.min(100,Math.round(p.paga/p.total*100));return`<tr><td style="font-weight:500">${e(p.desc)}</td><td style="color:#64748b">${e(p.inicio)}</td><td><span class="bdg bg">${p.paga}x</span></td><td style="color:#64748b">${p.total}x</td><td class="mn y" style="text-align:right">${f(p.val)}</td><td class="mn ${rp>0?'r':'g'}" style="text-align:right">${rp>0?f(rp*p.val):'✓ QUITADO'}</td><td><div style="font-size:10px;color:#64748b;margin-bottom:3px">${pct}%</div><div class="pbar"><div class="pf" style="width:${pct}%;background:${pct>=100?'#059669':pct>50?'#0284c7':'#d97706'}"></div></div></td></tr>`;}).join('')}</tbody>
+            <tbody>${ps.map(p=>{const rp=p.total-p.paga;const pct=(p.total>0?Math.min(100,Math.round(p.paga/p.total*100)):0);return`<tr><td style="font-weight:500">${e(p.desc)}</td><td style="color:#64748b">${e(p.inicio)}</td><td><span class="bdg bg">${p.paga}x</span></td><td style="color:#64748b">${p.total}x</td><td class="mn y" style="text-align:right">${f(p.val)}</td><td class="mn ${rp>0?'r':'g'}" style="text-align:right">${rp>0?f(rp*p.val):'✓ QUITADO'}</td><td><div style="font-size:10px;color:#64748b;margin-bottom:3px">${pct}%</div><div class="pbar"><div class="pf" style="width:${pct}%;background:${pct>=100?'#059669':pct>50?'#0284c7':'#d97706'}"></div></div></td></tr>`;}).join('')}</tbody>
           </table>`;
         }).join('')}
       </div>`);
@@ -14889,7 +14891,7 @@ function gerarRelatorio(){
       return`<div class="gh" style="border-color:${clr};color:${clr}">${e(cartao)}<span style="color:#dc2626">${f(rc)} restante</span></div>
       <table style="margin-bottom:10px">
         <thead><tr><th>Descrição</th><th>Início</th><th>Pagas</th><th>Total</th><th style="text-align:right">Valor/Mês</th><th style="text-align:right">Restante</th><th>Progresso</th></tr></thead>
-        <tbody>${ps.map(p=>{const rp=p.total-p.paga;const pct=Math.min(100,Math.round(p.paga/p.total*100));const fc=pct>=100?'pg':pct>50?'pb2':'py';return`<tr>
+        <tbody>${ps.map(p=>{const rp=p.total-p.paga;const pct=(p.total>0?Math.min(100,Math.round(p.paga/p.total*100)):0);const fc=pct>=100?'pg':pct>50?'pb2':'py';return`<tr>
           <td style="font-weight:500">${e(p.desc)}</td>
           <td style="color:#64748b">${e(p.inicio)}</td>
           <td><span class="bdg bg">${p.paga}x</span></td>
@@ -15192,7 +15194,7 @@ function gerarRelatorioPagina(secao){
         return`<div class="gh" style="border-color:${clr};color:${clr}">${e(cartao)}<span style="color:#dc2626">${f(rc)} restante</span></div>
         <table style="margin-bottom:14px">
           <thead><tr><th>Descrição</th><th>Início</th><th>Pagas</th><th>Total</th><th style="text-align:right">Valor/Mês</th><th style="text-align:right">Restante</th><th>Progresso</th></tr></thead>
-          <tbody>${ps.map(p=>{const rp=p.total-p.paga;const pct=Math.min(100,Math.round(p.paga/p.total*100));const fc=pct>=100?'pg':pct>50?'pb2':'py';return`<tr>
+          <tbody>${ps.map(p=>{const rp=p.total-p.paga;const pct=(p.total>0?Math.min(100,Math.round(p.paga/p.total*100)):0);const fc=pct>=100?'pg':pct>50?'pb2':'py';return`<tr>
             <td style="font-weight:500">${e(p.desc)}</td>
             <td style="color:#64748b">${e(p.inicio)}</td>
             <td><span class="bdg bg">${p.paga}x</span></td>
@@ -19210,7 +19212,7 @@ function renderUltimosLancs(){
     const badge=catBadge[l.cat]||'graphite';
     return `<tr>
       <td style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);white-space:nowrap">${_fmtData(l.data)}</td>
-      <td style="font-size:12px;font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.desc||'—')}${l.terceiro?`<span style="display:inline-block;margin-left:5px;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:var(--neon-purple)">👥 ${esc(l.terceiro)}</span>`:''}</td>
+      <td style="font-size:12px;font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.desc||'—')}${l.fatProxMes?`<span style="margin-left:5px;font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);font-family:'JetBrains Mono',monospace" title="Esta compra pertence à fatura do próximo mês — não impacta a meta de ${MESES_ABREV[semMesSel]}">💳 Fat.${MESES_ABREV[(semMesSel+1)%12]}</span>`:''}${l.terceiro?`<span style="display:inline-block;margin-left:5px;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:var(--neon-purple)">👥 ${esc(l.terceiro)}</span>`:''}</td>
       <td><span class="badge badge-${badge}" style="font-size:10px">${esc(l.cat||'—')}</span></td>
       <td style="font-size:11px;color:var(--text3);white-space:nowrap">${isCredito?'Créd':'Déb'}</td>
       <td style="font-size:11px;color:var(--neon-blue);white-space:nowrap">${l.cartao?esc(l.cartao):'—'}</td>
@@ -25014,7 +25016,8 @@ async function tgConfirmarAutorizacao(){
     setData('faturas',fat);
     const all=getData('lancamentos');
     if(!all[semana]) all[semana]=[];
-    all[semana].push({id,desc,data:dataLanc,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram',...(isMkt?{mktTipo:isMktMes?'mes':'variado'}:{})});
+    const _fatProxTg=getMesCompetencia(dataLanc,cartao)>dataLanc.substring(0,7);
+    all[semana].push({id,desc,data:dataLanc,forma:formaStr,cat:data.categoria,val:valParc,valTotal:val,cartao,nParc:nP,parcId,fatMes:mesIdx,fatVal:valParc,bemId:bemId||undefined,origem:'telegram',fatProxMes:_fatProxTg||undefined,...(isMkt?{mktTipo:isMktMes?'mes':'variado'}:{})});
     setData('lancamentos',all);
   }else{
     const cartaoSel=document.getElementById('tg-aprovar-cartao')?.value||'';

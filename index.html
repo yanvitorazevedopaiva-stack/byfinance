@@ -9440,7 +9440,7 @@ function _gfMesVigente(){
 
 function toggleGfInativo(id){
   const data=getData('gastosFixos');
-  const g=data.find(x=>x.id===id);
+  const g=data.find(x=>String(x.id)===String(id));
   if(!g) return;
   if(!g.inativosMeses) g.inativosMeses=[];
   const mes=_gfMesVigente();
@@ -10198,17 +10198,17 @@ function renderParcelas(){
 
 function delParcela(id){
   const parcelas=getData('parcelas');
-  const p=parcelas.find(x=>x.id===id);
+  const p=parcelas.find(x=>String(x.id)===String(id));
   if(!p) return;
   showConfirm('Remover Parcela',`"${p.desc}" (${p.cartao}) — ${p.total-p.paga}x parcela(s) restante(s) serão removidas.`,()=>{
-    setData('parcelas',getData('parcelas').filter(x=>x.id!==id));
+    setData('parcelas',getData('parcelas').filter(x=>String(x.id)!==String(id)));
     renderParcelas();
   });
 }
 
 let _epId=null;
 function editParcela(id){
-  const p=getData('parcelas').find(x=>x.id===id);
+  const p=getData('parcelas').find(x=>String(x.id)===String(id));
   if(!p) return;
   _epId=id;
   document.getElementById('ep-desc').value=p.desc||'';
@@ -10287,8 +10287,8 @@ function salvarEdicaoParcela(){
 
   // ── Sincroniza faturas (desfaz contribuição antiga, aplica nova) ──────────
   const _fat=getData('faturas');
-  const _oldMes=parseInt((_oldInicio||'').split('-')[1])-1;
-  const _newMes=parseInt((inicio||'').split('-')[1])-1;
+  const _oldMes=_oldCartao&&_oldInicio?getMesIdxCompetencia(_oldInicio.slice(0,7)+'-01',_oldCartao):parseInt((_oldInicio||'').split('-')[1])-1;
+  const _newMes=cartao&&inicio?getMesIdxCompetencia(inicio.slice(0,7)+'-01',cartao):parseInt((inicio||'').split('-')[1])-1;
   if(!isNaN(_oldMes)&&_fat[_oldCartao]){
     for(let i=0;i<_oldTotal;i++){const m=(_oldMes+i)%12;_fat[_oldCartao][m]=parseFloat((((_fat[_oldCartao][m]||0)-_oldVal)).toFixed(2));}
   }
@@ -11384,12 +11384,31 @@ function addLancamento(){
 function delLanc(id,sem){
   const s=sem!==undefined?sem:semanaAtual;
   const all=getData('lancamentos');
-  const l=(all[s]||[]).find(x=>x.id===id);
+  const l=(all[s]||[]).find(x=>String(x.id)===String(id));
   showConfirm('Remover Lançamento',`"${l?l.desc:'este lançamento'}" — ${l?fmt(l.val):''} será removido da Semana ${s}.`,()=>{
     const d=getData('lancamentos');
-    d[s]=(d[s]||[]).filter(x=>x.id!==id);
+    d[s]=(d[s]||[]).filter(x=>String(x.id)!==String(id));
     setData('lancamentos',d);
+    // Remove parcela vinculada se existir
+    if(l?.parcId){
+      const _parcs=getData('parcelas').filter(p=>String(p.id)!==String(l.parcId));
+      setData('parcelas',_parcs);
+      // Remove da fatura também
+      if(l.cartao&&l.fatMes!==undefined&&l.fatVal){
+        const _fat=getData('faturas');
+        if(_fat[l.cartao]){
+          for(let i=0;i<(l.nParc||1);i++){
+            const m=(l.fatMes+i)%12;
+            _fat[l.cartao][m]=parseFloat(((_fat[l.cartao][m]||0)-l.fatVal).toFixed(2));
+            if(_fat[l.cartao][m]<0) _fat[l.cartao][m]=0;
+          }
+          setData('faturas',_fat);
+        }
+      }
+    }
     renderLancamentos();
+    if(document.getElementById('parc-timeline')) renderParcelas();
+    if(document.getElementById('d-fat-cartoes')) renderDashboard();
   });
 }
 
@@ -19333,7 +19352,7 @@ function addFinanciamento(){
     // Cria parcela vinculada em Parcelas
     const parcelas=getData('parcelas');
     const parcId=newFinId+1;
-    parcelas.push({id:parcId,cartao,desc,inicio:inicio.slice(0,7),paga:0,total:nParc,val:parseFloat(vp.toFixed(2))});
+    parcelas.push({id:parcId,cartao,desc,inicio:getMesCompetencia(inicio.slice(0,7)+'-01',cartao),paga:0,total:nParc,val:parseFloat(vp.toFixed(2))});
     setData('parcelas',parcelas);
     // Salva financiamento com referência à parcela
     fins.push({id:newFinId,cartao,desc,total,nParc,

@@ -100,10 +100,10 @@ async function buildResumo(user_id) {
   // ── 3. VENCIMENTOS PRÓXIMOS (7 dias) ──
   const vencimentos = [];
   for (const g of gastosFixos) {
-    if (!g.venc) continue;
-    const diff = diasAte(parseInt(g.venc), hoje);
+    if (!g.vencimento) continue;
+    const diff = diasAte(parseInt(g.vencimento), hoje);
     if (diff >= 0 && diff <= 7) {
-      vencimentos.push({ nome: g.nome, tipo: 'Conta/Fixo', dia: g.venc, diff, val: g.val });
+      vencimentos.push({ nome: g.desc||g.nome||'Gasto Fixo', tipo: 'Conta/Fixo', dia: g.vencimento, diff, val: g.val });
     }
   }
   const cartoes = dados[user_id + '_cartoes'] || [];

@@ -89,7 +89,7 @@ function parsePrazo(texto) {
 async function getContexto(chat_id) {
   try {
     const data = await supabaseQuery(`/telegram_contexto?chat_id=eq.${chat_id}&select=contexto,id`);
-    console.log('getContexto resultado:', JSON.stringify(data));
+    // console.log('getContexto resultado:', JSON.stringify(data));
     return data?.[0]?.contexto || {};
   } catch(e) {
     console.error('getContexto erro:', e);
@@ -145,9 +145,12 @@ async function salvarPendente(chat_id, user_id, gasto, tipo_midia, mensagem_orig
     itens_mercado: gasto.itens_mercado || null,
     tipo: gasto.tipo || null
   };
-  console.log('Salvando pendente:', JSON.stringify(registro));
+  console.log('Salvando pendente para user:', registro.user_id, '| desc:', registro.descricao, '| val:', registro.valor);
   const resultado = await supabaseQuery('/telegram_pendentes', 'POST', registro);
   console.log('Resultado save:', JSON.stringify(resultado));
+  if (!resultado || (Array.isArray(resultado) && resultado.length === 0)) {
+    console.error('[salvarPendente] AVISO: INSERT retornou vazio — possível falha silenciosa. Registro:', JSON.stringify(registro));
+  }
 }
 
 async function supabaseQuery(path, method = 'GET', body = null) {
@@ -234,6 +237,25 @@ function preProcessarComando(texto) {
       mes:_mesNum||(_isProximo?'proximo':_isPassado?_mesPassado+1:null)};
   }
 
+  // ── Cancelar último ──────────────────────────────────────────────────────
+  if (eq('cancela','cancelar','desfaz','desfazer','apaga','apagar','remove','remover',
+         'tira isso','era errado','foi errado','errei','lancamento errado','nao era isso',
+         'cancela o ultimo','cancela ultimo','apaga o ultimo','remove o ultimo'))
+    return {tipo:'comando',acao:'cancelar_ultimo'};
+
+  // ── Fatura por mês específico ─────────────────────────────────────────────
+  if (/fatura.*(janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/.test(t) ||
+      /fatura.*(mes que vem|proximo mes|proxima fatura|mes passado)/.test(t)){
+    const _meses={janeiro:1,fevereiro:2,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+    const _mesNome=Object.keys(_meses).find(m=>t.includes(m));
+    const _mesNum=_mesNome?_meses[_mesNome]:null;
+    const _isProximo=t.includes('mes que vem')||t.includes('proximo');
+    const _isPassado=t.includes('passado');
+    const _mesPassado=new Date().getMonth()===0?11:new Date().getMonth()-1;
+    return {tipo:'consulta',pergunta:'faturas_todas',
+      mes:_mesNum||(_isProximo?'proximo':_isPassado?_mesPassado+1:null)};
+  }
+
   // ── Faturas (geral) ──────────────────────────────────────────────────────
   if (eq('faturas','fatura','ver faturas','ver fatura','minhas faturas','minha fatura',
          'todas as faturas','quais faturas','listar faturas','listar fatura','mostrar faturas',
@@ -296,6 +318,14 @@ function preProcessarComando(texto) {
          'o que falta','compromissos','meus compromissos','agenda','minha agenda',
          'o que ta pendente','o que está pendente','lista do dia','tarefas do dia'))
     return {tipo:'tarefa',acao:'listar'};
+
+  // ── Concluir tarefa (pré-processador rápido) ──────────────────────────
+  if (has('conclui','concluí','terminei','terminou','finalizei','finalizado',
+           'dei conta','dei um jeito','resolvi o papo','mandei ver',
+           'ta resolvido','tá resolvido','ta ok','tá ok','ok feito',
+           'ja fiz','já fiz','ja resolvi','já resolvi','foi feito','foi resolvido'))
+    if (!has('nao','não','ainda','quero','preciso','vou','para','tarefa nova','criar'))
+      return {tipo:'tarefa',acao:'concluir',titulo:texto.trim()};
 
   // ── Pendentes de autorização ───────────────────────────────────────────
   if (eq('pendentes','ver pendentes','lancamentos pendentes','lançamentos pendentes',
@@ -756,7 +786,7 @@ Mensagem: `;
   );
 
   const data = await res.json();
-  console.log('Gemini raw:', JSON.stringify(data));
+  // console.log('Gemini raw:', JSON.stringify(data));
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
   try {
@@ -861,7 +891,7 @@ export default async function handler(req, res) {
   const chat_id = msg.chat.id;
   let texto = msg.text || msg.caption || '';
 
-  console.log('Chat ID:', chat_id, 'Texto:', texto);
+  console.log('Chat ID:', chat_id, '| tipo_midia:', msg.voice ? 'audio' : msg.photo ? 'foto' : 'texto');
 
   try {
     // 1. Verifica se o chat_id já está vinculado
@@ -878,7 +908,7 @@ export default async function handler(req, res) {
       // Busca token em user_data (salvo via api/generate-token com service key)
       const tokenUdRes = await supabaseQuery(`/user_data?user_id=eq.__tgtoken__${tokenLimpo}&select=data`);
       let tokenData = tokenUdRes?.[0]?.data || null;
-      console.log('Token user_data resultado:', JSON.stringify(tokenData));
+      // console.log('Token user_data resultado:', JSON.stringify(tokenData));
 
       // Fallback: busca na tabela telegram_tokens (legado)
       if (!tokenData) {
@@ -980,7 +1010,7 @@ export default async function handler(req, res) {
     // Tenta mapeamento __uid__ para garantir que user_id seja o username correto
     let user_id = vinculo.user_id;
     const vinculo_user_id = vinculo.user_id; // UUID original — usado para queries em telegram_vinculos
-    console.log('user_id do vínculo:', user_id);
+    // console.log('user_id do vínculo:', user_id);
     if (user_id && user_id.includes('-')) { // parece UUID
       const uidMap = await supabaseQuery(`/user_data?user_id=eq.__uid__${user_id}&select=data`);
       const mappedUser = uidMap?.[0]?.data?.username;

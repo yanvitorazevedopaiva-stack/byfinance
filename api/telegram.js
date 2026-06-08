@@ -891,7 +891,7 @@ export default async function handler(req, res) {
   const chat_id = msg.chat.id;
   let texto = msg.text || msg.caption || '';
 
-  console.log('Chat ID:', chat_id, '| tipo_midia:', msg.voice ? 'audio' : msg.photo ? 'foto' : 'texto');
+  console.log('Chat ID:', chat_id, '| tipo:', msg.voice?'audio':msg.photo?'foto':'texto');
 
   try {
     // 1. Verifica se o chat_id já está vinculado

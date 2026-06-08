@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({ chat_id, text, parse_mode: 'Markdown' }),
     });
   } catch(e) {
-    console.error('notify.js erro ao enviar Telegram:', e.message);
+    console.error('notify.js erro:', e.message);
     return res.status(500).json({ error: e.message });
   }
 

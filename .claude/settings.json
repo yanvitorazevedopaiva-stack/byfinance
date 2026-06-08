@@ -28,7 +28,10 @@
       "Bash(grep -n '\\\\${.*data}' \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\")",
       "PowerShell($lines = Get-Content 'C:\\\\Users\\\\Usuario\\\\.claude\\\\projects\\\\c--Users-Usuario-Desktop-TEST\\\\20a8c0ce-e39f-40d2-add1-9985605a2daa.jsonl' -Encoding UTF8; Write-Host \"Total lines: $\\($lines.Count\\)\"; $total = $lines.Count; for \\($i = $total - 1; $i -ge [Math]::Max\\(0, $total - 100\\); $i--\\) { if \\($lines[$i] -match 'MELHORIA'\\) { Write-Host \"Line $i\" } })",
       "PowerShell($lines = Get-Content 'C:\\\\Users\\\\Usuario\\\\.claude\\\\projects\\\\c--Users-Usuario-Desktop-TEST\\\\20a8c0ce-e39f-40d2-add1-9985605a2daa.jsonl' -Encoding UTF8; $line = $lines[6864]; $obj = $line | ConvertFrom-Json; $msg = $obj.message; if \\($msg.content\\) { $msg.content | ForEach-Object { if \\($_.type -eq 'text'\\) { Write-Host $_.text } } } elseif \\($msg.role\\) { Write-Host \\($msg | ConvertTo-Json -Depth 10\\) } else { Write-Host $line.Substring\\(0, [Math]::Min\\(3000, $line.Length\\)\\) })",
-      "Read(//c/Users/Usuário/Desktop/TEST/**)"
+      "Read(//c/Users/Usuário/Desktop/TEST/**)",
+      "Bash(awk 'NR==11519' \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\TEST\\\\index.html\")",
+      "Bash(xxd)",
+      "Bash(xxd _snippet.txt)"
     ]
   }
 }

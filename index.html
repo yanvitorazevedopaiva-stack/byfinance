@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -1038,6 +1038,216 @@
     .login-logo{margin-bottom:0;}
     .login-logo h1{font-size:18px;}
     .login-tabs{margin-bottom:18px;}
+
+    /* ── DASHBOARD MOBILE ── */
+    .d-kpi-row{flex-wrap:wrap!important;gap:8px!important;}
+    .d-kpi-row .card{flex:1 1 calc(50% - 8px)!important;min-width:0!important;}
+    #health-bar-wrap{flex-direction:column!important;}
+
+    /* ── MODAL AUTORIZAÇÃO TELEGRAM ── */
+    #tg-aprovar-formas{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;}
+    .lanc-forma-btn{width:100%!important;padding:10px 6px!important;font-size:11px!important;text-align:center!important;}
+
+    /* ── PARCELAS MOBILE ── */
+    #parc-lista{overflow-x:auto!important;}
+    #parc-lista table{min-width:560px!important;}
+
+    /* ── PLANEJAMENTO/CRONOGRAMA MOBILE ── */
+    #crono-resumo{flex-direction:column!important;gap:10px!important;}
+    #crono-resumo>div{width:100%!important;}
+
+    /* ── MERCADO MOBILE ── */
+    #mkt-catalogo-wrap{overflow-x:auto!important;}
+    #mkt-panel-main>div:first-child{flex-wrap:wrap!important;}
+
+    /* ── METAS MOBILE ── */
+    #page-metas .grid2{grid-template-columns:1fr!important;}
+    #page-metas .card{margin-bottom:10px!important;}
+
+    /* ── BENS MOBILE ── */
+    #page-bens .grid2,#page-bens .grid3{grid-template-columns:1fr!important;}
+
+    /* ── TAREFAS MOBILE ── */
+    #trf-grid{grid-template-columns:1fr!important;gap:12px!important;}
+
+    /* ── DOCUMENTOS MOBILE ── */
+    #page-documentos .docs-grid{grid-template-columns:1fr!important;}
+
+    /* ── RELATÓRIOS MOBILE ── */
+    #page-relatorios .grid2,#page-relatorios .grid3{grid-template-columns:1fr!important;}
+    #page-relatorios .tbl-wrap{overflow-x:auto!important;}
+
+    /* ── CONFIGURAÇÕES MOBILE ── */
+    #page-config .grid2{grid-template-columns:1fr!important;}
+
+    /* ── RECEITAS MOBILE ── */
+    #page-receita .card>div[style*="display:flex"]{flex-wrap:wrap!important;gap:8px!important;}
+    #page-receita input,#page-receita select{width:100%!important;box-sizing:border-box!important;}
+
+    /* ── CARTÕES MOBILE ── */
+    #ct-vcards-list{flex-direction:column!important;}
+    #ct-new-form .grid2{grid-template-columns:1fr!important;}
+
+    /* ── INVESTIMENTOS MOBILE ── */
+    #page-investimentos .grid2,#page-investimentos .grid3{grid-template-columns:1fr!important;}
+    #inv-sumario{grid-template-columns:1fr 1fr!important;}
+
+    /* ── PARCEIROS MOBILE ── */
+    #page-parceiros table{min-width:420px!important;}
+    #page-parceiros .tbl-wrap{overflow-x:auto!important;}
+
+    /* ── FINANCIAMENTOS MOBILE ── */
+    #page-financiamentos table{min-width:500px!important;}
+    #page-financiamentos .tbl-wrap{overflow-x:auto!important;}
+
+    /* ── COMPRAS MOBILE ── */
+    #page-compras .cp-row{grid-template-columns:1fr auto!important;}
+
+    /* ── MODAIS UNIVERSAL MOBILE ── */
+    .modal-box{width:96vw!important;max-width:96vw!important;max-height:88vh!important;overflow-y:auto!important;}
+
+    /* ── SELECTS NATIVOS MOBILE (iOS/Android picker) ── */
+    select{-webkit-appearance:menulist!important;appearance:menulist!important;font-size:16px!important;min-height:40px!important;padding:8px 10px!important;}
+
+    /* ── ÁREA DE TOQUE MÍNIMA ── */
+    input[type="text"],input[type="number"],input[type="date"],input[type="email"],input[type="password"],textarea{min-height:40px!important;padding:10px 12px!important;}
+    button,.btn{min-height:36px!important;}
+
+    /* ══ SELECTS: picker nativo mobile iOS/Android ══ */
+    select{
+      -webkit-appearance:menulist!important;
+      appearance:menulist!important;
+      min-height:44px!important;
+      padding:10px 12px!important;
+      font-size:16px!important;
+      border-radius:10px!important;
+      width:100%!important;
+      box-sizing:border-box!important;
+    }
+
+    /* ══ INPUTS: área de toque mínima ══ */
+    input[type="text"],input[type="number"],input[type="date"],
+    input[type="email"],input[type="password"],textarea{
+      min-height:44px!important;
+      padding:10px 12px!important;
+    }
+    button,.btn{min-height:40px!important;}
+
+    /* ══ LANÇAMENTOS: formas em grid 2x3 ══ */
+    #lanc-formas-wrap{
+      display:grid!important;
+      grid-template-columns:1fr 1fr!important;
+      gap:6px!important;
+    }
+    .lanc-forma-btn{
+      width:100%!important;
+      min-height:44px!important;
+      font-size:11px!important;
+      justify-content:center!important;
+    }
+
+    /* ══ MODAL AUTORIZAÇÃO TELEGRAM: full screen ══ */
+    #tg-aprovar-modal>div{
+      width:100vw!important;
+      max-width:100vw!important;
+      max-height:100dvh!important;
+      height:100dvh!important;
+      border-radius:0!important;
+      margin:0!important;
+      overflow-y:auto!important;
+    }
+    #tg-aprovar-formas{
+      display:grid!important;
+      grid-template-columns:1fr 1fr!important;
+      gap:6px!important;
+    }
+
+    /* ══ MODAIS: bem-modal e anx-modal ══ */
+    .bem-modal-box,.anx-modal-box{
+      width:96vw!important;
+      max-width:96vw!important;
+      max-height:90dvh!important;
+      overflow-y:auto!important;
+      border-radius:16px!important;
+    }
+
+    /* ══ PARCELAS: scroll suave ══ */
+    #parc-lista{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+    #parc-lista table{min-width:540px!important;}
+
+    /* ══ SEMANAL: scroll suave ══ */
+    #page-semanal .tbl-wrap{
+      overflow-x:auto!important;
+      -webkit-overflow-scrolling:touch!important;
+    }
+
+    /* ══ CRONOGRAMA: scroll e cards em coluna ══ */
+    .crono-tbl-wrap{-webkit-overflow-scrolling:touch!important;}
+    #crono-resumo{
+      display:flex!important;
+      flex-direction:column!important;
+      gap:10px!important;
+    }
+    #crono-resumo>div{width:100%!important;}
+
+    /* ══ MERCADO: scroll suave ══ */
+    #mkt-catalogo-wrap{-webkit-overflow-scrolling:touch!important;}
+    #mkt-panel-main>div:first-child{flex-wrap:wrap!important;}
+
+    /* ══ TAREFAS: coluna única ══ */
+    #trf-grid{grid-template-columns:1fr!important;}
+
+    /* ══ METAS: coluna única ══ */
+    #page-metas .grid2,#page-metas .grid3{grid-template-columns:1fr!important;}
+
+    /* ══ BENS: coluna única ══ */
+    #page-bens .grid2,#page-bens .grid3{grid-template-columns:1fr!important;}
+
+    /* ══ PARCEIROS: scroll ══ */
+    #page-parceiros .tbl-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+
+    /* ══ FINANCIAMENTOS: scroll ══ */
+    #page-financiamentos .tbl-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+
+    /* ══ RECEITAS: formulário em coluna ══ */
+    #page-receita .card>div[style*="display:flex"]{flex-wrap:wrap!important;gap:8px!important;}
+
+    /* ══ INVESTIMENTOS ══ */
+    #page-investimentos .grid2,#page-investimentos .grid3{grid-template-columns:1fr!important;}
+
+    /* ══ RELATÓRIOS ══ */
+    #page-relatorios .grid2,#page-relatorios .grid3{grid-template-columns:1fr!important;}
+    #page-relatorios .tbl-wrap{overflow-x:auto!important;}
+
+    /* ══ HEALTH BAR: métricas em flex wrap ══ */
+    .health-right{flex-wrap:wrap!important;gap:8px!important;}
+    .health-metric{flex:1 1 calc(50% - 8px)!important;min-width:0!important;}
+  }
+
+  /* ══ EXTRA PEQUENO ≤420px ══ */
+  @media(max-width:420px){
+    .page{padding:8px 8px 90px!important;}
+    .page-title{font-size:14px!important;}
+    .card{padding:10px 12px!important;}
+    .card-value{font-size:17px!important;}
+    #lanc-formas-wrap,#tg-aprovar-formas{grid-template-columns:1fr!important;}
+    .btn{font-size:10px!important;padding:6px 10px!important;}
+    .sec-title{font-size:10px!important;}
+    .health-metric{flex:1 1 100%!important;}
+    .mob-nav-item{font-size:9px!important;}
+    .mob-nav-icon{font-size:20px!important;}
+  }
+
+  /* ===== EXTRA PEQUENO (≤420px) ===== */
+  @media(max-width:420px){
+    .page{padding:8px!important;}
+    .page-title{font-size:12px!important;}
+    .card{padding:10px 12px!important;}
+    .card-value{font-size:18px!important;}
+    #tg-aprovar-formas{grid-template-columns:1fr!important;}
+    .btn{font-size:10px!important;padding:5px 10px!important;}
+    #mob-topbar{padding:0 10px!important;height:46px!important;}
+    #main{padding-top:46px!important;}
   }
 
   /* ===== QUADRO CRONOGRAMA PAGAMENTO — TABELA ===== */
@@ -1224,6 +1434,20 @@
     cursor:pointer;font-weight:700;
   }
   .fat-hist-cell.paga:hover{filter:brightness(1.2);}
+  .fat-hist-cell.paga-extra{
+    background:rgba(0,255,157,0.12);color:var(--neon-green);
+    border:1px solid rgba(255,215,0,0.4);cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    position:relative;
+  }
+  .fat-hist-cell.paga-extra:hover{filter:brightness(1.15);}
+  .fat-hist-cell-detail{
+    display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    z-index:200;background:var(--card);border:1px solid var(--border);
+    border-radius:10px;padding:10px 14px;min-width:200px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);font-size:11px;white-space:nowrap;
+  }
+  .fat-hist-cell-detail.open{display:block;}
   .fat-hist-cell.pendente{
     background:rgba(255,215,0,0.08);color:var(--neon-yellow);
     cursor:pointer;font-weight:700;
@@ -7915,7 +8139,15 @@ async function _startSession(u){
   setTimeout(()=>_registrarAcesso&&_registrarAcesso(),100);
   const scr=document.getElementById('login-screen');
   if(scr) scr.classList.add('fading');
-  await _loadFromSupabase();
+  // Timeout de segurança — se _loadFromSupabase demorar mais de 6s, continua mesmo assim
+  try{
+    await Promise.race([
+      _loadFromSupabase(),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),6000))
+    ]);
+  }catch(e){
+    console.warn('[BYF] _loadFromSupabase timeout ou erro — continuando login:',e.message);
+  }
   if(scr) scr.style.display='none';
   _initApp();
   tgAuthRenderDashboard(800);
@@ -11280,12 +11512,50 @@ function renderHistoricoFaturas(){
   const rows=lista.map((c,ci)=>{
     const vals=fat[c]||Array(12).fill(0);
     const pg=pagas[c]||Array(12).fill(false);
+    const _fatDatas=load('fat_pagas_datas')||{};
     const cells=vals.map((v,i)=>{
       if(v<=0) return `<div class="fat-hist-cell vazia">—</div>`;
       const paga=pg[i];
-      const cls=paga?'paga':'pendente';
       const valStr=fmt(v).replace('R$ ','').replace('R$ ','').trim();
-      return `<div class="fat-hist-cell ${cls}${i===mesAtual?' mes-atual':''}" onclick="toggleFatPaga('${esc(c)}',${i})" title="${paga?'Paga — clique para desmarcar':'Pendente — clique para marcar como paga'}">${paga?'✓':valStr}</div>`;
+      if(!paga){
+        return `<div class="fat-hist-cell pendente${i===mesAtual?' mes-atual':''}" onclick="toggleFatPaga('${esc(c)}',${i})" title="Pendente — clique para marcar como paga">${valStr}</div>`;
+      }
+      // Verifica lançamentos APÓS data de pagamento no mesmo mês de competência
+      const _dataPgto=(_fatDatas[c]||{})[i];
+      const _mesKey=new Date().getFullYear()+'-'+String(i+1).padStart(2,'0');
+      const _lancsExtras=_dataPgto?Object.values(getData('lancamentos')||{}).flat().filter(l=>{
+        if(!l.cartao||l.cartao!==c) return false;
+        const _lMes=getMesCompetencia(l.data,l.cartao);
+        return _lMes===_mesKey&&l.data>_dataPgto;
+      }):[];
+      const _totalExtra=_lancsExtras.reduce((a,l)=>a+(l.fatVal||l.val||0),0);
+      if(_lancsExtras.length>0){
+        // ID sanitizado — remove caracteres especiais
+        const _detailId='fxd-'+ci+'-'+i+'-'+c.replace(/[^a-zA-Z0-9]/g,'_');
+        const _totalFmt=fmt(v+_totalExtra).replace('R$ ','').trim();
+        const _detalheHtml=_lancsExtras.map(l=>`
+          <div style="display:flex;justify-content:space-between;gap:16px;padding:4px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text3)">${l.data?l.data.split('-').reverse().join('/'):'—'}</span>
+            <span style="color:var(--neon-yellow);font-weight:700">+${fmt(l.fatVal||l.val||0).replace('R$ ','')}</span>
+          </div>`).join('');
+        return `<div class="fat-hist-cell paga-extra${i===mesAtual?' mes-atual':''}" onclick="toggleFatPaga('${esc(c)}',${i})" title="Paga — com lançamentos adicionais após pagamento">
+          <span>✓ ${_totalFmt}</span>
+          <span style="font-size:9px;color:var(--neon-yellow);cursor:pointer" onclick="event.stopPropagation();document.getElementById('${_detailId}').classList.toggle('open')">▼</span>
+          <div class="fat-hist-cell-detail" id="${_detailId}">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'JetBrains Mono',monospace">APÓS PAGAMENTO</div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+              <span style="color:var(--text3)">Fatura original</span>
+              <span style="color:var(--neon-green);font-weight:700">${valStr}</span>
+            </div>
+            ${_detalheHtml}
+            <div style="display:flex;justify-content:space-between;padding:6px 0 2px;font-weight:700">
+              <span>Total</span>
+              <span style="color:var(--neon-yellow)">${_totalFmt}</span>
+            </div>
+          </div>
+        </div>`;
+      }
+      return `<div class="fat-hist-cell paga${i===mesAtual?' mes-atual':''}" onclick="toggleFatPaga('${esc(c)}',${i})" title="Paga — clique para desmarcar">✓</div>`;
     }).join('');
     const sep=ci>0?`<div class="fat-hist-row-sep"></div>`:'';
     return `${sep}<div class="fat-hist-cart">${esc(c)}</div>${cells}`;
@@ -11317,6 +11587,12 @@ function toggleFatPaga(cartao,mes){
   const isNowPaid=!p[cartao][mes];
   p[cartao][mes]=isNowPaid;
   setFatPagas(p);
+  // Salva data de quando a fatura foi paga
+  const _fatDatas=load('fat_pagas_datas')||{};
+  if(!_fatDatas[cartao]) _fatDatas[cartao]={};
+  if(isNowPaid) _fatDatas[cartao][mes]=new Date().toISOString().split('T')[0];
+  else delete _fatDatas[cartao][mes];
+  save('fat_pagas_datas',_fatDatas);
 
   // Sincroniza parcelas.paga: quando fatura do mês é quitada/desquitada,
   // avança/reverte o contador de parcelas pagas para os cartões correspondentes

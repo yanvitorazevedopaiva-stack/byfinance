@@ -786,7 +786,7 @@ Mensagem: `;
   );
 
   const data = await res.json();
-  // console.log('Gemini raw:', JSON.stringify(data));
+  console.log('Gemini status:', res.status, 'erro:', data?.error?.message||'ok', 'tipo:', data?.candidates?.[0]?.content?.parts?.[0]?.text?.substring(0,100)||'sem resposta');
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
   try {

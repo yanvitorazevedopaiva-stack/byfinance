@@ -1062,6 +1062,8 @@ export default async function handler(req, res) {
       mensagem_original = msg.caption ? `[PDF] ${msg.caption}` : '[PDF]';
     }
 
+    console.log('DEBUG chegou aqui — ctx.aguardando:', ctx.aguardando, '| texto:', texto?.substring(0,50));
+
     // ── Comandos explícitos de cancelamento/reset ────────────────────────────
     const _cancelCmds = ['cancela','cancelar','cancela tudo','esquece','esqueça','esquecer','recomeça','recomeçar','cancela gasto','cancela lançamento','cancela isso','apaga isso','descarta','voltar','começa de novo'];
     if (_cancelCmds.some(cw => texto.toLowerCase().trim() === cw || texto.toLowerCase().trim().startsWith(cw+' '))) {

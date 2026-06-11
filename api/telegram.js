@@ -2066,6 +2066,8 @@ export default async function handler(req, res) {
       }
     }
 
+    console.log('DEBUG-PRE texto:', texto?.substring(0,60), '| aguardando:', ctx?.aguardando||'nenhum');
+
     // Pré-processamento: comandos diretos não precisam do Gemini
     const _preCmd = (!audioUrl && !fotoUrl) ? preProcessarComando(texto) : null;
     const gasto = _preCmd || await interpretarComGemini({ texto, audioUrl, fotoUrl, mimeType });

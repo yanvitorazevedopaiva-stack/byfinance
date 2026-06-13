@@ -776,17 +776,21 @@ Mensagem: `;
     }];
   }
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents }),
-    }
-  );
-
-  const data = await res.json();
-  console.log('Gemini status:', res.status, 'erro:', data?.error?.message||'ok', 'tipo:', data?.candidates?.[0]?.content?.parts?.[0]?.text?.substring(0,100)||'sem resposta');
+  const _modelosTentar = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-flash-latest', 'gemini-pro-latest'];
+  let res, data;
+  for (const _modelo of _modelosTentar) {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${_modelo}:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents }),
+      }
+    );
+    data = await res.json();
+    console.log('Gemini modelo:', _modelo, '| status:', res.status, '| erro:', data?.error?.message||'ok');
+    if (res.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) break;
+  }
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
   try {

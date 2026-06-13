@@ -776,7 +776,7 @@ Mensagem: `;
     }];
   }
 
-  const _modelosTentar = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-flash-latest', 'gemini-pro-latest'];
+  const _modelosTentar = ['gemini-flash-latest', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-pro-latest'];
   let res, data;
   for (const _modelo of _modelosTentar) {
     res = await fetch(

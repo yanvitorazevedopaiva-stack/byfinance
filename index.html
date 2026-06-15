@@ -5375,6 +5375,7 @@
           <div class="sec-title" style="margin:0">ITENS CADASTRADOS</div>
           <div style="display:flex;align-items:center;gap:10px">
             <span id="mkt-cat-count" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace"></span>
+            <button onclick="_mktVerTodos()" style="background:none;border:1px solid rgba(0,200,255,0.25);color:var(--neon-blue);cursor:pointer;border-radius:6px;padding:3px 10px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700">VER TODOS</button>
             <span style="font-size:10px;color:var(--text3)">← arraste →</span>
           </div>
         </div>
@@ -9062,7 +9063,13 @@ function renderDashboard(){
   // Fatura do mês atual (índice dinâmico)
   const fat=getData('faturas');
   const mesAtual=_dashMes;
-  const totalFatMes=Object.values(fat).reduce((a,arr)=>a+(arr[mesAtual]||0),0);
+  // Lógica de competência: se hoje >= vencimento mais próximo, mostra faturas do próximo mês
+  const _cartoes=getData('cartoes')||[];
+  const _diaHoje=new Date().getDate();
+  const _menorVenc=_cartoes.reduce((min,c)=>c.vencimento?Math.min(min,parseInt(c.vencimento)):min,31);
+  const _usaProxMes=_diaHoje>=_menorVenc;
+  const _mesFat=_usaProxMes?(_dashMes+1)%12:_dashMes;
+  const totalFatMes=Object.values(fat).reduce((a,arr)=>a+(arr[_mesFat]||0),0);
   document.getElementById('d-fat-mes').textContent=fmt(totalFatMes);
   // Widget Financiamentos
   const finsAtivos=getFinanciamentos().filter(f=>f.pagas<f.nParc);
@@ -23098,6 +23105,48 @@ function _mktUpdateArrows(){
 function mktToggleCatalogo(){_mktUpdateArrows();}// compat
 
 
+function _mktVerTodos(){
+  const cat=_mktGetCatalogo();
+  if(!cat.length){_showToast('Nenhum item cadastrado.');return;}
+  const cats={};
+  cat.forEach(it=>{if(!cats[it.cat])cats[it.cat]=[];cats[it.cat].push(it);});
+  const html=Object.entries(cats).map(([c,itens])=>`
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[c]||'📦'} ${c.toUpperCase()} (${itens.length})</div>
+      ${itens.map(it=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:5px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:6px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              ${it.foto?`<img src="${it.foto}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:20px">${_MKT_EMOJI[it.cat]||'📦'}</span>`}
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text)">${esc(it.nome)}</div>
+              <div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · ${it.sku?'#'+it.sku+' · ':''} ${it.dataCadastro?new Date(it.dataCadastro).toLocaleDateString('pt-BR'):''}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--neon-yellow)">${it.preco>0?_mktFmt(it.preco):'—'}</span>
+            <button onclick="mktAbrirVincular(${it.id})" style="background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--neon-green);cursor:pointer;font-size:10px;padding:4px 8px;border-radius:6px;font-family:'JetBrains Mono',monospace">📅</button>
+            <button onclick="mktEditCatalogo(${it.id})" style="background:none;border:1px solid rgba(0,200,255,0.3);color:var(--neon-blue);cursor:pointer;font-size:11px;padding:4px 8px;border-radius:6px">✎</button>
+            <button onclick="mktRemoveCatalogo(${it.id})" style="background:none;border:1px solid rgba(255,68,68,0.25);color:var(--neon-red);cursor:pointer;font-size:11px;padding:4px 8px;border-radius:6px">✕</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+  const overlay=document.createElement('div');
+  overlay.id='mkt-todos-overlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:5200;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML=`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:min(680px,96vw);max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px">📦 TODOS OS ITENS (${cat.length})</div>
+        <button onclick="document.getElementById('mkt-todos-overlay').remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">×</button>
+      </div>
+      <div style="overflow-y:auto;padding:16px 20px;flex:1">${html}</div>
+    </div>`;
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+}
+
 function _mktRenderCatalogo(){
   _mktMigrateSku();
   const el=document.getElementById('mkt-catalogo-lista');if(!el)return;
@@ -23273,7 +23322,7 @@ function mktConfirmarVincularBtn(){
   const listas=_mktGetListas();
   const lista=listas.find(l=>l.id===_mktVincularListaId);if(!lista)return;
   if(lista.itens.find(i=>i.refId===it.id)){_showError(`"${it.nome}" já está nesta lista.`);return;}
-  lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd,unidade,precoPrev:preco,precoReal:preco,comprado:false});
+  lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd,unidade,precoPrev:preco,precoReal:preco,comprado:false,origemCatalogo:true});
   _mktSetListas(listas);
   mktFecharVincular();
   const msg=document.getElementById('mkt-cad-msg');
@@ -23612,7 +23661,7 @@ function _mktConfirmarDrop(itemId,listaId){
   const lista=listas.find(l=>l.id===listaId);
   if(!lista){document.getElementById('mkt-drag-price-modal')?.remove();return;}
   if(lista.itens.find(i=>i.refId===itemId)){_showToast(`"${it.nome}" já está na lista.`);document.getElementById('mkt-drag-price-modal')?.remove();return;}
-  lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:preco,comprado:false});
+  lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:preco,comprado:false,origemCatalogo:true});
   _mktSetListas(listas);
   document.getElementById('mkt-drag-price-modal')?.remove();
   _mktRenderMes();
@@ -23644,7 +23693,7 @@ function _mktRenderMes(){
   if(!lista.itens.length){el.innerHTML=`<div style="text-align:center;color:var(--text3);padding:32px;font-size:12px">Nenhum item.${isConcluido?'':'<br><br><button class="btn btn-sm" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ Adicionar item</button>'}</div>`;return;}
   const _planejados=lista.itens.filter(i=>!i.variavel);const _variaveis=lista.itens.filter(i=>i.variavel);const cats={};_planejados.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
   const _catalogo=_mktGetCatalogo();
-  el.innerHTML=Object.entries(cats).length?Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);const catItem=it.refId?_catalogo.find(c=>c.id===it.refId):null;const sku=catItem?.sku||it.sku||null;const skuBadge=sku?`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px">#${sku}</span>`:'';return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado&&!isConcluido?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}${skuBadge}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join(''):'';
+  el.innerHTML=Object.entries(cats).length?Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);const catItem=it.refId?_catalogo.find(c=>c.id===it.refId):null;const sku=catItem?.sku||it.sku||null;const skuBadge=sku?`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px">#${sku}</span>`:'';return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado&&!isConcluido?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}${skuBadge}${it.origemScanner?'<span style="font-size:9px;background:rgba(0,255,157,0.15);color:var(--neon-green);border:1px solid rgba(0,255,157,0.3);border-radius:4px;padding:1px 5px;margin-left:5px;font-family:\'JetBrains Mono\',monospace;font-weight:700">📷 NOTA</span>':''}${it.origemCatalogo?'<span style="font-size:9px;background:rgba(0,200,255,0.12);color:var(--neon-blue);border:1px solid rgba(0,200,255,0.25);border-radius:4px;padding:1px 5px;margin-left:5px;font-family:\'JetBrains Mono\',monospace;font-weight:700">📦 CATÁLOGO</span>':''}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join(''):'';
   _mktRenderVariaveis(el,_variaveis,isConcluido);
 }
 function mktAbrirFecharCompra(){

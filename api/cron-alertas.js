@@ -81,7 +81,11 @@ async function buildResumo(user_id) {
   const mesKey         = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
   const receitasVarMes = (receitasVar[mesKey] || []).reduce((a, r) => a + (r.val || r.valor || 0), 0);
 
-  const totalFatMes   = Object.values(faturas).reduce((a, arr) => a + (arr[mesAtual] || 0), 0);
+  const cartoes = dados[user_id + '_cartoes'] || [];
+  const _diaHoje = hoje.getDate();
+  const _menorVenc = cartoes.reduce((min,c)=>c.vencimento?Math.min(min,parseInt(c.vencimento)):min,31);
+  const _mesFatura = _diaHoje >= _menorVenc ? (mesAtual + 1) % 12 : mesAtual;
+  const totalFatMes   = Object.values(faturas).reduce((a, arr) => a + (arr[_mesFatura] || 0), 0);
   const totalGf       = gastosFixos.reduce((a, g) => a + (g.val || 0), 0);
   // Se há receitas variáveis lançadas no mês, usa elas (já incluem tudo lançado)
   // Caso contrário, usa as fixas como previsão
@@ -143,7 +147,7 @@ async function buildResumo(user_id) {
   let msg = `${emoji} *${saudacao}!* — BY Finance\n_${dataFmt}_\n\n`;
 
   // Bloco déficit/superávit
-  msg += `━━━ *RESULTADO ${MESES[mesAtual].toUpperCase()}* ━━━\n`;
+  msg += `━━━ *RESULTADO ${MESES[_mesFatura].toUpperCase()}* ━━━\n`;
   msg += `💰 *Receitas: ${fmt(totalReceitas)}*\n`;
   if(totalRecFixas>0) msg += `   ↳ Fixas: ${fmt(totalRecFixas)}\n`;
   if(receitasVarMes>0) msg += `   ↳ Variáveis: ${fmt(receitasVarMes)}\n`;

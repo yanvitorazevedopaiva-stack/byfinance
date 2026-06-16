@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -9214,7 +9214,6 @@ function renderDashboard(){
   // Parcelas de terceiros — alerta só no dia do fechamento do cartão
   const _parcTerceiros=(getData('parcelas')||[]).filter(p=>p.terceiro&&p.paga<p.total);
   const _cartoesList=getData('cartoes')||[];
-  const _diaHoje=new Date().getDate();
   _parcTerceiros.forEach(p=>{
     const _ct=_cartoesList.find(c=>c.nome===p.cartao);
     if(!_ct) return;

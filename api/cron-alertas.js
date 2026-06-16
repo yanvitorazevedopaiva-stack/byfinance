@@ -110,7 +110,6 @@ async function buildResumo(user_id) {
       vencimentos.push({ nome: g.desc||g.nome||'Gasto Fixo', tipo: 'Conta/Fixo', dia: g.vencimento, diff, val: g.val });
     }
   }
-  const cartoes = dados[user_id + '_cartoes'] || [];
   for (const c of cartoes) {
     if (c.fechamento) {
       const diff = diasAte(parseInt(c.fechamento), hoje);

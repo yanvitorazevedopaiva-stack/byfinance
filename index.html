@@ -14307,6 +14307,24 @@ function mostrarDecisaoModal(it,dias,tipo){
   }
 }
 
+let _comprasNegarPendId=null,_comprasNegarItDesc='';
+function _comprasConfirmarNegar(){
+  const motivo=(document.getElementById('compras-negar-motivo')?.value||'').trim();
+  document.getElementById('compras-negar-overlay')?.remove();
+  if(!_comprasNegarPendId){return;}
+  const lista=getCompras();
+  const idx=lista.findIndex(x=>x.id===_comprasNegarPendId);
+  if(idx>-1){
+    lista[idx].status='negado';
+    lista[idx].negado_por=_authUser||'Sistema';
+    lista[idx].negado_motivo=motivo||'Não informado';
+  }
+  setCompras(lista);
+  _notificarTodosCompra(lista[idx],'negado',motivo||'Não informado');
+  renderCompras();
+  _comprasNegarPendId=null;
+}
+
 function comprasDecisao(acao){
   document.getElementById('compras-decision-modal').classList.remove('open');
   if(!_comprasDecId){return;}
@@ -14314,18 +14332,25 @@ function comprasDecisao(acao){
   if(!it){_comprasDecId=null;return;}
 
   if(acao==='negar'){
-    const motivo=prompt(`Por que está negando "${it.desc}"?\nDigite o motivo:`);
-    if(motivo===null){_comprasDecId=null;return;}
-    const lista=getCompras();
-    const idx=lista.findIndex(x=>x.id===_comprasDecId);
-    if(idx>-1){
-      lista[idx].status='negado';
-      lista[idx].negado_por=_authUser||'Sistema';
-      lista[idx].negado_motivo=motivo;
-    }
-    setCompras(lista);
-    _notificarTodosCompra(lista[idx],'negado',motivo);
-    renderCompras();
+    _comprasNegarPendId=_comprasDecId;
+    _comprasNegarItDesc=it.desc;
+    const ov=document.createElement('div');
+    ov.id='compras-negar-overlay';
+    ov.style.cssText='position:fixed;inset:0;z-index:5300;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center';
+    ov.innerHTML=`
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:min(380px,92vw);padding:20px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--text)">Por que está negando?</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:14px">"${esc(it.desc)}"</div>
+        <textarea id="compras-negar-motivo" rows="3" placeholder="Digite o motivo..."
+          style="width:100%;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:13px;font-family:inherit;resize:none;box-sizing:border-box"></textarea>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button onclick="document.getElementById('compras-negar-overlay').remove();_comprasNegarPendId=null;" style="flex:1;background:none;border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:8px;padding:10px;font-size:12px">Cancelar</button>
+          <button onclick="_comprasConfirmarNegar()" style="flex:1;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.35);color:var(--neon-red);cursor:pointer;border-radius:8px;padding:10px;font-size:12px;font-weight:700">✕ Negar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    setTimeout(()=>document.getElementById('compras-negar-motivo')?.focus(),50);
+    return;
 
   } else if(acao==='aprovar'){
     const lista=getCompras();

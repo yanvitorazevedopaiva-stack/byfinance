@@ -21,8 +21,9 @@ export default async function handler(req, res) {
 
   if (!username && !uid) return res.status(400).json({ error: 'username or uid required' });
 
-  // Monta IDs base
-  const ids = [...new Set([username, uid].filter(Boolean))];
+  // Monta IDs base — só inclui uid (UUID) pois a coluna user_id é do tipo uuid
+  // username é usado apenas para resolver o mapping __uid__
+  const ids = [...new Set([uid].filter(Boolean))];
 
   // SEMPRE resolve via __uid__ mapping — o bot pode ter salvo com username diferente
   // (ex: mapeamento antigo tinha 'yanpaiva' mas _authUser agora é 'Yan')

@@ -59,11 +59,17 @@ export default async function handler(req, res) {
     }
   }
 
-  // Monta query OR para cobrir qualquer formato que o bot usou
-  const orParts = ids.map(id => `user_id.eq.${id}`);
+  // Filtra apenas UUIDs válidos para a query (coluna user_id é do tipo uuid)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidIds = ids.filter(id => uuidRegex.test(id));
+  if (!uuidIds.length) {
+    console.log('get-pendentes: nenhum UUID válido encontrado em ids:', ids);
+    return res.status(200).json([]);
+  }
+  const orParts = uuidIds.map(id => `user_id.eq.${id}`);
   const filter = orParts.length > 1
     ? `or=(${orParts.join(',')})`
-    : `user_id=eq.${ids[0]}`;
+    : `user_id=eq.${uuidIds[0]}`;
 
   const url = `${SUPABASE_URL}/rest/v1/telegram_pendentes?${filter}&status=eq.pendente&order=created_at.desc`;
   console.log('get-pendentes: query URL (sem base):', url.replace(SUPABASE_URL, ''));

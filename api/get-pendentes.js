@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
       );
       const revData = await revRes.json();
-      const match = (revData||[]).find(r => r.data?.username === username);
+      const match = (revData||[]).find(r => (r.data?.username||'').toLowerCase() === (username||'').toLowerCase());
       if (match) {
         resolvedUid = match.user_id.replace('__uid__','');
         console.log('get-pendentes: UUID resolvido via username:', resolvedUid);

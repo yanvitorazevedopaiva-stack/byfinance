@@ -8247,11 +8247,13 @@ async function initAuth(){
         if(!username) username=session.user.email?.split('@')[0]||'usuario';
         sessionStorage.setItem('financeOS_user',username);
         sessionStorage.setItem('byf_supabase_uid',uid);
+        localStorage.setItem('byf_supabase_uid',uid);
         if(!sessionStorage.getItem('byf_session_start'))
           sessionStorage.setItem('byf_session_start',Date.now());
         localStorage.setItem('byf_username_'+uid,username);
         _authUser=username;
-        _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
+        _authUID=uid;
+        console.log('[initAuth] Supabase session OK — uid:', uid, 'user:', username);
         // Garante que o mapping __uid__ existe no Supabase para este usuário
         try{
           _supabase.from('user_data').upsert({
@@ -8287,6 +8289,19 @@ async function initAuth(){
   const saved=sessionStorage.getItem('financeOS_user');
   if(saved){
     _authUser=saved;
+    _authUID=sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+    // Se uid ainda vazio, tenta recuperar da sessão Supabase
+    if(!_authUID&&_supabase){
+      try{
+        const {data:{session}}=await _supabase.auth.getSession();
+        if(session?.user?.id){
+          _authUID=session.user.id;
+          sessionStorage.setItem('byf_supabase_uid',_authUID);
+          localStorage.setItem('byf_supabase_uid',_authUID);
+        }
+      }catch(_){}
+    }
+    console.log('[initAuth] Fallback local — user:', saved, 'uid:', _authUID||'(vazio)');
     const scr=document.getElementById('login-screen');
     if(scr) scr.style.display='none';
     if(_supabase){

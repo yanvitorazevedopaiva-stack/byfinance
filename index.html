@@ -7556,6 +7556,7 @@ if(_supabase){
     if(event==='TOKEN_REFRESHED'&&session){
       sessionStorage.setItem('byf_session_start',Date.now());
       sessionStorage.setItem('byf_supabase_uid',session.user.id);
+      localStorage.setItem('byf_supabase_uid',session.user.id);
     }
     // Usuário clicou no link de recuperação de senha — exibir modal de nova senha
     if(event==='PASSWORD_RECOVERY'){
@@ -7629,7 +7630,7 @@ let _syncTimer=null;
 
 // ===================== AUTH =====================
 let _authUser='';
-let _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
+let _authUID=sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
 function _userPrefix(){return _authUser?_authUser+'_':'';}
 function _getUsers(){try{const u=localStorage.getItem('financeOS_users');return u?JSON.parse(u):{}}catch(e){return {};}}
 function _saveUsers(u){try{localStorage.setItem('financeOS_users',JSON.stringify(u));}catch(e){}}
@@ -7985,6 +7986,7 @@ async function doLogin(){
         ||localStorage.getItem('byf_username_'+data.user.id)
         ||uInput;
       sessionStorage.setItem('byf_supabase_uid',data.user.id);
+      localStorage.setItem('byf_supabase_uid',data.user.id);
       localStorage.setItem('byf_username_'+data.user.id,username);
       if(btn){btn.textContent='ACESSAR';btn.disabled=false;}
       _startSession(username);
@@ -8204,6 +8206,7 @@ async function doLogoutConfirm(){
   sessionStorage.removeItem('financeOS_user');
   sessionStorage.removeItem('byf_supabase_uid');
   sessionStorage.removeItem('byf_session_start');
+  localStorage.removeItem('byf_supabase_uid');
   _authUser='';
   location.reload();
 }

@@ -24901,8 +24901,21 @@ function trfBadgeProgresso(meta){
 // ── TELEGRAM PENDENTES DE AUTORIZAÇÃO ──────────────────────────────────────
 
 async function tgAuthCarregar(){
-  const uid=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+  // Busca uid de todas as fontes disponíveis
+  let uid=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
   const user=_authUser||sessionStorage.getItem('financeOS_user')||'';
+  // Se uid ainda vazio, tenta buscar da sessão Supabase
+  if(!uid&&_supabase){
+    try{
+      const {data:{session}}=await _supabase.auth.getSession();
+      if(session?.user?.id){
+        uid=session.user.id;
+        _authUID=uid;
+        sessionStorage.setItem('byf_supabase_uid',uid);
+        localStorage.setItem('byf_supabase_uid',uid);
+      }
+    }catch(_){}
+  }
   if(!uid&&!user) return [];
   try{
     const r=await fetch('/api/get-pendentes',{

@@ -8155,13 +8155,14 @@ function doLoginAfterRegister(){
 
 async function _startSession(u){
   _authUser=u;
-  _authUID=sessionStorage.getItem('byf_supabase_uid')||'';
+  _authUID=sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
   if(!_authUID&&_supabase){
     try{
       const {data:{session}}=await _supabase.auth.getSession();
       if(session?.user?.id){
         _authUID=session.user.id;
         sessionStorage.setItem('byf_supabase_uid',_authUID);
+        localStorage.setItem('byf_supabase_uid',_authUID);
       }
     }catch(_){}
   }
@@ -14373,9 +14374,10 @@ function comprasDecisao(acao){
 }
 
 async function _notificarTodosCompra(it,tipo,motivo){
-  if(!_supabase||!_authUID) return;
+  const _uidNot=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+  if(!_supabase||!_uidNot) return;
   try{
-    const {data:vinculos}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUID);
+    const {data:vinculos}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_uidNot);
     if(!vinculos?.length) return;
     let msg='';
     if(tipo==='negado'){
@@ -14391,9 +14393,10 @@ async function _notificarTodosCompra(it,tipo,motivo){
 }
 
 async function _enviarVotacaoCompra(it){
-  if(!_supabase||!_authUID) return;
+  const _uidVot=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+  if(!_supabase||!_uidVot) return;
   try{
-    const {data:vinculos}=await _supabase.from('telegram_vinculos').select('chat_id,nome').eq('user_id',_authUID);
+    const {data:vinculos}=await _supabase.from('telegram_vinculos').select('chat_id,nome').eq('user_id',_uidVot);
     if(!vinculos?.length) return;
     const msg=`🗳 *Votação de compra!*\n\n🛍 *${it.desc}*\n💰 ${fmt(it.val)}\n${it.onde?`🏪 ${it.onde}\n`:''}\n*${_authUser}* aprovou esta compra. Você concorda?\n\n1️⃣ *Aprovar*\n2️⃣ *Negar*`;
     await Promise.all(vinculos.map(async v=>{
@@ -24607,8 +24610,15 @@ async function _trfPopulaAtribuirSel(){
   let opcoesBase=`<option value="">— Tarefa para mim (${esc(meuNome)}) —</option>`;
   if(!_supabase||!_authUser){sel.innerHTML=opcoesBase;return;}
   try{
-    const {data}=await _supabase.from('telegram_vinculos').select('nome,chat_id').eq('user_id',_authUser);
-    if(!data||!data.length){sel.innerHTML=opcoesBase;return;}
+    const _vincUid=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+    const _vincQueries=[];
+    if(_vincUid) _vincQueries.push(_supabase.from('telegram_vinculos').select('nome,chat_id').eq('user_id',_vincUid));
+    if(_authUser&&_authUser!==_vincUid) _vincQueries.push(_supabase.from('telegram_vinculos').select('nome,chat_id').eq('user_id',_authUser));
+    if(!_vincQueries.length){sel.innerHTML=opcoesBase;return;}
+    const _vincResults=await Promise.all(_vincQueries.map(q=>q.catch(()=>({data:[]}))));
+    const _vincSet=new Set();
+    const data=_vincResults.flatMap(r=>(r.data||[]).filter(v=>{if(_vincSet.has(v.chat_id))return false;_vincSet.add(v.chat_id);return true;}));
+    if(!data.length){sel.innerHTML=opcoesBase;return;}
     // Inclui o próprio usuário como opção explícita (com chat_id se tiver)
     const euVinculo=data.find(v=>v.nome&&v.nome.toLowerCase()===meuNome.toLowerCase());
     const euOpt=euVinculo
@@ -25463,10 +25473,9 @@ async function tgConfirmarAutorizacao(){
       const _chatIdsRec=new Set();
       if(data.chat_id) _chatIdsRec.add(String(data.chat_id));
       try{
-        const {data:_vRec}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUser);
-        if(_vRec) _vRec.forEach(v=>{if(v.chat_id) _chatIdsRec.add(String(v.chat_id));});
-        if(_authUID){
-          const {data:_vRecUID}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUID);
+        const _uidRec=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+        if(_uidRec){
+          const {data:_vRecUID}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_uidRec);
           if(_vRecUID) _vRecUID.forEach(v=>{if(v.chat_id) _chatIdsRec.add(String(v.chat_id));});
         }
       }catch(_){}
@@ -25575,10 +25584,9 @@ async function tgConfirmarAutorizacao(){
     const _chatIdsAut=new Set();
     if(data.chat_id) _chatIdsAut.add(String(data.chat_id));
     try{
-      const {data:_vAut}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUser);
-      if(_vAut) _vAut.forEach(v=>{if(v.chat_id) _chatIdsAut.add(String(v.chat_id));});
-      if(_authUID){
-        const {data:_vAutUID}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_authUID);
+      const _uidAut=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+      if(_uidAut){
+        const {data:_vAutUID}=await _supabase.from('telegram_vinculos').select('chat_id').eq('user_id',_uidAut);
         if(_vAutUID) _vAutUID.forEach(v=>{if(v.chat_id) _chatIdsAut.add(String(v.chat_id));});
       }
     }catch(_){}
@@ -25781,14 +25789,11 @@ async function tgConfirmarRejeicao(){
     const chatIds=new Set();
     if(data.chat_id) chatIds.add(String(data.chat_id));
     try{
-      const {data:vinculos}=await _supabase.from('telegram_vinculos')
-        .select('chat_id').eq('user_id',_authUser);
-      if(vinculos) vinculos.forEach(v=>{if(v.chat_id) chatIds.add(String(v.chat_id));});
-      // Busca também por UUID (compatibilidade)
-      if(_authUID){
-        const {data:vinculosUID}=await _supabase.from('telegram_vinculos')
-          .select('chat_id').eq('user_id',_authUID);
-        if(vinculosUID) vinculosUID.forEach(v=>{if(v.chat_id) chatIds.add(String(v.chat_id));});
+      const _uidNotif=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+      if(_uidNotif){
+        const {data:vinculos}=await _supabase.from('telegram_vinculos')
+          .select('chat_id').eq('user_id',_uidNotif);
+        if(vinculos) vinculos.forEach(v=>{if(v.chat_id) chatIds.add(String(v.chat_id));});
       }
     }catch(_){}
 
@@ -25837,14 +25842,12 @@ let _cfgTgTimerInterval=null;
 async function cfgTgCarregarStatus(){
   if(!_supabase||!_authUser) return;
   try{
-    // Busca por username E por UUID (compatibilidade com registros antigos)
-    const [{data:byUser},{data:byUID}]=await Promise.all([
-      _supabase.from('telegram_vinculos').select('*').eq('user_id',_authUser),
-      _authUID?_supabase.from('telegram_vinculos').select('*').eq('user_id',_authUID):Promise.resolve({data:[]})
-    ]);
-    // Merge e deduplica por chat_id (username tem prioridade)
+    // Busca por UUID (coluna user_id é do tipo uuid)
+    const _uidCfg=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+    if(!_uidCfg){console.warn('[cfgTgCarregarStatus] UUID vazio, impossível buscar vínculos');return;}
+    const {data:byUID}=await _supabase.from('telegram_vinculos').select('*').eq('user_id',_uidCfg);
     const visto=new Set();
-    const data=[...(byUser||[]),...(byUID||[])].filter(v=>{
+    const data=(byUID||[]).filter(v=>{
       if(visto.has(v.chat_id)) return false;
       visto.add(v.chat_id); return true;
     }).sort((a,b)=>(b.principal||0)-(a.principal||0));
@@ -25953,8 +25956,8 @@ async function cfgTgDesvincular(){
   if(!_supabase||!_authUser) return;
   if(!confirm('Desvincular todos os números do Telegram? Você precisará vincular novamente.')) return;
   try{
-    await _supabase.from('telegram_vinculos').delete().eq('user_id',_authUser);
-    if(_authUID) await _supabase.from('telegram_vinculos').delete().eq('user_id',_authUID);
+    const _uidDel=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+    if(_uidDel) await _supabase.from('telegram_vinculos').delete().eq('user_id',_uidDel);
     cfgTgCarregarStatus();
     cfgMsgShow(document.getElementById('cfg-tg-msg'),'ok','Telegram desvinculado.');
   }catch(e){

@@ -24899,8 +24899,19 @@ function trfBadgeProgresso(meta){
 
 async function tgAuthCarregar(){
   if(!_supabase) return [];
-  const uid=_authUID||sessionStorage.getItem('byf_supabase_uid')||'';
+  let uid=_authUID||sessionStorage.getItem('byf_supabase_uid')||'';
   const user=_authUser||sessionStorage.getItem('financeOS_user')||'';
+  // Se uid está vazio, tenta buscar da sessão Supabase
+  if(!uid&&_supabase){
+    try{
+      const {data:{session}}=await _supabase.auth.getSession();
+      if(session?.user?.id){
+        uid=session.user.id;
+        _authUID=uid;
+        sessionStorage.setItem('byf_supabase_uid',uid);
+      }
+    }catch(_){}
+  }
   if(!uid&&!user) return [];
   try{
     const queries=[];

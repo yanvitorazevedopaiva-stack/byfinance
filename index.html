@@ -7542,6 +7542,7 @@ function _initSupabase(){
   catch(e){console.warn('Supabase indisponível',e);}
 }
 _initSupabase();
+window._supabase=_supabase;
 // Listener de estado de autenticação Supabase
 if(_supabase){
   _supabase.auth.onAuthStateChange((event,session)=>{
@@ -7631,6 +7632,23 @@ let _syncTimer=null;
 // ===================== AUTH =====================
 let _authUser='';
 let _authUID=sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
+async function _resolveUserUUID(username){
+  if(!username) return '';
+  try{
+    const r=await fetch('/api/resolve-uid',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username})
+    });
+    const d=await r.json();
+    if(d.uid){
+      _authUID=d.uid;
+      try{sessionStorage.setItem('byf_supabase_uid',d.uid);}catch(_){}
+      try{localStorage.setItem('byf_supabase_uid',d.uid);}catch(_){}
+      console.log('[_resolveUserUUID] UUID resolvido via API:',d.uid);
+    }
+    return d.uid||'';
+  }catch(e){console.warn('[_resolveUserUUID] erro:',e);return '';}
+}
 function _userPrefix(){return _authUser?_authUser+'_':'';}
 function _getUsers(){try{const u=localStorage.getItem('financeOS_users');return u?JSON.parse(u):{}}catch(e){return {};}}
 function _saveUsers(u){try{localStorage.setItem('financeOS_users',JSON.stringify(u));}catch(e){}}
@@ -8166,6 +8184,9 @@ async function _startSession(u){
       }
     }catch(_){}
   }
+  // Fallback: resolve UUID via API (funciona mesmo sem _supabase)
+  if(!_authUID) await _resolveUserUUID(u);
+  console.log('[_startSession] user:',u,'uid:',_authUID||'(vazio)');
   sessionStorage.setItem('financeOS_user',u);
   sessionStorage.setItem('byf_session_start',Date.now());
   sessionStorage.setItem('trf_show_on_login','1'); // sinaliza que é um login real
@@ -8301,6 +8322,8 @@ async function initAuth(){
         }
       }catch(_){}
     }
+    // Último fallback: resolve UUID via API server-side (funciona sem _supabase)
+    if(!_authUID) await _resolveUserUUID(saved);
     console.log('[initAuth] Fallback local — user:', saved, 'uid:', _authUID||'(vazio)');
     const scr=document.getElementById('login-screen');
     if(scr) scr.style.display='none';

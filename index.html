@@ -24901,34 +24901,21 @@ function trfBadgeProgresso(meta){
 // ── TELEGRAM PENDENTES DE AUTORIZAÇÃO ──────────────────────────────────────
 
 async function tgAuthCarregar(){
-  if(!_supabase) return [];
-  let uid=_authUID||sessionStorage.getItem('byf_supabase_uid')||'';
+  const uid=_authUID||sessionStorage.getItem('byf_supabase_uid')||localStorage.getItem('byf_supabase_uid')||'';
   const user=_authUser||sessionStorage.getItem('financeOS_user')||'';
-  // Se uid está vazio, tenta buscar da sessão Supabase
-  if(!uid&&_supabase){
-    try{
-      const {data:{session}}=await _supabase.auth.getSession();
-      if(session?.user?.id){
-        uid=session.user.id;
-        _authUID=uid;
-        sessionStorage.setItem('byf_supabase_uid',uid);
-      }
-    }catch(_){}
-  }
   if(!uid&&!user) return [];
   try{
-    const queries=[];
-    if(uid) queries.push(_supabase.from('telegram_pendentes').select('*').eq('user_id',uid).eq('status','pendente'));
-    if(user&&user!==uid) queries.push(_supabase.from('telegram_pendentes').select('*').eq('user_id',user).eq('status','pendente'));
-    const results=await Promise.all(queries);
-    const vistos=new Set();
-    const todos=[];
-    results.forEach(r=>{
-      if(r.error) console.warn('[tgAuthCarregar] erro query:',r.error);
-      (r.data||[]).forEach(p=>{if(!vistos.has(p.id)){vistos.add(p.id);todos.push(p);}});
+    // Usa get-pendentes (service key, bypassa RLS) — solução definitiva
+    const r=await fetch('/api/get-pendentes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:user,uid})
     });
-    console.log('[tgAuthCarregar] uid:',uid,'user:',user,'encontrados:',todos.length);
-    return todos.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    if(!r.ok) throw new Error('get-pendentes status '+r.status);
+    const data=await r.json();
+    const lista=Array.isArray(data)?data:[];
+    console.log('[tgAuthCarregar] uid:',uid,'user:',user,'encontrados:',lista.length);
+    return lista.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   }catch(e){
     console.error('[tgAuthCarregar] erro:',e);
     return [];

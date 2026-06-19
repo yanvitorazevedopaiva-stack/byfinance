@@ -24905,13 +24905,11 @@ async function tgAuthCarregar(){
   const user=_authUser||sessionStorage.getItem('financeOS_user')||'';
   if(!uid&&!user) return [];
   try{
-    // Usa get-pendentes (service key, bypassa RLS) — solução definitiva
     const r=await fetch('/api/get-pendentes',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username:user,uid})
     });
-    if(!r.ok) throw new Error('get-pendentes status '+r.status);
     const data=await r.json();
     const lista=Array.isArray(data)?data:[];
     console.log('[tgAuthCarregar] uid:',uid,'user:',user,'encontrados:',lista.length);

@@ -21,9 +21,26 @@ export default async function handler(req, res) {
 
   if (!username && !uid) return res.status(400).json({ error: 'username or uid required' });
 
-  // Monta IDs base — só inclui uid (UUID) pois a coluna user_id é do tipo uuid
-  // username é usado apenas para resolver o mapping __uid__
-  const ids = [...new Set([uid].filter(Boolean))];
+  // Monta IDs base — coluna user_id é UUID
+  let resolvedUid = uid || '';
+  // Se uid vazio, tenta achar o UUID pelo username via user_data
+  if (!resolvedUid && username) {
+    try {
+      const revRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/user_data?user_id=like.__uid__%&select=user_id,data`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const revData = await revRes.json();
+      const match = (revData||[]).find(r => r.data?.username === username);
+      if (match) {
+        resolvedUid = match.user_id.replace('__uid__','');
+        console.log('get-pendentes: UUID resolvido via username:', resolvedUid);
+      }
+    } catch(e) {
+      console.error('get-pendentes: erro ao resolver username->uid:', e.message);
+    }
+  }
+  const ids = [...new Set([resolvedUid].filter(Boolean))];
 
   // SEMPRE resolve via __uid__ mapping — o bot pode ter salvo com username diferente
   // (ex: mapeamento antigo tinha 'yanpaiva' mas _authUser agora é 'Yan')

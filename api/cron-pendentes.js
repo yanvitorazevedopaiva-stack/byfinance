@@ -37,6 +37,16 @@ export default async function handler(req, res) {
   console.log('Cron pendentes antigos iniciado:', new Date().toISOString());
 
   try {
+    // Limpa rows de dedup antigos (>1h) para não inchar user_data
+    try {
+      const _dedupCutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=like.__tgdedup__*&updated_at=lt.${_dedupCutoff}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      });
+      console.log('Limpeza de dedup antigos concluída');
+    } catch (e) { console.warn('Limpeza dedup falhou:', e.message); }
+
     // Busca pendentes com mais de 7 dias
     const seteDiasAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const pendentes = await sb(

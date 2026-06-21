@@ -24128,6 +24128,11 @@ Retorne apenas o array JSON começando com [ e terminando com ].`;
   }
 }
 
+function mktFecharScanner(){
+  const el=document.getElementById('mkt-scanner-modal');
+  if(el) el.remove();
+}
+
 function mktAbrirScanner(itens){
   _mktScanItens=itens;_mktScanIdx=0;_mktScanOk=0;
   mktScannerRenderItem();

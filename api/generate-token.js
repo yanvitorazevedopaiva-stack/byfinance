@@ -12,6 +12,27 @@ export default async function handler(req, res) {
   const token = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
+  // Se auth_uid não veio do front, resolve pelo username (mapeamento __uid__) como rede de segurança
+  let resolvedAuthUid = auth_uid || null;
+  if (!resolvedAuthUid) {
+    try {
+      const _r = await fetch(
+        `${SUPABASE_URL}/rest/v1/user_data?user_id=like.__uid__*&select=user_id,data`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const _rows = await _r.json();
+      const _match = (Array.isArray(_rows) ? _rows : []).find(
+        row => (row.data?.username || '').toLowerCase() === (user_id || '').toLowerCase()
+      );
+      if (_match) {
+        resolvedAuthUid = _match.user_id.replace('__uid__', '');
+        console.log('generate-token: auth_uid resolvido pelo username:', resolvedAuthUid);
+      }
+    } catch (e) {
+      console.error('generate-token: falha ao resolver auth_uid:', e.message);
+    }
+  }
+
   const response = await fetch(`${SUPABASE_URL}/rest/v1/user_data`, {
     method: 'POST',
     headers: {
@@ -22,7 +43,7 @@ export default async function handler(req, res) {
     },
     body: JSON.stringify({
       user_id: '__tgtoken__' + token,
-      data: { token, nome: nome || user_id, username: user_id, auth_uid: auth_uid || null, expires_at: expiresAt },
+      data: { token, nome: nome || user_id, username: user_id, auth_uid: resolvedAuthUid, expires_at: expiresAt },
       updated_at: new Date().toISOString(),
     }),
   });

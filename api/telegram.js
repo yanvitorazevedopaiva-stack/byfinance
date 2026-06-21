@@ -852,7 +852,7 @@ async function getMesCompetenciaTg(dataCompra, nomeCartao, user_id){
     const cartoes=dados[user_id+'_cartoes']||[];
     const cartao=cartoes.find(c=>c.nome===nomeCartao||(nomeCartao&&c.nome.toLowerCase().includes((nomeCartao+'').toLowerCase())));
     const fechamento=cartao?.fechamento?parseInt(cartao.fechamento):null;
-    if(!fechamento||d.getDate()<=fechamento){
+    if(!fechamento||d.getDate()<fechamento){
       return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
     }
     const prox=new Date(d.getFullYear(),d.getMonth()+1,1);

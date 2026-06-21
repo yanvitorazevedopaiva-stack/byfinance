@@ -2522,7 +2522,7 @@ export default async function handler(req, res) {
 
     if (gasto.tipo === 'comando' && gasto.acao === 'listar_pendentes') {
       const _pends = await supabaseQuery(
-        `/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&order=created_at.desc&select=descricao,valor,categoria,data_lancamento&limit=10`
+        `/telegram_pendentes?user_id=eq.${vinculo_user_id}&status=eq.pendente&order=created_at.desc&select=descricao,valor,categoria,data_lancamento&limit=10`
       );
       if (!_pends || !_pends.length) {
         await sendTelegram(chat_id, `✅ Nenhum lançamento pendente de autorização.`);
@@ -2539,7 +2539,7 @@ export default async function handler(req, res) {
 
     if (gasto.tipo === 'comando' && gasto.acao === 'cancelar_ultimo') {
       const ultimos = await supabaseQuery(
-        `/telegram_pendentes?user_id=eq.${user_id}&status=eq.pendente&order=created_at.desc&limit=1`
+        `/telegram_pendentes?user_id=eq.${vinculo_user_id}&status=eq.pendente&order=created_at.desc&limit=1`
       );
       if (ultimos?.[0]) {
         await supabaseQuery(`/telegram_pendentes?id=eq.${ultimos[0].id}`, 'PATCH', { status: 'rejeitado' });

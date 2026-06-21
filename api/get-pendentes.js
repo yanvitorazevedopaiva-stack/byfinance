@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   if (!resolvedUid && username) {
     try {
       const revRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/user_data?user_id=like.__uid__%&select=user_id,data`,
+        `${SUPABASE_URL}/rest/v1/user_data?user_id=like.__uid__*&select=user_id,data`,
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
       );
       const revData = await revRes.json();

@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
   try {
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/user_data?user_id=like.__uid__%&select=user_id,data`,
+      `${SUPABASE_URL}/rest/v1/user_data?user_id=like.__uid__*&select=user_id,data`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
     );
     const rows = await r.json();

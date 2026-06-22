@@ -2213,7 +2213,7 @@
   body.day .plan-tab.active{color:#059669;background:rgba(5,150,105,0.07);border-color:rgba(5,150,105,0.25);}
   body.day .plan-tab:hover{background:rgba(0,0,0,0.04);}
   @media(max-width:640px){.plan-tabs{gap:4px;padding:4px;}.plan-tab{padding:7px 10px;font-size:10px;gap:5px;}}
-  @media(max-width:768px){#mkt-grid,#trf-grid{grid-template-columns:1fr!important;}}
+  @media(max-width:768px){#mkt-grid,#mkt-mes-grid,#trf-grid{grid-template-columns:1fr!important;}}
 
   /* Simulador */
   .sim-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
@@ -3220,6 +3220,18 @@
     .card{padding:12px 10px!important;}
     .mob-drawer-item{font-size:12px!important;padding:12px 10px!important;}
     #lanc-formas-wrap .lanc-forma-btn{font-size:9px!important;}
+  }
+  /* Área de toque mínima no menu mobile (acessibilidade) */
+  @media(max-width:768px){
+    .mob-drawer-item{min-height:44px;}
+  }
+  /* Bens/Financiamento: formulário rápido empilha no mobile */
+  @media(max-width:768px){
+    .bem-fin-quick [style*="grid-template-columns:1fr 1fr 1fr 120px"]{grid-template-columns:1fr!important;}
+  }
+  /* Área de toque do ✕ que fecha o menu mobile */
+  @media(max-width:768px){
+    .mob-drawer-close{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
   }
 </style>
 <!-- Emails gerenciados pelo Supabase Auth (signUp confirmação + resetPasswordForEmail recuperação) -->

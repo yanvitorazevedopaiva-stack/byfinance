@@ -25520,7 +25520,7 @@ async function tgConfirmarAutorizacao(){
       anexo:null
     });
     if(typeof setReceitas==='function') setReceitas(recs); else setData('receitas',recs);
-    await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
+    await fetch('/api/set-pendente-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pendId,status:'autorizado'})});
     {
       const valorFmt=val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
       const textoReceita=`✅ *Receita autorizada!*\n\n📝 ${desc}\n💰 ${valorFmt}\n🏷 ${data.categoria}\n📅 ${dataLanc.split('-').reverse().join('/')}\n\n_Registrada com sucesso em Receitas._`;
@@ -25627,7 +25627,7 @@ async function tgConfirmarAutorizacao(){
     setData('compras_variaveis', comprasVar);
   }
 
-  await _supabase.from('telegram_pendentes').update({status:'autorizado'}).eq('id',pendId);
+  await fetch('/api/set-pendente-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pendId,status:'autorizado'})});
 
   const autorizador=load('perfilNome')||_authUser||'Usuário';
   const _remetenteInfo=data.remetente&&data.remetente!==autorizador?`\n👤 Registrado por: *${esc(data.remetente)}*\n✅ Autorizado por: *${esc(autorizador)}*`:`\n✅ Autorizado por: *${esc(autorizador)}*`;
@@ -25833,7 +25833,7 @@ async function tgConfirmarRejeicao(){
   if(!data){if(btnRej){btnRej.disabled=false;btnRej.textContent='❌ CONFIRMAR REJEIÇÃO';}return;}
 
   const motivo=document.getElementById('tg-rejeitar-motivo')?.value.trim()||'';
-  await _supabase.from('telegram_pendentes').update({status:'rejeitado'}).eq('id',pendId);
+  await fetch('/api/set-pendente-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pendId,status:'rejeitado'})});
 
   {
     const valor=parseFloat(data.valor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});

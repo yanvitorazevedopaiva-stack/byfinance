@@ -5464,6 +5464,7 @@
             <button class="btn btn-sm" id="mkt-btn-add-var" onclick="document.getElementById('mkt-add-var-modal').style.display='flex'" style="border-color:rgba(255,215,0,0.4);color:var(--neon-yellow);background:rgba(255,215,0,0.06)">🛒 VARIÁVEL</button>
           </div>
         </div>
+        <input type="text" id="mkt-mes-busca" oninput="_mktRenderMes()" placeholder="🔍 Buscar por nome ou SKU..." style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box;margin-bottom:10px">
         <div id="mkt-mes-itens"></div>
       </div>
       <div>
@@ -5706,10 +5707,13 @@
           </div>
           <input id="mkt-add-man-preco" type="text" inputmode="numeric" placeholder="R$" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--neon-yellow);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;box-sizing:border-box">
         </div>
-        <button class="btn btn-green" onclick="mktAddItemManual()" style="width:100%">+ ADICIONAR</button>
+        <button class="btn btn-green" onclick="mktAddItemManual()" style="width:100%">+ CADASTRAR E SELECIONAR</button>
       </div>
       <div style="margin-top:14px">
-        <button onclick="mktFecharAddMes()" class="btn" style="width:100%;border-color:var(--border);color:var(--text3)">FECHAR</button>
+        <div style="display:flex;gap:8px">
+          <button id="mkt-add-concluir-btn" onclick="mktConcluirAddSel()" class="btn btn-green" style="flex:2;opacity:0.5" disabled>✓ CONCLUIR</button>
+          <button onclick="mktFecharAddMes()" class="btn" style="flex:1;border-color:var(--border);color:var(--text3)">FECHAR</button>
+        </div>
       </div>
     </div>
   </div>
@@ -5752,6 +5756,55 @@
       <div style="display:flex;gap:8px;margin-top:16px">
         <button class="btn btn-green" onclick="mktSalvarEdit()" style="flex:1">✓ SALVAR</button>
         <button class="btn" onclick="mktFecharEdit()" style="border-color:var(--border);color:var(--text3)">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Editar Item da Lista -->
+  <div id="mkt-edit-item-modal" style="display:none;position:fixed;inset:0;z-index:4200;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:14px;max-width:420px;width:100%;padding:20px;max-height:90vh;overflow-y:auto">
+      <div style="font-size:14px;font-weight:700;color:var(--neon-blue);letter-spacing:0.5px;margin-bottom:14px">✎ EDITAR ITEM</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px">DESCRIÇÃO</div>
+      <input type="text" id="mkt-edit-nome" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CATEGORIA</div>
+      <select id="mkt-edit-cat" style="width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;margin-bottom:12px">
+        <option value="Hortifruti">🥦 Hortifruti</option>
+        <option value="Carnes">🥩 Carnes</option>
+        <option value="Laticinios">🥛 Laticínios</option>
+        <option value="Padaria">🍞 Padaria</option>
+        <option value="Higiene">🧴 Higiene</option>
+        <option value="Limpeza">🧹 Limpeza</option>
+        <option value="Mercearia">🛒 Mercearia</option>
+        <option value="Frios">🧀 Frios</option>
+        <option value="Outros">📦 Outros</option>
+      </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px;margin-bottom:16px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">QTD</div>
+          <input type="number" id="mkt-edit-qtd" step="any" min="0" style="width:100%;padding:8px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">UNIDADE</div>
+          <select id="mkt-edit-unidade" style="width:100%;padding:8px 6px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px">
+            <option value="un">un</option>
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="L">L</option>
+            <option value="mL">mL</option>
+            <option value="cx">cx</option>
+            <option value="pct">pct</option>
+            <option value="dz">dz</option>
+            <option value="m">m</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">VLR UNIT.</div>
+          <input type="text" id="mkt-edit-preco" placeholder="R$" style="width:100%;padding:8px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="mktFecharEditarItem()" style="flex:1;padding:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Cancelar</button>
+        <button onclick="mktSalvarEdicaoItem()" style="flex:1;padding:10px;background:rgba(0,255,157,0.12);border:1px solid rgba(0,255,157,0.35);color:var(--neon-green);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Salvar</button>
       </div>
     </div>
   </div>
@@ -23771,9 +23824,25 @@ function _mktRenderMes(){
   _mktRenderNF(lista);
   const el=document.getElementById('mkt-mes-itens');if(!el)return;
   if(!lista.itens.length){el.innerHTML=`<div style="text-align:center;color:var(--text3);padding:32px;font-size:12px">Nenhum item.${isConcluido?'':'<br><br><button class="btn btn-sm" onclick="mktAbrirAddItemMes()" style="border-color:rgba(0,255,157,0.35);color:var(--neon-green)">+ Adicionar item</button>'}</div>`;return;}
-  const _planejados=lista.itens.filter(i=>!i.variavel);const _variaveis=lista.itens.filter(i=>i.variavel);const cats={};_planejados.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
+  const _planejados=lista.itens.filter(i=>!i.variavel);const _variaveis=lista.itens.filter(i=>i.variavel);
   const _catalogo=_mktGetCatalogo();
-  el.innerHTML=Object.entries(cats).length?Object.entries(cats).map(([cat,itens])=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${_MKT_EMOJI[cat]||'📦'} ${cat.toUpperCase()}</div>${itens.map(it=>{const total=it.qtd*(it.precoReal||it.precoPrev||0);const catItem=it.refId?_catalogo.find(c=>c.id===it.refId):null;const sku=catItem?.sku||it.sku||null;const skuBadge=sku?`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px">#${sku}</span>`:'';return`<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:${it.comprado?'rgba(0,255,157,0.05)':'var(--bg2)'};border:1px solid ${it.comprado?'rgba(0,255,157,0.2)':'var(--border)'};margin-bottom:5px"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;flex-shrink:0;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;${it.comprado&&!isConcluido?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}${skuBadge}${it.origemScanner?'<span style="font-size:9px;background:rgba(0,255,157,0.15);color:var(--neon-green);border:1px solid rgba(0,255,157,0.3);border-radius:4px;padding:1px 5px;margin-left:5px;font-family:\'JetBrains Mono\',monospace;font-weight:700">📷 NOTA</span>':''}${it.origemCatalogo?'<span style="font-size:9px;background:rgba(0,200,255,0.12);color:var(--neon-blue);border:1px solid rgba(0,200,255,0.25);border-radius:4px;padding:1px 5px;margin-left:5px;font-family:\'JetBrains Mono\',monospace;font-weight:700">📦 CATÁLOGO</span>':''}</div><div style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · prev: ${it.precoPrev>0?_mktFmt(it.precoPrev):'—'}</div></div>${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--neon-green)">${total>0?_mktFmt(total):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$ real" style="width:80px;padding:5px 7px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Preço real pago">`}<div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};min-width:70px;text-align:right">${total>0?_mktFmt(total):'—'}</div>${isConcluido?'':`<button onclick="mktRemoveMesItem(${it.id})" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>`}</div>`;}).join('')}</div>`).join(''):'';
+  const _mktResolveSku=(it)=>{if(it.sku)return it.sku;if(it.refId){const c=_catalogo.find(c=>c.id===it.refId);if(c&&c.sku)return c.sku;}return null;};
+  const _busca=(document.getElementById('mkt-mes-busca')?.value||'').trim().toLowerCase();
+  const _planejadosView=_busca?_planejados.filter(it=>{const _s=_mktResolveSku(it);return (it.nome||'').toLowerCase().includes(_busca)||(_s&&String(_s).toLowerCase().includes(_busca));}):_planejados;
+  const _rows=_planejadosView.map(it=>{
+    const unit=(it.precoReal||it.precoPrev||0);const total=it.qtd*unit;const sku=_mktResolveSku(it);
+    const badges=`${it.origemScanner?'<span title="Da nota fiscal" style="margin-left:4px">📷</span>':''}${it.origemCatalogo?'<span title="Do catálogo" style="margin-left:4px">📦</span>':''}`;
+    return `<tr style="border-bottom:1px solid var(--border);${it.comprado?'background:rgba(0,255,157,0.05)':''}">`
+      +`<td style="padding:7px 4px;text-align:center"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;cursor:pointer"></td>`
+      +`<td style="padding:7px 6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);white-space:nowrap">${sku?'#'+sku:'—'}</td>`
+      +`<td style="padding:7px 6px;font-size:12px;font-weight:600;${it.comprado&&!isConcluido?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}${badges}</td>`
+      +`<td style="padding:7px 4px;text-align:right">${isConcluido?`<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)">${unit>0?_mktFmt(unit):'—'}</span>`:`<input type="text" value="${it.precoReal>0?it.precoReal.toFixed(2):''}" placeholder="R$" onchange="mktUpdatePrecoReal(${it.id},this.value)" title="Valor unitário pago" style="width:62px;padding:4px 6px;background:var(--bg3);border:1px solid rgba(255,215,0,0.25);color:var(--neon-yellow);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right"></td>`}`
+      +`<td style="padding:7px 4px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);white-space:nowrap">${it.qtd}${it.unidade||'un'}</td>`
+      +`<td style="padding:7px 6px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${it.comprado?'var(--neon-green)':'var(--neon-yellow)'};white-space:nowrap">${total>0?_mktFmt(total):'—'}</td>`
+      +`<td style="padding:7px 2px;text-align:center;white-space:nowrap">${isConcluido?'':`<button onclick="mktEditarItem(${it.id})" title="Editar" style="background:none;border:none;color:var(--neon-blue);cursor:pointer;font-size:13px;padding:0 3px">✎</button><button onclick="mktRemoveMesItem(${it.id})" title="Remover" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px">✕</button>`}</td>`
+      +`</tr>`;
+  }).join('');
+  el.innerHTML=_planejadosView.length?`<div class="tbl-wrap" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:460px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:6px 4px"></th><th style="padding:6px 6px;text-align:left;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">SKU</th><th style="padding:6px 6px;text-align:left;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">DESCRIÇÃO</th><th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">VLR UNIT.</th><th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">QTD</th><th style="padding:6px 6px;text-align:right;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">VLR TOTAL</th><th style="padding:6px 2px"></th></tr></thead><tbody>${_rows}</tbody></table></div>`:(_busca?`<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhum item encontrado.</div>`:'');
   _mktRenderVariaveis(el,_variaveis,isConcluido);
 }
 function mktAbrirFecharCompra(){
@@ -23860,7 +23929,49 @@ function mktConfirmarFecharCompra(){
 function mktToggleMesItem(itemId){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const it=lista.itens.find(i=>i.id===itemId);if(it)it.comprado=!it.comprado;_mktSetListas(listas);_mktRenderMes();}
 function mktUpdatePrecoReal(itemId,val){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;const it=lista.itens.find(i=>i.id===itemId);if(it)it.precoReal=_mktParseBRL(val)||parseFloat(val)||0;_mktSetListas(listas);_mktRenderMes();}
 function mktRemoveMesItem(itemId){const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens=lista.itens.filter(i=>i.id!==itemId);_mktSetListas(listas);_mktRenderMes();}
-function mktAbrirAddItemMes(){document.getElementById('mkt-add-mes-modal').style.display='flex';mktAddMesTab('cat');mktFiltrarCatalogoPicker();}
+let _mktEditId=null;let _mktEditOrig=null;
+function mktEditarItem(itemId){
+  const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!lista)return;
+  const it=lista.itens.find(i=>i.id===itemId);if(!it)return;
+  _mktEditId=itemId;
+  const precoAtual=(it.precoReal||it.precoPrev||0);
+  _mktEditOrig={nome:it.nome,cat:it.cat,qtd:it.qtd,unidade:it.unidade||'un',preco:precoAtual};
+  const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+  setV('mkt-edit-nome',it.nome||'');
+  setV('mkt-edit-cat',it.cat||'Outros');
+  setV('mkt-edit-qtd',it.qtd!=null?it.qtd:1);
+  setV('mkt-edit-unidade',it.unidade||'un');
+  setV('mkt-edit-preco',precoAtual>0?precoAtual.toFixed(2):'');
+  const m=document.getElementById('mkt-edit-item-modal');if(m)m.style.display='flex';
+}
+function mktFecharEditarItem(){const m=document.getElementById('mkt-edit-item-modal');if(m)m.style.display='none';_mktEditId=null;_mktEditOrig=null;}
+function mktSalvarEdicaoItem(){
+  if(_mktEditId==null)return;
+  const nome=(document.getElementById('mkt-edit-nome')?.value||'').trim();
+  const cat=document.getElementById('mkt-edit-cat')?.value||'Outros';
+  const qtd=parseFloat(document.getElementById('mkt-edit-qtd')?.value)||0;
+  const unidade=document.getElementById('mkt-edit-unidade')?.value||'un';
+  const preco=_mktParseBRL(document.getElementById('mkt-edit-preco')?.value)||0;
+  if(!nome){_showError('Informe a descrição do item.');return;}
+  if(qtd<=0){_showError('A quantidade deve ser maior que zero.');return;}
+  const o=_mktEditOrig||{};
+  const mudou=(nome!==o.nome)||(cat!==o.cat)||(qtd!==o.qtd)||(unidade!==o.unidade)||(preco!==o.preco);
+  if(!mudou){mktFecharEditarItem();return;}
+  const idAlvo=_mktEditId;
+  showConfirm('Confirmar edição','Tem certeza que deseja salvar as alterações deste item?',()=>{
+    const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista){mktFecharEditarItem();return;}
+    const it=lista.itens.find(i=>i.id===idAlvo);if(!it){mktFecharEditarItem();return;}
+    it.nome=nome;it.cat=cat;it.qtd=qtd;it.unidade=unidade;it.precoReal=preco;
+    _mktSetListas(listas);
+    mktFecharEditarItem();
+    _mktRenderMes();
+  });
+}
+let _mktAddSel=[];
+function mktAbrirAddItemMes(){_mktAddSel=[];document.getElementById('mkt-add-mes-modal').style.display='flex';mktAddMesTab('cat');const _b=document.getElementById('mkt-add-busca');if(_b)_b.value='';mktFiltrarCatalogoPicker();_mktAddAtualizarConcluir();}
+function mktToggleAddSel(catItemId){const i=_mktAddSel.indexOf(catItemId);if(i>=0)_mktAddSel.splice(i,1);else _mktAddSel.push(catItemId);mktFiltrarCatalogoPicker();_mktAddAtualizarConcluir();}
+function _mktAddAtualizarConcluir(){const btn=document.getElementById('mkt-add-concluir-btn');if(!btn)return;const n=_mktAddSel.length;btn.textContent=n>0?`✓ CONCLUIR (${n})`:'✓ CONCLUIR';btn.disabled=n===0;btn.style.opacity=n===0?'0.5':'1';btn.style.cursor=n===0?'default':'pointer';}
+function mktConcluirAddSel(){if(!_mktMesId||!_mktAddSel.length){mktFecharAddMes();return;}const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista){mktFecharAddMes();return;}const cat=_mktGetCatalogo();let add=0;_mktAddSel.forEach(id=>{const it=cat.find(x=>x.id===id);if(!it)return;if(lista.itens.find(i=>i.refId===id))return;lista.itens.push({id:Date.now()+add,refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:0,comprado:false,sku:it.sku||null,origemCatalogo:true});add++;});_mktSetListas(listas);_mktAddSel=[];mktFecharAddMes();_mktRenderMes();}
 function mktFecharAddMes(){document.getElementById('mkt-add-mes-modal').style.display='none';}
 function mktAddMesTab(tab){
   document.getElementById('mkt-add-panel-cat').style.display=tab==='cat'?'block':'none';
@@ -23871,32 +23982,21 @@ function mktAddMesTab(tab){
 }
 function mktFiltrarCatalogoPicker(){
   const busca=(document.getElementById('mkt-add-busca')?.value||'').toLowerCase().trim();
-  const cat=_mktGetCatalogo().filter(i=>
-    !busca||
-    i.nome.toLowerCase().includes(busca)||
-    i.cat.toLowerCase().includes(busca)||
-    (i.sku||'').toLowerCase().includes(busca)
-  );
+  const cat=_mktGetCatalogo().filter(i=>!busca||i.nome.toLowerCase().includes(busca)||i.cat.toLowerCase().includes(busca)||(i.sku||'').toLowerCase().includes(busca));
   const el=document.getElementById('mkt-add-cat-lista');if(!el)return;
+  const lista=_mktGetListas().find(l=>l.id===_mktMesId);
+  const naLista=(id)=>!!(lista&&lista.itens.some(i=>i.refId===id));
   if(!cat.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Nenhum item encontrado. Tente buscar pelo nome ou referência (I27000...).</div>';return;}
-  el.innerHTML=cat.map(it=>`
-    <button onclick="mktAddItemDosCatalogo(${it.id})"
-      style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:all .15s;box-sizing:border-box"
-      onmouseover="this.style.background='rgba(0,200,255,0.07)';this.style.borderColor='rgba(0,200,255,0.3)'"
-      onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'">
-      <span style="font-size:18px;flex-shrink:0">${_MKT_EMOJI[it.cat]||'📦'}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.nome)}</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
-          ${it.sku?`<span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);padding:1px 5px;border-radius:4px;letter-spacing:.3px">${it.sku}</span>`:''}
-          <span style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · ${it.preco>0?_mktFmt(it.preco):'sem preço'}</span>
-        </div>
-      </div>
-      <span style="font-size:10px;color:var(--neon-green);font-weight:700;flex-shrink:0">+ ADD</span>
-    </button>`).join('');
+  el.innerHTML=cat.map(it=>{
+    const sel=_mktAddSel.indexOf(it.id)>=0;const inList=naLista(it.id);
+    const bcolor=sel?'rgba(0,255,157,0.5)':(inList?'rgba(0,200,255,0.25)':'var(--border)');
+    const bg=sel?'rgba(0,255,157,0.10)':'var(--bg2)';
+    const right=inList?`<span style="font-size:9px;color:var(--neon-blue);flex-shrink:0">já na lista</span>`:(sel?`<span style="font-size:15px;color:var(--neon-green);font-weight:700;flex-shrink:0">✓</span>`:`<span style="font-size:10px;color:var(--text3);flex-shrink:0">tocar +</span>`);
+    return `<button ${inList?'disabled':`onclick="mktToggleAddSel(${it.id})"`} style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid ${bcolor};background:${bg};color:var(--text);cursor:${inList?'default':'pointer'};opacity:${inList?'0.6':'1'};text-align:left;display:flex;align-items:center;gap:10px;box-sizing:border-box"><span style="font-size:18px;flex-shrink:0">${_MKT_EMOJI[it.cat]||'📦'}</span><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.nome)}</div><div style="display:flex;align-items:center;gap:8px;margin-top:2px">${it.sku?`<span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--neon-blue);background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);padding:1px 5px;border-radius:4px">${it.sku}</span>`:''}<span style="font-size:10px;color:var(--text3)">${it.qtd}${it.unidade||'un'} · ${it.preco>0?_mktFmt(it.preco):'sem preço'}</span></div></div>${right}</button>`;
+  }).join('');
 }
 function mktAddItemDosCatalogo(catItemId){const it=_mktGetCatalogo().find(x=>x.id===catItemId);if(!it||!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;if(lista.itens.find(i=>i.refId===catItemId)){_showError(`"${it.nome}" já está nesta lista.`);return;}lista.itens.push({id:Date.now(),refId:it.id,nome:it.nome,cat:it.cat,qtd:it.qtd,unidade:it.unidade||'un',precoPrev:it.preco,precoReal:0,comprado:false});_mktSetListas(listas);mktFecharAddMes();_mktRenderMes();}
-function mktAddItemManual(){const nome=(document.getElementById('mkt-add-man-nome')?.value||'').trim();if(!nome){_showError('Informe onome.');return;}const cat=document.getElementById('mkt-add-man-cat')?.value||'Outros';const qtd=parseFloat(document.getElementById('mkt-add-man-qtd')?.value)||1;const unidade=document.getElementById('mkt-add-man-unidade')?.value||'un';const preco=_mktParseBRL(document.getElementById('mkt-add-man-preco')?.value);if(!_mktMesId)return;const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;lista.itens.push({id:Date.now(),refId:null,nome,cat,qtd,unidade,precoPrev:preco,precoReal:0,comprado:false});_mktSetListas(listas);['mkt-add-man-nome','mkt-add-man-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('mkt-add-man-qtd').value='1';document.getElementById('mkt-add-man-unidade').value='un';mktFecharAddMes();_mktRenderMes();}
+function mktAddItemManual(){const nome=(document.getElementById('mkt-add-man-nome')?.value||'').trim();if(!nome){_showError('Informe o nome.');return;}const cat=document.getElementById('mkt-add-man-cat')?.value||'Outros';const qtd=parseFloat(document.getElementById('mkt-add-man-qtd')?.value)||1;const unidade=document.getElementById('mkt-add-man-unidade')?.value||'un';const preco=_mktParseBRL(document.getElementById('mkt-add-man-preco')?.value);const newId=Date.now();const c=_mktGetCatalogo();c.push({id:newId,sku:_mktGetNextSku(),nome,cat,qtd,unidade,preco,foto:'',dataCadastro:new Date().toISOString(),ultimaAtualizacao:new Date().toISOString()});_mktSetCatalogo(c);_mktAddSel.push(newId);['mkt-add-man-nome','mkt-add-man-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const _q=document.getElementById('mkt-add-man-qtd');if(_q)_q.value='1';const _u=document.getElementById('mkt-add-man-unidade');if(_u)_u.value='un';if(typeof _mktRenderCatalogo==='function')_mktRenderCatalogo();mktAddMesTab('cat');mktFiltrarCatalogoPicker();_mktAddAtualizarConcluir();if(typeof _showToast==='function')_showToast(`"${nome}" cadastrado e selecionado.`);}
 function mktAnexarNF(inp){
   if(!inp.files[0]||!_mktMesId) return;
   const f=inp.files[0];

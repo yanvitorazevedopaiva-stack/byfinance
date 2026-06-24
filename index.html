@@ -8204,11 +8204,11 @@ async function _startSession(u){
   sessionStorage.setItem('trf_show_on_login','1'); // sinaliza que é um login real
   // Mapeamento UUID→username para o bot encontrar dados via user_data
   if(_authUID&&_supabase){
-    _supabase.from('user_data').upsert({
+    Promise.resolve(_supabase.from('user_data').upsert({
       user_id:'__uid__'+_authUID,
       data:{username:u},
       updated_at:new Date().toISOString()
-    },{onConflict:'user_id'}).catch(()=>{});
+    },{onConflict:'user_id'})).catch(()=>{});
   }
   setTimeout(()=>_registrarAcesso&&_registrarAcesso(),100);
   const scr=document.getElementById('login-screen');

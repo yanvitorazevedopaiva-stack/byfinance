@@ -10,6 +10,7 @@
 <title>BY Persona Finance</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.3/Sortable.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   /* ===== VARIÁVEIS — MODO NOTURNO (padrão) ===== */
@@ -23801,6 +23802,19 @@ function _mktConfirmarDrop(itemId,listaId){
   gfRenderMercadoCard();
   _showToast(`✓ "${it.nome}" adicionado à lista!`);
 }
+let _mktSortable=null;
+function mktReordenarItens(){
+  const tbody=document.getElementById('mkt-mes-tbody');if(!tbody||!_mktMesId)return;
+  const ids=Array.from(tbody.querySelectorAll('tr[data-id]')).map(tr=>Number(tr.getAttribute('data-id')));
+  const listas=_mktGetListas();const lista=listas.find(l=>l.id===_mktMesId);if(!lista)return;
+  const planMap={};lista.itens.forEach(it=>{if(!it.variavel)planMap[it.id]=it;});
+  const ordenados=ids.map(id=>planMap[id]).filter(Boolean);
+  const idsSet=new Set(ids);
+  const planFora=lista.itens.filter(i=>!i.variavel&&!idsSet.has(i.id));
+  const variaveis=lista.itens.filter(i=>i.variavel);
+  lista.itens=[...ordenados,...planFora,...variaveis];
+  _mktSetListas(listas);
+}
 function _mktRenderMes(){
   if(!_mktMesId)return;const lista=_mktGetListas().find(l=>l.id===_mktMesId);if(!lista){mktVoltarMain();return;}
   const isConcluido=lista.status==='concluido';
@@ -23832,7 +23846,7 @@ function _mktRenderMes(){
   const _rows=_planejadosView.map(it=>{
     const unit=(it.precoReal||it.precoPrev||0);const total=it.qtd*unit;const sku=_mktResolveSku(it);
     const badges=`${it.origemScanner?'<span title="Da nota fiscal" style="margin-left:4px">📷</span>':''}${it.origemCatalogo?'<span title="Do catálogo" style="margin-left:4px">📦</span>':''}`;
-    return `<tr style="border-bottom:1px solid var(--border);${it.comprado?'background:rgba(0,255,157,0.05)':''}">`
+    return `<tr data-id="${it.id}" style="border-bottom:1px solid var(--border);${it.comprado?'background:rgba(0,255,157,0.05)':''}">`+`<td class="mkt-drag-handle" style="padding:7px 2px;text-align:center;color:var(--text3);font-size:13px;cursor:grab;touch-action:none">${(!isConcluido&&!_busca)?'⠿':''}</td>`
       +`<td style="padding:7px 4px;text-align:center"><input type="checkbox" ${it.comprado?'checked':''} ${isConcluido?'disabled':''} onchange="mktToggleMesItem(${it.id})" style="accent-color:var(--neon-green);width:16px;height:16px;cursor:pointer"></td>`
       +`<td style="padding:7px 6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);white-space:nowrap">${sku?'#'+sku:'—'}</td>`
       +`<td style="padding:7px 6px;font-size:12px;font-weight:600;${it.comprado&&!isConcluido?'text-decoration:line-through;color:var(--text3)':''}">${esc(it.nome)}${badges}</td>`
@@ -23842,8 +23856,9 @@ function _mktRenderMes(){
       +`<td style="padding:7px 2px;text-align:center;white-space:nowrap">${isConcluido?'':`<button onclick="mktEditarItem(${it.id})" title="Editar" style="background:none;border:none;color:var(--neon-blue);cursor:pointer;font-size:13px;padding:0 3px">✎</button><button onclick="mktRemoveMesItem(${it.id})" title="Remover" style="background:none;border:none;color:var(--neon-red);cursor:pointer;font-size:14px;padding:0 2px">✕</button>`}</td>`
       +`</tr>`;
   }).join('');
-  el.innerHTML=_planejadosView.length?`<div class="tbl-wrap" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:460px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:6px 4px"></th><th style="padding:6px 6px;text-align:left;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">SKU</th><th style="padding:6px 6px;text-align:left;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">DESCRIÇÃO</th><th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">VLR UNIT.</th><th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">QTD</th><th style="padding:6px 6px;text-align:right;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">VLR TOTAL</th><th style="padding:6px 2px"></th></tr></thead><tbody>${_rows}</tbody></table></div>`:(_busca?`<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhum item encontrado.</div>`:'');
+  el.innerHTML=_planejadosView.length?`<div class="tbl-wrap" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:460px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:6px 2px"></th><th style="padding:6px 4px"></th><th style="padding:6px 6px;text-align:left;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">SKU</th><th style="padding:6px 6px;text-align:left;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">DESCRIÇÃO</th><th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">VLR UNIT.</th><th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">QTD</th><th style="padding:6px 6px;text-align:right;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.5px">VLR TOTAL</th><th style="padding:6px 2px"></th></tr></thead><tbody id="mkt-mes-tbody">${_rows}</tbody></table></div>`:(_busca?`<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Nenhum item encontrado.</div>`:'');
   _mktRenderVariaveis(el,_variaveis,isConcluido);
+  if(window.Sortable&&!_busca&&!isConcluido){const _tb=document.getElementById('mkt-mes-tbody');if(_tb){if(_mktSortable){try{_mktSortable.destroy();}catch(e){}}_mktSortable=Sortable.create(_tb,{handle:'.mkt-drag-handle',animation:150,onEnd:function(){mktReordenarItens();}});}}
 }
 function mktAbrirFecharCompra(){
   if(!_mktMesId) return;
